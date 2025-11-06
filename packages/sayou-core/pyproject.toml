@@ -36,13 +36,5 @@ classifiers = [
 # -----------------
 # 3. 소스 코드 위치
 # -----------------
-[tool.hatch.build.targets.sdist]
-include = ["/src/sayou/core", "/README.md"]
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/sayou"]
-
-[tool.hatch.build]
-
-[tool.hatch.build.sources]
-"src/sayou" = "src/sayou"

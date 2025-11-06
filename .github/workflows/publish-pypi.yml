@@ -7,8 +7,24 @@ on:
 
 jobs:
   build-and-publish:
-    name: Build and publish to PyPI
+    name: Build and publish ${{ matrix.package }} to PyPI
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - sayou-core
+          - sayou-connector
+          - sayou-chunking
+          - sayou-wrapper
+          - sayou-refinery
+          - sayou-assembler
+          - sayou-loader
+          - sayou-extractor
+          - sayou-document
+          - sayou-llm
+          - sayou-rag
 
     steps:
       - name: Checkout
@@ -17,18 +33,18 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.10"
 
       - name: Install build tools
         run: pip install hatch
 
-      - name: Build sayou-core
+      - name: Build ${{ matrix.package }}
         run: |
-          cd packages/sayou-core
+          cd packages/${{ matrix.package }}
           hatch build
 
-      - name: Publish to PyPI
+      - name: Publish ${{ matrix.package }} to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
-          packages_dir: packages/sayou-core/dist/
+          packages_dir: packages/${{ matrix.package }}/dist/
