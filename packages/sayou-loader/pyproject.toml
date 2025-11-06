@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# -----------------
+# 1. 패키지 기본 정보
+# -----------------
+[project]
+name = "sayou-loader"
+version = "0.0.1"
+authors = [
+    { name = "Sayouzone", email = "contact@sayouzone.com" },
+]
+description = "Loader components for the Sayou Data Fabric"
+readme = "README.md"
+license = { file = "../../LICENSE" }
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+dependencies = [
+    "sayou-core ~= 0.0.2"
+]
+
+# -----------------
+# 2. 프로젝트 링크 (PyPI 사이드바)
+# -----------------
+[project.urls]
+"Homepage" = "https://github.com/sayouzone/sayou-fabric"
+"Documentation" = "https://sayouzone.github.io/sayou-fabric/"
+"Repository" = "https://github.com/sayouzone/sayou-fabric"
+"Changelog" = "https://github.com/sayouzone/sayou-fabric/releases"
+
+# -----------------
+# 3. 소스 코드 위치
+# -----------------
+[tool.hatch.build.targets.wheel]
+packages = ["src/sayou"]
