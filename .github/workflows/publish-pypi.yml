@@ -3,28 +3,12 @@ name: Publish Python Packages to PyPI
 on:
   push:
     tags:
-      - 'v*'
+      - '*-v*'
 
 jobs:
   build-and-publish:
-    name: Build and publish ${{ matrix.package }} to PyPI
+    name: Build and publish package from tag
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        package:
-          - sayou-core
-          - sayou-connector
-          - sayou-chunking
-          - sayou-wrapper
-          - sayou-refinery
-          - sayou-assembler
-          - sayou-loader
-          - sayou-extractor
-          - sayou-document
-          - sayou-llm
-          - sayou-rag
 
     steps:
       - name: Checkout
@@ -38,13 +22,22 @@ jobs:
       - name: Install build tools
         run: pip install hatch
 
-      - name: Build ${{ matrix.package }}
+      - name: Parse package name and version from tag
+        id: parse_tag
         run: |
-          cd packages/${{ matrix.package }}
+          TAG_NAME="${{ github.ref_name }}"
+          PACKAGE_NAME=$(echo $TAG_NAME | rev | cut -d'-' -f2- | rev)
+          echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+          PACKAGE_VERSION=$(echo $TAG_NAME | rev | cut -d'-' -f1 | rev | cut -c 2-)
+          echo "Deploying $PACKAGE_NAME version $PACKAGE_VERSION"
+
+      - name: Build ${{ steps.parse_tag.outputs.package_name }}
+        run: |
+          cd packages/${{ steps.parse_tag.outputs.package_name }}
           hatch build
 
-      - name: Publish ${{ matrix.package }} to PyPI
+      - name: Publish ${{ steps.parse_tag.outputs.package_name }} to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
-          packages_dir: packages/${{ matrix.package }}/dist/
+          packages_dir: packages/${{ steps.parse_tag.outputs.package_name }}/dist/
