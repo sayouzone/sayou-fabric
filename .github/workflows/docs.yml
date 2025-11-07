@@ -31,13 +31,3 @@ jobs:
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-extra:
-  social:
-    - type: "website"
-      name: "Sayou Data Platform"
-      url: "https://sayouzone.github.io/sayou-fabric/"
-  meta:
-    description: "Sayou Data Platform — Modular RAG for building LLM data pipelines, from ingestion to RAG execution."
-    keywords: "Data, LLM, RAG, AI, Python, sayouzone"
-    author: "Sayouzone"
