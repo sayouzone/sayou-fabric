@@ -1,6 +1,6 @@
 # Quickstart
 
-This page provides a high-level, conceptual example of how `sayou-fabric` components are composed.
+This page provides a high-level, conceptual example of how `Sayou Data Platform` components are composed.
 
 For a complete, runnable End-to-End example, please see the `/examples` folder in the main repository.
 

@@ -1,6 +1,6 @@
 # Installation
 
-This section explains how to install Sayou Data Fabric and its modular components.
+This section explains how to install Sayou Data Platform and its modular components.
 
 ---
 

@@ -1,13 +1,15 @@
-# Sayou Data Fabric
+<meta name="robots" content="index, follow">
 
-**Sayou Data Fabric** is a modular framework for building and operating LLM data pipelines.  
+# Sayou Data Platform
+
+**Sayou Data Platform** is a modular framework for building and operating LLM data pipelines.  
 It provides lightweight, composable, and production-ready components for each stage of the data flow — from ingestion to generation.
 
 ---
 
 ## 1. Overview
 
-Sayou Data Fabric decomposes the LLM pipeline into modular data units, allowing developers to build explicit and traceable workflows.  
+Sayou Data Platform decomposes the LLM pipeline into modular data units, allowing developers to build explicit and traceable workflows.  
 Each module is an independent Python package with minimal dependencies.
 
 | Layer | Description |

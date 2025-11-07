@@ -1,6 +1,6 @@
 # sayou-llm
 
-`sayou-llm` is the universal **LLM Adapter** for the Sayou Fabric. It provides a single, standardized interface (`BaseLLMClient`) to interact with *any* LLM, whether it's a remote API (like OpenAI) or a local model (like GGUF or Transformers).
+`sayou-llm` is the universal **LLM Adapter** for the Sayou Data Platform. It provides a single, standardized interface (`BaseLLMClient`) to interact with *any* LLM, whether it's a remote API (like OpenAI) or a local model (like GGUF or Transformers).
 
 ---
 

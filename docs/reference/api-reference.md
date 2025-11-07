@@ -1,8 +1,8 @@
 # API Reference
 
-This section provides the auto-generated API documentation for all public classes and methods within the Sayou Data Fabric ecosystem.
+This section provides the auto-generated API documentation for all public classes and methods within the Sayou Data Platform.
 
-This documentation is generated directly from the docstrings in the `sayou-fabric` source code using a tool like `mkdocstrings`.
+This documentation is generated directly from the docstrings in the `Sayou Data Platform` source code using a tool like `mkdocstrings`.
 
 ---
 

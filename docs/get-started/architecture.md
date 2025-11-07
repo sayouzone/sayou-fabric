@@ -1,6 +1,6 @@
 # Architecture
 
-Sayou Data Fabric adopts a **3-Tier interface architecture** to ensure modularity, extensibility, and maintainability.
+Sayou Data Platform adopts a **3-Tier interface architecture** to ensure modularity, extensibility, and maintainability.
 
 ---
 

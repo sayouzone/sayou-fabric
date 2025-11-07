@@ -1,4 +1,4 @@
-# Sayou Data Fabric
+# Sayou Data Platform
 
 [한국어 (README.ko.md)](./README.ko.md)
 > A Modular Open-Source Framework for Building LLM Data Pipelines
@@ -9,11 +9,11 @@
 
 ## 1. Core Architecture
 
-`sayou-fabric` decomposes the LLM data pipeline by **data flow units** to provide the **stability**, **lightweight footprint**, and **extensibility** required for production environments.
+`Sayou Data Platform` decomposes the LLM data pipeline by **data flow units** to provide the **stability**, **lightweight footprint**, and **extensibility** required for production environments.
 
 ### 1.1. Lightweight & Modular Packages
 
-Every component in the `sayou-fabric` is deployed as an **independent Python package**.
+Every component in the `Sayou Data Platform` is deployed as an **independent Python package**.
 
 * Users install only what they need: `pip install sayou-chunking`.
 * Each library minimizes its dependencies (beyond `sayou-core`), preventing conflicts and ensuring lightweight container images.
@@ -32,7 +32,7 @@ The `sayou-rag` `RAGExecutor` avoids implicit "magic." It explicitly runs the T1
 
 ## 2. Ecosystem Packages
 
-`sayou-fabric` includes the following core libraries:
+`Sayou Data Platform` includes the following core libraries:
 
 | Package | Status | Description |
 | :--- | :--- | :--- |
@@ -93,4 +93,4 @@ git push origin feature/add-semantic-chunker
 
 ## 7. License
 
-sayou-fabric is distributed under the Apache License 2.0.
+Sayou Data Platform(sayou-fabric) is distributed under the Apache License 2.0.

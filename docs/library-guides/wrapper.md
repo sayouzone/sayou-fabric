@@ -1,6 +1,6 @@
 # sayou-wrapper
 
-`sayou-wrapper` is the "entry point" to the `sayou-fabric` data flow. It **validates** raw data (like JSON) and **maps** it into the standardized `Atom` data structure (from `sayou-core`).
+`sayou-wrapper` is the "entry point" to the `Sayou Data Platform` data flow. It **validates** raw data (like JSON) and **maps** it into the standardized `Atom` data structure (from `sayou-core`).
 
 ---
 

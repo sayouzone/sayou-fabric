@@ -1,6 +1,6 @@
 # Introduction
 
-**Sayou Data Fabric** is a modular open-source framework designed to streamline the development of production-grade LLM data pipelines.
+**Sayou Data Platform** is a modular open-source framework designed to streamline the development of production-grade LLM data pipelines.
 
 ---
 
@@ -8,7 +8,7 @@
 
 Modern LLM applications require complex data operations — ingestion, preprocessing, retrieval, and generation — each with its own context and scaling requirements.
 
-Sayou Data Fabric provides a unified, interface-driven ecosystem that supports explicit data flow control across all stages of the pipeline.
+Sayou Data Platform provides a unified, interface-driven ecosystem that supports explicit data flow control across all stages of the pipeline.
 
 ## 2. Typical Use Cases
 

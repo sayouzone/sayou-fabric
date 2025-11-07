@@ -1,6 +1,6 @@
 # sayou-rag
 
-`sayou-rag` is the **Orchestration Engine** of the Sayou Fabric. It does not provide a single pipeline, but rather an **`RAGExecutor`** that runs a "graph" of composable "nodes" (components) to execute complex RAG and Agentic workflows.
+`sayou-rag` is the **Orchestration Engine** of the Sayou Data Platform. It does not provide a single pipeline, but rather an **`RAGExecutor`** that runs a "graph" of composable "nodes" (components) to execute complex RAG and Agentic workflows.
 
 ---
 

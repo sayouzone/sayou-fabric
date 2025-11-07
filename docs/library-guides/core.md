@@ -1,12 +1,12 @@
 # sayou-core
 
-`sayou-core` provides the foundational abstract classes and shared utilities used across the entire Sayou Data Fabric ecosystem.
+`sayou-core` provides the foundational abstract classes and shared utilities used across the entire Sayou Data Platform.
 
 ---
 
 ## 1. Concepts
 
-`sayou-core` is the blueprint that ensures all Fabric components operate consistently. It enforces a common component lifecycle, standardized logging, and a unified data structure.
+`sayou-core` is the blueprint that ensures all Platform components operate consistently. It enforces a common component lifecycle, standardized logging, and a unified data structure.
 
 * **`BaseComponent`**: The abstract class that all Tier 1, 2, and 3 components must inherit from. It provides the `.initialize()` lifecycle hook, a standardized `._log()` interface, and a `component_name` attribute.
 

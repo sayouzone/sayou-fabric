@@ -30,7 +30,7 @@ The `BaseSplitter` is the core contract for all chunking logic. It defines the s
 
 ## 3. T3 Plugin Development
 
-A key feature of `sayou-fabric` is adding your own logic via T3 plugins. For example, you could wrap a third-party tool like LangChain.
+A key feature of `Sayou Data Platform` is adding your own logic via T3 plugins. For example, you could wrap a third-party tool like LangChain.
 
 ### Tutorial: Building a `LangchainRecursiveSplitter` (T3)
 (Placeholder for a step-by-step text tutorial.)

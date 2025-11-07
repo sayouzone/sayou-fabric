@@ -1,4 +1,4 @@
-# Sayou Data Fabric
+# Sayou Data Platform
 
 [English (README.md)](./README.md)
 > LLM 데이터 파이프라인 구축을 위한 모듈형 오픈소스 프레임워크
@@ -9,12 +9,12 @@
 
 ## 1. Core Architecture
 
-`sayou-fabric`은 LLM 데이터 파이프라인을 **데이터 처리 흐름 단위**로 분리하여,
+`Sayou Data Platform`은 LLM 데이터 파이프라인을 **데이터 처리 흐름 단위**로 분리하여,
 프로덕션 환경에 필요한 **안정성**, **경량성**, **확장성**을 제공합니다.
 
 ### 1.1. 경량·모듈형 구조 (Lightweight & Modular Packages)
 
-`sayou-fabric`의 각 구성 요소(Connector, Chunking, RAG 등)는 **독립적인 Python 패키지**로 배포됩니다.
+`Sayou Data Platform`의 각 구성 요소(Connector, Chunking, RAG 등)는 **독립적인 Python 패키지**로 배포됩니다.
 
 * 사용자는 `pip install sayou-chunking`처럼 **정확히 필요한 기능만** 설치할 수 있습니다.
 * 각 라이브러리는 `sayou-core` 외의 의존성을 최소화하여, 불필요한 충돌을 줄이고 경량화된 컨테이너 구성을 지원합니다.
@@ -29,11 +29,11 @@
 
 ### 1.3. 명시적 구성과 조합형 워크플로우 (Explicit Composition)
 
-`sayou-rag`의 `RAGExecutor`는 암묵적 로직 대신, 사용자가 명시적으로 조립한 T1/T2/T3 노드(Router, Tracer, Fetcher, Generator)를 실행합니다. 이는 RAG 파이프라인의 모든 단계를 투명하게 디버깅하고 제어할 수 있음을 의미합니다.
+`Sayou Data Platform`의 `RAGExecutor`는 암묵적 로직 대신, 사용자가 명시적으로 조립한 T1/T2/T3 노드(Router, Tracer, Fetcher, Generator)를 실행합니다. 이는 RAG 파이프라인의 모든 단계를 투명하게 디버깅하고 제어할 수 있음을 의미합니다.
 
 ## 2. Ecosystem Packages
 
-`sayou-fabric`은 다음의 핵심 라이브러리들을 포함합니다.
+`Sayou Data Platform`은 다음의 핵심 라이브러리들을 포함합니다.
 
 | 패키지 (Package) | 상태 (Status) | 설명 (Description) |
 | :--- | :--- | :--- |
@@ -66,7 +66,7 @@ pip install sayou-connector sayou-chunking
 
 ## 5. Documentation
 
-sayou-fabric의 아키텍처, 튜토리얼, T3 플러그인 개발 가이드 및 전체 API 레퍼런스는 **공식 문서**에서 제공됩니다.
+Sayou Data Platform의 아키텍처, 튜토리얼, T3 플러그인 개발 가이드 및 전체 API 레퍼런스는 **공식 문서**에서 제공됩니다.
 
 ## 6. Contributing
 
@@ -95,4 +95,4 @@ git push origin feature/add-semantic-chunker
 
 ## 7. License
 
-sayou-fabric은 Apache License 2.0을 따릅니다.
+Sayou Data Platform(sayou-fabric)은 Apache License 2.0을 따릅니다.
