@@ -28,10 +28,9 @@ classifiers = [
 # 2. 프로젝트 링크 (PyPI 사이드바)
 # -----------------
 [project.urls]
-"Homepage" = "https://github.com/sayouzone/sayou-fabric"
+"Homepage" = "https://www.sayouzone.com/"
 "Documentation" = "https://sayouzone.github.io/sayou-fabric/"
 "Repository" = "https://github.com/sayouzone/sayou-fabric"
-"Changelog" = "https://github.com/sayouzone/sayou-fabric/releases"
 
 # -----------------
 # 3. 소스 코드 위치
