@@ -7,11 +7,11 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-core"
-version = "0.0.2"
+version = "0.0.3"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
-description = "Core components for the Sayou Data Fabric ecosystem (BaseComponent, Atom)."
+description = "Core components for the Sayou Data Platform"
 readme = "README.md"
 license = { file = "../../LICENSE" }
 requires-python = ">=3.9"
