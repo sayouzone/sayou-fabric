@@ -1,6 +1,6 @@
 # Contributing
 
-We welcome contributions to the Sayou Data Fabric! Whether you're fixing a bug, proposing a new feature, or improving documentation, your help is valued.
+We welcome contributions to the Sayou Data Platform! Whether you're fixing a bug, proposing a new feature, or improving documentation, your help is valued.
 
 ---
 
