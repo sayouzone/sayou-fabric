@@ -61,6 +61,8 @@ nav:
       - Quickstart: get-started/quickstart.md
       - Architecture: get-started/architecture.md
       - Philosophy: get-started/philosophy.md
+  - Sayou Agent:
+      - Overview: sayou-agent/overview.md
   - Library Guides:
       - Core: library-guides/core.md
       - Connector: library-guides/connector.md
@@ -72,7 +74,6 @@ nav:
       - Extractor: library-guides/extractor.md
       - Document: library-guides/document.md
       - LLM: library-guides/llm.md
-      - RAG: library-guides/rag.md
   - Reference:
       - API Reference: reference/api-reference.md
       - Contributing: reference/contributing.md
