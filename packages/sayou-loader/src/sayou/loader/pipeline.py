@@ -3,7 +3,7 @@ from sayou.core.base_component import BaseComponent
 from .interfaces.base_translator import BaseTranslator
 from .interfaces.base_writer import BaseWriter
 
-class Pipeline(BaseComponent):
+class LoaderPipeline(BaseComponent):
     """
     (Orchestrator) 'Translator'와 'Writer'를
     '조립'하여 'Load' 파이프라인을 실행합니다.
