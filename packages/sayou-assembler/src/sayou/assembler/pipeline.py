@@ -8,7 +8,7 @@ from .utils.schema_validator import SchemaValidator
 from .interfaces.base_builder import BaseBuilder
 from .interfaces.base_storer import BaseStorer
 
-class Pipeline(BaseComponent):
+class AssemblerPipeline(BaseComponent):
     """
     Assembler 파이프라인 (Orchestrator).
     (Validator -> Builder -> Storer) 순서로 작업을 실행합니다.
@@ -51,30 +51,36 @@ class Pipeline(BaseComponent):
 
         self._log("All components initialized.")
 
-    def run(self, atoms: List[DataAtom]):
+    def run(self, refined_atoms: List[DataAtom], **kwargs) -> dict:
         """
-        (Validator -> Builder -> Storer) 파이프라인을 실행합니다.
+        atoms 대신 RAG의 'refined_atoms'를 받습니다.
+        
+        :param refined_atoms: Refinery가 반환한 DataAtom 리스트
+        :return: {"kg_object": ..., "kg_path": ...} 딕셔너리
         """
-        self._log(f"Assembler run started with {len(atoms)} atoms.")
+        self._log(f"Assembler run started with {len(refined_atoms)} atoms.")
 
         # 1. 검증 (Validation)
-        valid_atoms = self.validator.validate_batch(atoms)
-        self._log(f"Validation complete: {len(valid_atoms)} / {len(atoms)} valid atoms.")
+        valid_atoms = self.validator.validate_batch(refined_atoms)
+        self._log(f"Validation complete: {len(valid_atoms)} / {len(refined_atoms)} valid atoms.")
         if not valid_atoms:
             self._log("No valid atoms to process. Exiting.")
-            return None
+            return {"kg_object": None, "kg_path": None}
 
         # 2. 구축 (Build)
         self._log(f"Running Builder: {self.builder.component_name}...")
         built_object = self.builder.build(valid_atoms)
         if built_object is None:
             self._log("Builder returned None. Exiting.")
-            return None
+            return {"kg_object": None, "kg_path": None}
         self._log(f"Build complete. Object type: {type(built_object)}")
 
         # 3. 저장 (Store)
         self._log(f"Running Storer: {self.storer.component_name}...")
         self.storer.store(built_object)
         self._log(f"Store complete. Assembly finished.")
-        
-        return built_object
+
+        return {
+            "kg_object": built_object,
+            "kg_path": getattr(self.storer, "filepath", None) # FileStorer가 경로를 가지고 있다고 가정
+        }

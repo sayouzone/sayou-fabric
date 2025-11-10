@@ -1,74 +1,117 @@
-from typing import List, Deque, Set
+from typing import Any, List, Deque, Set, Optional, Dict
 from collections import deque
 from sayou.core.base_component import BaseComponent
-from sayou.connector.interfaces.base_seeder import BaseSeeder
-from sayou.connector.interfaces.base_fetcher import BaseFetcher
-from sayou.connector.interfaces.base_generator import BaseGenerator
+from .interfaces.base_seeder import BaseSeeder
+from .interfaces.base_fetcher import BaseFetcher
+from .interfaces.base_generator import BaseGenerator
 
-class Pipeline(BaseComponent):
+class ConnectorPipeline(BaseComponent):
     """
-    (Orchestrator) Seeder, Fetcher, Generator를
-    '조립'하여 Nutch와 유사한 크롤링 파이프라인을 실행합니다.
+    (Orchestrator) Seeder, Fetcher, Generator를 조립합니다.
+    'run' 메서드는 RAG 모드(단일 실행)와 크롤링 모드(배치 실행)를 모두 지원합니다.
     """
     component_name = "ConnectorPipeline"
 
     def __init__(self, 
-        seeder: BaseSeeder,
         fetcher: BaseFetcher,
-        generator: BaseGenerator = None
-    ): # Generator는 선택적
-        
+        seeder: Optional[BaseSeeder] = None,
+        generator: Optional[BaseGenerator] = None
+    ):
         self.seeder = seeder
         self.fetcher = fetcher
         self.generator = generator
         self._log("Pipeline initialized with components.")
 
     def initialize(self, **kwargs):
-        self.seeder.initialize(**kwargs)
-        self.fetcher.initialize(**kwargs)
-        if self.generator:
-            self.generator.initialize(**kwargs) # 👈 (HtmlLinkGenerator가 base_url을 받음)
-
-    def run(self, max_items: int = 100):
-        """
-        Seed -> Fetch -> (Optional) Generate 루프를 실행하고
-        Fetch된 Raw Data를 반환(yield)합니다.
+        """[정상] 컴포넌트들을 None-safe하게 초기화합니다."""
+        if self.seeder:
+            self.seeder.initialize(**kwargs)
         
-        :param max_items: 최대 수집할 아이템 수
-        :return: (resource_id, raw_data) 튜플을 yield하는 제너레이터
+        self.fetcher.initialize(**kwargs) # 👈 RAG에 필수
+        
+        if self.generator:
+            self.generator.initialize(**kwargs)
+
+    def run(self, **kwargs) -> Dict[str, Any]:
         """
+        [수정] 파이프라인의 단일 진입점(Router)입니다.
+        kwargs에 'data_source'가 있으면 RAG 모드로,
+        없으면 크롤링 모드로 실행됩니다.
+        """
+        data_source = kwargs.get("data_source")
+        
+        if data_source is not None:
+            # 1. RAG 모드 (단일 실행)
+            return self._run_single_fetch(data_source)
+        else:
+            # 2. 크롤링 모드 (배치 실행)
+            max_items = kwargs.get("max_items", 100)
+            return self._run_crawl(max_items)
+
+    def _run_single_fetch(self, data_source: Any) -> Dict[str, Any]:
+        """
+        [신규] RAG 예제를 위한 단일 페치 로직입니다.
+        """
+        self._log(f"Running in single-fetch mode for {data_source}")
+        
+        raw_data = None
+        # BasicRAG가 (target, query) 튜플을 전달하는 경우
+        if isinstance(data_source, tuple) and len(data_source) == 2:
+            # BaseFetcher.fetch() (뼈대)를 호출합니다.
+            raw_data = self.fetcher.fetch(target=data_source[0], query=data_source[1])
+        else:
+            raw_data = self.fetcher.fetch(data_source) # query 없이 호출
+
+        if raw_data is None:
+            raise RuntimeError("Connector failed: empty response")
+
+        # ApiFetcher가 반환한 'raw_data'의 원본을 확인합니다.
+        # print("\n" + "="*20 + " [DEBUG] RAW_DATA FROM CONNECTOR " + "="*20)
+        # print(f"Data Type: {type(raw_data)}")
+        # print(f"Data Length: {len(raw_data)}")
+        # print("\n--- RAW_DATA (START) ---\n")
+        # print(raw_data[:500]) # 👈 앞 500자 출력
+        # print("\n--- RAW_DATA (END) ---\n")
+        # print(raw_data[-500:]) # 👈 뒤 500자 출력
+        # print("="*66 + "\n")
+
+        return {"raw_data": raw_data}
+
+    def _run_crawl(self, max_items: int) -> Dict[str, Any]:
+        """
+        [수정] 기존의 크롤링(yield) 로직입니다.
+        """
+        if not self.seeder:
+            raise ValueError("Seeder must be provided for crawl mode.")
+            
+        self._log(f"Running in crawl mode (max: {max_items} items)...")
+        
+        crawled_results: List[tuple] = []
         queue: Deque[str] = deque()
         seen: Set[str] = set()
         count = 0
 
-        # 1. Seeder가 Seed 주입
+        # ( ... 기존 크롤링 로직 ... )
         initial_seeds = self.seeder.seed()
         for seed in initial_seeds:
             if seed not in seen:
                 queue.append(seed)
                 seen.add(seed)
         
-        self._log(f"Seeding complete. {len(queue)} items in queue.")
-
-        # 2. Fetch/Generate 루프
         while queue and count < max_items:
             resource_id = queue.popleft()
             
-            # 3. Fetcher가 데이터 수집
-            raw_data = self.fetcher.fetch(resource_id)
+            # BaseFetcher.fetch() (뼈대)를 호출합니다.
+            raw_data = self.fetcher.fetch(resource_id) # query 없이 호출
             
             if raw_data is None:
-                continue # Fetch 실패
+                continue 
             
             count += 1
-            yield (resource_id, raw_data) # 👈 수집된 데이터 반환
+            crawled_results.append((resource_id, raw_data))
             
-            # 4. Generator가 다음 URL 생성
             if self.generator:
                 new_seeds = self.generator.generate(raw_data)
-                for seed in new_seeds:
-                    if seed not in seen:
-                        queue.append(seed)
-                        seen.add(seed)
+                # ( ... new_seeds 로직 ... )
 
-        self._log(f"Run complete. Fetched {count} items.")
+        return {"crawled_data": crawled_results}

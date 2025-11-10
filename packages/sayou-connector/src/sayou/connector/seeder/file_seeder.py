@@ -1,6 +1,6 @@
 from typing import List
-from sayou.connector.interfaces.base_seeder import BaseSeeder
-from sayou.connector.core.exceptions import ConnectorError
+from ..interfaces.base_seeder import BaseSeeder
+from ..core.exceptions import ConnectorError
 
 class FileSeeder(BaseSeeder):
     """(Tier 2) '파일'에서 Seed 리스트를 읽는 일반 엔진."""
