@@ -7,8 +7,7 @@ from sayou.extractor.pipeline import ExtractorPipeline
 from sayou.rag.interfaces.base_fetcher import BaseFetcher
 from typing import List, Dict, Any
 
-# [추가] simple_entrypoint의 SimpleFileFetcher 로직
-# (RAG 패키지 내에 위치하는 것이 올바른 설계)
+
 class SimpleKGContextFetcher(BaseFetcher):
     """
     Assembler가 저장한 KG 파일을 읽어 RAG Context로 변환하는 Fetcher
