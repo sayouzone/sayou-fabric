@@ -8,7 +8,7 @@ from sayou.wrapper.pipeline import WrapperPipeline
 from sayou.wrapper.interfaces.base_mapper import BaseMapper
 from sayou.wrapper.interfaces.base_validator import BaseValidator
 from sayou.wrapper.validator.default_validator import DefaultValidator
-from sayou.wrapper.mappers.lambda_mapper import LambdaMapper
+from sayou.wrapper.mapper.lambda_mapper import LambdaMapper
 
 from sayou.refinery.pipeline import RefineryPipeline
 from sayou.refinery.processor.text import DefaultTextCleaner
