@@ -1,12 +1,12 @@
-# src/sayou/wrapper/pipeline.py
-from typing import List, Any
+import json
+from typing import Dict, List, Any
+
 from sayou.core.base_component import BaseComponent
 from sayou.core.atom import DataAtom
-from sayou.core.exceptions import InitializationError
-from sayou.wrapper.interfaces.base_mapper import BaseMapper
-from sayou.wrapper.interfaces.base_validator import BaseValidator
+from .interfaces.base_mapper import BaseMapper
+from .interfaces.base_validator import BaseValidator
 
-class Pipeline(BaseComponent):
+class WrapperPipeline(BaseComponent):
     """
     (Orchestrator) 'Mapper'와 'Validator'를
     '조립'하여 'Wrapping' 파이프라인을 실행합니다.
@@ -14,8 +14,9 @@ class Pipeline(BaseComponent):
     component_name = "WrapperPipeline"
 
     def __init__(self, 
-                mapper: BaseMapper,
-                validator: BaseValidator):
+        mapper: BaseMapper,
+        validator: BaseValidator
+    ):
         
         self.mapper = mapper
         self.validator = validator
@@ -34,27 +35,40 @@ class Pipeline(BaseComponent):
         self.mapper.initialize(**kwargs)
         self.validator.initialize(**kwargs)
 
-    def run(self, raw_data_list: List[Any]) -> List[DataAtom]:
+    def run(self, raw_data: Any, **kwargs) -> Dict[str, Any]: # 👈 'raw_data'를 받음
         """
-        [Mapper -> Validator -> DataAtom] 파이프라인을 실행합니다.
-        
-        :param raw_data_list: e.g., CSV row 리스트
-        :return: 생성된 DataAtom 리스트
+        1. Connector가 전달한 *단일* 'raw_data'(JSON 문자열)를 받습니다.
+        2. 'paths' 리스트를 *직접* 파싱합니다.
+        3. 'BaseMapper.map_list' (뼈대)에 *진짜 리스트*를 전달합니다.
         """
-        self._log(f"Wrapper pipeline run started with {len(raw_data_list)} items.")
-        
-        # 1. (Mapper) Raw -> Dict 리스트로 매핑
-        mapped_dicts = self.mapper.map_list(raw_data_list)
-        
-        # 2. (Validator) 스키마 검증 및 필터링
+        self._log(f"Wrapper pipeline run started with single raw_data item.")
+
+        real_raw_data_list = []
+        try:
+            parsed_data = json.loads(raw_data)
+            current_data = parsed_data.get("body", {}).get("paths")
+
+            if current_data is None:
+                self._log("'paths' field not found in JSON body.")
+
+            if isinstance(current_data, list) and current_data and isinstance(current_data[0], str):
+                current_data = "".join(current_data) 
+            while isinstance(current_data, str):
+                current_data = json.loads(current_data)
+
+            if isinstance(current_data, list):
+                real_raw_data_list = current_data
+            else:
+                self._log(f"Expected 'paths' to resolve to a list, but got {type(current_data)}")
+
+        except Exception as e:
+            self._log(f"Failed to parse and extract 'paths' from raw_data: {e}")
+
+        mapped_dicts = self.mapper.map_list(real_raw_data_list)
         validated_dicts = self.validator.validate_list(mapped_dicts)
-        
-        # 3. (공통) DataAtom 객체 생성
         final_atoms: List[DataAtom] = []
         for v_dict in validated_dicts:
             try:
-                # ⭐️ DataAtom.from_dict()가 아닌, 키를 직접 매핑
-                # (BaseWrapper.wrap()의 로직을 파이프라인이 수행)
                 atom = DataAtom(
                     source=v_dict.get("source"),
                     type=v_dict.get("type"),
@@ -65,4 +79,5 @@ class Pipeline(BaseComponent):
                 self._log(f"DataAtom creation failed: {e}")
 
         self._log(f"Wrapper run finished. {len(final_atoms)} atoms created.")
-        return final_atoms
+
+        return {"atoms": final_atoms}
