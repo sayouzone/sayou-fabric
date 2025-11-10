@@ -1,15 +1,15 @@
-from typing import List, Dict, Any
+from typing import List
 from sayou.core.base_component import BaseComponent
 from sayou.core.atom import DataAtom
-from sayou.refinery.core.exceptions import RefineryError
-from sayou.refinery.core.context import RefineryContext
-from sayou.refinery.interfaces.base_processor import BaseProcessor
-from sayou.refinery.interfaces.base_aggregator import BaseAggregator
-from sayou.refinery.interfaces.base_merger import BaseMerger
+from .core.exceptions import RefineryError
+from .core.context import RefineryContext
+from .interfaces.base_processor import BaseProcessor
+from .interfaces.base_aggregator import BaseAggregator
+from .interfaces.base_merger import BaseMerger
 
 RefinerStep = BaseProcessor | BaseAggregator| BaseMerger
 
-class Pipeline(BaseComponent):
+class RefineryPipeline(BaseComponent):
     """
     Refinery 파이프라인 (Orchestrator).
     모든 Refiner(Processor, Aggregator, Merger)를 '순차적'으로 실행합니다.
@@ -32,20 +32,18 @@ class Pipeline(BaseComponent):
             raise RefineryError(f"Failed to initialize pipeline step {step.component_name}: {e}")
         self._log("All steps initialized.")
 
-    def run(self, key_atoms: List[DataAtom], key_external_data: Dict[str, Any] = None) -> List[DataAtom]:
+    def run(self, atoms: List[DataAtom], **kwargs) -> dict:
         """
-        파이프라인을 순차 실행합니다.
-        
-        :param atoms: 정제할 원본 DataAtom 리스트
-        :param external_data: (선택적) Merger가 사용할 외부 조회 데이터
-        :return: 모든 정제가 완료된 DataAtom 리스트
+        key_atoms 대신 RAG의 'atoms'를 받습니다.
+        :param atoms: Wrapper가 반환한 DataAtom 리스트
+        :return: {"refined_atoms": List[DataAtom]} 딕셔너리
         """
-        self._log(f"Refinery run started with {len(key_atoms)} atoms.")
+        self._log(f"Refinery run started with {len(atoms)} atoms.")
         
         # 1. 파이프라인 실행 컨텍스트 생성
         context = RefineryContext(
-            atoms=key_atoms,
-            external_data=key_external_data or {}
+            atoms=atoms,
+            external_data=kwargs.get("external_data", {})
         )
         
         for i, step in enumerate(self.steps):
@@ -70,4 +68,4 @@ class Pipeline(BaseComponent):
         self._log(f"Refinery run finished. Final output: {len(context.atoms)} atoms.")
         
         # 3. 최종 결과물인 Atom 리스트만 반환
-        return context.atoms
+        return {"refined_atoms": context.atoms}
