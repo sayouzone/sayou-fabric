@@ -5,7 +5,7 @@ from .interfaces.base_querier import BaseQuerier
 from .interfaces.base_searcher import BaseSearcher
 from .core.exceptions import QueryError
 
-class Pipeline(BaseComponent):
+class ExtractorPipeline(BaseComponent):
     """(Orchestrator) 'Extractor' 파이프라인 (스마트 라우터)."""
     component_name = "ExtractorPipeline"
 

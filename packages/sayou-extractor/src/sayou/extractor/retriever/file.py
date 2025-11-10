@@ -1,29 +1,37 @@
-from typing import Any, Dict
-from sayou.extractor.interfaces.base_retriever import BaseRetriever
-from sayou.extractor.core.exceptions import RetrievalError, ExtractorError
+from typing import Any, Dict, List
+from ..core.exceptions import RetrievalError, QueryError
+from ..interfaces.base_retriever import BaseRetriever
 import os
 
 class FileRetriever(BaseRetriever):
-    """(Tier 2) '로컬 파일 시스템'에서 파일 읽기 (Key-Value 조회)"""
+    """
+    (Tier 2) 'file_read' 쿼리 타입에 응답하여
+    로컬 파일 시스템의 텍스트를 읽어옵니다.
+    """
     component_name = "FileRetriever"
-    SUPPORTED_TYPES = ["file_read"] # 👈 "file_read" 처리
+    SUPPORTED_TYPES: List[str] = ["file_read"]
 
     def initialize(self, **kwargs):
-        self.base_dir = kwargs.get("base_dir", os.getcwd())
-        self.encoding = kwargs.get("encoding", "utf-8")
+        super().initialize(**kwargs)
+        self.base_dir = kwargs.get("base_dir")
+        if not self.base_dir:
+            self._log("Warning: FileRetriever initialized without 'base_dir'.")
 
-    def _do_retrieve(self, request: Dict[str, Any]) -> str:
-        """[Tier 1 구현] 파일 읽기"""
-        filepath = request.get("filepath")
-        if not filepath:
-            raise RetrievalError("'file_read' request requires 'filepath'.")
+    def _do_retrieve(self, request: Dict[str, Any]) -> Any:
+        """'file_read' 쿼리 요청을 실제로 처리합니다."""
+        filepath_relative = request.get("filepath")
         
-        safe_path = os.path.abspath(os.path.join(self.base_dir, filepath))
-        if not safe_path.startswith(os.path.abspath(self.base_dir)):
-            raise RetrievalError("File path is outside the allowed base directory.")
+        if not filepath_relative:
+            raise QueryError("FileRetriever request requires 'filepath'.")
+        if not self.base_dir:
+            raise QueryError("FileRetriever was not initialized with 'base_dir'.")
+            
+        full_path = os.path.join(self.base_dir, filepath_relative)
         
+        self._log(f"Retrieving file: {full_path}")
         try:
-            with open(safe_path, "r", encoding=self.encoding) as f:
+            with open(full_path, "r", encoding="utf-8") as f:
                 return f.read()
-        except FileNotFoundError:
-            raise RetrievalError(f"File not found: {safe_path}")
+        except Exception as e:
+            self._log(f"Failed to read file {full_path}: {e}")
+            return None
