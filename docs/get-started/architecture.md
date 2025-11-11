@@ -1,62 +1,57 @@
 # Architecture
 
-Sayou Data Platform adopts a **3-Tier interface architecture** to ensure modularity, extensibility, and maintainability.
+You don't need to understand the architecture to use `BasicRAG`, but it helps to know what's happening under the hood.
 
----
+The Sayou framework is a composable set of libraries, or "Lego bricks." The `BasicRAG` facade simply assembles these bricks for you in a pre-defined order.
 
-## 1. System Overview
+This is the pipeline `BasicRAG` builds for you:
 
-(diagram here)
+### The `BasicRAG` Pipeline
 
-Each module defines its own isolated data flow, built around a consistent set of base contracts and execution patterns.
+**1. Connector (`sayou-connector`)**
 
----
+* **Job:** Fetches raw data.
 
-## 2. 3-Tier Architecture
+* **In `BasicRAG`:** `BasicRAG` uses the `ApiFetcher` component. When you pass `data_source=(URL, QUERY)` to `pipeline.run()`, this component executes the API call and returns the raw JSON string.
 
-| Tier | Role | Description |
-|:--|:--|:--|
-| **Tier 1 — Interface** | Defines contracts | Abstract base classes such as `BaseFetcher`, `BaseChunker`, `BaseLLMClient`. |
-| **Tier 2 — Default** | Provides standard implementations | Core utilities and default strategies ready for production use. |
-| **Tier 3 — Plugin** | Enables user-defined extensions | Custom connectors, retrieval logic, or LLM adapters integrated via T1 interface. |
 
-This structure ensures every module can be replaced or extended without breaking the overall pipeline.
+**2. Wrapper (`sayou-wrapper`)**
 
----
+* **Job:** Parses and structures the raw data.
 
-## 3. Data Flow Composition
+* **In `BasicRAG`:** This is the most complex stage, which `BasicRAG` fully automates.
+    1.  It receives the single JSON string from the Connector.
+    2.  It parses the *outer* JSON (`{"header": ..., "body": ...}`).
+    3.  It extracts the `body.paths` field.
+    4.  It handles multi-encoded JSON (e.g., if `paths` is a string `"[...]"`) by parsing it again until it gets a true list.
+    5.  It passes this list (`[{...}, {...}]`) to the `BaseMapper`'s `map_list` function.
+    6.  The `BaseMapper` uses your `map_logic` function (via the internal `LambdaMapper`) to transform each item (`{...}`) into a validated `DataAtom`.
 
-(diagram here — conceptual data flow)
 
-1. **Ingestion (Connector)** – Fetch raw data from APIs, files, or databases.
-2. **Preprocessing (Wrapper, Chunking, Refinery)** – Normalize, segment, and refine data.
-3. **Persistence (Assembler, Loader)** – Structure and store data into vector or relational stores.
-4. **Retrieval (Extractor)** – Query and fetch relevant data.
-5. **Generation (LLM / RAG)** – Use the retrieved context to generate results.
+**3. Refinery (`sayou-refinery`)**
 
----
+* **Job:** Cleans the `DataAtoms`.
 
-## 4. Execution Model
+* **In `BasicRAG`:** By default, `BasicRAG` loads a `DefaultTextCleaner` to remove HTML tags (like `<b>`) from the `friendly_name` field.
 
-Each stage is executed explicitly through the `RAGExecutor` or user-defined pipelines.
 
-```python
-from sayou.connector import ApiFetcher
-from sayou.refinery import RefineryPipeline
-from sayou.rag import RAGExecutor
+**4. Assembler (`sayou-assembler`)**
 
-fetcher = ApiFetcher(base_url="https://api.example.com")
-data = fetcher.fetch({"endpoint": "/news/latest"})
-refined = RefineryPipeline().process(data)
+* **Job:** Builds the Knowledge Graph (KG) from the `DataAtoms`.
 
-result = RAGExecutor().run("Summarize today's news", context=refined)
-print(result)
-```
+* **In `BasicRAG`:**
+    1.  The `SchemaValidator` (auto-loaded) checks if each Atom has an `entity_class` (which you provided in `map_logic`).
+    2.  The `DefaultKGBuilder` constructs the graph.
+    3.  The `FileStorer` saves the final `final_kg.json` to disk.
 
-This model supports fine-grained debugging and unit testing across all pipeline nodes.
+**5. RAG Stage (`sayou-rag` + `llm` + `extractor`)**
 
-## 5. Scalability and Deployment
+* **Job:** Uses the KG to answer the query.
 
-- Modular packages enable microservice-style deployment.
-- Each component can run independently or as part of a unified workflow.
-- Supports both local and distributed execution contexts.
+* **In `BasicRAG`:**
+    1.  The `FileRetriever` (from `sayou-extractor`) reads the `final_kg.json`.
+    2.  The `SimpleKGContextFetcher` formats the KG data into a clean text `context`.
+    3.  The `LLMPipeline` (from `sayou-llm`) injects this `context` into a prompt for your local LLM.
+    4.  The final `answer` is returned.
+
+When you're ready, you can "graduate" from `BasicRAG` and assemble these components yourself. This is covered in the **Library Guides** and **Sayou Agent** sections.

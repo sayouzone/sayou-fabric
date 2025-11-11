@@ -1,4 +1,4 @@
-site_name: Sayou Data Platform
+site_name: Sayouzone's Data Platform
 site_description: Modular Open-Source Framework for LLM Data Pipelines
 site_author: Sayouzone
 site_url: https://sayouzone.github.io/sayou-fabric/
@@ -77,24 +77,25 @@ extra_css:
 nav:
   - Home: index.md
   - Get Started:
-      - Introduction: get-started/introduction.md
-      - Installation: get-started/installation.md
-      - Quickstart: get-started/quickstart.md
-      - Architecture: get-started/architecture.md
-      - Philosophy: get-started/philosophy.md
+    - Introduction: get-started/introduction.md
+    - Installation: get-started/installation.md
+    - Quickstart: get-started/quickstart.md
+    - Architecture: get-started/architecture.md
+    - Philosophy: get-started/philosophy.md
   - Sayou Agent:
-      - Overview: sayou-agent/overview.md
+    - Overview: sayou-agent/overview.md
   - Library Guides:
-      - Core: library-guides/core.md
-      - Connector: library-guides/connector.md
-      - Chunking: library-guides/chunking.md
-      - Refinery: library-guides/refinery.md
-      - Wrapper: library-guides/wrapper.md
-      - Assembler: library-guides/assembler.md
-      - Loader: library-guides/loader.md
-      - Extractor: library-guides/extractor.md
-      - Document: library-guides/document.md
-      - LLM: library-guides/llm.md
+    - Overview: library-guides/overview.md
+    - Core: library-guides/core.md
+    - Connector: library-guides/connector.md
+    - Chunking: library-guides/chunking.md
+    - Refinery: library-guides/refinery.md
+    - Wrapper: library-guides/wrapper.md
+    - Assembler: library-guides/assembler.md
+    - Loader: library-guides/loader.md
+    - Extractor: library-guides/extractor.md
+    - Document: library-guides/document.md
+    - LLM: library-guides/llm.md
   - Reference:
-      - API Reference: reference/api-reference.md
-      - Contributing: reference/contributing.md
+    - API Reference: reference/api-reference.md
+    - Contributing: reference/contributing.md

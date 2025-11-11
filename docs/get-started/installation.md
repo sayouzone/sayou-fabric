@@ -1,39 +1,28 @@
 # Installation
 
-This section explains how to install Sayou Data Platform and its modular components.
+Getting started with Sayou is straightforward. The `sayou-rag` package is the main "umbrella package" that includes all the core components you need to build your first pipeline.
 
 ---
 
-## 1. Prerequisites
-
-- Python 3.9 or higher
-- pip ≥ 23.0
-- (Optional) virtual environment recommended
+### Install with pip
+We recommend installing `sayou-rag` in a virtual environment.
 
 ```bash
+# Create and activate a virtual environment (recommended)
 python -m venv venv
-source venv/bin/activate   # or .\venv\Scripts\activate on Windows
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install the main package
+pip install sayou-rag
 ```
 
-## 2. Installation Options
+This single command installs `sayou-rag` and all its core library dependencies, such as:
+* `sayou-core`
+* `sayou-connector`
+* `sayou-wrapper`
+* `sayou-assembler`
+* `sayou-extractor`
+* `sayou-llm`
 
-Install only what you need.
-
-```bash
-# Example 1: RAG pipeline with local LLM support
-pip install sayou-rag "sayou-llm[transformers]" sayou-extractor
-
-# Example 2: Data collection and chunking only
-pip install sayou-connector sayou-chunking
-```
-
-## 3. Verify Installation
-
-```bash
-python -m sayou.core --version
-```
-
-## 4. Next Steps
-
-- Read the **[Architecture](architecture.md)** section to understand the internal structure.
-- Explore the **[Library Guides](../library-guides/core.md)** for module-level details.
+### Requirements
+* Python 3.9 or higher.
