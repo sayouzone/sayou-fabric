@@ -34,23 +34,27 @@ jobs:
       - name: Detect package directory
         id: detect_dir
         run: |
-          if [ -d "packages/${{ steps.parse_tag.outputs.package_name }}" ]; then
-            echo "package_dir=packages/${{ steps.parse_tag.outputs.package_name }}" >> $GITHUB_OUTPUT
-          elif [ -d "packages-dev/${{ steps.parse_tag.outputs.package_name }}" ]; then
-            echo "package_dir=packages-dev/${{ steps.parse_tag.outputs.package_name }}" >> $GITHUB_OUTPUT
+          PKG="${{ steps.parse_tag.outputs.package_name }}"
+          if [ -d "packages/$PKG" ]; then
+            echo "package_dir=packages/$PKG" >> "$GITHUB_OUTPUT"
+            echo "✅ Found in packages/$PKG"
+          elif [ -d "packages-dev/$PKG" ]; then
+            echo "package_dir=packages-dev/$PKG" >> "$GITHUB_OUTPUT"
+            echo "✅ Found in packages-dev/$PKG"
           else
             echo "❌ Error: Package not found in packages/ or packages-dev/"
+            echo "Checked: $(ls -d packages* || true)"
             exit 1
           fi
-          echo "Detected directory: $(cat $GITHUB_OUTPUT)"
 
       - name: Build ${{ steps.parse_tag.outputs.package_name }}
         run: |
-          cd packages/${{ steps.parse_tag.outputs.package_name }}
+          echo "Building from: ${{ steps.detect_dir.outputs.package_dir }}"
+          cd ${{ steps.detect_dir.outputs.package_dir }}
           hatch build
 
       - name: Publish ${{ steps.parse_tag.outputs.package_name }} to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
-          packages_dir: packages/${{ steps.parse_tag.outputs.package_name }}/dist/
+          packages_dir: ${{ steps.detect_dir.outputs.package_dir }}/dist/
