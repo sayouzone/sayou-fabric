@@ -31,6 +31,19 @@ jobs:
           PACKAGE_VERSION=$(echo $TAG_NAME | rev | cut -d'-' -f1 | rev | cut -c 2-)
           echo "Deploying $PACKAGE_NAME version $PACKAGE_VERSION"
 
+      - name: Detect package directory
+        id: detect_dir
+        run: |
+          if [ -d "packages/${{ steps.parse_tag.outputs.package_name }}" ]; then
+            echo "package_dir=packages/${{ steps.parse_tag.outputs.package_name }}" >> $GITHUB_OUTPUT
+          elif [ -d "packages-dev/${{ steps.parse_tag.outputs.package_name }}" ]; then
+            echo "package_dir=packages-dev/${{ steps.parse_tag.outputs.package_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Error: Package not found in packages/ or packages-dev/"
+            exit 1
+          fi
+          echo "Detected directory: $(cat $GITHUB_OUTPUT)"
+
       - name: Build ${{ steps.parse_tag.outputs.package_name }}
         run: |
           cd packages/${{ steps.parse_tag.outputs.package_name }}
