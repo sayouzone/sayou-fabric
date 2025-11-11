@@ -5,6 +5,9 @@
 **Sayou Data Platform** is a modular framework for building and operating LLM data pipelines.  
 It provides lightweight, composable, and production-ready components for each stage of the data flow — from ingestion to generation.
 
+[Get Started](get-started/introduction.md){ .md-button .md-button--primary }
+[View on GitHub](https://github.com/sayouzone/sayou-fabric){ .md-button }
+
 ---
 
 ## 1. Overview

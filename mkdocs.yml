@@ -10,28 +10,37 @@ theme:
   language: en
   logo: assets/sayou_logo.png
   favicon: assets/favicon.png
+  font:
+    text: "Inter"
+    code: "JetBrains Mono"
   palette:
     - scheme: default
-      primary: white
-      accent: blue-grey
+      primary: indigo
+      accent: indigo
       toggle:
-        icon: material/brightness-7
+        icon: material/weather-night
         name: Switch to dark mode
     - scheme: slate
-      primary: white
-      accent: blue-grey
+      primary: indigo
+      accent: indigo
       toggle:
-        icon: material/brightness-4
+        icon: material/weather-sunny
         name: Switch to light mode
   features:
+    # === Navigation ===
     - navigation.tabs
     - navigation.sections
     - navigation.top
-    - navigation.footer
-    - navigation.instant
     - navigation.tracking
-    - content.code.annotate
+    - navigation.footer
+    # - toc.integrate
+    # === Content ===
     - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - content.action.view
+    # === Performance ===
+    - navigation.instant
 
 markdown_extensions:
   - admonition
@@ -41,7 +50,10 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.tabbed
-  - pymdownx.highlight
+  - pymdownx.highlight:
+      anchor_linenums: true
+      linenums_style: table
+      pygments_style: github-dark
   - pymdownx.inlinehilite
   - toc:
       permalink: true
@@ -49,6 +61,15 @@ markdown_extensions:
 
 plugins:
   - search
+
+extra:
+  generator: true
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/sayouzone/sayou-fabric
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/sayouzone
+  analytics: null
 
 extra_css:
   - assets/extra.css
