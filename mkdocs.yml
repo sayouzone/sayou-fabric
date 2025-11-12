@@ -41,6 +41,7 @@ theme:
     - content.action.view
     # === Performance ===
     - navigation.instant
+  canonical_url: https://sayouzone.github.io/sayou-fabric/
 
 markdown_extensions:
   - admonition
@@ -65,11 +66,30 @@ plugins:
 extra:
   generator: true
   social:
+    - icon: fontawesome/solid/globe
+      link: https://sayouzone.com/
+      name: Sayouzone Official Website
     - icon: fontawesome/brands/github
       link: https://github.com/sayouzone/sayou-fabric
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/company/sayouzone
   analytics: null
+  meta:
+    - name: description
+      content: "Sayouzone Data Platform — Modular Open Source Framework for LLM Data Pipelines."
+    - name: keywords
+      content: "Sayouzone, LLM, RAG, AI, Open Source, Data Platform, Python, SDK"
+    - property: og:title
+      content: "Sayouzone Data Platform"
+    - property: og:description
+      content: "Build RAG pipelines and LLM data workflows with Sayouzone components."
+    - property: og:url
+      content: "https://sayouzone.github.io/sayou-fabric/"
+    - property: og:image
+      content: "https://sayouzone.github.io/sayou-fabric/assets/og_image.png"
+    - name: twitter:card
+      content: "summary_large_image"
+
 
 extra_css:
   - assets/extra.css
