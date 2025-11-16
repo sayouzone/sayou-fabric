@@ -6,13 +6,13 @@
 
 `sayou-document` is a high-fidelity document parsing library for Python. It converts various document formats (PDF, DOCX, PPTX, XLSX) into a **single, unified JSON structure**, focusing on extracting rich, structured data, not just plain text.
 
-This library is the foundational "Extractor" component of the **Sayou Data Platform**, designed for data-driven AI and advanced RAG pipelines that require more than just text.
+This library is a foundational "Extractor" component of the **Sayou Data Platform**, designed for data-driven AI and advanced RAG pipelines that require a reliable, structured data source.
 
 ## Philosophy
 
-We believe LLMs are powerful but not infallible. **Logic should be handled by engineers, not probability.**
+`sayou-document` is designed to be an **extractor**, not an interpreter. It focuses on capturing the raw, structural facts of a document—"this text is bold, 16pt, and at (x0, y0)"—and preserving them with high fidelity.
 
-`sayou-document` is **not** an "interpreter." It does not guess if a bold text is a "title." It is an **"extractor."** It captures the raw facts—"this text is bold, 16pt, and at (x0, y0)"—preserving the original document's fidelity. This rich, structured data is then passed to `sayou-refinery` for intelligent, rule-based processing.
+This reliable, structured data provides a robust foundation for any downstream processing or AI pipeline.
 
 ## 🚀 Key Features
 
@@ -24,7 +24,7 @@ We believe LLMs are powerful but not infallible. **Logic should be handled by en
     * PowerPoint (`.pptx`)
     * Excel (`.xlsx`)
 * **Layout Preservation:** Captures headers, footers (Word), table of contents (PDF), and slide notes (PPTX).
-* **Pluggable OCR:** Easily integrate any OCR engine (like Google Vision) to extract text from scanned PDFs and embedded images.
+* **Pluggable OCR:** Easily integrate any OCR engine to extract text from scanned PDFs and embedded images.
 * **Part of an Ecosystem:** Designed to be the first step, feeding structured data into `sayou-refinery`, `sayou-chunking`, and ultimately `sayou-rag`.
 
 ## 📦 Installation
@@ -38,7 +38,7 @@ pip install sayou-document
 
 ## ⚡ Quickstart
 
-The `DocumentPipeline` is the only object you need. It automatically routes the file to the correct parser and returns a standardized `Document` object.
+The `DocumentPipeline` is the primary interface. It automatically routes the file to the correct parser and returns a standardized `Document` object.
 
 ```python
 import os
@@ -145,4 +145,4 @@ We welcome contributions! If you are interested in improving `sayou-document` or
 
 ## 📜 License
 
-This project is licensed under the Apache 2.0 License.
+Apache 2.0 License © 2025 Sayouzone
