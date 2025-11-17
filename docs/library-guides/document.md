@@ -12,15 +12,13 @@ Within `sayou-rag`, this library serves as the default plugin for the 'Extractor
 
 To use `sayou-document` independently of the main `sayou-rag` package, you can install it directly:
 
-[Bash installation command block]
+```bash
+pip install sayou-document
+```
 
 ## 2. Core Concepts & Architecture
 
 `sayou-document` is built on a 3-Tier architecture, ensuring high extensibility.
-
-```bash
-pip install sayou-document
-```
 
 ### Tier 1: Interfaces (The Contract)
 

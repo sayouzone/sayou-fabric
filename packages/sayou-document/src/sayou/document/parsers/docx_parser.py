@@ -5,6 +5,7 @@ try:
     from docx.table import Table
     from docx.text.paragraph import Paragraph
     from docx.oxml.ns import qn
+    from docx.enum.style import WD_STYLE_TYPE
 except ImportError:
     DocxDocument = None
 
@@ -99,8 +100,23 @@ class DocxParser(BaseDocumentParser):
         results = []
         current_text = ""
         style_name = para.style.name if para.style else "Normal"
-        ocr_enabled = True
+        raw_attrs = {"style": style_name}
+        try:
+            if para.style.name.startswith(('List', '목록')) or para._p.pPr.numPr is not None:
+                raw_attrs["semantic_type"] = "list"
+                try:
+                    raw_attrs["list_level"] = para._p.pPr.numPr.ilvl.val
+                except AttributeError:
+                    raw_attrs["list_level"] = 0
+            elif para.style.style_id.startswith("Heading") and para.style.type == WD_STYLE_TYPE.PARAGRAPH:
+                level_str = ''.join(filter(str.isdigit, para.style.style_id))
+                if level_str:
+                    raw_attrs["semantic_type"] = "heading"
+                    raw_attrs["heading_level"] = int(level_str)
+        except Exception as e:
+            self._log(f"Semantic style parsing error: {e}")
 
+        ocr_enabled = True
         for run in para.runs:
             if run.text:
                 current_text += run.text
@@ -112,7 +128,7 @@ class DocxParser(BaseDocumentParser):
                         type="text",
                         text=current_text.strip(),
                         meta=ElementMetadata(page_num=page_num, id=f"{meta_id_base}:text{len(results)}"),
-                        raw_attributes={"style": style_name}
+                        raw_attributes=raw_attrs
                     ))
                     current_text = "" 
 
@@ -128,7 +144,7 @@ class DocxParser(BaseDocumentParser):
                 type="text",
                 text=current_text.strip(),
                 meta=ElementMetadata(page_num=page_num, id=f"{meta_id_base}:text_end"),
-                raw_attributes={"style": style_name}
+                raw_attributes=raw_attrs
             ))
             
         return results
