@@ -1,5 +1,6 @@
-from sayou.chunking.interfaces.base_splitter import BaseSplitter, ChunkingError
 from typing import List, Dict, Any
+
+from ..interfaces.base_splitter import BaseSplitter, ChunkingError
 
 class FixedLengthSplitter(BaseSplitter):
     """

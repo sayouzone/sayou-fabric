@@ -1,7 +1,9 @@
-from sayou.core.base_component import BaseComponent
-from sayou.chunking.interfaces.base_splitter import BaseSplitter
-from sayou.chunking.core.exceptions import ChunkingError
 from typing import List, Dict, Any, Set
+
+from sayou.core.base_component import BaseComponent
+
+from .interfaces.base_splitter import BaseSplitter
+from .core.exceptions import ChunkingError
 
 class ChunkingPipeline(BaseComponent):
     """
@@ -65,6 +67,4 @@ class ChunkingPipeline(BaseComponent):
         요청 'type'에 맞는 핸들러를 찾아 'split' 메서드를 호출합니다.
         """
         handler = self._get_handler(request)
-        
-        # ⭐️ T1(BaseSplitter)의 'split' 메서드 호출
         return handler.split(request)
