@@ -11,7 +11,18 @@ class BaseSplitter(BaseComponent):
     SUPPORTED_TYPES: List[str] = []
 
     def split(self, split_request: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """[공통 골격] 청킹(분할) 실행"""
+        """
+        [공통 골격] 청킹(분할) 실행
+        
+        Args:
+            split_request: 
+
+        Returns:
+            List: 
+
+        Note:
+
+        """
         split_type = split_request.get("type", "unknown")
         self._log(f"Performing split for type '{split_type}'...")
         try:
@@ -27,6 +38,14 @@ class BaseSplitter(BaseComponent):
     def _do_split(self, split_request: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         [T2/T3 구현 필수] (결과 포맷: [{"chunk_content": "...", "metadata": {...}}, ...])
+        
+        Args:
+            split_request: 
+
+        Returns:
+            List: 
+
+        Note:
         """
         raise NotImplementedError
     
@@ -34,6 +53,16 @@ class BaseSplitter(BaseComponent):
         """
         [공통 유틸리티] 분할된 텍스트 리스트를 표준 청크 Dict 리스트로 포맷팅합니다.
         T2/T3 구현체들이 이 메서드를 재사용할 수 있습니다.
+        
+        Args:
+            text_chunks: 
+            source_metadata: 
+
+        Returns:
+            List: 
+
+        Note:
+
         """
         result_chunks = []
         doc_id = source_metadata.get('doc_id', 'doc')

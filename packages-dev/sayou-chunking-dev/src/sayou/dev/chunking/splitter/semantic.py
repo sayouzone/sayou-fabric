@@ -12,13 +12,28 @@ class SemanticSplitter(BaseSplitter):
     def initialize(self, **kwargs):
         """
         시맨틱 청킹은 Embedding 모델이 필요할 수 있습니다.
-        e.g., self.model = SentenceTransformer(kwargs.get("model_name"))
+        e.g., self.model = SentenceTransformer(kwargs.get("model_name"))        
+        
+        Args:
+            **kwargs: 
         """
         self._model = None # (모델 로딩 로직)
         self._threshold = kwargs.get("semantic_threshold", 0.85)
         self._log("SemanticSplitter (Default) initialized.")
 
     def _do_split(self, split_request: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        
+        
+        Args:
+            split_request: 
+
+        Returns:
+            List: 
+
+        Note:
+
+        """
         content = split_request.get("content")
         if not content: raise ChunkingError("Missing 'content' field.")
         source_metadata = split_request.get("metadata", {})

@@ -11,6 +11,18 @@ class StructureBasedSplitter(BaseSplitter):
     SUPPORTED_TYPES = ["structure_markdown"] # e.g., Markdown
 
     def _do_split(self, split_request: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        
+        
+        Args:
+            split_request: 
+
+        Returns:
+            List: 
+
+        Note:
+
+        """
         content = split_request.get("content")
         if not content: raise ChunkingError("Missing 'content' field.")
         
