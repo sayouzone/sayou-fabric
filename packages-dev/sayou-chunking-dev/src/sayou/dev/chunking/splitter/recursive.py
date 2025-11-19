@@ -14,6 +14,19 @@ class RecursiveCharacterSplitter(BaseSplitter):
 
     def _do_split(self, split_request: Dict[str, Any]) -> List[Dict[str, Any]]:
         """[Tier 1 구현] 파라미터 검증 및 '기본' 분할 로직 실행"""
+        """
+        
+        
+        Args:
+            text_chunks: 
+            source_metadata: 
+
+        Returns:
+            List: 
+
+        Note:
+
+        """
         
         content = split_request.get("content")
         if not content or not isinstance(content, str):
@@ -35,7 +48,19 @@ class RecursiveCharacterSplitter(BaseSplitter):
     def _execute_split_logic(self, text: str, chunk_size: int, chunk_overlap: int, separators: List[str]) -> List[str]:
         """
         [T3가 Override 가능] '기본' 재귀 분할 로직.
-        (LangChain의 로직을 단순화하여 모방)
+        (LangChain의 로직을 단순화하여 모방)        
+        
+        Args:
+            text: 
+            chunk_size: 
+            chunk_overlap: 
+            separators: 
+
+        Returns:
+            List: 
+
+        Note:
+
         """
         self._log(f"Executing default recursive split...")
         
