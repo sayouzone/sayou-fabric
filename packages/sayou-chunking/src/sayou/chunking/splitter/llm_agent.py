@@ -1,5 +1,6 @@
-from sayou.chunking.interfaces.base_splitter import BaseSplitter, ChunkingError
 from typing import List, Dict, Any
+
+from ..interfaces.base_splitter import BaseSplitter, ChunkingError
 
 class AgenticSplitter(BaseSplitter):
     """
@@ -12,6 +13,9 @@ class AgenticSplitter(BaseSplitter):
     def initialize(self, **kwargs):
         """
         LLM 클라이언트(e.g., OpenAI)를 주입받아야 합니다.
+
+        Args:
+            **kwargs): 
         """
         # self._llm_client: BaseLLMClient = kwargs.get("llm_client")
         # if not self._llm_client:
@@ -24,6 +28,17 @@ class AgenticSplitter(BaseSplitter):
         self._log("AgenticSplitter (Default) initialized.")
 
     def _do_split(self, split_request: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        
+        Args:
+            split_request: 
+        
+        Returns:
+            List: 
+        
+        Note:
+
+        """
         content = split_request.get("content")
         if not content: raise ChunkingError("Missing 'content' field.")
         source_metadata = split_request.get("metadata", {})

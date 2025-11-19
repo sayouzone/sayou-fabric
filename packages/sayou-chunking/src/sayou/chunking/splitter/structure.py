@@ -1,110 +1,94 @@
 import re
+from typing import List
+from ..splitter.recursive import RecursiveSplitter
+from ..utils.schema import Document, Chunk
+from ..utils.text_segmenter import TextSegmenter
 
-from typing import List, Dict, Any
-
-from ..interfaces.base_splitter import BaseSplitter, ChunkingError
-from ..splitter.recursive import RecursiveCharacterSplitter
-
-class StructureBasedSplitter(BaseSplitter):
+class StructureSplitter(RecursiveSplitter):
     """
-    (Tier 2) '구조'를 기준으로 1차 분할하고, '시맨틱 메타데이터'를 각 청크에 포장합니다.
+    (Tier 2) 범용 구조 분할기 (The Generic Architect).
+    - 역할: 사용자가 정의한 '구조 패턴(Regex)'을 기준으로 문서를 크게 나눕니다.
+    - 특징: MarkdownPlugin처럼 전용 로직이 없어도, 패턴만 넣으면 구조화된 청킹이 가능합니다.
     """
-    component_name = "StructureBasedSplitter"
-    SUPPORTED_TYPES = ["structure_markdown"]
+    component_name = "StructureSplitter"
+    SUPPORTED_TYPES = ["structure"]
 
-    def initialize(self, **kwargs):
-        self.fallback_splitter = RecursiveCharacterSplitter()
-        self.fallback_splitter.initialize(**kwargs)
-        self._log("Initialized with RecursiveCharacterSplitter as fallback.")
-
-    def _do_split(self, split_request: Dict[str, Any]) -> List[Dict[str, Any]]:
-        content = split_request.get("content")
-        if not isinstance(content, str):
-            raise ChunkingError("Request requires a 'content' field (str).")
+    def _do_split(self, doc: Document) -> List[Chunk]:
+        """
         
-        chunk_size = split_request.get("chunk_size", 1000)
-        chunk_overlap = split_request.get("chunk_overlap", 100)
-        source_metadata = split_request.get("metadata", {})
-        pattern = r"(?=^\s*(# |## |### |- |\* |\d+\. ))"
+        Args:
+            doc: 
+        
+        Returns:
+            List: 
+        
+        Note:
 
-        # 1. 1차 분할 (시맨틱)
+        """
+        config = doc.metadata.get("config", {})
+        doc_id = doc.metadata.get("id", "doc")
+        chunk_size = config.get("chunk_size", 1000)
+
+        # 1. 사용자 정의 구조 패턴 가져오기
+        # 예: 법률 문서라면 r"제\d+조" 같은 패턴이 들어옴
+        structure_pattern = config.get("structure_pattern", r"\n\n") 
+
+        # 2. 구조적 분할 (Lookahead를 적용하여 패턴 앞에서 자름)
+        # 패턴이 단순히 구분자가 아니라 '헤더' 역할을 하도록 (?=...) 처리 시도
         try:
-            semantic_splits = re.split(pattern, content, flags=re.MULTILINE)
-            if semantic_splits and not semantic_splits[0].strip():
-                semantic_splits = semantic_splits[1:]
-        except Exception as e:
-            self._log(f"Regex split failed: {e}. Splitting as one chunk.")
-            semantic_splits = [content]
+            # 사용자가 괄호를 안 넣었을 수 있으니 안전하게 그룹핑
+            split_regex = f"(?m)(?={structure_pattern})" 
+            sections = re.split(split_regex, doc.content)
+        except Exception:
+            # 정규식 오류 시 기본 분할
+            sections = doc.content.split("\n\n")
 
-        # 2. 2차 분할 및 '포장'
-        final_chunks: List[Dict[str, Any]] = []
-        global_part_index = 0
-        
-        for chunk_text in semantic_splits:
-            if not chunk_text or not chunk_text.strip():
-                continue
-            
-            chunk_semantic_meta = self._extract_semantic_metadata(chunk_text)
-            current_chunk_metadata = {**source_metadata, **chunk_semantic_meta}
-            
-            if len(chunk_text) <= chunk_size:
-                # 2a. 조각이 충분히 작으면: '단서'와 함께 T1 헬퍼로 '포장'
-                packaged_chunks = self._build_chunks(
-                    [chunk_text], 
-                    current_chunk_metadata,
-                    start_index=global_part_index
+        final_chunks = []
+        global_idx = 0
+
+        for section in sections:
+            section = section.strip()
+            if not section: continue
+
+            # 3. 섹션 내부 미세 분할 (Recursive 상속 기능 활용)
+            # 섹션이 chunk_size보다 크면 Recursive하게 자름
+            if len(section) > chunk_size:
+                # 부모(Recursive)의 로직을 빌려 쓰되, Document를 새로 포장해서 넘김
+                # (주의: 여기서 super()._do_split을 바로 부르면 메타데이터가 꼬일 수 있어 직접 Segmenter 호출)
+                sub_parts = TextSegmenter.split_with_protection(
+                    section,
+                    config.get("separators", self.DEFAULT_SEPARATORS),
+                    config.get("protected_patterns", []),
+                    chunk_size,
+                    config.get("chunk_overlap", 50)
                 )
-                final_chunks.extend(packaged_chunks)
-                global_part_index += len(packaged_chunks)
+                for part in sub_parts:
+                    final_chunks.append(self._pack_chunk(part, doc.metadata, doc_id, global_idx, is_structure=False))
+                    global_idx += 1
             else:
-                # 2b. 조각이 너무 크면: T2 '부품'(Recursive)에 위임
-                self._log(f"Chunk starting with '{chunk_text[:30]}...' is too large ({len(chunk_text)}). Using fallback splitter.")
-                
-                fallback_request = {
-                    "content": chunk_text,
-                    "type": "recursive_char",
-                    "chunk_size": chunk_size,
-                    "chunk_overlap": chunk_overlap,
-                    "separators": [
-                        r"\n\n",                     # paragraph
-                        r"(?<=[.!?])\s+",            # sentence boundary
-                        r"\n",                       # single newline fallback
-                        r""                          # character-level fallback
-                    ],
-                    "metadata": current_chunk_metadata
-                }
-                
-                smaller_chunks = self.fallback_splitter.split(fallback_request)
-                for chunk in smaller_chunks:
-                    chunk_text = chunk["chunk_content"]
-                    merged_meta = {**current_chunk_metadata, **chunk["metadata"]}
-                    
-                    new_chunk_id = f'{merged_meta["id"]}_chunk_{global_part_index}'
-                    merged_meta["chunk_id"] = new_chunk_id
-                    merged_meta["part_index"] = global_part_index
-                    final_chunks.append({
-                        "chunk_content": chunk_text,
-                        "metadata": merged_meta
-                    })
-                    global_part_index += 1
-                
+                # 섹션이 작으면 통째로 청크화 (구조 보존)
+                final_chunks.append(self._pack_chunk(section, doc.metadata, doc_id, global_idx, is_structure=True))
+                global_idx += 1
+
         return final_chunks
 
-    def _extract_semantic_metadata(self, chunk_text: str) -> Dict[str, Any]:
-        """청크의 시작 부분을 분석해 시맨틱 메타데이터 추출"""
-        meta = {"semantic_type": "text"}
+    def _pack_chunk(self, text, meta, doc_id, idx, is_structure):
+        """
         
-        if re.match(r"^\s*# ", chunk_text):
-            meta["semantic_type"] = "h1"
-        elif re.match(r"^\s*## ", chunk_text):
-            meta["semantic_type"] = "h2"
-        elif re.match(r"^\s*### ", chunk_text):
-            meta["semantic_type"] = "h3"
-        elif re.match(r"^\s*[-*] ", chunk_text):
-            meta["semantic_type"] = "list_item_unordered"
-        elif re.match(r"^\s*\d+\. ", chunk_text):
-            meta["semantic_type"] = "list_item_ordered"
-        elif re.match(r"^\s*\|", chunk_text):
-            meta["semantic_type"] = "table" 
+        Args:
+            doc: 
         
-        return meta
+        Returns:
+            List: 
+        
+        Note:
+
+        """
+        m = meta.copy()
+        m.pop("config", None)
+        m.update({
+            "chunk_id": f"{doc_id}_{idx}",
+            "part_index": idx,
+            "semantic_type": "structure_section" if is_structure else "text_fragment"
+        })
+        return Chunk(text, m)
