@@ -1,5 +1,6 @@
 import re
 from typing import List, Optional
+
 from ..splitter.recursive import RecursiveSplitter
 from ..utils.schema import Document, Chunk
 from ..utils.text_segmenter import TextSegmenter

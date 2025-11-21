@@ -1,6 +1,8 @@
 from abc import abstractmethod
 from typing import List, Dict, Any
+
 from sayou.core.base_component import BaseComponent
+
 from ..core.exceptions import ChunkingError
 from ..utils.schema import Document, Chunk
 

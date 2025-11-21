@@ -1,5 +1,6 @@
-from sayou.chunking.splitter.fixed_length import FixedLengthSplitter
 from typing import List, Dict, Any
+
+from ..splitter.fixed_length import FixedLengthSplitter
 
 class AuditedFixedLengthSplitter(FixedLengthSplitter):
     """
@@ -8,7 +9,7 @@ class AuditedFixedLengthSplitter(FixedLengthSplitter):
     """
     component_name = "AuditedFixedLengthSplitter"
     
-    # ⭐️ T2와 '다른' 타입을 정의하여 T2와 공존합니다.
+    # T2와 '다른' 타입을 정의하여 T2와 공존합니다.
     SUPPORTED_TYPES = ["fixed_length_audited"] 
 
     def initialize(self, **kwargs):
@@ -24,7 +25,7 @@ class AuditedFixedLengthSplitter(FixedLengthSplitter):
         반환된 결과에 '추가' 작업을 수행합니다. (Decorator 패턴)
         """
         
-        # 1. ⭐️ T2(부모)의 분할 로직을 그대로 호출하여 결과를 받음
+        # 1. T2(부모)의 분할 로직을 그대로 호출하여 결과를 받음
         default_chunks = super()._do_split(split_request)
         
         # 2. 결과물에 '추가' 작업 (e.g., 메타데이터 수정)

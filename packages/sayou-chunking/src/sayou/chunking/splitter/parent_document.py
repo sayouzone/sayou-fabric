@@ -1,7 +1,7 @@
 from typing import List
+
 from ..interfaces.base_splitter import BaseSplitter
 from ..utils.schema import Document, Chunk
-
 from ..splitter.recursive import RecursiveSplitter
 from ..splitter.structure import StructureSplitter
 

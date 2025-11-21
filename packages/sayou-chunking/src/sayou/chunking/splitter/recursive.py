@@ -1,4 +1,5 @@
 from typing import List
+
 from ..interfaces.base_splitter import BaseSplitter
 from ..utils.schema import Document, Chunk
 from ..utils.text_segmenter import TextSegmenter

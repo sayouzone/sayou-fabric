@@ -1,5 +1,6 @@
 import math
 from typing import List, Callable
+
 from ..interfaces.base_splitter import BaseSplitter
 from ..utils.schema import Document, Chunk
 
