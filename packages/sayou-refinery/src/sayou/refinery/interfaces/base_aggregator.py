@@ -1,6 +1,8 @@
 from abc import abstractmethod
+
 from sayou.core.base_component import BaseComponent
-from sayou.refinery.core.context import RefineryContext
+
+from ..core.context import RefineryContext
 
 class BaseAggregator(BaseComponent):
     """

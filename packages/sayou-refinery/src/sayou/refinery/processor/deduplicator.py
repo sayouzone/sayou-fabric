@@ -1,7 +1,9 @@
 from typing import List, Set
-from sayou.refinery.interfaces.base_processor import BaseProcessor
+
 from sayou.core.atom import DataAtom
-from sayou.refinery.core.exceptions import RefineryError
+
+from ..interfaces.base_processor import BaseProcessor
+from ..core.exceptions import RefineryError
 
 class Deduplicator(BaseProcessor):
     """

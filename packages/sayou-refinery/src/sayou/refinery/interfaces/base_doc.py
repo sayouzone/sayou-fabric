@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import List, Dict, Any
 from dataclasses import dataclass
+
 from sayou.core.base_component import BaseComponent
 
 @dataclass

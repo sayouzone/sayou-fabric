@@ -1,9 +1,11 @@
 from abc import abstractmethod
 from collections import defaultdict
-from typing import List, Dict, Any, Tuple
+from typing import List, Any, Tuple
+
 from sayou.core.atom import DataAtom
-from sayou.refinery.interfaces.base_aggregator import BaseAggregator
-from sayou.refinery.core.context import RefineryContext
+
+from ..core.context import RefineryContext
+from ..interfaces.base_aggregator import BaseAggregator
 
 class AverageAggregator(BaseAggregator):
     """

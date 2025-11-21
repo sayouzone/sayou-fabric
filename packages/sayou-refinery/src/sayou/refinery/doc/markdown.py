@@ -1,6 +1,8 @@
 from typing import List, Dict, Any
+
 from ..interfaces.base_doc import BaseDocRefiner, ContentBlock
-class DocToMarkdownRefiner(BaseDocRefiner):
+
+class StandardDocRefiner(BaseDocRefiner):
     """
     (Tier 2) Document 'Dict'를 Markdown으로 변환하는 '엔진'.
     
@@ -12,7 +14,8 @@ class DocToMarkdownRefiner(BaseDocRefiner):
     
     Tier 3는 이 클래스를 상속하여 _handle_text 등의 '규칙'을 오버라이드합니다.
     """
-    component_name = "DocToMarkdownRefiner"
+    component_name = "StandardDocRefiner"
+    SUPPORTED_TYPES = ['standard_doc']
     
     def initialize(
         self, 
@@ -150,19 +153,33 @@ class DocToMarkdownRefiner(BaseDocRefiner):
         md_table = ""
         table_data = element.get("data", [])
         
-        if not table_data or not table_data[0]:
+        if not table_data:
             return []
 
-        header = table_data[0]
-        md_table += "| " + " | ".join(map(str, header)) + " |\n"
-        md_table += "| " + " | ".join(["---"] * len(header)) + " |\n"
+        max_cols = 0
+        for row in table_data:
+            if row:
+                max_cols = max(max_cols, len(row))
         
+        if max_cols == 0:
+            return []
+
+        # 1. 헤더 행 (첫 번째 행)
+        header = table_data[0]
+        header_cells = list(map(str, header)) + [""] * (max_cols - len(header))
+        md_table += "| " + " | ".join(header_cells) + " |\n"
+        
+        # 2. 구분자 행 (최대 열 개수 기준)
+        md_table += "| " + " | ".join(["---"] * max_cols) + " |\n"
+        
+        # 3. 본문 행 (두 번째 행부터)
         for row in table_data[1:]:
-            md_table += "| " + " | ".join(map(str, row)) + " |\n"
+            body_cells = list(map(str, row)) + [""] * (max_cols - len(row))
+            md_table += "| " + " | ".join(body_cells) + " |\n"
             
         return [ContentBlock(
             type="md",
-            content=md_table,
+            content=md_table.strip(),
             metadata={
                 "page_num": element.get("meta", {}).get("page_num"), 
                 "id": element.get("id"),

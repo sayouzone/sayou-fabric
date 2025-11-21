@@ -1,10 +1,10 @@
 import re
 from typing import List, Any, Tuple
-from sayou.refinery.aggregator.average import AverageAggregator # 👈 (Tier 2) '일반 엔진' 상속
-from sayou.core.atom import DataAtom
-from sayou.refinery.core.context import RefineryContext
 
-# (이 플러그인은 'utils' 같은 헬퍼가 필요할 수 있음)
+from sayou.core.atom import DataAtom
+
+from ..aggregator.average import AverageAggregator
+
 def get_day_type(date_str: str) -> str:
     from datetime import datetime
     try:
