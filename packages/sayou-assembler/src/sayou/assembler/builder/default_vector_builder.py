@@ -1,6 +1,8 @@
 from typing import List, Any
-from sayou.assembler.interfaces.base_builder import BaseBuilder
+
 from sayou.core.atom import DataAtom
+
+from ..interfaces.base_builder import BaseBuilder
 
 class DefaultVectorBuilder(BaseBuilder):
     """

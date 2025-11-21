@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import Any
+
 from sayou.core.base_component import BaseComponent
 
 class BaseStorer(BaseComponent):

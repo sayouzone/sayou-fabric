@@ -1,22 +1,33 @@
 from abc import abstractmethod
-from typing import List, Any
+from typing import Dict, Any
+
 from sayou.core.base_component import BaseComponent
-from sayou.core.atom import DataAtom
+
+from ..core.exceptions import AssemblerError
+from ..graph.knowledge_graph import KnowledgeGraph
 
 class BaseBuilder(BaseComponent):
     """
-    (Tier 1) Atom 리스트를 받아 특정 인메모리 객체로 '구축(Build)'하는
-    모든 빌더의 인터페이스.
+    (Tier 1) WrapperOutput(Standard Nodes)을 받아 KnowledgeGraph를 조립하는 인터페이스.
     """
     component_name = "BaseBuilder"
 
+    def _build(self, wrapper_output: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        [Public API] Wrapper 결과를 받아 그래프(Dict)로 반환.
+        """
+        self._log("Starting assembly process...")
+        try:
+            # 1. 실제 조립 (Tier 2)
+            kg_obj = self.build(wrapper_output)
+            
+            # 2. 결과 반환 (Dict)
+            return kg_obj.to_dict()
+            
+        except Exception as e:
+            raise AssemblerError(f"Assembly failed in {self.component_name}: {e}")
+
     @abstractmethod
-    def build(self, atoms: List[DataAtom]) -> Any:
-        """
-        Atom 리스트를 받아 특정 구조(e.g., KnowledgeGraph, VectorIndex)를 
-        인메모리에 구축하고 그 객체를 반환합니다.
-        
-        :param atoms: 유효성이 검증된 DataAtom 리스트
-        :return: 구축된 객체 (e.g., KnowledgeGraph 인스턴스)
-        """
+    def build(self, data: Dict[str, Any]) -> KnowledgeGraph:
+        """[구현 필수]"""
         raise NotImplementedError

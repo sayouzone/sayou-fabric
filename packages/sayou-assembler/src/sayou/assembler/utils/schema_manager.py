@@ -1,6 +1,8 @@
 import json
+
 from sayou.core.base_component import BaseComponent
-from sayou.assembler.core.exceptions import SchemaError
+
+from ..core.exceptions import SchemaError
 
 class SchemaManager(BaseComponent):
     """

@@ -1,7 +1,9 @@
+from typing import List
+
 from sayou.core.base_component import BaseComponent
 from sayou.core.atom import DataAtom
-from sayou.assembler.core.exceptions import SchemaError
-from typing import List, Dict, Any
+
+from ..core.exceptions import SchemaError
 
 class SchemaValidator(BaseComponent):
     """DataAtom이 온톨로지 스키마에 맞는지 검증하는 유틸리티 클래스."""
