@@ -1,8 +1,9 @@
 import fitz
-import base64
-from typing import List, Optional, Dict, Any
-from sayou.document.interfaces.base_parser import BaseDocumentParser
-from sayou.document.models import (
+from typing import Optional, Dict, Any
+
+from ..interfaces.base_parser import BaseDocumentParser
+from ..interfaces.base_ocr import BaseOCR
+from ..models import (
     Document, ImageElement, Page, TextElement, BoundingBox, 
     ElementMetadata, BaseElement
 )
@@ -13,6 +14,11 @@ class PdfParser(BaseDocumentParser):
     """
     component_name = "PdfParser"
     SUPPORTED_TYPES = [".pdf"]
+
+    def __init__(self, ocr_engine: Optional[BaseOCR] = None):
+        """OCR 엔진을 선택적으로 주입받을 수 있도록 생성자 정의"""
+        super().__init__() 
+        self.ocr_engine = ocr_engine
 
     def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
         # 1. PDF 로드

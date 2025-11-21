@@ -1,5 +1,5 @@
 import io
-import base64
+
 try:
     from docx import Document as DocxDocument
     from docx.table import Table
@@ -10,8 +10,9 @@ except ImportError:
     DocxDocument = None
 
 from typing import List, Optional
-from sayou.document.interfaces.base_parser import BaseDocumentParser
-from sayou.document.models import (
+
+from ..interfaces.base_parser import BaseDocumentParser
+from ..models import (
     Document, Page, BaseElement, TextElement, TableElement, 
     ImageElement, TableCell, BoundingBox, ElementMetadata
 )

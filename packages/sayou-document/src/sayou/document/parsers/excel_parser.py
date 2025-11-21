@@ -1,6 +1,6 @@
 import io
 import zipfile
-import base64
+
 try:
     import openpyxl
     from openpyxl.drawing.image import Image as XLImage
@@ -8,8 +8,9 @@ except ImportError:
     openpyxl = None
 
 from typing import List, Optional
-from sayou.document.interfaces.base_parser import BaseDocumentParser
-from sayou.document.models import (
+
+from ..interfaces.base_parser import BaseDocumentParser
+from ..models import (
     Document, Page, Sheet, TableElement, ImageElement,
     ElementMetadata, BaseElement, TableCell
 )

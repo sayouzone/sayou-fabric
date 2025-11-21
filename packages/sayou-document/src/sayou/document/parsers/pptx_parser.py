@@ -1,14 +1,15 @@
 import io
-import base64
+
 try:
     from pptx import Presentation
     from pptx.enum.shapes import MSO_SHAPE_TYPE
 except ImportError:
     Presentation = None
 
-from typing import List, Dict, Optional
-from sayou.document.interfaces.base_parser import BaseDocumentParser
-from sayou.document.models import (
+from typing import List
+
+from ..interfaces.base_parser import BaseDocumentParser
+from ..models import (
     Document, Slide, BaseElement, TextElement, TableElement, 
     ImageElement, ChartElement, TableCell, BoundingBox, ElementMetadata
 )

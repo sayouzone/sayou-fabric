@@ -1,8 +1,10 @@
 from abc import abstractmethod
 from typing import List, Optional
+
 from sayou.core.base_component import BaseComponent
-from sayou.document.models import Document, ImageElement, ElementMetadata, BoundingBox
-from .base_ocr import BaseOCR 
+
+from .base_ocr import BaseOCR
+from ..models import Document, ImageElement, ElementMetadata, BoundingBox
 
 class BaseDocumentParser(BaseComponent):
     """
