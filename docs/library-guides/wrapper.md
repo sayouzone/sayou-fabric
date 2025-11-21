@@ -1,59 +1,92 @@
-# sayou-wrapper
+# Library Guide: sayou-wrapper
 
-`sayou-wrapper` is the "entry point" to the `Sayou Data Platform` data flow. It **validates** raw data (like JSON) and **maps** it into the standardized `Atom` data structure (from `sayou-core`).
+`sayou-wrapper` serves as the **standardization layer** in the data pipeline. Its primary role is to decouple the "Data Source" (Upstream) from the "Data Consumer" (Downstream).
 
----
-
-## 1. Concepts (Core Interfaces)
-
-This library is built on two T1 Interfaces.
-
-* **`BaseMapper` (T1):** The contract for **transforming raw data** (e.g., a complex dictionary) into a structured `Atom` payload.
-* **`BaseValidator` (T1):** The contract for **validating** raw data against a set of rules *before* it gets mapped into an `Atom`.
+By enforcing a strict schema (`SayouNode`), it allows `sayou-assembler` and `sayou-loader` to operate purely on graph logic without worrying about field naming conventions or data inconsistencies.
 
 ---
 
-## 2. T2 Usage (Default Components)
+## 1. Core Concepts & Architecture
 
-`sayou-wrapper` provides T2 mappers for common data formats.
+The library follows the **3-Tier Architecture** with a **Dynamic Registry Pattern**.
 
-### Using `JsonPathMapper` (T2)
-(Placeholder for text explaining this is a powerful T2 mapper. It uses JSONPath expressions to pull data from deep within a nested JSON object and map it to specific fields in an `Atom` payload.)
+### Tier 1: Interfaces (The Contract)
+* **`BaseAdapter`**: The abstract base class. It defines the `adapt()` method which takes `Any` input and returns a `WrapperOutput` (Pydantic Model).
 
-### Using `DictMapper` (T2)
-(Placeholder for text explaining this is a simple 1-to-1 mapper that maps top-level dictionary keys to `Atom` payload fields.)
+### Tier 2: Adapters (The Implementations)
+* **`DocumentChunkAdapter`**: The default adapter designed to process the output of `sayou-chunking`.
+    * Maps `chunk_id` to `sayou:doc:{id}`.
+    * Maps `semantic_type="table"` to `sayou:Table` class.
+    * Preserves `parent_id` for graph lineage.
 
-### Using `DefaultValidator` (T2)
-(Placeholder for text explaining this T2 validator checks for basic requirements, such as the presence of a unique ID field or non-null values.)
+### Core Schema: `SayouNode`
+This is the lingua franca of the platform.
 
----
-
-## 3. T3 Plugin Development
-
-A T3 plugin is ideal for integrating a formal validation library like Pydantic.
-
-### Tutorial: Building a `PydanticValidator` (T3)
-(Placeholder for a step-by-step text tutorial.)
-1.  **Create your class:** Define `PydanticValidator`.
-2.  **Inherit T1:** Make your class inherit from `BaseValidator` (T1).
-3.  **Implement `_do_validate`:** Inside this method, take the raw data dictionary, pass it to a pre-defined Pydantic model, and catch any `ValidationError`.
-4.  **Use it:** Pass your `PydanticValidator` instance to the `WrapperPipeline` (or `AssemblerPipeline`) to enforce strict schema validation.
+```python
+class SayouNode(BaseModel):
+    node_id: str       # Unique URI
+    node_class: str    # Ontology Class
+    attributes: Dict   # Dynamic Properties
+    relationships: Dict[str, List[str]] # Edges
+```
 
 ---
 
-## 4. API Reference
+## 2. Usage Examples
 
-### Tier 1: Interfaces
+### 2.1. Processing Document Chunks
 
-| Interface | File | Description |
-| :--- | :--- | :--- |
-| `BaseMapper` | `interfaces/base_mapper.py`| Contract for mapping raw data to an `Atom`. |
-| `BaseValidator`| `interfaces/base_validator.py`| Contract for validating raw data. |
+When building a RAG pipeline from documents, `sayou-wrapper` bridges the gap between text chunks and graph nodes.
 
-### Tier 2: Default Components
+```python
+from sayou.wrapper.pipeline import WrapperPipeline
 
-| Component | Directory | Implements |
-| :--- | :--- | :--- |
-| `DictMapper` | `mapper/` | `BaseMapper` |
-| `JsonPathMapper`| `mapper/` | `BaseMapper` |
-| `DefaultValidator`| `validator/` | `BaseValidator` |
+pipeline = WrapperPipeline(adapter_type="document_chunk")
+
+# Input can be a file path or a list of dicts
+nodes = pipeline.run("chunks.json")
+```
+
+### 2.2. Extending for Custom Data (Tier 3)
+
+You can create custom adapters for structured data like APIs.
+
+```python
+from sayou.wrapper.interfaces.base_adapter import BaseAdapter
+from sayou.wrapper.schemas.sayou_standard import WrapperOutput, SayouNode
+
+class MyApiAdapter(BaseAdapter):
+    component_name = "MyApiAdapter"
+    SUPPORTED_TYPES = ["my_api"]
+
+    def _do_adapt(self, raw_data):
+        # Implementation logic...
+        return WrapperOutput(nodes=[...])
+```
+
+---
+
+## 3. Data Flow
+
+**Input (from Chunking):**
+
+```json
+{
+    "chunk_content": "...",
+    "metadata": { "semantic_type": "h1", "chunk_id": "123" }
+}
+```
+
+**Output (Standard Node):**
+
+```json
+{
+    "node_id": "sayou:doc:123",
+    "node_class": "sayou:Topic",
+    "attributes": {
+        "schema:text": "...",
+        "sayou:semanticType": "h1"
+    },
+    "relationships": {}
+}
+```
