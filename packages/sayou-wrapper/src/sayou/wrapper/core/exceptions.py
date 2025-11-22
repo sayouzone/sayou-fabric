@@ -1,4 +1,3 @@
-# src/sayou/wrapper/core/exceptions.py
 from sayou.core.exceptions import SayouCoreError
 
 class WrapperError(SayouCoreError):

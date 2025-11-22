@@ -1,8 +1,8 @@
 from abc import abstractmethod
-from typing import List, Dict, Any
+
 from sayou.core.base_component import BaseComponent
-from sayou.refinery.core.context import RefineryContext
-from sayou.core.atom import DataAtom
+
+from ..core.context import RefineryContext
 
 class BaseMerger(BaseComponent):
     """

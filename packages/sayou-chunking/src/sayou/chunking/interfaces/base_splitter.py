@@ -1,69 +1,103 @@
-import copy
-
 from abc import abstractmethod
 from typing import List, Dict, Any
 
 from sayou.core.base_component import BaseComponent
+
 from ..core.exceptions import ChunkingError
+from ..utils.schema import Document, Chunk
 
 class BaseSplitter(BaseComponent):
     """
-    (Tier 1) '콘텐츠 딕셔너리'를 '청크 딕셔너리 리스트'로 분할하는 인터페이스.
+    (Tier 1) '문서'를 '청크' 리스트로 분할하는 기본 인터페이스.
     """
     component_name = "BaseSplitter"
     SUPPORTED_TYPES: List[str] = []
 
     def split(self, split_request: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
-        [공통 골격] [수정] T2가 '완전히 포장된' 청크 리스트를 반환.
+        [공통 골격] 청킹(분할) 실행
+        
+        Args:
+            split_request: 
+
+        Returns:
+            List: 
+
+        Note:
+
         """
         split_type = split_request.get("type", "unknown")
-        if split_type not in self.SUPPORTED_TYPES:
-            raise ChunkingError(f"Handler {self.component_name} does not support type: '{split_type}'")
-            
-        self._log(f"Handling split request for '{split_type}'...")
         
         try:
-            final_chunks = self._do_split(split_request)
-            return final_chunks
-        
+            if split_type not in self.SUPPORTED_TYPES:
+                raise ChunkingError(f"Handler {self.component_name} does not support type: '{split_type}'")
+            
+            if "content" not in split_request:
+                raise ChunkingError("Request requires 'content' field.")
+
+            # Dict -> Document 변환
+            doc = Document(
+                content=split_request.get("content", ""),
+                metadata=split_request.get("metadata", {})
+            )
+
+            # Config 정보도 메타데이터에 병합 (Prioritize request-level config)
+            doc.metadata["config"] = {
+                "chunk_size": split_request.get("chunk_size", 1000),
+                "chunk_overlap": split_request.get("chunk_overlap", 100),
+                **doc.metadata.get("config", {})
+            }
+
+            # 딕셔너리(split_request)가 아니라 객체(doc)를 넘겨야 함!
+            chunks = self._do_split(doc)
+            
+            # Chunk(Obj) -> Dict 변환 (Pipeline 호환성)
+            return self._build_chunks(chunks)
+            
         except Exception as e:
             raise ChunkingError(f"Split failed in {self.component_name}: {e}")
 
     @abstractmethod
-    def _do_split(self, split_request: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _do_split(self, doc: Document) -> List[Chunk]:
         """
-        [T2/T3 구현 필수] [수정] (반환값: 최종 포장된 List[Dict])
-        분할, 메타데이터 추출, 공통 메타데이터 결합, 포장까지 모두 수행.
-        T1의 _build_chunks 헬퍼를 '반드시' 사용해야 함.
+        [T2/T3 구현] 반드시 List[Chunk] 객체를 반환해야 함.
+        
+        Args:
+            split_request: 
+
+        Returns:
+            List: 
+
+        Note:
         """
         raise NotImplementedError
     
-    def _build_chunks(
-        self, 
-        text_chunks: List[str], 
-        source_metadata: Dict[str, Any],
-        parent_id_key: str = "id",
-        start_index: int = 0
-    ) -> List[Dict[str, Any]]:
+    def _build_chunks(self, chunks: List[Any]) -> List[Dict[str, Any]]:
         """
-        [공통 유틸리티] [수정] T2가 호출하는 '포장 헬퍼' 역할.
-        T2가 분할한 텍스트(List[str])에 T2가 제공한 '특수 메타데이터'(source_metadata)를
-        결합하여 최종 포장합니다.
+        Chunk 객체 리스트를 Dict 리스트로 변환하는 헬퍼
+        
+        Args:
+            text_chunks: 
+            source_metadata: 
+
+        Returns:
+            List: 
+
+        Note:
+
         """
         result_chunks = []
-        base_metadata = copy.deepcopy(source_metadata)
-        parent_id = base_metadata.get(parent_id_key, "doc")
-        
-        for i, text in enumerate(text_chunks):
-            part_index = start_index + i
-            chunk_metadata = base_metadata.copy() 
-            chunk_metadata.update({
-                "chunk_id": f"{parent_id}_chunk_{part_index}",
-                "part_index": part_index
-            })
-            result_chunks.append({
-                "chunk_content": text, 
-                "metadata": chunk_metadata
-            })
+        # chunks가 이미 List[Chunk]라고 가정하고 변환
+        for chunk in chunks:
+            if isinstance(chunk, Chunk):
+                result_chunks.append({
+                    "chunk_content": chunk.chunk_content,
+                    "metadata": chunk.metadata
+                })
+            # 만약 실수로 str 리스트가 오면 방어 로직 (T2 개발 편의)
+            elif isinstance(chunk, str):
+                result_chunks.append({
+                    "chunk_content": chunk,
+                    "metadata": {}
+                })
         return result_chunks

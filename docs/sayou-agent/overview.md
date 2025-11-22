@@ -1,93 +1,81 @@
-# Sayou RAG — Retrieval-Augmented Generation Engine
+# Sayou RAG: The Data Platform Orchestrator
 
-> **Sayou RAG** is the orchestration layer of the **Sayou Data Fabric**,  
-> enabling intelligent data-driven reasoning, generation, and retrieval at scale.
+Welcome to **Sayou RAG**.
+This is the command center of the Sayou Data Platform.
 
----
-
-## Introduction
-
-Sayou RAG connects the Sayou ecosystem — **data, schema, and LLMs** — into a unified reasoning fabric.  
-It’s a modular and composable framework for building Retrieval-Augmented Generation pipelines that can:
-
-- Fetch structured or unstructured data from multiple sources  
-- Clean and normalize data into schema-aligned formats  
-- Build contextual knowledge graphs for deep retrieval  
-- Generate answers or insights with local or cloud LLMs  
-
-Whether you’re handling CSVs, APIs, PDFs, or knowledge bases —  
-Sayou RAG helps you **bridge raw data to intelligent reasoning.**
+If individual libraries like `sayou-document` or `sayou-chunking` are the **engine parts** (pistons, gears, valves), then `sayou-rag` is the **Car**. It assembles these parts into a working vehicle that takes you from "Raw Data" to "Intelligent Answers."
 
 ---
 
-## Architecture Overview
+## 1. The Two Pillars of RAG
 
-```mermaid
-flowchart LR
-    A[User Query] --> B[Connector / Extractor]
-    B --> C[Refinery / Wrapper]
-    C --> D[Assembler / Loader]
-    D --> E[LLM Generator]
-    E --> F[Response Output]
+We architected `sayou-rag` around two fundamental lifecycles of data.
+
+### Phase 1: Ingestion Pipeline (The Builder)
+* **Goal:** Turn unstructured chaos into structured knowledge.
+* **Process:** This is a heavy, batch-oriented process.
+    1.  **Connect:** Fetch data from files or APIs.
+    2.  **Parse:** Extract high-fidelity data (`sayou-document`).
+    3.  **Refine:** Convert to standard Markdown (`sayou-refinery`).
+    4.  **Chunk:** Split based on structure and context (`sayou-chunking`).
+    5.  **Wrap:** Enforce company schema (`sayou-wrapper`).
+    6.  **Assemble:** Build the Knowledge Graph (`sayou-assembler`).
+    7.  **Load:** Persist to Vector DB or Graph DB (`sayou-loader`).
+
+### Phase 2: Inference Pipeline (The Solver)
+* **Goal:** Retrieve precise context and generate answers.
+* **Process:** This is a real-time, latency-sensitive process.
+    1.  **Extract:** Search KG/Vector Store for relevant nodes (`sayou-extractor`).
+    2.  **Generate:** Synthesize answers using LLMs (`sayou-llm`).
+
+---
+
+## 2. Smart Routing & Automation
+
+The core innovation of `sayou-rag` is the **`StandardPipeline`**. It acts as an intelligent router that decides how to process input data without user intervention.
+
+**Scenario A: "I have a PDF file."**
+
+```python
+rag.ingest("manual.pdf")
 ```
 
-- Connector: Collects data from APIs or local files
-- Refinery: Cleans, filters, or enriches raw content
-- Wrapper: Converts structured data into schema-aligned formats
-- Assembler: Links entities into a knowledge graph
-- LLM: Generates contextual answers using any compatible model
+* **Logic:** Detects file path -> Activates `DocumentPipeline` -> Full ETL Process.
 
-## ⚡ Getting Started
+**Scenario B: "I have raw text or JSON."**
+
+```python
+rag.ingest({"text": "..."})
+```
+
+* **Logic:** Detects Dict input -> Skips Parsing -> Activates `WrapperPipeline` directly.
+
+---
+
+## 3. Dependency Map
+
+`sayou-rag` sits at the top of the hierarchy. It does not contain complex parsing or splitting logic itself; it imports and orchestrates them.
+* **Upstream:** `sayou-connector`
+* **Midstream (Processing):** `sayou-document`, `sayou-refinery`, `sayou-chunking`
+* **Midstream (Structure):** `sayou-wrapper`, `sayou-assembler`
+* **Downstream:** `sayou-loader`, `sayou-extractor`, `sayou-llm`
+
+---
+
+## 4. Getting Started
+
+For detailed usage of the pipeline, refer to the **Quickstart** guide in the README or explore the specific guides for each component library in the left sidebar.
+
+To begin building your own RAG application, simply install the main package:
 
 ```python
 pip install sayou-rag
 ```
 
-① Basic RAG
-
-For most users — minimal setup, instant results.
+And initialize the standard pipeline:
 
 ```python
-from sayou.rag.pipeline.basic_pipeline import BasicRAG
-
-pipeline = BasicRAG()
-pipeline.initialize_all(model_path="models/gemma-3-1b-it")
-result = pipeline.run(query="Summarize today's subway routes.")
-
-print(result["answer"])
+from sayou.rag.pipeline.standard import StandardPipeline
+rag = StandardPipeline()
+rag.initialize()
 ```
-
-② Advanced RAG
-
-For experts — fully composable, multi-source pipelines.
-
-```python
-from sayou.rag.pipeline.advanced_pipeline import AdvancedRAG
-
-pipeline = AdvancedRAG()
-pipeline.initialize_all(config_path="configs/rag_config.yaml")
-result = pipeline.run(query="Summarize company internal policies.", contains_documents=True)
-```
-
-## Pipeline Composition
-
-| Stage       | Library           | Role                         |
-| ----------- | ----------------- | ---------------------------- |
-| `connector` | `sayou-connector` | Fetch API, DB, or file data  |
-| `refinery`  | `sayou-refinery`  | Text cleaning, normalization |
-| `wrapper`   | `sayou-wrapper`   | Schema alignment             |
-| `assembler` | `sayou-assembler` | Knowledge Graph construction |
-| `extractor` | `sayou-extractor` | Retrieval & indexing         |
-| `llm`       | `sayou-llm`       | Text generation & reasoning  |
-
-## Design Philosophy
-
-"Knowledge is not retrieved — it is orchestrated."
-
-Sayou RAG focuses on flow consistency rather than fixed templates.
-It provides:
-
-- Predictable default flows (Basic Mode)
-- Fully modular extension (Advanced Mode)
-- Pluggable LLM & Data Sources
-- Observability via built-in tracing

@@ -1,46 +1,96 @@
-from sayou.chunking.interfaces.base_splitter import BaseSplitter, ChunkingError
-from typing import List, Dict, Any
+from typing import List
+
+from ..interfaces.base_splitter import BaseSplitter
+from ..utils.schema import Document, Chunk
+from ..splitter.recursive import RecursiveSplitter
+from ..splitter.structure import StructureSplitter
 
 class ParentDocumentSplitter(BaseSplitter):
     """
-    (Tier 2 - 기본 기능) '작은 자식 청크'와 '큰 부모 청크'를
-    모두 생성하는 전략을 지원합니다.
+    Parent-Child 전략 복합체 (The Commander).
+    - 역할: '부모 전략'으로 문맥(Context)을 잡고, '자식 전략'으로 검색(Retrieval) 단위를 만듭니다.
+    - 특징: 단순 Fixed-Fixed 뿐만 아니라, Structure-Recursive, Semantic-Recursive 등 조합이 가능합니다.
     """
     component_name = "ParentDocumentSplitter"
-    SUPPORTED_TYPES = ["parent_child"]
+    SUPPORTED_TYPES = ["parent_document"]
 
-    def _do_split(self, split_request: Dict[str, Any]) -> List[Dict[str, Any]]:
-        content = split_request.get("content")
-        if not content: raise ChunkingError("Missing 'content' field.")
+    def _do_split(self, doc: Document) -> List[Chunk]:
+        """
         
-        # (이 전략은 T2 <-> T2 Composition을 사용하기 좋습니다)
-        # e.g., parent_splitter_type = "recursive_char"
-        # e.g., child_splitter_type = "fixed_length"
+        Args:
+            doc: 
         
-        parent_chunk_size = split_request.get("parent_chunk_size", 2000)
-        child_chunk_size = split_request.get("child_chunk_size", 400)
-        source_metadata = split_request.get("metadata", {})
+        Returns:
+            List: 
+        
+        Note:
 
-        # (실제 로직)
-        # 1. '부모 청크'를 생성합니다 (e.g., RecursiveCharacterSplitter 사용).
-        # 2. 각 '부모 청크' 내에서 '자식 청크'를 생성합니다.
-        # 3. '자식 청크'의 metadata에 'parent_chunk_id'를 추가합니다.
+        """
+        config = doc.metadata.get("config", {})
+        doc_id = doc.metadata.get("id", "doc")
         
-        # (이 전략은 반환 값이 다를 수 있습니다. e.g., 부모/자식 리스트)
-        # (여기서는 '자식 청크'만 반환한다고 가정)
+        # 1. 전략 선택 (Strategy Selection)
+        strategy_type = config.get("parent_strategy", "recursive") # default: size-based
         
-        self._log("ParentDocument splitting is not fully implemented yet.")
+        if strategy_type == "structure":
+            # 구조(Regex) 기반 부모 분할
+            parent_splitter = StructureSplitter()
+        else:
+            # 크기(Size) 기반 부모 분할 (Default)
+            parent_splitter = RecursiveSplitter()
+            
+        # 자식은 보통 Recursive(미세 분할)를 사용
+        child_splitter = RecursiveSplitter()
+
+        final_chunks = []
+
+        # 2. [Phase 1] 부모 청크 생성 (The Context)
+        # 부모용 설정 주입 (예: 2000자)
+        parent_config = config.copy()
+        parent_config["chunk_size"] = config.get("parent_chunk_size", 2000)
         
-        # (임시) 자식 청크 1개만 생성
-        child_chunk_text = content[:child_chunk_size]
-        child_metadata = source_metadata.copy()
-        child_metadata["parent_doc_id"] = source_metadata.get("doc_id", "doc")
-        
-        # (T1의 _build_chunks 사용 불가. 메타데이터가 다름)
-        result_chunks = [{
-            "chunk_content": child_chunk_text,
-            "metadata": child_metadata,
-            "chunk_id": f"{source_metadata.get('doc_id', 'doc')}_child_0"
-        }]
-        
-        return result_chunks
+        parent_doc_input = Document(content=doc.content, metadata={**doc.metadata, "config": parent_config})
+        parent_chunks = parent_splitter._do_split(parent_doc_input)
+
+        for p_idx, p_chunk in enumerate(parent_chunks):
+            # 부모 ID 재정의 (계층 구조 명확화)
+            parent_id = f"{doc_id}_parent_{p_idx}"
+            
+            # 3. 부모 청크 저장
+            p_chunk.update_metadata(
+                chunk_id=parent_id,
+                part_index=p_idx,
+                doc_level="parent",
+                child_ids=[] # 나중에 채움
+            )
+            final_chunks.append(p_chunk)
+
+            # 4. [Phase 2] 자식 청크 생성 (The Content)
+            child_doc_input = Document(
+                content=p_chunk.chunk_content,
+                metadata={
+                    **doc.metadata,
+                    "config": config, # 원래 설정(작은 size) 사용
+                    "parent_id": parent_id,  # 연결 고리
+                    "section_context": p_chunk.metadata.get("semantic_type", "unknown") # 문맥 상속
+                }
+            )
+            
+            child_chunks = child_splitter._do_split(child_doc_input)
+            
+            child_ids_list = []
+            for c_idx, c_chunk in enumerate(child_chunks):
+                child_id = f"{parent_id}_child_{c_idx}"
+                child_ids_list.append(child_id)
+                
+                c_chunk.update_metadata(
+                    chunk_id=child_id,
+                    part_index=c_idx,
+                    doc_level="child"
+                )
+                final_chunks.append(c_chunk)
+            
+            # 부모에게 자식 목록 역참조 추가 (양방향 연결)
+            p_chunk.metadata["child_ids"] = child_ids_list
+
+        return final_chunks
