@@ -106,7 +106,6 @@ nav:
     - Overview: sayou-agent/overview.md
   - Library Guides:
     - Overview: library-guides/overview.md
-    - Core: library-guides/core.md
     - Connector: library-guides/connector.md
     - Chunking: library-guides/chunking.md
     - Refinery: library-guides/refinery.md

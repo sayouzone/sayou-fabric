@@ -1,66 +1,80 @@
-# sayou-loader
+# Library Guide: sayou-loader
 
-`sayou-loader` is a low-level library focused on **translating** data into specific query languages (like SQL or Cypher) and **writing** that data to a destination. It is often used by `Assembler` or `Extractor` plugins.
+`sayou-loader` manages the **egress** of data from the pipeline. It connects the ephemeral processing world (Memory) to the persistent storage world (Disk/DB).
 
----
-
-## 1. Concepts (Core Interfaces)
-
-* **`BaseTranslator` (T1):** The contract for **translating** a `sayou` standard object (like an `Atom` or `KnowledgeGraph`) into a language string (e.g., an `INSERT` statement or a `CREATE` node query).
-* **`BaseWriter` (T1):** The contract for **executing** the translated string(s) against a target database or writing to a file.
+It is designed to be the final, reliable step in the `sayou-rag` ingestion process.
 
 ---
 
-## 2. T2 Usage (Default Components)
+## 1. Core Concepts & Architecture
 
-The T2 components in `sayou-loader` are designed to be used as tools by other libraries.
-
-### Using `SqlTranslator` (T2)
-(Placeholder for text explaining this T2 component can take an `Atom` and, based on a schema, generate a standard SQL `INSERT` or `UPDATE` statement.)
-
-### Using `CypherTranslator` (T2)
-(Placeholder for text explaining this T2 component can take a `KnowledgeGraph` object and generate a series of `CREATE` and `MERGE` Cypher statements.)
-
-### Using `FileWriter` (T2)
-(Placeholder for text explaining this T2 component implements `BaseWriter` and simply writes string data (like from `JsonTranslator`) to a local file.)
-
----
-
-## 3. T3 Plugin Development
-
-T3 plugins in this library are highly specific adapters for cloud or specialized databases.
-
-### Tutorial: Building a `BigQueryWriter` (T3)
-(Placeholder for a step-by-step text tutorial.)
-1.  **Create your class:** Define `BigQueryWriter` in the `plugins/` folder.
-2.  **Inherit T1:** Make your class inherit from `BaseWriter` (T1).
-3.  **Implement `_do_write`:** This method receives data (e.g., from `SqlTranslator`).
-4.  **Add Logic:** Inside the method, use the `google-cloud-bigquery` client to connect and execute the load job.
-5.  **Use it:** Your `BigQueryWriter` can now be used by any component (like `Assembler`) that needs to write to BigQuery.
-
----
-
-## 4. API Reference
+The library follows the standard **3-Tier Architecture** with a focus on fail-safety.
 
 ### Tier 1: Interfaces
+* **`BaseLoader`**: The abstract base class. It employs the **Template Method Pattern**, implementing standardized logging and error handling in the `load()` method while delegating actual logic to `_do_load()`.
 
-| Interface | File | Description |
-| :--- | :--- | :--- |
-| `BaseTranslator`| `interfaces/base_translator.py`| Contract for translating objects to query strings. |
-| `BaseWriter` | `interfaces/base_writer.py` | Contract for writing/executing data. |
+### Tier 2: Templates (The Defaults)
+* **`FileLoader`**: The workhorse. It saves data to the local filesystem. It intelligently handles different data types:
+    * `Dict/List` -> JSON file
+    * `Bytes` -> Binary file
+    * `String` -> Text file
+    * `Other` -> Pickle file
 
-### Tier 2: Default Components
+### Orchestrator: Pipeline & Fallback
+The `LoaderPipeline` contains critical logic: **Smart Fallback**.
 
-| Component | Directory | Implements |
-| :--- | :--- | :--- |
-| `SqlTranslator` | `translator/` | `BaseTranslator` |
-| `CypherTranslator`| `translator/` | `BaseTranslator` |
-| `JsonTranslator` | `translator/` | `BaseTranslator` |
-| `FileWriter` | `writer/` | `BaseWriter` |
+    if handler_not_found:
+        log_warning("Fallback to FileLoader")
+        handler = FileLoader()
 
-### Tier 3: Official Plugins
+This ensures that long-running pipeline jobs do not end in data loss due to a misconfiguration or network issue at the very last step.
 
-| Plugin | Directory | Implements/Wraps |
-| :--- | :--- | :--- |
-| `BigQueryWriter` | `plugins/` | `BaseWriter` (T1) |
-| `Neo4jWriter` | `plugins/` | `BaseWriter` (T1) |
+---
+
+## 2. Usage Examples
+
+### 2.1. Saving Knowledge Graphs (Standard RAG)
+
+In a typical `sayou-rag` workflow, the Assembler outputs a dictionary representing the graph.
+
+```python
+loader.run(
+    data=kg_graph_dict, 
+    destination="data/kg_v1.json", 
+    target_type="file"
+)
+```
+
+### 2.2. Integrating with Graph Databases (Tier 3)
+
+You can extend `sayou-loader` to write directly to databases like Neo4j.
+
+```python
+# (Requires sayou-loader[neo4j] or custom plugin)
+loader.run(
+    data=kg_graph_dict,
+    destination="bolt://neo4j:password@localhost:7687",
+    target_type="neo4j"
+)
+```
+
+---
+
+## 3. Creating Custom Loaders (Tier 3)
+
+To support a new storage backend (e.g., AWS S3), simply inherit from `BaseLoader`.
+
+```python
+from sayou.loader.interfaces.base_loader import BaseLoader
+
+class S3Loader(BaseLoader):
+    component_name = "S3Loader"
+    SUPPORTED_TYPES = ["s3"]
+
+    def _do_load(self, data, destination, **kwargs):
+        # Logic to upload data to S3 bucket (destination)
+        s3_client.put_object(...)
+        return True
+```
+
+Register this loader with the pipeline using the `extra_loaders` argument during initialization.
