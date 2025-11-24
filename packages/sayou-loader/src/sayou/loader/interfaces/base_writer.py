@@ -1,36 +1,50 @@
 from abc import abstractmethod
 from typing import Any
+
 from sayou.core.base_component import BaseComponent
-from sayou.loader.core.exceptions import WriterError
+
+from ..core.exceptions import WriterError
 
 class BaseWriter(BaseComponent):
     """
-    (Tier 1) '변환된 데이터'를 '영구 저장소'(e.g., File, DB)에
-    '쓰는(Write)' 모든 Writer의 인터페이스. (Template Method)
+    (Tier 1) 데이터를 목적지에 적재하는 모든 Writer의 인터페이스.
+    Template Method 패턴을 사용하여 로깅과 예외 처리를 강제합니다.
     """
     component_name = "BaseWriter"
-    
-    def write(self, translated_data: Any):
+    SUPPORTED_TYPES = [] 
+
+    def write(self, data: Any, destination: str, **kwargs) -> bool:
         """
-        [공통 골격] 쓰기 프로세스를 실행하고 로깅/예외처리를 수행합니다.
-        Tier 2/3는 이 메서드를 오버라이드하지 않습니다.
+        [공통 골격] 적재 프로세스를 제어합니다. (Override 금지 권장)
+        """
+        self._log(f"Starting write to '{destination}' (Type: {type(data).__name__})...")
         
-        :param translated_data: Translator가 반환한 데이터
-        """
-        self._log(f"Writing data of type '{type(translated_data)}'...")
         try:
-            # Tier 2/3가 '알맹이'를 구현
-            self._do_write(translated_data)
+            # Pre-check logic (옵션)
+            if not data:
+                self._log("Data is empty. Skipping write.")
+                return False
+
+            # Tier 2/3의 실제 구현 호출
+            result = self._do_write(data, destination, **kwargs)
             
-            self._log(f"Write complete.")
+            if result:
+                self._log("Write completed successfully.")
+            else:
+                self._log("Write completed but returned False.")
+            
+            return result
+
         except Exception as e:
-            self._log(f"Write failed: {e}")
-            raise WriterError(f"Write failed: {e}")
+            self._log(f"Wite failed: {e}")
+            # 여기서 에러를 삼킬지, 다시 던질지는 정책 결정
+            # 파이프라인의 중단을 막으려면 False 반환, 멈추려면 raise
+            return False 
 
     @abstractmethod
-    def _do_write(self, translated_data: Any):
+    def _do_write(self, data: Any, destination: str, **kwargs) -> bool:
         """
-        [구현 필수] 실제 쓰기 로직입니다.
-        (e.g., file.write(), db_session.execute_batch())
+        [구현 필수] 실제 적재 로직을 구현하세요.
+        성공 시 True, 실패 시 False를 반환하세요.
         """
         raise NotImplementedError

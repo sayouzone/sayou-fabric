@@ -1,48 +1,64 @@
-from typing import Any
+from typing import Any, Dict, List, Optional
+
 from sayou.core.base_component import BaseComponent
-from .interfaces.base_translator import BaseTranslator
+
 from .interfaces.base_writer import BaseWriter
+from .writer.file_writer import FileWriter
+# from .plugins.neo4j_writer import Neo4jWriter
 
 class LoaderPipeline(BaseComponent):
     """
-    (Orchestrator) 'Translator'와 'Writer'를
-    '조립'하여 'Load' 파이프라인을 실행합니다.
+    (Orchestrator) 데이터를 적절한 저장소로 보냅니다.
+    적절한 로더를 찾지 못하면 로컬 파일로 저장하는 안전장치(Fallback)를 가집니다.
     """
     component_name = "LoaderPipeline"
 
-    def __init__(self, 
-                translator: BaseTranslator,
-                writer: BaseWriter):
+    def __init__(self, extra_writers: Optional[List[BaseWriter]] = None):
+        self.handler_map: Dict[str, BaseWriter] = {}
         
-        self.translator = translator
-        self.writer = writer
-        self._log("Pipeline initialized with Translator and Writer.")
+        default_writers = [
+            FileWriter(),
+            # Neo4jWriter()
+        ]
+        
+        self._register(default_writers)
+        if extra_writers:
+            self._register(extra_writers)
+
+    def _register(self, writers: List[BaseWriter]):
+        for writer in writers:
+            for t in getattr(writer, "SUPPORTED_TYPES", []):
+                self.handler_map[t] = writer
 
     def initialize(self, **kwargs):
-        """
-        내부 컴포넌트(Translator, Writer)에 설정을 주입합니다.
-        
-        e.g., kwargs = {
-            "filepath": "output.json", (Writer가 사용)
-            "format": "jsonl",        (Writer가 사용)
-            "neo4j_uri": "bolt://..." (Writer가 사용)
-        }
-        """
-        self.translator.initialize(**kwargs)
-        self.writer.initialize(**kwargs)
+        for handler in set(self.handler_map.values()):
+            handler.initialize(**kwargs)
 
-    def run(self, input_object: Any):
+    def run(
+        self, 
+        data: Any, 
+        destination: str, 
+        target_type: str = "file", 
+        **kwargs
+    ) -> bool:
         """
-        [Translator -> Writer] 파이프라인을 실행합니다.
-        
-        :param input_object: e.g., Assembler가 생성한 KnowledgeGraph
+        Args:
+            target_type: 저장소 타입 ('neo4j', 'file' 등).
         """
-        self._log(f"Loader pipeline run started for object type {type(input_object)}.")
+        handler = self.handler_map.get(target_type)
         
-        # 1. (Translator) e.g., KG -> Cypher List
-        translated_data = self.translator.translate(input_object)
+        if not handler:
+            self._log(f"No writer found for '{target_type}'. Fallback to 'file'.", level="warning")
+            handler = self.handler_map.get("file")
+            
+            if "://" in destination: 
+                destination = "fallback_dump.json"
+                self._log(f"Destination changed to local file: {destination}")
+
+        self._log(f"Loading data using {handler.component_name}...")
         
-        # 2. (Writer) e.g., Cypher List -> DB
-        self.writer.write(translated_data)
-        
-        self._log(f"Loader run finished successfully.")
+        try:
+            return handler.write(data, destination, **kwargs)
+        except Exception as e:
+            self._log(f"Pipeline Error: {e}")
+            return False

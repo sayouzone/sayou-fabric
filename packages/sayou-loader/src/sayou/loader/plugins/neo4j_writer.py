@@ -2,7 +2,6 @@ from typing import List
 from sayou.loader.interfaces.base_writer import BaseWriter
 from sayou.loader.core.exceptions import WriterError
 
-# (이 파일은 'pip install neo4j'가 필요함 -> Tier 3)
 try:
     from neo4j import GraphDatabase
 except ImportError:
