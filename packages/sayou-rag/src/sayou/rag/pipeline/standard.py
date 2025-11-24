@@ -1,176 +1,154 @@
+import os
+import json
+
 from typing import Dict, Any, Optional
 
 from sayou.core.base_component import BaseComponent
-
-# import os
-# import sys
-
-# CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-# ROOT_DIR = CURRENT_DIR
-# while not os.path.exists(os.path.join(ROOT_DIR, "packages")):
-#     parent = os.path.dirname(ROOT_DIR)
-#     if parent == ROOT_DIR:
-#         raise FileNotFoundError("'packages' folder not found.")
-#     ROOT_DIR = parent
-
-# PACKAGES_ROOT = os.path.join(ROOT_DIR, "packages")
-# sys.path.insert(0, os.path.join(PACKAGES_ROOT, "sayou-core", "."))
-# sys.path.insert(0, os.path.join(PACKAGES_ROOT, "sayou-connector", "."))
-
 from sayou.connector.pipeline import ConnectorPipeline
 from sayou.document.pipeline import DocumentPipeline
 from sayou.refinery.pipeline import RefineryPipeline
 from sayou.chunking.pipeline import ChunkingPipeline
 from sayou.wrapper.pipeline import WrapperPipeline
 from sayou.assembler.pipeline import AssemblerPipeline
-from ..components.simple_loader import SimpleLoader
-# from ..components.simple_extractor import SimpleExtractor
-# from ..components.simple_llm import SimpleLLM
+from sayou.loader.pipeline import LoaderPipeline
+
+from sayou.extractor.pipeline import ExtractorPipeline
+from sayou.llm.pipeline import LLMPipeline
 
 class StandardPipeline(BaseComponent):
     """
-    (Tier 1) Sayou RAG의 표준 파이프라인.
-    - ingest(): 문서 -> KG 변환 및 저장 (배치)
-    - ask(): 질문 -> 검색 -> 답변 (실시간)
+    (Tier 1) 데이터 수집부터 지식 적재, 추론까지 담당하는 총괄 파이프라인.
     """
     component_name = "StandardPipeline"
 
     def __init__(self):
-        self.connector = ConnectorPipeline()
+        self.con_pipe = ConnectorPipeline()
         self.doc_pipe = DocumentPipeline()
         self.ref_pipe = RefineryPipeline()
         self.chunk_pipe = ChunkingPipeline()
         self.wrap_pipe = WrapperPipeline()
         self.asm_pipe = AssemblerPipeline()
-        self.loader = SimpleLoader()
-        # self.loader = LoaderPipeline()
-        # self.extractor = SimpleExtractor()
-        # self.llm = SimpleLLM()
+        self.load_pipe = LoaderPipeline()
+        # self.ext_pipe = ExtractorPipeline()
+        # self.llm_pipe = LLMPipeline()
 
     def initialize(self, **kwargs):
         """모든 하위 파이프라인 초기화"""
-        self.connector.initialize(**kwargs)
+        self.con_pipe.initialize(**kwargs)
         self.doc_pipe.initialize(**kwargs)
         self.ref_pipe.initialize(**kwargs)
         self.chunk_pipe.initialize(**kwargs)
         self.wrap_pipe.initialize(**kwargs)
         self.asm_pipe.initialize(**kwargs)
-        # self.loader.initialize(**kwargs)
+        self.load_pipe.initialize(**kwargs)
         self._log("All sub-pipelines initialized.")
 
     # ====================================================
-    # Phase 1: Ingestion (Smart Routing ETL)
+    # Phase 1: Ingestion (Accumulative Load)
     # ====================================================
     def ingest(
         self, 
         source: str, 
         strategy: str = "local_scan", 
         save_to: str = "knowledge_graph.json",
+        loader_type: str = "file", 
+        overwrite: bool = False,
         **kwargs
     ) -> Dict[str, Any]:
         
-        self._log(f"--- Starting Ingestion: {source} ({strategy}) ---")
-        
-        total_nodes = 0
-        processed_count = 0
+        self._log(f"--- Starting Ingestion: {source} -> {save_to} ---")
 
-        # 1. Connector Loop
-        for fetch_result in self.connector.run(source, strategy=strategy, **kwargs):
-            source_uri = fetch_result.task.uri 
-            
+        master_graph = {"nodes": [], "edges": [], "summary": {"node_count": 0, "edge_count": 0}}
+        if not overwrite and loader_type == "file" and os.path.exists(save_to):
+            try:
+                self._log(f"Loading existing KG from '{save_to}'...")
+                with open(save_to, "r", encoding="utf-8") as f:
+                    existing = json.load(f)
+                    self._merge_graphs(master_graph, existing)
+            except Exception as e:
+                self._log(f"Failed to load existing KG: {e}")
+
+        processed_count = 0
+        new_nodes_count = 0
+
+        for fetch_result in self.con_pipe.run(source, strategy=strategy, **kwargs):
+            source_uri = fetch_result.task.uri
             try:
                 if not fetch_result.success:
-                    self._log(f"Skipping failed fetch: {source_uri} - {fetch_result.error}")
                     continue
 
-                # 2. 데이터 처리 (라우팅)
-                kg_graph = self._process_data(fetch_result)
-                
-                if kg_graph:
-                    # 3. Loader (저장)
-                    # (파일 덮어쓰기 방지 로직이 필요하지만 데모용으로 단순화)
-                    # self.loader.run(kg_graph, destination=save_to, target_type="file")
-                    self.loader.load(kg_graph, destination=save_to)
+                current_graph = self._process_data(fetch_result)                
+                if current_graph:
+                    self._merge_graphs(master_graph, current_graph)
                     
-                    node_count = kg_graph.get("summary", {}).get("node_count", 0)
-                    total_nodes += node_count
+                    count = current_graph.get("summary", {}).get("node_count", 0)
+                    new_nodes_count += count
                     processed_count += 1
-                    self._log(f"Processed {source_uri}: {node_count} nodes created.")
+                    self._log(f"Merged {os.path.basename(source_uri)}: +{count} nodes")
 
             except Exception as e:
                 self._log(f"Error processing {source_uri}: {e}")
 
-        self._log(f"Ingestion finished. Processed: {processed_count}, Total Nodes: {total_nodes}")
-        return {"status": "success", "processed_items": processed_count, "total_nodes": total_nodes}
+        self._log(f"Saving total {len(master_graph['nodes'])} nodes to {save_to}...")
+        
+        success = self.load_pipe.run(
+            data=master_graph, 
+            destination=save_to, 
+            target_type=loader_type
+        )
+        
+        return {
+            "status": "success" if success else "failed", 
+            "processed_files": processed_count,
+            "total_nodes": len(master_graph['nodes'])
+        }
+
+    def _merge_graphs(self, base_graph: Dict[str, Any], new_graph: Dict[str, Any]):
+        """
+        (Helper) 두 개의 그래프 딕셔너리를 병합합니다.
+        Node ID 충돌 시, 새로운 것으로 덮어쓰거나 유지하는 정책을 적용합니다.
+        """
+        node_map = {n['id']: n for n in base_graph.get('nodes', [])}
+        for node in new_graph.get('nodes', []):
+            node_map[node['id']] = node
+
+        base_graph['nodes'] = list(node_map.values())
+        base_edges = base_graph.get('edges', [])
+        new_edges = new_graph.get('edges', [])
+        base_edges.extend(new_edges)
+        base_graph['edges'] = base_edges
+
+        base_graph['summary'] = {
+            "node_count": len(base_graph['nodes']),
+            "edge_count": len(base_graph['edges'])
+        }
 
     def _process_data(self, result) -> Optional[Dict[str, Any]]:
-        """
-        단일 FetchResult를 처리하여 KG Graph를 반환하는 내부 라우터.
-        """
         data = result.data
         source_uri = result.task.uri
         source_name = os.path.basename(source_uri) if source_uri else "unknown_source"
 
-        # Case A: Binary File (PDF, DOCX...)
         if isinstance(data, bytes):
-            self._log(f"Route [Binary]: Parsing document {source_name}")
-            
-            # Doc -> Refinery -> Markdown String
             doc_obj = self.doc_pipe.run(data, source_name)
             doc_json = doc_obj.model_dump()
             blocks = self.ref_pipe.run(doc_json)
-            
-            # (Bridge Logic) 리스트를 텍스트로 병합
-            # TODO: 이 로직은 추후 sayou-refinery 내부의 'Aggregator' 등으로 고도화 가능
             md_content = "\n\n".join([b.content for b in blocks if b.type == "md"])
-            
             return self._process_text(md_content, source_name)
 
-        # Case B: Structured Text/Dict (Web Crawl)
         elif isinstance(data, dict):
-            self._log(f"Route [Structured Dict]: Converting to Markdown {source_name}")
-            
-            # (Bridge Logic) 딕셔너리를 텍스트로 변환
-            # TODO: 이 로직도 별도의 Transformer가 담당해야 할 수 있음
             title = data.get("title", "No Title")
             content = data.get("content", "")
-            # 링크 정보 제거하고 본문만 사용
             md_content = f"# {title}\n\n{content}"
-            
             return self._process_text(md_content, source_name)
-
-        # Case C: List (DB Records) -> Wrapper 직행 (미구현)
-        elif isinstance(data, list):
-            self._log(f"Route [DB Records]: Skipping (Adapter needed)", level="warning")
-            return None
-
-        else:
-            self._log(f"Unknown data type: {type(data)}", level="warning")
-            return None
+            
+        return None
 
     def _process_text(self, text_content: str, source_name: str) -> Dict[str, Any]:
-        """
-        [Internal Helper] Text -> Chunking -> Wrapper -> Assembler
-        현재는 하드코딩되어 있지만, 향후 'TextProcessingPipeline' 등으로 모듈화 가능.
-        """
-        if not text_content.strip():
-            return None
-
-        # 1. Chunking (Markdown Strategy)
-        chunk_req = {
-            "type": "markdown",
-            "content": text_content,
-            "metadata": {"source": source_name},
-            "chunk_size": 1000
-        }
+        if not text_content.strip(): return None
+        chunk_req = {"type": "markdown", "content": text_content, "metadata": {"source": source_name}, "chunk_size": 1000}
         chunks = self.chunk_pipe.run(chunk_req)
-
-        # 2. Wrapper (Document Chunk Adapter)
         wrapped_data = self.wrap_pipe.run(chunks, adapter_type="document_chunk")
-
-        # 3. Assembler (Hierarchy Strategy)
         kg_graph = self.asm_pipe.run(wrapped_data, strategy="hierarchy")
-        
         return kg_graph
 
     # ====================================================
@@ -179,11 +157,9 @@ class StandardPipeline(BaseComponent):
     def ask(self, query: str, load_from: str = "knowledge_graph.json") -> str:
         self._log(f"--- Starting Inference: {query} ---")
 
-        # 1. Extractor (Storage -> Context)
-        context = self.extractor.retrieve(query, source=load_from)
+        context = self.ext_pipe.retrieve(query, source=load_from)
 
-        # 2. LLM (Context + Query -> Answer)
-        answer = self.llm.generate(query, context)
+        answer = self.llm_pipe.generate(query, context)
 
         self._log("Inference finished.")
         return answer
