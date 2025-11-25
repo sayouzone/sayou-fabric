@@ -19,7 +19,14 @@ from ..models import (
 
 class DocxParser(BaseDocumentParser):
     component_name = "DocxParser"
-    SUPPORTED_TYPES = [".docx"]
+    SUPPORTED_TYPES = [".docx", ".doc"]
+
+    # XML 네임스페이스 정의
+    NAMESPACES = {
+        'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+        'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+        'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing'
+    }
 
     def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
         if DocxDocument is None:
@@ -153,7 +160,7 @@ class DocxParser(BaseDocumentParser):
     def _extract_inline_image(self, run, doc, page_num, ocr_enabled) -> Optional[ImageElement]:
         """_process_image_data 헬퍼 사용"""
         try:
-            blip_elements = run._element.findall('.//a:blip', namespaces=run._element.nsmap)
+            blip_elements = run._element.findall('.//a:blip', namespaces=self.NAMESPACES)
             for blip in blip_elements:
                 rId = blip.get(qn('r:embed'))
                 if rId:

@@ -1,27 +1,28 @@
 from abc import abstractmethod
-from typing import List, Any
+from typing import Iterator
+
+from ..core.models import FetchTask, FetchResult
+
 from sayou.core.base_component import BaseComponent
 
 class BaseGenerator(BaseComponent):
     """
-    (Tier 1) "더(More)" 수집할 대상을 탐색하는 모든 Generator의 인터페이스.
-    (e.g., HTML에서 <a> 태그 찾기, API 응답에서 'next_page' URL 찾기)
+    (Tier 1) '무엇을 수집할지' 결정하는 네비게이터.
+    Iterator 프로토콜을 따르며, Fetch 결과를 피드백 받아 다음 경로를 수정할 수도 있음.
     """
     component_name = "BaseGenerator"
-
-    def generate(self, raw_data: Any) -> List[str]:
-        """[공통 골격] Fetch된 데이터에서 다음 Seed 리스트를 생성합니다."""
-        try:
-            # Tier 2/3가 '알맹이'를 구현
-            return self._do_generate(raw_data)
-        except Exception as e:
-            self._log(f"Failed to generate new seeds: {e}")
-            return [] # 생성 실패 시 빈 리스트 반환
+    SUPPORTED_TYPES = []
 
     @abstractmethod
-    def _do_generate(self, raw_data: Any) -> List[str]:
+    def generate(self) -> Iterator[FetchTask]:
         """
-        [구현 필수] 실제 Gerenate 로직입니다.
-        (e.g., <a> 태그 파싱, 'next_page_token' 파싱)
+        [Generator] 수집할 Task를 하나씩 생성하여 반환(yield)합니다.
         """
         raise NotImplementedError
+
+    def feedback(self, result: FetchResult):
+        """
+        (Optional) Fetcher의 결과를 보고 다음 탐색 전략을 수정해야 할 때 사용.
+        예: 웹 크롤러(HTML에서 링크 추출), API(다음 페이지 토큰 확인)
+        """
+        pass
