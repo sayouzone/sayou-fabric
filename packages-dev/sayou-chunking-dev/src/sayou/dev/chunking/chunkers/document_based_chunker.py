@@ -50,3 +50,44 @@ class DocumentBasedChunker(BaseChunker):
             chunks.append(doc.page_content)
         
         return chunks
+
+if __name__ == "__main__":
+    pdf_file = "./data/Salesforce FY25 Annual Report.pdf"
+    
+    chunker = DocumentBasedChunker()
+    chunks = chunker.chunk(pdf_file)
+
+
+"""
+Document 1 Content:
+Salesforce FY25 Annual Report
+Need Help? Ask Agentforce.
+Leading the
+AI Agent Revolution
+FY25 Annual Report
+© 2025 Salesforce, Inc. All rights reserved. Salesforce and salesforce.com are registered trademarks of Salesforce, Inc.  
+Salesforce owns other registered and unregistered trademarks. Other names used herein may be trademarks of their respective owners.
+salesforce.com
+
+
+Document 2 Content:
+Worldwide Corporate Headquarters
+Salesforce, Inc.
+Salesforce Tower
+415 Mission Street, 3rd Floor
+San Francisco, CA 94105, USA
+1-800-NO-SOFTWARE
+
+
+Document 3 Content:
+1  “Remaining Performance Obligation” represents future revenues that are under contract but have not yet been recognized.
+2 Non-GAAP operating margin is a non-GAAP financial measure. Refer to page 6 for a reconciliation of GAAP to non-GAAP financial measures.
+FY25 Highlights
+FY25 marked an important moment of 
+opportunity and possibility . AI is reshaping 
+business, and Salesforce is leading the way with 
+record-breaking momentum. We just delivered 
+our highest revenue, operating margin, and ca
+
+
+"""

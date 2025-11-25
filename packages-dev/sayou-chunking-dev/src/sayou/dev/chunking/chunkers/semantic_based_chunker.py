@@ -66,3 +66,24 @@ if __name__ == "__main__":
     
     chunker = SemanticBasedChunker()
     chunks = chunker.chunk(text)
+
+
+"""
+modules.json: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 349/349 [00:00<00:00, 1.97MB/s]
+config_sentence_transformers.json: 100%|████████████████████████████████████████████████████████████████████████████| 116/116 [00:00<00:00, 595kB/s]
+README.md: 10.5kB [00:00, 9.58MB/s]
+sentence_bert_config.json: 100%|██████████████████████████████████████████████████████████████████████████████████| 53.0/53.0 [00:00<00:00, 381kB/s]
+config.json: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 612/612 [00:00<00:00, 6.50MB/s]
+model.safetensors: 100%|███████████████████████████████████████████████████████████████████████████████████████| 90.9M/90.9M [00:07<00:00, 11.8MB/s]
+tokenizer_config.json: 100%|███████████████████████████████████████████████████████████████████████████████████████| 350/350 [00:00<00:00, 2.52MB/s]
+vocab.txt: 232kB [00:00, 14.5MB/s]
+tokenizer.json: 466kB [00:00, 26.1MB/s]
+special_tokens_map.json: 100%|██████████████████████████████████████████████████████████████████████████████████████| 112/112 [00:00<00:00, 557kB/s]
+config.json: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 190/190 [00:00<00:00, 1.57MB/s]
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+        - Avoid using `tokenizers` before the fork if possible
+        - Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+Semantic Chunk 1: Astronauts are sent to space., Interstellar deals with space exploration., Space travel involves many challenges.
+Semantic Chunk 2: The Martian is about survival on Mars.
+"""

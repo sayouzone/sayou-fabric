@@ -12,6 +12,8 @@ class ContentAwareChunker(BaseChunker):
     """
     Content-aware chunker
 
+    Content-Aware Chunking
+
     This method adapts chunking based on content characteristics (e.g., chunking text at paragraph level, tables as separate entities).
 
     When to Use:

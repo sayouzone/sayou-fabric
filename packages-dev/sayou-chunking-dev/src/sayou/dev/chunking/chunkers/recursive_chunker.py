@@ -14,6 +14,8 @@ class RecursiveChunker(BaseChunker):
     """
     Recursive chunker
 
+    Recursive Chunking
+
     Recursive chunking divides text in a hierarchical, iterative manner using a set of separations (such as newline characters or spaces). This method allows for more structured chunking based on content boundaries.
 
     Explanation:

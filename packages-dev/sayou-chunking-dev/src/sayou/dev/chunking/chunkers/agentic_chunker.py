@@ -14,6 +14,8 @@ class AgenticChunker(BaseChunker):
     """
     Agentic chunker
 
+    Agentic Chunking
+
     Agentic chunking leverages large language models (LLMs) to determine how to chunk the text based on its context. This is a more dynamic approach where the model itself decides how much and what part of the text should form a chunk.
 
     Explanation:

@@ -16,6 +16,8 @@ class TopicBasedChunker(BaseChunker):
     """
     Topic-based chunker
 
+    Keyword-Based Chunking
+
     This strategy splits the document based on topics using techniques like Latent Dirichlet Allocation (LDA) or other topic modeling algorithms to segment the text.
 
     When to Use:
@@ -50,7 +52,7 @@ class TopicBasedChunker(BaseChunker):
     def _do_chunk(self, 
         text: str,
         num_topics: int = 3) -> List[str]:
-        
+
         # Split the text into sentences for chunking
         sentences = text.split('. ')
 
