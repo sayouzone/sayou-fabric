@@ -1,7 +1,9 @@
 from abc import abstractmethod
 from typing import Dict, Any, List
+
 from sayou.core.base_component import BaseComponent
-from sayou.rag.core.exceptions import RAGError
+
+from ..core.exceptions import BrainError
 
 class BaseRouter(BaseComponent):
     component_name = "BaseRouter"
@@ -13,12 +15,12 @@ class BaseRouter(BaseComponent):
             route_result = self._do_route(query, chat_history or [])
             
             if "domain" not in route_result or "confidence" not in route_result:
-                raise RAGError("Route result must contain 'domain' and 'confidence'.")
+                raise BrainError("Route result must contain 'domain' and 'confidence'.")
                 
             self._log(f"Route result: {route_result}")
             return route_result
         except Exception as e:
-            raise RAGError(f"Routing failed: {e}")
+            raise BrainError(f"Routing failed: {e}")
 
     @abstractmethod
     def _do_route(self, query: str, chat_history: List) -> Dict[str, Any]:

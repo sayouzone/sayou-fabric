@@ -1,7 +1,9 @@
 from abc import abstractmethod
-from typing import Dict, Any, List
+from typing import List
+
 from sayou.core.base_component import BaseComponent
-from sayou.rag.core.exceptions import RAGError
+
+from ..core.exceptions import BrainError
 
 class BaseTransformer(BaseComponent):
     component_name = "BaseTransformer"
@@ -13,12 +15,12 @@ class BaseTransformer(BaseComponent):
             transformed_queries = self._do_transform(query, chat_history or [])
             
             if not isinstance(transformed_queries, list):
-                raise RAGError("Transform result must be a list of strings.")
+                raise BrainError("Transform result must be a list of strings.")
                 
             self._log(f"Transformed into {len(transformed_queries)} sub-queries.")
             return transformed_queries
         except Exception as e:
-            raise RAGError(f"Query transformation failed: {e}")
+            raise BrainError(f"Query transformation failed: {e}")
 
     @abstractmethod
     def _do_transform(self, query: str, chat_history: List) -> List[str]:

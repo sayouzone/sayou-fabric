@@ -1,7 +1,9 @@
 from abc import abstractmethod
-from typing import Dict, Any, List
+from typing import Dict, Any
+
 from sayou.core.base_component import BaseComponent
-from sayou.rag.core.exceptions import RAGError
+
+from ..core.exceptions import BrainError
 
 class BaseTracer(BaseComponent):
     component_name = "BaseTracer"
@@ -14,12 +16,12 @@ class BaseTracer(BaseComponent):
             trace_result = self._do_trace(route_result)
             
             if "source_type" not in trace_result:
-                raise RAGError("Trace result must contain 'source_type'.")
+                raise BrainError("Trace result must contain 'source_type'.")
                 
             self._log(f"Data location found: {trace_result}")
             return trace_result
         except Exception as e:
-            raise RAGError(f"Data tracing failed: {e}")
+            raise BrainError(f"Data tracing failed: {e}")
 
     @abstractmethod
     def _do_trace(self, route_result: Dict[str, Any]) -> Dict[str, Any]:

@@ -1,7 +1,8 @@
-from sayou.rag.interfaces.base_tracer import BaseTracer
-from sayou.rag.core.exceptions import RAGError
-from sayou.extractor.pipeline import ExtractorPipeline # 👈 '도구' 타입
 from typing import Dict, Any
+
+from sayou.extractor.pipeline import ExtractorPipeline
+
+from ..interfaces.base_tracer import BaseTracer
 
 class SayouKGTracer(BaseTracer):
     """

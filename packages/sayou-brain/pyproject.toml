@@ -6,12 +6,12 @@ build-backend = "hatchling.build"
 # 1. 패키지 기본 정보
 # -----------------
 [project]
-name = "sayou-rag"
+name = "sayou-brain"
 version = "0.1.0"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
-description = "RAG components for the Sayou Data Platform"
+description = "Brain components for the Sayou Data Platform"
 readme = "README.md"
 license = { file = "../../LICENSE" }
 requires-python = ">=3.9"

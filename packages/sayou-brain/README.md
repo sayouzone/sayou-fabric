@@ -1,18 +1,18 @@
-# sayou-rag
+# sayou-brain
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/sayouzone/sayou-fabric/ci.yml?branch=main)](https://github.com/sayouzone/sayou-fabric/actions)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://sayouzone.github.io/sayou-fabric/sayou-agent/overview/)
 
-`sayou-rag` is the **orchestrator** of the Sayou Data Platform. It integrates all individual libraries (`sayou-document`, `sayou-chunking`, `sayou-assembler`, etc.) into a single, coherent pipeline for Retrieval-Augmented Generation (RAG).
+`sayou-brain` is the **orchestrator** of the Sayou Data Platform. It integrates all individual libraries (`sayou-document`, `sayou-chunking`, `sayou-assembler`, etc.) into a single, coherent pipeline for Retrieval-Augmented Generation.
 
-While other libraries focus on specific tasks (parsing, splitting, assembling), `sayou-rag` focuses on the **lifecycle of data**—from ingestion to inference. It serves as the primary entry point for developers building data-centric AI applications.
+While other libraries focus on specific tasks (parsing, splitting, assembling), `sayou-brain` focuses on the **lifecycle of data**—from ingestion to inference. It serves as the primary entry point for developers building data-centric AI applications.
 
 ## Philosophy
 
 **"One Interface, Two Worlds."**
-RAG consists of two distinct phases: **Ingestion** (Write/ETL) and **Inference** (Read/QA).
-`sayou-rag` provides a unified `StandardPipeline` that abstracts away the complexity of underlying modules, offering simple methods like `ingest()` and `ask()` to bridge these two worlds.
+Brain consists of two distinct phases: **Ingestion** (Write/ETL) and **Inference** (Read/QA).
+`sayou-brain` provides a unified `StandardPipeline` that abstracts away the complexity of underlying modules, offering simple methods like `ingest()` and `ask()` to bridge these two worlds.
 
 ## 🚀 Key Features
 
@@ -26,7 +26,7 @@ RAG consists of two distinct phases: **Ingestion** (Write/ETL) and **Inference**
 ## 📦 Installation
 
 ```python
-pip install sayou-rag
+pip install sayou-brain
 ```
 
 ## ⚡ Quickstart
@@ -36,11 +36,11 @@ You don't need to import individual libraries. The `StandardPipeline` handles ev
 ### 1. Initialize the Pipeline
 
 ```python
-from sayou.rag.pipeline.standard import StandardPipeline
+from sayou.brain.pipeline.standard import StandardPipeline
 
 # Initialize the orchestrator (loads all sub-pipelines)
-rag = StandardPipeline()
-rag.initialize()
+brain = StandardPipeline()
+brain.initialize()
 ```
 
 ### 2. Ingest Data (ETL)
@@ -51,7 +51,7 @@ Simply provide a file path. The pipeline creates a Knowledge Graph automatically
 # This triggers: Document -> Refinery -> Chunking -> Wrapper -> Assembler -> Loader
 target_file = "company_report.pdf"
 
-result = rag.ingest(target_file, save_to="knowledge_graph.json")
+result = brain.ingest(target_file, save_to="knowledge_graph.json")
 print(f"Ingestion Status: {result['status']}")
 ```
 
@@ -63,13 +63,13 @@ Ask questions based on the ingested data.
 query = "What is the revenue growth this year?"
 
 # This triggers: Extractor -> LLM
-answer = rag.ask(query, load_from="knowledge_graph.json")
+answer = brain.ask(query, load_from="knowledge_graph.json")
 print(f"Answer: {answer}")
 ```
 
 ## 🗺️ Architecture
 
-`sayou-rag` delegates tasks to specialized workers:
+`sayou-brain` delegates tasks to specialized workers:
 
 * **Parsing:** `sayou-document`
 * **Cleaning:** `sayou-refinery`

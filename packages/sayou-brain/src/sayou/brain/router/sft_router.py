@@ -1,8 +1,10 @@
-from sayou.rag.interfaces.base_router import BaseRouter
-from sayou.rag.core.exceptions import RAGError
-from sayou.llm.interfaces.base_llm_client import BaseLLMClient # (가상: sayou-llm 라이브러리)
 from typing import Dict, Any, List
 import json
+
+from ..interfaces.base_router import BaseRouter
+from ..core.exceptions import BrainError
+
+from sayou.llm.interfaces.base_llm_client import BaseLLMClient
 
 class SayouSftRouter(BaseRouter):
     """
@@ -15,7 +17,7 @@ class SayouSftRouter(BaseRouter):
         """SFT 모델을 호출할 LLM 클라이언트를 주입받습니다."""
         self.sft_client: BaseLLMClient = kwargs.get("sft_router_client")
         if not self.sft_client:
-            raise RAGError("SayouSftRouter requires 'sft_router_client'.")
+            raise BrainError("SayouSftRouter requires 'sft_router_client'.")
         self._log("SayouSftRouter (Default) initialized.")
 
     def _do_route(self, query: str, chat_history: List) -> Dict[str, Any]:
