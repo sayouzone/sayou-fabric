@@ -14,6 +14,7 @@ class SentenceBasedChunker(BaseChunker):
     """
     Sentence-based chunker
 
+    Sentence-based Chunking
     Research papers, news articles
     
     What It Is:

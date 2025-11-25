@@ -12,6 +12,8 @@ class OverlappingChunker(BaseChunker):
     """
     Overlapping chunker
 
+    Overlapping Chunking
+
     Machine translation, summarization, or question-answering
 
     What It Is:

@@ -14,6 +14,8 @@ class TokenBasedChunker(BaseChunker):
     """
     Token-based chunker
 
+    Token-Based Chunking
+
     Token-based chunking splits text based on a fixed number of tokens rather than words or sentences. It uses tokenizers from NLP models (e.g., Hugging Face's transformers).
 
     When to Use:
