@@ -40,19 +40,19 @@ Every library in the ecosystem follows a consistent **Interface-Template-Plugin*
 
 Sayou Fabric consists of independent, loosely coupled libraries that work together seamlessly.
 
-| Stage | Package | Role | Description |
-| :--- | :--- | :--- | :--- |
-| **0. Core** | `sayou-core` | **Foundation** | Base components, logging, and decorators. |
-| **1. Ingest** | `sayou-connector` | **Collector** | Fetches raw data from Files, Web, APIs, or DBs via smart generators. |
-| **2. Parse** | `sayou-document` | **Parser** | High-fidelity parsing of PDF, DOCX, PPTX (preserves coords & styles). |
-| **3. Refine** | `sayou-refinery` | **Cleaner** | Normalizes complex JSON structures into clean, standard Markdown. |
-| **4. Split** | `sayou-chunking` | **Splitter** | Context-aware chunking. Protects atomic blocks (tables/code). |
-| **5. Wrap** | `sayou-wrapper` | **Standardizer** | Enforces the company schema (`SayouNode`) on all incoming data. |
-| **6. Build** | `sayou-assembler` | **Architect** | Assembles nodes into an In-Memory Knowledge Graph (Parent-Child linking). |
-| **7. Load** | `sayou-loader` | **Persister** | Saves the constructed graph to File, VectorDB, or GraphDB with fallback safety. |
-| **8. Query** | `sayou-extractor` | **Retriever** | Intelligent retrieval using Hybrid Search (Vector + Graph). |
-| **9. Gen** | `sayou-llm` | **Modeler** | An adapter layer for various LLMs (OpenAI, Anthropic, Local). |
-| **10. Main** | `sayou-brain` | **Orchestrator** | The control tower that manages the entire pipeline (`StandardPipeline`). |
+| Stage | Package | Description |
+| :--- | :--- | :--- |
+| **0. Core** | `sayou-core` | Base components, logging, and decorators. |
+| **1. Ingest** | `sayou-connector` | Fetches raw data from Files, Web, APIs, or DBs via smart generators. |
+| **2. Parse** | `sayou-document` | High-fidelity parsing of PDF, DOCX, PPTX (preserves coords & styles). |
+| **3. Refine** | `sayou-refinery` | Normalizes complex JSON structures into clean, standard Markdown. |
+| **4. Split** | `sayou-chunking` | Context-aware chunking. Protects atomic blocks (tables/code). |
+| **5. Wrap** | `sayou-wrapper` | Enforces the company schema (`SayouNode`) on all incoming data. |
+| **6. Build** | `sayou-assembler` | Assembles nodes into an In-Memory Knowledge Graph (Parent-Child linking). |
+| **7. Load** | `sayou-loader` | Saves the constructed graph to File, VectorDB, or GraphDB with fallback safety. |
+| **8. Query** | `sayou-extractor` | Intelligent retrieval using Hybrid Search (Vector + Graph). |
+| **9. Gen** | `sayou-llm` | An adapter layer for various LLMs (OpenAI, Anthropic, Local). |
+| **10. Main** | `sayou-brain` | The control tower that manages the entire pipeline (`StandardPipeline`). |
 
 ---
 

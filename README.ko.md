@@ -41,19 +41,19 @@ LLM 체이닝에 집중하는 기존 프레임워크들과 달리, Sayou Fabric�
 
 Sayou Fabric은 서로 독립적이면서도 유기적으로 연결되는 라이브러리들로 구성되어 있습니다.
 
-| 단계 | 패키지 | 역할 | 설명 |
-| :--- | :--- | :--- | :--- |
-| **0. Core** | `sayou-core` | **Foundation** | 기본 컴포넌트, 로깅, 데코레이터 등 공통 기반. |
-| **1. Ingest** | `sayou-connector` | **Collector** | 파일, 웹, API, DB 등 다양한 소스에서 원시 데이터를 수집. |
-| **2. Parse** | `sayou-document` | **Parser** | PDF, DOCX 등의 좌표와 스타일을 보존하는 High-Fidelity 파싱. |
-| **3. Refine** | `sayou-refinery` | **Cleaner** | 복잡한 JSON 구조를 LLM 친화적인 표준 Markdown으로 정규화. |
-| **4. Split** | `sayou-chunking` | **Splitter** | 문맥 인식 청킹. 표나 코드 블록 등 원자적 요소를 보호하며 분할. |
-| **5. Wrap** | `sayou-wrapper` | **Standardizer** | 모든 데이터를 사내 표준 스키마(`SayouNode`)로 변환 및 검증. |
-| **6. Build** | `sayou-assembler` | **Architect** | 노드 간의 부모-자식 관계를 연결하여 인메모리 지식 그래프 조립. |
-| **7. Load** | `sayou-loader` | **Persister** | 완성된 그래프를 파일, VectorDB, GraphDB에 안전하게 적재. |
-| **8. Query** | `sayou-extractor` | **Retriever** | 벡터 검색과 그래프 탐색을 결합한 하이브리드 검색 수행. |
-| **9. Gen** | `sayou-llm` | **Modeler** | 다양한 LLM(OpenAI, Local)을 위한 통합 어댑터 계층. |
-| **10. Main** | `sayou-brain` | **Orchestrator** | 전체 파이프라인을 총괄하고 제어하는 관제탑 (`StandardPipeline`). |
+| 단계 | 패키지 | 설명 |
+| :--- | :--- | :--- |
+| **0. Core** | `sayou-core` | 기본 컴포넌트, 로깅, 데코레이터 등 공통 기반. |
+| **1. Ingest** | `sayou-connector` | 파일, 웹, API, DB 등 다양한 소스에서 원시 데이터를 수집. |
+| **2. Parse** | `sayou-document` | PDF, DOCX 등의 좌표와 스타일을 보존하는 High-Fidelity 파싱. |
+| **3. Refine** | `sayou-refinery` | 복잡한 JSON 구조를 LLM 친화적인 표준 Markdown으로 정규화. |
+| **4. Split** | `sayou-chunking` | 문맥 인식 청킹. 표나 코드 블록 등 원자적 요소를 보호하며 분할. |
+| **5. Wrap** | `sayou-wrapper` | 모든 데이터를 사내 표준 스키마(`SayouNode`)로 변환 및 검증. |
+| **6. Build** | `sayou-assembler` | 노드 간의 부모-자식 관계를 연결하여 인메모리 지식 그래프 조립. |
+| **7. Load** | `sayou-loader` | 완성된 그래프를 파일, VectorDB, GraphDB에 안전하게 적재. |
+| **8. Query** | `sayou-extractor` | 벡터 검색과 그래프 탐색을 결합한 하이브리드 검색 수행. |
+| **9. Gen** | `sayou-llm` | 다양한 LLM(OpenAI, Local)을 위한 통합 어댑터 계층. |
+| **10. Main** | `sayou-brain` | 전체 파이프라인을 총괄하고 제어하는 관제탑 (`StandardPipeline`). |
 
 ---
 
