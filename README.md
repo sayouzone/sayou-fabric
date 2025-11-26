@@ -1,6 +1,6 @@
 <div align='center'>
 
-![Chonkie Logo](https://github.com/sayouzone/sayou-fabric/blob/main/docs/assets/sayou_logo.png?raw=true)
+<img src="https://github.com/sayouzone/sayou-fabric/blob/main/docs/assets/sayou_logo.png?raw=true" width="250">
 
 # Sayou Fabric
 
