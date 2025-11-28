@@ -79,7 +79,7 @@ The `StandardPipeline` in `sayou-brain` acts as a Facade, abstracting away the c
 ### Step 1: Initialize the Brain
 
 ```python
-from sayou.rag.pipeline.standard import StandardPipeline
+from sayou.brain.pipeline.standard import StandardPipeline
 
 # Initialize the orchestrator (automatically loads all sub-pipelines)
 brain = StandardPipeline()

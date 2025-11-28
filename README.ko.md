@@ -80,7 +80,7 @@ pip install sayou-chunking sayou-document
 ### Step 1: Initialize the Brain
 
 ```python
-from sayou.rag.pipeline.standard import StandardPipeline
+from sayou.brain.pipeline.standard import StandardPipeline
 
 # 오케스트레이터 초기화 (하위 파이프라인 자동 로드)
 brain = StandardPipeline()
