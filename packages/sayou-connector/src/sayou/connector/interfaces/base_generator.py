@@ -1,28 +1,73 @@
 from abc import abstractmethod
 from typing import Iterator
 
-from ..core.models import FetchTask, FetchResult
-
 from sayou.core.base_component import BaseComponent
+from sayou.core.decorators import measure_time
+from sayou.core.schemas import SayouPacket, SayouTask
+
+from ..core.exceptions import GeneratorError
+
 
 class BaseGenerator(BaseComponent):
     """
-    (Tier 1) '무엇을 수집할지' 결정하는 네비게이터.
-    Iterator 프로토콜을 따르며, Fetch 결과를 피드백 받아 다음 경로를 수정할 수도 있음.
+    (Tier 1) Abstract base class for all task generators.
+
+    Generators are responsible for discovering resources (e.g., listing files,
+    crawling links) and creating `SayouTask` objects for the Fetcher.
     """
+
     component_name = "BaseGenerator"
     SUPPORTED_TYPES = []
 
-    @abstractmethod
-    def generate(self) -> Iterator[FetchTask]:
+    @measure_time
+    def generate(self) -> Iterator[SayouTask]:
         """
-        [Generator] 수집할 Task를 하나씩 생성하여 반환(yield)합니다.
+        Execute the generation strategy and yield tasks one by one.
+
+        This method handles the lifecycle of the generation process, including
+        logging and error boundary protection.
+
+        Yields:
+            Iterator[SayouTask]: An iterator of tasks to be processed by Fetchers.
+        """
+        self._log(f"Starting generation strategy: {self.component_name}")
+        count = 0
+        try:
+            for task in self._do_generate():
+                count += 1
+                yield task
+        except Exception as e:
+            wrapped_error = GeneratorError(
+                f"[{self.component_name}] Strategy crashed: {str(e)}"
+            )
+            self.logger.error(wrapped_error, exc_info=True)
+        finally:
+            self._log(f"Generator finished. Total tasks yielded: {count}")
+
+    @abstractmethod
+    def _do_generate(self) -> Iterator[SayouTask]:
+        """
+        [Abstract Hook] Implement the logic to discover resources.
+
+        Yields:
+            SayouTask: A task object representing a unit of work.
         """
         raise NotImplementedError
 
-    def feedback(self, result: FetchResult):
+    def feedback(self, packet: SayouPacket):
         """
-        (Optional) Fetcher의 결과를 보고 다음 탐색 전략을 수정해야 할 때 사용.
-        예: 웹 크롤러(HTML에서 링크 추출), API(다음 페이지 토큰 확인)
+        Receive feedback from the execution result of a task.
+
+        This allows the generator to adjust its strategy dynamically
+        (e.g., adding new links found in a crawled page).
+
+        Args:
+            packet (SayouPacket): The result packet from the Fetcher.
+        """
+        self._do_feedback(packet)
+
+    def _do_feedback(self, packet: SayouPacket):
+        """
+        [Optional Hook] Override this to handle feedback logic.
         """
         pass

@@ -1,79 +1,100 @@
-import os
 import fnmatch
-from typing import Iterator, List, Optional
+import os
+from typing import Iterator
 
-from ..core.models import FetchTask
+from sayou.core.schemas import SayouTask
+
 from ..interfaces.base_generator import BaseGenerator
+
 
 class FileGenerator(BaseGenerator):
     """
-    (Tier 2) 로컬 파일 시스템을 탐색하여 수집 대상을 선정하는 Generator.
+    Concrete implementation of BaseGenerator for file system traversal.
+
+    Scans a directory tree starting from a source path. It yields `SayouTask`s
+    for files that match specific criteria, such as file extensions or name patterns.
+    Supports both recursive and flat directory scanning.
     """
+
     component_name = "FileGenerator"
-    SUPPORTED_TYPES = ["local_scan"]
+    SUPPORTED_TYPES = ["file"]
 
     def initialize(
-        self, 
-        source: str, 
-        recursive: bool = True, 
-        extensions: Optional[List[str]] = None, 
+        self,
+        source: str,
+        recursive: bool = True,
+        extensions: list = None,
         name_pattern: str = "*",
         **kwargs
     ):
         """
+        Configure the file scanning strategy.
+
         Args:
-            root_path: 탐색 시작 경로
-            recursive: 하위 폴더 포함 여부
-            extensions: 허용할 확장자 리스트 (예: ['.pdf', '.docx']). None이면 모두 허용.
-            name_pattern: 파일명 패턴 (예: '*report*'). 기본값 '*'.
+            source (str): The root directory or file path to start scanning.
+            recursive (bool): If True, scan subdirectories recursively.
+            extensions (Optional[List[str]]): List of allowed extensions (e.g., ['.pdf', '.txt']).
+            name_pattern (str): Glob pattern for filename matching (e.g., '*report*').
+            **kwargs: Ignored additional arguments.
         """
         self.root_path = os.path.abspath(source)
         self.recursive = recursive
-        self.extensions = [ext.lower() for ext in extensions] if extensions else None
+        self.extensions = [e.lower() for e in extensions] if extensions else None
         self.name_pattern = name_pattern
 
-    def generate(self) -> Iterator[FetchTask]:
-        """조건에 맞는 파일만 Task로 생성하여 Yield"""
-        self._log(f"Scanning '{self.root_path}' (Recursive={self.recursive}, Ext={self.extensions})")
+    def _do_generate(self) -> Iterator[SayouTask]:
+        """
+        Walk through the file system and yield tasks for valid files.
 
+        Yields:
+            Iterator[SayouTask]: Tasks with `source_type='file'`.
+        """
         if os.path.isfile(self.root_path):
             if self._is_valid(self.root_path):
                 yield self._create_task(self.root_path)
             return
 
-        if self.recursive:
-            for root, _, files in os.walk(self.root_path):
-                for file in files:
-                    full_path = os.path.join(root, file)
-                    if self._is_valid(file):
-                        yield self._create_task(full_path)
-        else:
-            # Non-recursive (현재 폴더만)
-            try:
-                for item in os.listdir(self.root_path):
-                    full_path = os.path.join(self.root_path, item)
-                    if os.path.isfile(full_path) and self._is_valid(item):
-                        yield self._create_task(full_path)
-            except FileNotFoundError:
-                self._log(f"Path not found: {self.root_path}", level="error")
+        walker = (
+            os.walk(self.root_path)
+            if self.recursive
+            else [(self.root_path, [], os.listdir(self.root_path))]
+        )
+
+        for root, _, files in walker:
+            for file in files:
+                full_path = os.path.join(root, file)
+                if self._is_valid(file):
+                    yield self._create_task(full_path)
 
     def _is_valid(self, filename: str) -> bool:
-        """필터링 로직"""
-        # 1. 이름 패턴 확인 (Wildcard match)
+        """
+        Check if a file matches the extension and name pattern criteria.
+
+        Args:
+            filename (str): The name of the file to check.
+
+        Returns:
+            bool: True if the file should be processed, False otherwise.
+        """
         if not fnmatch.fnmatch(filename, self.name_pattern):
             return False
-        
-        # 2. 확장자 확인
-        if self.extensions:
-            ext = os.path.splitext(filename)[1].lower()
-            if ext not in self.extensions:
-                return False
-        
+        if (
+            self.extensions
+            and os.path.splitext(filename)[1].lower() not in self.extensions
+        ):
+            return False
         return True
 
-    def _create_task(self, path: str) -> FetchTask:
-        return FetchTask(
-            source_type="file", # Fetcher 라우팅 키
-            uri=path,
-            meta={"filename": os.path.basename(path)}
+    def _create_task(self, path: str) -> SayouTask:
+        """
+        Create a SayouTask for a valid file path.
+
+        Args:
+            path (str): The absolute path to the file.
+
+        Returns:
+            SayouTask: The configured task object.
+        """
+        return SayouTask(
+            source_type="file", uri=path, meta={"filename": os.path.basename(path)}
         )
