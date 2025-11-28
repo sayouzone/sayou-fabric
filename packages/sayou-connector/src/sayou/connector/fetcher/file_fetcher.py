@@ -1,8 +1,6 @@
 from ..core.models import FetchTask, FetchResult
 from ..interfaces.base_fetcher import BaseFetcher
 
-from sayou.core.decorators import retry, measure_time, safe_run
-
 class FileFetcher(BaseFetcher):
     """
     (Tier 2) 로컬 파일 시스템에서 바이너리를 읽어오는 Fetcher.

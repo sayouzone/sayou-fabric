@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-document"
-version = "0.1.2"
+version = "0.1.1"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
@@ -24,7 +24,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 dependencies = [
-    "sayou-core ~= 0.1.0",
+    "sayou-core ~= 0.0.3",
     "openpyxl==3.1.5",
     "PyMuPDF==1.25.5",
     "python-docx==1.1.2",
