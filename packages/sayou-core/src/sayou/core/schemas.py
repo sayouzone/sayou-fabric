@@ -1,6 +1,8 @@
-from typing import Dict, List, Any, Optional
-from pydantic import BaseModel, Field
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
+
 
 class SayouTask(BaseModel):
     source_type: str = Field(..., description="Fetcher 라우팅 키 (e.g., 'file', 'http', 'sqlite')")

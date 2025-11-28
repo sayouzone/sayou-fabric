@@ -1,8 +1,7 @@
-import time
-import logging
 import functools
-
-from typing import Callable, Any
+import logging
+import time
+from typing import Any, Callable
 
 logger = logging.getLogger("SayouCore")
 

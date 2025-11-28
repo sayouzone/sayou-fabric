@@ -1,6 +1,6 @@
 import logging
-
 from abc import ABC
+
 
 class BaseComponent(ABC):
     """
