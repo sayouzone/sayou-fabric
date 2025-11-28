@@ -1,6 +1,7 @@
 import time
 import logging
 import functools
+
 from typing import Callable, Any
 
 logger = logging.getLogger("SayouCore")
@@ -38,24 +39,26 @@ def safe_run(default_return: Any = None) -> Callable:
         return wrapper
     return decorator
 
-def retry(max_retries: int = 3, delay: float = 1.0) -> Callable:
+def retry(max_retries: int = 3, delay: float = 1.0, backoff: float = 2.0) -> Callable:
     """
-    [Decorator] 실패 시 일정 횟수만큼 재시도합니다.
-    네트워크 요청(Connector, LLM)에 필수적입니다.
+    [Decorator] 실패 시 재시도. backoff 인자를 추가하여 대기 시간을 점진적으로 늘립니다.
     """
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             last_exception = None
+            current_delay = delay  # 초기 딜레이
+            
             for attempt in range(max_retries):
                 try:
                     return func(*args, **kwargs)
                 except Exception as e:
                     last_exception = e
-                    logger.warning(f"[Retry] {func.__qualname__} failed ({attempt+1}/{max_retries}). Retrying in {delay}s...")
-                    time.sleep(delay)
+                    logger.warning(f"[Retry] {func.__qualname__} failed ({attempt+1}/{max_retries}). Retrying in {current_delay}s...")
+                    time.sleep(current_delay)
+                    current_delay *= backoff  # 1초 -> 2초 -> 4초...
             
-            logger.error(f"[Retry] {func.__qualname__} failed after {max_retries} attempts.")
+            logger.error(f"[Retry] Failed after {max_retries} attempts.")
             raise last_exception
         return wrapper
     return decorator
