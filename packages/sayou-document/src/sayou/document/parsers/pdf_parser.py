@@ -1,23 +1,31 @@
-import fitz
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
-from ..interfaces.base_parser import BaseDocumentParser
+import fitz
+
 from ..interfaces.base_ocr import BaseOCR
+from ..interfaces.base_parser import BaseDocumentParser
 from ..models import (
-    Document, ImageElement, Page, TextElement, BoundingBox, 
-    ElementMetadata, BaseElement
+    BaseElement,
+    BoundingBox,
+    Document,
+    ElementMetadata,
+    ImageElement,
+    Page,
+    TextElement,
 )
+
 
 class PdfParser(BaseDocumentParser):
     """
     (Tier 2) fitz를 사용하여 PDF를 파싱하고, 'Document Model'을 반환합니다.
     """
+
     component_name = "PdfParser"
     SUPPORTED_TYPES = [".pdf"]
 
     def __init__(self, ocr_engine: Optional[BaseOCR] = None):
         """OCR 엔진을 선택적으로 주입받을 수 있도록 생성자 정의"""
-        super().__init__() 
+        super().__init__()
         self.ocr_engine = ocr_engine
 
     def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
@@ -49,7 +57,7 @@ class PdfParser(BaseDocumentParser):
             doc_type="pdf",
             page_count=len(pages_list),
             pages=pages_list,
-            toc=toc_list
+            toc=toc_list,
         )
 
     def _load_document(self, file_bytes: bytes) -> fitz.Document:
@@ -59,7 +67,9 @@ class PdfParser(BaseDocumentParser):
         except Exception as e:
             raise ValueError(f"fitz failed to open PDF: {e}")
 
-    def _process_page(self, doc: fitz.Document, page_num: int, file_name: str, **kwargs) -> Page:
+    def _process_page(
+        self, doc: fitz.Document, page_num: int, file_name: str, **kwargs
+    ) -> Page:
         """단일 페이지 처리 로직 (스캔본 감지 추가)"""
         page = doc.load_page(page_num)
         elements_list = []
@@ -71,30 +81,42 @@ class PdfParser(BaseDocumentParser):
             self._log(f"Page {page_num+1} seems to be scanned. Applying full-page OCR.")
             try:
                 # 페이지를 고해상도 이미지로 렌더링
-                pix = page.get_pixmap(dpi=kwargs.get("ocr_dpi", 200)) 
+                pix = page.get_pixmap(dpi=kwargs.get("ocr_dpi", 200))
                 img_bytes = pix.tobytes("png")
                 ocr_text = self.ocr_engine.ocr_bytes(img_bytes, **kwargs)
-                
+
                 if ocr_text:
                     # 페이지 전체를 하나의 TextElement로 생성
-                    full_page_bbox = BoundingBox(x0=0, y0=0, x1=page.rect.width, y1=page.rect.height)
-                    elements_list.append(TextElement(
-                        id=f"p{page_num+1}:full_ocr",
-                        type="text",
-                        bbox=full_page_bbox,
-                        meta=ElementMetadata(page_num=page_num+1, id=f"p{page_num+1}:full_ocr"),
-                        text=ocr_text
-                    ))
+                    full_page_bbox = BoundingBox(
+                        x0=0, y0=0, x1=page.rect.width, y1=page.rect.height
+                    )
+                    elements_list.append(
+                        TextElement(
+                            id=f"p{page_num+1}:full_ocr",
+                            type="text",
+                            bbox=full_page_bbox,
+                            meta=ElementMetadata(
+                                page_num=page_num + 1, id=f"p{page_num+1}:full_ocr"
+                            ),
+                            text=ocr_text,
+                        )
+                    )
                     page_text_dump = ocr_text
                     ocr_applied = True
 
             except Exception as e:
-                self._log(f"Full-page OCR failed for page {page_num+1}: {e}", level="warning")
+                self._log(
+                    f"Full-page OCR failed for page {page_num+1}: {e}", level="warning"
+                )
 
         if not ocr_applied:
-            blocks = page.get_text("dict", flags=fitz.TEXTFLAGS_DICT, sort=True).get("blocks", [])
+            blocks = page.get_text("dict", flags=fitz.TEXTFLAGS_DICT, sort=True).get(
+                "blocks", []
+            )
             for block in blocks:
-                element = self._create_element_from_block(block, page_num, file_name, **kwargs)
+                element = self._create_element_from_block(
+                    block, page_num, file_name, **kwargs
+                )
                 if element:
                     elements_list.append(element)
 
@@ -103,21 +125,20 @@ class PdfParser(BaseDocumentParser):
             width=page.rect.width,
             height=page.rect.height,
             elements=elements_list,
-            text=page_text_dump
+            text=page_text_dump,
         )
 
-    def _create_element_from_block(self, block: Dict[str, Any], page_num: int, file_name: str, **kwargs) -> Optional[BaseElement]:
+    def _create_element_from_block(
+        self, block: Dict[str, Any], page_num: int, file_name: str, **kwargs
+    ) -> Optional[BaseElement]:
         """블록 딕셔너리를 Pydantic Element 객체로 변환"""
         b_type = block.get("type")
         bbox = block.get("bbox")
-        
-        pydantic_bbox = BoundingBox(
-            x0=bbox[0], y0=bbox[1], x1=bbox[2], y1=bbox[3]
-        )
-        
+
+        pydantic_bbox = BoundingBox(x0=bbox[0], y0=bbox[1], x1=bbox[2], y1=bbox[3])
+
         meta = ElementMetadata(
-            page_num=page_num + 1,
-            id=f"p{page_num}:b{block.get('number', 0)}"
+            page_num=page_num + 1, id=f"p{page_num}:b{block.get('number', 0)}"
         )
 
         # Type 0: Text Block
@@ -130,7 +151,9 @@ class PdfParser(BaseDocumentParser):
 
         return None
 
-    def _process_text_block(self, block: Dict, bbox: BoundingBox, meta: ElementMetadata) -> Optional[TextElement]:
+    def _process_text_block(
+        self, block: Dict, bbox: BoundingBox, meta: ElementMetadata
+    ) -> Optional[TextElement]:
         """텍스트 블록 상세 처리"""
         block_text = ""
         # TODO: High-Fidelity (v0.1.0+) - 폰트/스타일 정보 추출
@@ -138,26 +161,28 @@ class PdfParser(BaseDocumentParser):
             for span in line.get("spans", []):
                 block_text += span.get("text", "")
             block_text += " "
-        
+
         block_text = block_text.strip()
-        if not block_text: 
+        if not block_text:
             return None
 
         return TextElement(
             id=meta.id,
             bbox=bbox,
             text=block_text,
-            meta=meta
+            meta=meta,
             # raw_attributes={"style": span.get("font")...} # v0.1.0
         )
 
-    def _process_image_block(self, block: Dict, bbox: BoundingBox, meta: ElementMetadata, **kwargs) -> Optional[ImageElement]:
+    def _process_image_block(
+        self, block: Dict, bbox: BoundingBox, meta: ElementMetadata, **kwargs
+    ) -> Optional[ImageElement]:
         """이미지 블록 처리: _process_image_data 헬퍼 사용"""
         try:
             image_bytes = block.get("image")
             if not image_bytes:
                 return None
-            ocr_enabled = kwargs.get("ocr_images", True) 
+            ocr_enabled = kwargs.get("ocr_images", True)
 
             return self._process_image_data(
                 image_bytes=image_bytes,
@@ -165,7 +190,7 @@ class PdfParser(BaseDocumentParser):
                 elem_id=meta.id,
                 page_num=meta.page_num,
                 bbox=bbox,
-                ocr_enabled=ocr_enabled
+                ocr_enabled=ocr_enabled,
             )
 
         except Exception as e:

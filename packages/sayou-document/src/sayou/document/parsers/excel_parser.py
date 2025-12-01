@@ -11,9 +11,16 @@ from typing import List, Optional
 
 from ..interfaces.base_parser import BaseDocumentParser
 from ..models import (
-    Document, Page, Sheet, TableElement, ImageElement,
-    ElementMetadata, BaseElement, TableCell
+    BaseElement,
+    Document,
+    ElementMetadata,
+    ImageElement,
+    Page,
+    Sheet,
+    TableCell,
+    TableElement,
 )
+
 
 class ExcelParser(BaseDocumentParser):
     component_name = "ExcelParser"
@@ -37,24 +44,24 @@ class ExcelParser(BaseDocumentParser):
 
             elements_list: List[BaseElement] = []
 
-            sheet_data = [] # LLM 친화적 2D 리스트
-            rows_cells = [] # High-Fidelity 2D 리스트
+            sheet_data = []  # LLM 친화적 2D 리스트
+            rows_cells = []  # High-Fidelity 2D 리스트
 
             for r_idx, row in enumerate(sheet.iter_rows()):
                 cleaned_row_data = []
                 current_row_cells = []
-                
+
                 for c_idx, cell in enumerate(row):
                     cell_text = str(cell.value) if cell.value is not None else ""
                     cleaned_row_data.append(cell_text)
                     cell_obj = TableCell(
                         text=cell_text,
-                        row_span=1, 
+                        row_span=1,
                         col_span=1,
                         is_header=False,
                     )
                     current_row_cells.append(cell_obj)
-                
+
                 if any(cleaned_row_data):
                     sheet_data.append(cleaned_row_data)
                     rows_cells.append(current_row_cells)
@@ -66,10 +73,10 @@ class ExcelParser(BaseDocumentParser):
                     data=sheet_data,
                     cells=rows_cells,
                     caption=f"Sheet: {sheet_name}",
-                    meta=ElementMetadata(page_num=idx + 1)
+                    meta=ElementMetadata(page_num=idx + 1),
                 )
                 elements_list.append(table_elem)
-            
+
             sheet_images = self._extract_images(sheet, idx + 1, ocr_images)
             elements_list.extend(sheet_images)
 
@@ -79,7 +86,7 @@ class ExcelParser(BaseDocumentParser):
                     elements=elements_list,
                     sheet_name=sheet_name,
                     is_hidden=is_hidden,
-                    sheet_index=idx
+                    sheet_index=idx,
                 )
                 pages_list.append(sheet_obj)
 
@@ -88,7 +95,7 @@ class ExcelParser(BaseDocumentParser):
             file_id=file_name,
             doc_type="sheet",
             page_count=len(pages_list),
-            pages=pages_list
+            pages=pages_list,
         )
 
     def _extract_images(self, sheet, page_num, ocr_enabled) -> List[ImageElement]:
@@ -102,7 +109,7 @@ class ExcelParser(BaseDocumentParser):
                             img_format=image.format or "png",
                             elem_id=f"sheet{page_num}:img{i}",
                             page_num=page_num,
-                            ocr_enabled=ocr_enabled
+                            ocr_enabled=ocr_enabled,
                         )
                         img_elem.raw_attributes["from_col"] = image.anchor._from.col
                         img_elem.raw_attributes["from_row"] = image.anchor._from.row
@@ -119,8 +126,8 @@ class ExcelParser(BaseDocumentParser):
             self._log("⚠️ Excel load failed. Attempting repair (removing custom.xml)...")
             try:
                 repaired_buffer = io.BytesIO()
-                with zipfile.ZipFile(io.BytesIO(file_bytes), 'r') as zin:
-                    with zipfile.ZipFile(repaired_buffer, 'w') as zout:
+                with zipfile.ZipFile(io.BytesIO(file_bytes), "r") as zin:
+                    with zipfile.ZipFile(repaired_buffer, "w") as zout:
                         for item in zin.infolist():
                             if "custom.xml" not in item.filename:
                                 buffer = zin.read(item.filename)

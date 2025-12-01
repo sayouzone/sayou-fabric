@@ -2,15 +2,21 @@ from abc import abstractmethod
 from typing import List, Optional
 
 from sayou.core.base_component import BaseComponent
+from sayou.core.decorators import measure_time
 
-from .base_ocr import BaseOCR
-from ..models import Document, ImageElement, ElementMetadata, BoundingBox
+from ..core.exceptions import ParserError
+from ..interfaces.base_ocr import BaseOCR
+from ..models import BoundingBox, Document, ElementMetadata, ImageElement
+
 
 class BaseDocumentParser(BaseComponent):
     """
-    (Tier 1) 모든 문서 파서의 부모 클래스입니다.
-    공통적인 로깅, 에러 처리, OCR 엔진 주입 기능을 제공합니다.
+    (Tier 1) Abstract base class for all document parsers.
+
+    Provides common functionality for logging, error handling, and OCR engine integration.
+    Implements the Template Method pattern via `parse` -> `_parse`.
     """
+
     component_name = "BaseDocumentParser"
     SUPPORTED_TYPES: List[str] = []
 
@@ -19,55 +25,96 @@ class BaseDocumentParser(BaseComponent):
         self.ocr_engine: Optional[BaseOCR] = None
 
     def set_ocr_engine(self, ocr_engine: Optional[BaseOCR]):
-        """(선택적) 스캔본 처리를 위한 OCR 엔진을 주입합니다."""
+        """
+        Inject an OCR engine for processing scanned images.
+
+        Args:
+            ocr_engine (BaseOCR): The OCR engine instance.
+        """
         self.ocr_engine = ocr_engine
         if ocr_engine:
             self._log(f"OCR Engine '{ocr_engine.component_name}' attached.")
 
-    def parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
+    @measure_time
+    def parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Optional[Document]:
         """
-        [공통 뼈대] 파싱 프로세스의 템플릿 메서드입니다.
-        1. 입력 검증
-        2. 실제 파싱 (_parse 호출)
-        3. 결과 로깅 및 반환
+        Execute the parsing process.
+
+        Args:
+            file_bytes (bytes): Binary content of the file.
+            file_name (str): Original filename (used for extension detection).
+            **kwargs: Additional parsing options.
+
+        Returns:
+            Document: The parsed structured document object, or None if failed.
+
+        Raises:
+            ParserError: If parsing logic encounters a critical error.
         """
         self._log(f"Parsing file: {file_name} ({len(file_bytes)} bytes)")
-        
+
         if not file_bytes:
-            self._log("[WARNING] Received empty file bytes.")
+            self._log("Received empty file bytes.", level="warning")
             return None
 
         try:
             document = self._parse(file_bytes, file_name, **kwargs)
+
             if document:
-                self._log(f"Successfully extracted  pages from {file_name}.")
+                self._log(
+                    f"Successfully extracted {len(document.pages)} pages from {file_name}."
+                )
             else:
-                self._log("[WARNING] Parser returned None.")
+                self._log("Parser returned None.", level="warning")
 
             return document
 
         except Exception as e:
-            self._log(f"[ERROR] Failed to parse {file_name}: {e}")
-            raise e 
+            wrapped_error = ParserError(
+                f"[{self.component_name}] Failed to parse {file_name}: {str(e)}"
+            )
+            self.logger.error(wrapped_error, exc_info=True)
+            raise wrapped_error
 
     @abstractmethod
     def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
         """
-        [구현 필수] 실제 파싱 로직 (Tier 2에서 구현)
-        반환 타입이 List[DataAtom] -> Document 로 변경되었습니다.
+        [Abstract Hook] Implement the actual parsing logic.
+
+        Args:
+            file_bytes (bytes): File content.
+            file_name (str): Filename.
+
+        Returns:
+            Document: The parsed result.
         """
         raise NotImplementedError
 
-    def _process_image_data(self, image_bytes: bytes, img_format: str, 
-                            elem_id: str, page_num: int, 
-                            bbox: Optional[BoundingBox] = None, 
-                            ocr_enabled: bool = True) -> ImageElement:
+    def _process_image_data(
+        self,
+        image_bytes: bytes,
+        img_format: str,
+        elem_id: str,
+        page_num: int,
+        bbox: Optional[BoundingBox] = None,
+        ocr_enabled: bool = True,
+    ) -> ImageElement:
         """
-        [공통 방어선] 모든 파서가 이미지를 발견하면 이 메서드를 호출합니다.
-        OCR 엔진이 있고 ocr_enabled가 True면, 자동으로 OCR을 수행합니다.
+        Helper to handle image extraction and OCR.
+
+        Args:
+            image_bytes (bytes): Raw image data.
+            img_format (str): Image format (png, jpg).
+            elem_id (str): Unique element ID.
+            page_num (int): Page number.
+            bbox (BoundingBox, optional): Coordinates.
+            ocr_enabled (bool): Whether to attempt OCR.
+
+        Returns:
+            ImageElement: Constructed image element, possibly with OCR text.
         """
         import base64
-        
+
         image_base64 = base64.b64encode(image_bytes).decode("utf-8")
         ocr_text = None
 
@@ -76,7 +123,9 @@ class BaseDocumentParser(BaseComponent):
                 extracted = self.ocr_engine.ocr_bytes(image_bytes)
                 if extracted and extracted.strip():
                     ocr_text = extracted.strip()
-                    self._log(f"OCR extracted {len(ocr_text)} chars from image {elem_id}")
+                    self._log(
+                        f"OCR extracted {len(ocr_text)} chars from image {elem_id}"
+                    )
             except Exception as e:
                 self._log(f"OCR failed for image {elem_id}: {e}", level="warning")
 
@@ -87,5 +136,5 @@ class BaseDocumentParser(BaseComponent):
             meta=ElementMetadata(page_num=page_num, id=elem_id),
             image_base64=image_base64,
             image_format=img_format,
-            ocr_text=ocr_text
+            ocr_text=ocr_text,
         )
