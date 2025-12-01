@@ -13,7 +13,7 @@ class BoundingBox(BaseModel):
 
     Units depend on the source format (e.g., Points for PDF, EMUs for PPTX).
     Values are NOT normalized to 0.0-1.0 range.
-    
+
     Structure:
     - x0: Left
     - y0: Top
@@ -80,6 +80,11 @@ class BaseElement(BaseModel):
     raw_attributes: Dict[str, Any] = {}
     model_config = ConfigDict(extra="allow")
 
+    @property
+    def text(self) -> str:
+        """Returns the textual representation of the element."""
+        return ""
+
 
 class TextElement(BaseElement):
     """
@@ -88,6 +93,7 @@ class TextElement(BaseElement):
     This includes paragraphs, headings, list items, and other textual content.
     It may include styling information via the `style` field.
     """
+
     type: Literal["text"] = "text"
     text: str
     style: Optional[TextStyle] = None
@@ -117,11 +123,19 @@ class TableElement(BaseElement):
     1. `data`: A simplified 2D list of strings (LLM-friendly).
     2. `cells`: A detailed list of `TableCell` objects (High-fidelity layout).
     """
+
     type: Literal["table"] = "table"
     data: List[List[str]]
     cells: List[List[TableCell]] = []
     caption: Optional[str] = None
     meta: ElementMetadata
+
+    @property
+    def text(self) -> str:
+        """Returns a CSV-like string representation of the table."""
+        if not self.data:
+            return ""
+        return "\n".join(["\t".join(row) for row in self.data])
 
 
 class ImageElement(BaseElement):
@@ -131,12 +145,18 @@ class ImageElement(BaseElement):
     Can store the image data as a Base64 string (`image_base64`), a URL (`image_url`),
     or extracted text via OCR (`ocr_text`).
     """
+
     type: Literal["image"] = "image"
     image_url: Optional[str] = None
     image_base64: Optional[str] = None
     caption: Optional[str] = None
     ocr_text: Optional[str] = None
     meta: ElementMetadata
+
+    @property
+    def text(self) -> str:
+        """Returns OCR text if available."""
+        return self.ocr_text or self.caption or ""
 
 
 class ChartElement(BaseElement):
@@ -147,11 +167,17 @@ class ChartElement(BaseElement):
     extracting the underlying data or a textual description (`text_representation`)
     that describes the chart's content (e.g., series names, data points).
     """
+
     type: Literal["chart"] = "chart"
     chart_title: Optional[str] = None
     chart_type: Optional[str] = None
     text_representation: Optional[str] = None
     meta: ElementMetadata
+
+    @property
+    def text(self) -> str:
+        """Returns text representation of the chart."""
+        return self.text_representation or self.chart_title or ""
 
 
 # ==============================================================================
@@ -236,6 +262,7 @@ class DocumentMetadata(BaseModel):
     Includes standard properties like title, author, and creation dates,
     as well as a dictionary for any format-specific extra metadata.
     """
+
     title: Optional[str] = None
     author: Optional[str] = None
     created_at: Optional[str] = None
