@@ -4,11 +4,22 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/library-guides/connector/)
 
-**The Universal Data Ingestion Engine**
+**The Universal Data Ingestion Engine for Sayou Fabric.**
 
 `sayou-connector` provides a unified interface to fetch data from diverse sources—Local Files, Web URLs, and Databases—normalizing everything into a standard format called **SayouPacket**.
 
 It separates the logic of **Navigation** (Generator) from **Retrieval** (Fetcher), enabling complex recursive crawling and pagination strategies out of the box.
+
+## 💡 Core Philosophy
+
+**"Navigate First, Fetch Later."**
+
+Data collection is not just about downloading; it's about discovery. We decouple the responsibility into two roles:
+
+1.  **Generator (Navigator):** The "Brain". It decides *what* to fetch next (e.g., calculates DB offsets, finds next page links) and yields a Task.
+2.  **Fetcher (Driver):** The "Muscle". It executes the actual retrieval (e.g., HTTP GET, SQL Query) and returns a Packet.
+
+This separation enables the **Feedback Loop**, where the result of a fetch (e.g., found links) feeds back into the Generator to discover more targets.
 
 ## 📦 Installation
 
@@ -54,13 +65,19 @@ if __name__ == "__main__":
 
 ## 🔑 Key Concepts
 
-* **Strategies:** Switch execution modes effortlessly (`file`, `requests`, `sqlite`).
-* **SayouPacket:** A standardized data container (Success/Fail status, Data, Metadata) ensuring type safety.
-* **Feedback Loop:** Generators can dynamically create new tasks based on Fetcher results (e.g., finding new links, next DB page).
+### Generators
+* **`FileGenerator`**: Recursively scans directories to find files matching extensions or patterns.
+* **`SqlGenerator`**: Generates paginated SQL queries (LIMIT/OFFSET) to fetch large tables in batches.
+* **`WebCrawlGenerator`**: Manages a URL frontier queue for BFS/DFS web crawling with depth control.
+
+### Fetchers
+* **`FileFetcher`**: Reads binary or text content from the local file system.
+* **`SqliteFetcher`**: Executes SQL queries against SQLite databases securely.
+* **`SimpleWebFetcher`**: Fetches HTML pages and extracts data/links using BeautifulSoup.
 
 ## 🤝 Contributing
 
-We welcome contributions for new Fetchers (e.g., S3, Kafka) or Generators!
+We welcome contributions for new Fetchers (e.g., `S3Fetcher`, `KafkaFetcher`) or Generators (e.g., `SitemapGenerator`)!
 
 ## 📜 License
 
