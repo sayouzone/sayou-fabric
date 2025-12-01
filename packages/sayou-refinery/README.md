@@ -1,35 +1,23 @@
-# `sayou-refinery`
+# sayou-refinery
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/sayouzone/sayou-fabric/ci.yml?branch=main)](https://github.com/sayouzone/sayou-fabric/actions)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://sayouzone.github.io/sayou-fabric/library-guides/refinery/)
+[![PyPI version](https://img.shields.io/pypi/v/sayou-refinery.svg?color=blue)](https://pypi.org/project/sayou-refinery/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/library-guides/refinery/)
 
+**The Universal Data Cleaning & Normalization Engine for Sayou Fabric.**
 
-`sayou-refinery` is the central data transformation and cleansing library for the Sayou Data Platform. It acts as the "smelter" in the data pipeline, taking raw extracted data and turning it into clean, usable content for downstream tasks like chunking, embedding, and RAG.
+`sayou-refinery` acts as the "Cleaning Plant" in your data pipeline.
 
-## Philosophy: Transformation, Not Extraction
+It transforms heterogeneous raw data (JSON Documents, HTML, DB Records) into a standardized stream of **ContentBlocks**, ensuring that downstream components (like Chunkers or LLMs) receive clean, uniform data regardless of the original source format.
 
-`sayou-refinery` does not extract data from files; that is the job of `sayou-document` or `sayou-connector`.
+## 💡 Core Philosophy
 
-Instead, `sayou-refinery`'s sole responsibility is **transformation**. It cleans, interprets, filters, and reformats data structures, making them intelligent and optimized for LLMs.
+**"Flatten Structure, Polish Content."**
 
-## 🚀 Key Features
+Refinery operates in two distinct stages to guarantee data quality:
 
-`sayou-refinery` has a dual role:
-
-1.  **Document Refining:** It "interprets" the rich, high-fidelity JSON output from `sayou-document` and transforms it into LLM-friendly formats like Markdown (`ContentBlock` objects).
-2.  **DataAtom Refining:** It cleans and processes streams of `DataAtom` objects (from `sayou-connector` or `sayou-wrapper`) to reduce noise and enhance insights for RAG.
-
-### Core Components
-
-* **Doc Refiners (`doc/`):** Specialized tools for transforming `sayou-document` output.
-    * `DocToMarkdownRefiner`: The (Tier 2) engine that converts a `document` JSON into a list of `ContentBlock` objects (Markdown, Images), interpreting `raw_attributes` to create semantic structure (like headings and lists).
-* **Atom Processors (`processor/`):** (1:1) Cleans or transforms single `DataAtom`s.
-    * e.g., `Deduplicator` (removes duplicates), `TextCleaner` (strips HTML).
-* **Atom Aggregators (`aggregator/`):** (N:M) Summarizes or combines multiple `DataAtom`s into new ones.
-    * e.g., `AverageAggregator` (calculates averages from time-series data).
-* **Atom Mergers (`merger/`):** (N+E:N) Enriches `DataAtom`s with external data.
-    * e.g., `KeyBasedMerger` (joins atoms with a CSV or database lookup).
+1.  **Normalization (Shape Shifting):** Converts complex structures (nested JSON, HTML trees, DB Rows) into a linear list of `ContentBlocks`.
+2.  **Processing (Cleaning):** Applies a chain of cleaning agents (Regex, Masking, Deduplication) to improve data hygiene.
 
 ## 📦 Installation
 
@@ -37,79 +25,67 @@ Instead, `sayou-refinery`'s sole responsibility is **transformation**. It cleans
 pip install sayou-refinery
 ```
 
-## ⚡ Quickstart
+## ⚡ Quick Start
 
-`sayou-refinery` provides different tools for different data types.
-
-### 1. Refining a Document (from `sayou-document`)
-
-This example shows how `sayou-rag` uses `refinery` to process a document.
+The `RefineryPipeline` orchestrates the normalization and processing chain.
 
 ```python
-import json
-from sayou.refinery.processor.doc_to_markdown import DocToMarkdownRefiner
+from sayou.refinery.pipeline import RefineryPipeline
 
-# 1. Load the JSON output from sayou-document
-# (This assumes doc_data is a dict from doc.model_dump())
-with open("my_document_output.json", "r", encoding="utf-8") as f:
-    doc_data = json.load(f)
+def run_demo():
+    # 1. Initialize with specific cleaning rules
+    pipeline = RefineryPipeline()
+    pipeline.initialize(
+        mask_email=True,
+        outlier_rules={"price": {"min": 0, "max": 1000, "action": "clamp"}}
+    )
 
-# 2. Initialize the Tier 2 refiner (default engine)
-refiner = DocToMarkdownRefiner()
-refiner.initialize()
+    # 2. Raw Data (e.g., from sayou-document)
+    raw_doc = {
+        "metadata": {"title": "Test Doc"},
+        "pages": [{
+            "elements": [
+                {"type": "text", "text": "Contact: admin@sayou.ai"},
+                {"type": "text", "text": "   Dirty   Whitespace   "}
+            ]
+        }]
+    }
 
-# 3. Refine the dict into ContentBlocks (MD, image data, etc.)
-content_blocks = refiner.refine(doc_data)
+    # 3. Run Pipeline
+    # source_type: 'standard_doc', 'html', 'json', etc.
+    blocks = pipeline.run(raw_doc, source_type="standard_doc")
 
-# 4. (Application Logic) Assemble and save the Markdown
-final_markdown = []
-for block in content_blocks:
-    if block.type == "md":
-        final_markdown.append(block.content)
-    # (Add logic here to save images (block.type == "image_base64") and link them)
+    # 4. Result
+    for block in blocks:
+        print(f"[{block.type}] {block.content}")
+        
+        # Output:
+        # [md_meta] --- title: Test Doc ...
+        # [md] Contact: [EMAIL]
+        # [md] Dirty Whitespace
 
-output = "\n\n".join(final_markdown)
-# print(output)
+if __name__ == "__main__":
+    run_demo()
 ```
 
-### 2. Refining DataAtoms
+## 🔑 Key Components
 
-This example shows how to clean a list of `DataAtom`s.
+### Normalizers
+* **`DocMarkdownNormalizer`**: Converts Sayou Document Dicts into Markdown blocks.
+* **`HtmlTextNormalizer`**: Strips HTML tags and scripts, extracting clean text.
+* **`RecordNormalizer`**: Converts DB rows or JSON objects into 'record' blocks.
 
-```python
-from sayou.core.atom import DataAtom
-from sayou.refinery.core.context import RefineryContext
-from sayou.refinery.processor.deduplicator import Deduplicator
-
-# 1. Prepare DataAtoms (e.g., from sayou-connector)
-atoms = [
-    DataAtom("source_A", "item", {"id": "123", "data": "A"}),
-    DataAtom("source_B", "item", {"id": "456", "data": "B"}),
-    DataAtom("source_C", "item", {"id": "123", "data": "C_dupe"})
-]
-context = RefineryContext(atoms=atoms)
-
-# 2. Initialize the Tier 2 processor
-# We want to deduplicate based on the 'id' field in the payload
-deduper = Deduplicator()
-deduper.initialize(key_field="payload.id")
-
-# 3. Process the context
-refined_context = deduper.process(context)
-
-# refined_context.atoms will now only contain the first two atoms
-# print(len(refined_context.atoms)) # Output: 2
-```
-
-## 🗺️ Roadmap
-
-* Implementing more Tier 2 `Aggregator` templates (e.g., `SumAggregator`, `TimeSeriesResampler`).
-* Developing Tier 3 plugins for advanced HTML-to-Markdown conversion.
+### Processors
+* **`TextCleaner`**: Normalizes whitespace and removes noise via regex.
+* **`PiiMasker`**: Masks sensitive info like emails and phone numbers.
+* **`Deduplicator`**: Removes duplicate content blocks.
+* **`Imputer`**: Fills missing values in record blocks.
+* **`OutlierHandler`**: Filters or clamps numerical outliers in records.
 
 ## 🤝 Contributing
 
-We welcome contributions! If you are interested in building new refiner plugins, please check our contributing guidelines (TODO) and open an issue.
+We welcome contributions for new Normalizers (e.g., `CsvNormalizer`, `LogNormalizer`) or Processors (e.g., `LangChainFilter`).
 
 ## 📜 License
 
-This project is licensed under the Apache 2.0 License.
+Apache 2.0 License © 2025 Sayouzone
