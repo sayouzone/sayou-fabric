@@ -1,17 +1,27 @@
 from sayou.core.exceptions import SayouCoreError
 
+
 class RefineryError(SayouCoreError):
-    """Refinery 컴포넌트 관련 기본 오류"""
+    """
+    Base exception for all errors within the sayou-refinery toolkit.
+    """
+
     pass
 
-class InterfaceError(SayouCoreError):
-    """인터페이스 계약 관련 오류"""
-    pass
-    
-class PatternError(SayouCoreError):
-    """Tier 2 일반 엔진(Pattern) 관련 오류 (사용 안 함)"""
+
+class NormalizationError(RefineryError):
+    """
+    Raised when raw data cannot be converted to ContentBlocks.
+    (e.g., Malformed JSON, Unsupported format)
+    """
+
     pass
 
-class PluginError(SayouCoreError):
-    """Tier 3 플러그인 관련 오류"""
+
+class ProcessingError(RefineryError):
+    """
+    Raised when a processor fails to clean or transform blocks.
+    (e.g., PII masking failure, Imputation rule error)
+    """
+
     pass
