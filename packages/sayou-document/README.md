@@ -1,147 +1,96 @@
-# `sayou-document`
+# sayou-document
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/sayouzone/sayou-fabric/ci.yml?branch=main)](https://github.com/sayouzone/sayou-fabric/actions)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://sayouzone.github.io/sayou-fabric/library-guides/document/)
+[![PyPI version](https://img.shields.io/pypi/v/sayou-document.svg?color=blue)](https://pypi.org/project/sayou-document/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/library-guides/document/)
 
-`sayou-document` is a high-fidelity document parsing library for Python. It converts various document formats (PDF, DOCX, PPTX, XLSX) into a **single, unified JSON structure**, focusing on extracting rich, structured data, not just plain text.
+**The Universal Document Parsing Gateway for Sayou Fabric.**
 
-This library is a foundational "Extractor" component of the **Sayou Data Platform**, designed for data-driven AI and advanced RAG pipelines that require a reliable, structured data source.
+`sayou-document` is a high-fidelity parsing engine that converts diverse document formats (PDF, DOCX, PPTX, XLSX, Images) into a unified, structured **Document Object Model (DOM)**.
 
-## Philosophy
+Unlike simple text extractors, it preserves the semantic structure of documents—headers, tables, charts, and layout coordinates—making it ideal for RAG (Retrieval-Augmented Generation) and Layout-aware LLM applications.
 
-`sayou-document` is designed to be an **extractor**, not an interpreter. It focuses on capturing the raw, structural facts of a document—"this text is bold, 16pt, and at (x0, y0)"—and preserving them with high fidelity.
+## 💡 Core Philosophy
 
-This reliable, structured data provides a robust foundation for any downstream processing or AI pipeline.
+**"One Interface, High Fidelity."**
 
-## 🚀 Key Features
+We abstract away the complexity of proprietary file formats. Whether it's a slide deck or a spreadsheet, `sayou-document` normalizes it into a consistent `Document` > `Page` > `Element` hierarchy.
 
-* **Unified Schema:** One consistent JSON structure for all document types.
-* **High-Fidelity:** Extracts text, tables, images, charts, bounding boxes, and metadata.
-* **Multi-Format:** Out-of-the-box support for:
-    * PDF (`.pdf`)
-    * Word (`.docx`)
-    * PowerPoint (`.pptx`)
-    * Excel (`.xlsx`)
-* **Layout Preservation:** Captures headers, footers (Word), table of contents (PDF), and slide notes (PPTX).
-* **Pluggable OCR:** Easily integrate any OCR engine to extract text from scanned PDFs and embedded images.
-* **Part of an Ecosystem:** Designed to be the first step, feeding structured data into `sayou-refinery`, `sayou-chunking`, and ultimately `sayou-rag`.
+1.  **Smart Routing:** Automatically detects file types (and converts images to PDF if needed) to select the optimal parser.
+2.  **Hybrid Extraction:** Combines native text extraction with OCR fallback for scanned pages or images.
+3.  **Strict Schema:** Outputs data strictly adhering to Pydantic models, ready for the next pipeline stage (Refinery).
+
+```mermaid
+flowchart LR
+    File[Raw File] --> Pipeline[Document Pipeline]
+    Pipeline -->|PDF/Image| OCR[PDF Parser + OCR]
+    Pipeline -->|Office| Office[DOCX/PPTX/XLSX Parser]
+    OCR --> DOM[Structured Document Model]
+    Office --> DOM
+```
 
 ## 📦 Installation
 
 ```bash
 pip install sayou-document
 
-# To include default OCR capabilities or converters (optional)
-# pip install sayou-document[ocr]
+# For OCR support (requires Tesseract installed on OS)
+pip install "sayou-document[ocr]"
 ```
 
-## ⚡ Quickstart
+## ⚡ Quick Start
 
-The `DocumentPipeline` is the primary interface. It automatically routes the file to the correct parser and returns a standardized `Document` object.
+The `DocumentPipeline` handles file detection, conversion, and parsing automatically.
 
 ```python
 import os
 from sayou.document.pipeline import DocumentPipeline
-# Optional: Add an OCR engine plugin
-# from sayou.document.plugins.ocr import GoogleVisionOCR
 
-# 1. Initialize the pipeline
-pipeline = DocumentPipeline()
+def run_demo():
+    # 1. Initialize Pipeline (with optional OCR)
+    pipeline = DocumentPipeline(use_default_ocr=True)
+    pipeline.initialize()
 
-# Optional: Inject an OCR engine (Tier 3 Plugin)
-# ocr_engine = GoogleVisionOCR(credentials="path/to/creds.json")
-# pipeline = DocumentPipeline(ocr_engine=ocr_engine)
-
-pipeline.initialize()
-
-# 2. Load your file
-file_path = "path/to/your/document.pptx"
-file_name = os.path.basename(file_path)
-
-with open(file_path, "rb") as f:
-    file_bytes = f.read()
-
-# 3. Run the pipeline
-try:
-    # 'doc' is a Pydantic object
-    doc = pipeline.run(file_bytes, file_name)
-
-    # 4. Get the unified JSON output
-    json_output = doc.model_dump_json(indent=2)
-
-    # Save the result
-    with open(f"parsed_{file_name}.json", "w", encoding="utf-8") as f:
-        f.write(json_output)
+    # 2. Parse a file (PDF, Word, Excel, PPT, or Image)
+    file_path = "quarterly_report.pdf"
+    # file_path = "scan_image.png"  # Images are auto-converted to PDF & OCR'd
     
-    print(f"Successfully parsed {file_name}")
+    with open(file_path, "rb") as f:
+        file_bytes = f.read()
+        
+    doc = pipeline.run(file_bytes, os.path.basename(file_path))
+    
+    if doc:
+        print(f"File: {doc.file_name} ({doc.doc_type})")
+        print(f"Pages: {doc.page_count}")
+        
+        # 3. Access Structured Data
+        first_page = doc.pages[0]
+        if first_page.elements:
+            print(f"Content Preview: {first_page.elements[0].text[:100]}...")
+        
+        # Export to JSON
+        print(doc.model_dump_json(indent=2))
 
-except ValueError as e:
-    print(f"Error parsing {file_name}: {e}")
+if __name__ == "__main__":
+    run_demo()
 ```
 
-### Example JSON Output (Truncated)
+## 🔑 Key Components
 
-The `Document` object provides a clean, predictable structure.
+### Parsers
+* **`PdfParser`**: Extracts text, images, and TOC from PDFs using `PyMuPDF`. Supports full-page OCR for scanned documents.
+* **`DocxParser`**: Parses Word documents, preserving heading levels and table structures.
+* **`PptxParser`**: Extracts text frames, notes, and tables from slides.
+* **`ExcelParser`**: Converts sheets into table elements and extracts embedded images.
 
-```json
-{
-  "file_name": "document.pptx",
-  "file_id": "document.pptx",
-  "doc_type": "slide",
-  "metadata": {
-    "title": "My Presentation",
-    "author": "Sayou"
-  },
-  "page_count": 1,
-  "pages": [
-    {
-      "page_num": 1,
-      "width": 1280.0,
-      "height": 720.0,
-      "elements": [
-        {
-          "id": "p1:shape:100",
-          "type": "text",
-          "bbox": { "x0": 100.0, "y0": 50.0, "x1": 500.0, "y1": 100.0 },
-          "raw_attributes": {
-            "placeholder_type": "TITLE"
-          },
-          "text": "This is the Main Title",
-          "meta": { "page_num": 1, "id": "p1:shape:100" }
-        },
-        {
-          "id": "p1:shape:101",
-          "type": "chart",
-          "bbox": { "x0": 100.0, "y0": 150.0, "x1": 600.0, "y1": 400.0 },
-          "raw_attributes": {
-            "series_count": 2
-          },
-          "chart_title": "Sales Data",
-          "chart_type": "BAR_CLUSTERED",
-          "text_representation": "Chart: Sales Data...\n- Series 1: [10, 20, 30]\n",
-          "meta": { "page_num": 1, "id": "p1:shape:101" }
-        }
-      ],
-      "note_text": "Remember to emphasize the Q4 growth."
-    }
-  ],
-  "toc": []
-}
-```
-
-## 🗺️ Roadmap (v0.1.0+)
-
-`sayou-document` v0.0.1 provides a robust foundation. Our next steps focus on deepening the "High-Fidelity" promise:
-
-* **Annotations:** Extracting PDF comments, highlights, and sticky notes.
-* **Advanced Styles:** Capturing detailed cell-level formatting (borders, fills) from Excel and Word tables.
-* **Structural Semantics:** Parsing footnotes, endnotes, and list structures (bullets/numbering) from Word.
-* **HWP Support:** Adding a (Tier 3) converter plugin for `.hwp` files.
+### Converters & OCR
+* **`ImageToPdfConverter`**: Automatically converts JPG/PNG images to PDF to leverage the robust PDF parsing pipeline.
+* **`TesseractOCR`**: (Optional) Provides OCR capabilities for handling scanned content and embedded images.
 
 ## 🤝 Contributing
 
-We welcome contributions! If you are interested in improving `sayou-document` or building new parsers/plugins, please check our contributing guidelines (TODO) and open an issue.
+We welcome contributions for new Parsers (e.g., `HwpParser` for Korean documents, `HtmlParser`) or Enhanced OCR integrations (e.g., Google Vision API).
 
 ## 📜 License
 
