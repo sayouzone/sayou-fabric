@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-document"
-version = "0.1.4"
+version = "0.1.5"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
@@ -29,8 +29,13 @@ dependencies = [
     "PyMuPDF==1.25.5",
     "python-docx==1.1.2",
     "python-pptx==1.0.2",
-    "pydantic ~= 2.12.4"
+    "pydantic ~= 2.12.4",
+    "Pillow >= 10.0.0"
 ]
+
+[project.optional-dependencies]
+ocr = ["pytesseract"]
+all = ["sayou-document[ocr]"]
 
 # -----------------
 # 2. 프로젝트 링크 (PyPI 사이드바)
