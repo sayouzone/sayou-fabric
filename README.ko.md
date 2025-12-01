@@ -4,11 +4,11 @@
 
 # Sayou Fabric
 
-[![PyPI](https://img.shields.io/pypi/v/sayou-brain.svg?color=blue&label=pypi%20package)](https://pypi.org/project/sayou-brain/)
+[![PyPI](https://img.shields.io/pypi/v/sayou-connector.svg?color=blue&label=pypi%20package)](https://pypi.org/project/sayou-connector/)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blueviolet.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Downloads](https://static.pepy.tech/badge/sayou-rag?color=orange)](https://pepy.tech/project/sayou-rag)
+[![Downloads](https://static.pepy.tech/badge/sayou-connector?color=orange)](https://pepy.tech/project/sayou-connector)
 [![GitHub stars](https://img.shields.io/github/stars/sayouzone/sayou-fabric.svg)](https://github.com/sayouzone/sayou-fabric/stargazers)
 
 _엔터프라이즈 RAG 파이프라인 구축을 위한 데이터 중심(Data-Centric) 프레임워크_
@@ -41,19 +41,19 @@ LLM 체이닝에 집중하는 기존 프레임워크들과 달리, Sayou Fabric�
 
 Sayou Fabric은 서로 독립적이면서도 유기적으로 연결되는 라이브러리들로 구성되어 있습니다.
 
-| 단계 | 패키지 | 설명 |
+| 패키지 | 버전 | 설명 |
 | :--- | :--- | :--- |
-| **0. Core** | `sayou-core` | 기본 컴포넌트, 로깅, 데코레이터 등 공통 기반. |
-| **1. Ingest** | `sayou-connector` | 파일, 웹, API, DB 등 다양한 소스에서 원시 데이터를 수집. |
-| **2. Parse** | `sayou-document` | PDF, DOCX 등의 좌표와 스타일을 보존하는 High-Fidelity 파싱. |
-| **3. Refine** | `sayou-refinery` | 복잡한 JSON 구조를 LLM 친화적인 표준 Markdown으로 정규화. |
-| **4. Split** | `sayou-chunking` | 문맥 인식 청킹. 표나 코드 블록 등 원자적 요소를 보호하며 분할. |
-| **5. Wrap** | `sayou-wrapper` | 모든 데이터를 사내 표준 스키마(`SayouNode`)로 변환 및 검증. |
-| **6. Build** | `sayou-assembler` | 노드 간의 부모-자식 관계를 연결하여 인메모리 지식 그래프 조립. |
-| **7. Load** | `sayou-loader` | 완성된 그래프를 파일, VectorDB, GraphDB에 안전하게 적재. |
-| **8. Query** | `sayou-extractor` | 벡터 검색과 그래프 탐색을 결합한 하이브리드 검색 수행. |
-| **9. Gen** | `sayou-llm` | 다양한 LLM(OpenAI, Local)을 위한 통합 어댑터 계층. |
-| **10. Main** | `sayou-brain` | 전체 파이프라인을 총괄하고 제어하는 관제탑 (`StandardPipeline`). |
+| `sayou-core` | [![PyPI version](https://img.shields.io/pypi/v/sayou-core.svg?color=blue)](https://pypi.org/project/sayou-core/) | 기본 컴포넌트, 로깅, 데코레이터 등 공통 기반. |
+| `sayou-connector` | [![PyPI version](https://img.shields.io/pypi/v/sayou-connector.svg?color=blue)](https://pypi.org/project/sayou-connector/) | 파일, 웹, API, DB 등 다양한 소스에서 원시 데이터를 수집. |
+| `sayou-document` | [![PyPI version](https://img.shields.io/pypi/v/sayou-document.svg?color=blue)](https://pypi.org/project/sayou-document/) | PDF, DOCX 등의 좌표와 스타일을 보존하는 High-Fidelity 파싱. |
+| `sayou-refinery` | [![PyPI version](https://img.shields.io/pypi/v/sayou-refinery.svg?color=blue)](https://pypi.org/project/sayou-refinery/) | 복잡한 JSON 구조를 LLM 친화적인 표준 Markdown으로 정규화. |
+| `sayou-chunking` | [![PyPI version](https://img.shields.io/pypi/v/sayou-chunking.svg?color=blue)](https://pypi.org/project/sayou-chunking/) | 문맥 인식 청킹. 표나 코드 블록 등 원자적 요소를 보호하며 분할. |
+| `sayou-wrapper` | [![PyPI version](https://img.shields.io/pypi/v/sayou-wrapper.svg?color=blue)](https://pypi.org/project/sayou-wrapper/) | 모든 데이터를 사내 표준 스키마(`SayouNode`)로 변환 및 검증. |
+| `sayou-assembler` | [![PyPI version](https://img.shields.io/pypi/v/sayou-assembler.svg?color=blue)](https://pypi.org/project/sayou-assembler/) | 노드 간의 부모-자식 관계를 연결하여 인메모리 지식 그래프 조립. |
+| `sayou-loader` | [![PyPI version](https://img.shields.io/pypi/v/sayou-loader.svg?color=blue)](https://pypi.org/project/sayou-loader/) | 완성된 그래프를 파일, VectorDB, GraphDB에 안전하게 적재. |
+| `sayou-extractor` | [![PyPI version](https://img.shields.io/pypi/v/sayou-extractor.svg?color=blue)](https://pypi.org/project/sayou-extractor/) | 벡터 검색과 그래프 탐색을 결합한 하이브리드 검색 수행. |
+| `sayou-llm` | [![PyPI version](https://img.shields.io/pypi/v/sayou-llm.svg?color=blue)](https://pypi.org/project/sayou-llm/) | 다양한 LLM(OpenAI, Local)을 위한 통합 어댑터 계층. |
+| `sayou-brain` | [![PyPI version](https://img.shields.io/pypi/v/sayou-brain.svg?color=blue)](https://pypi.org/project/sayou-brain/) | 전체 파이프라인을 총괄하고 제어하는 관제탑 (`StandardPipeline`). |
 
 ---
 

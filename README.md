@@ -4,11 +4,11 @@
 
 # Sayou Fabric
 
-[![PyPI](https://img.shields.io/pypi/v/sayou-brain.svg?color=blue&label=pypi%20package)](https://pypi.org/project/sayou-brain/)
+[![PyPI](https://img.shields.io/pypi/v/sayou-document.svg?color=blue&label=pypi%20package)](https://pypi.org/project/sayou-document/)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blueviolet.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Downloads](https://static.pepy.tech/badge/sayou-rag?color=orange)](https://pepy.tech/project/sayou-rag)
+[![Downloads](https://static.pepy.tech/badge/sayou-document?)](https://pepy.tech/project/sayou-document)
 [![GitHub stars](https://img.shields.io/github/stars/sayouzone/sayou-fabric.svg)](https://github.com/sayouzone/sayou-fabric/stargazers)
 
 _The Data-Centric Framework for Building Enterprise RAG Pipelines_
@@ -40,19 +40,19 @@ Every library in the ecosystem follows a consistent **Interface-Template-Plugin*
 
 Sayou Fabric consists of independent, loosely coupled libraries that work together seamlessly.
 
-| Stage | Package | Description |
+| Package | Version | Description |
 | :--- | :--- | :--- |
-| **0. Core** | `sayou-core` | Base components, logging, and decorators. |
-| **1. Ingest** | `sayou-connector` | Fetches raw data from Files, Web, APIs, or DBs via smart generators. |
-| **2. Parse** | `sayou-document` | High-fidelity parsing of PDF, DOCX, PPTX (preserves coords & styles). |
-| **3. Refine** | `sayou-refinery` | Normalizes complex JSON structures into clean, standard Markdown. |
-| **4. Split** | `sayou-chunking` | Context-aware chunking. Protects atomic blocks (tables/code). |
-| **5. Wrap** | `sayou-wrapper` | Enforces the company schema (`SayouNode`) on all incoming data. |
-| **6. Build** | `sayou-assembler` | Assembles nodes into an In-Memory Knowledge Graph (Parent-Child linking). |
-| **7. Load** | `sayou-loader` | Saves the constructed graph to File, VectorDB, or GraphDB with fallback safety. |
-| **8. Query** | `sayou-extractor` | Intelligent retrieval using Hybrid Search (Vector + Graph). |
-| **9. Gen** | `sayou-llm` | An adapter layer for various LLMs (OpenAI, Anthropic, Local). |
-| **10. Main** | `sayou-brain` | The control tower that manages the entire pipeline (`StandardPipeline`). |
+| `sayou-core` | [![PyPI version](https://img.shields.io/pypi/v/sayou-core.svg?color=blue)](https://pypi.org/project/sayou-core/) | Base components, logging, and decorators. |
+| `sayou-connector` | [![PyPI version](https://img.shields.io/pypi/v/sayou-connector.svg?color=blue)](https://pypi.org/project/sayou-connector/) | Fetches raw data from Files, Web, APIs, or DBs via smart generators. |
+| `sayou-document` | [![PyPI version](https://img.shields.io/pypi/v/sayou-document.svg?color=blue)](https://pypi.org/project/sayou-document/) | High-fidelity parsing of PDF, DOCX, PPTX (preserves coords & styles). |
+| `sayou-refinery` | [![PyPI version](https://img.shields.io/pypi/v/sayou-refinery.svg?color=blue)](https://pypi.org/project/sayou-refinery/) | Normalizes complex JSON structures into clean, standard Markdown. |
+| `sayou-chunking` | [![PyPI version](https://img.shields.io/pypi/v/sayou-chunking.svg?color=blue)](https://pypi.org/project/sayou-chunking/) | Context-aware chunking. Protects atomic blocks (tables/code). |
+| `sayou-wrapper` | [![PyPI version](https://img.shields.io/pypi/v/sayou-wrapper.svg?color=blue)](https://pypi.org/project/sayou-wrapper/) | Enforces the company schema (`SayouNode`) on all incoming data. |
+| `sayou-assembler` | [![PyPI version](https://img.shields.io/pypi/v/sayou-assembler.svg?color=blue)](https://pypi.org/project/sayou-assembler/) | Assembles nodes into an In-Memory Knowledge Graph (Parent-Child linking). |
+| `sayou-loader` | [![PyPI version](https://img.shields.io/pypi/v/sayou-loader.svg?color=blue)](https://pypi.org/project/sayou-loader/) | Saves the constructed graph to File, VectorDB, or GraphDB with fallback safety. |
+| `sayou-extractor` | [![PyPI version](https://img.shields.io/pypi/v/sayou-extractor.svg?color=blue)](https://pypi.org/project/sayou-extractor/) | Intelligent retrieval using Hybrid Search (Vector + Graph). |
+| `sayou-llm` | [![PyPI version](https://img.shields.io/pypi/v/sayou-llm.svg?color=blue)](https://pypi.org/project/sayou-llm/) | An adapter layer for various LLMs (OpenAI, Anthropic, Local). |
+| `sayou-brain` | [![PyPI version](https://img.shields.io/pypi/v/sayou-brain.svg?color=blue)](https://pypi.org/project/sayou-brain/) | The control tower that manages the entire pipeline (`StandardPipeline`). |
 
 ---
 
