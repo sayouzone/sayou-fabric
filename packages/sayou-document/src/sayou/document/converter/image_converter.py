@@ -1,17 +1,20 @@
 import io
+
 try:
     from PIL import Image
 except ImportError:
     Image = None
 
-from ..interfaces.base_converter import BaseConverter
 from ..core.exceptions import ConversionError
+from ..interfaces.base_converter import BaseConverter
+
 
 class ImageToPdfConverter(BaseConverter):
     """
     (Tier 2) Simple converter that turns Image files (JPG, PNG) into PDF bytes.
     Useful for unifying the pipeline input to PDF format.
     """
+
     component_name = "ImageToPdfConverter"
     SUPPORTED_TYPES = [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]
 
@@ -21,7 +24,7 @@ class ImageToPdfConverter(BaseConverter):
 
         try:
             image = Image.open(io.BytesIO(file_bytes))
-            
+
             # PDF 저장을 위해 RGB 모드로 변환 (PNG 투명도 이슈 방지)
             if image.mode in ("RGBA", "LA"):
                 background = Image.new("RGB", image.size, (255, 255, 255))

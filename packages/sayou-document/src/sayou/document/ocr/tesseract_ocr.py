@@ -1,17 +1,20 @@
 try:
+    import io
+
     import pytesseract
     from PIL import Image
-    import io
 except ImportError:
     pytesseract = None
 
-from ..interfaces.base_ocr import BaseOCR
 from ..core.exceptions import OCRError
+from ..interfaces.base_ocr import BaseOCR
+
 
 class TesseractOCR(BaseOCR):
     """
     (Tier 2) OCR implementation using Google's Tesseract engine via 'pytesseract'.
     """
+
     component_name = "TesseractOCR"
 
     def initialize(self, lang: str = "eng+kor", **kwargs):

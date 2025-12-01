@@ -41,7 +41,7 @@ class ExcelParser(BaseDocumentParser):
         Args:
             file_bytes (bytes): Binary content of the .xlsx file.
             file_name (str): Original filename.
-            **kwargs: 
+            **kwargs:
                 - skip_hidden (bool): If True, ignore hidden sheets.
                 - ocr_images (bool): If True, run OCR on embedded images.
 

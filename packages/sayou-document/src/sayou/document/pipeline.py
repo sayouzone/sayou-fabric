@@ -4,19 +4,17 @@ from typing import Dict, List, Optional
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
 
-from .interfaces.base_parser import BaseDocumentParser
-from .interfaces.base_ocr import BaseOCR
-from .interfaces.base_converter import BaseConverter
-from .models import Document
+from .converter.image_converter import ImageToPdfConverter
 from .core.exceptions import ParserError
-
+from .interfaces.base_converter import BaseConverter
+from .interfaces.base_ocr import BaseOCR
+from .interfaces.base_parser import BaseDocumentParser
+from .models import Document
+from .ocr.tesseract_ocr import TesseractOCR
 from .parser.docx_parser import DocxParser
 from .parser.excel_parser import ExcelParser
 from .parser.pdf_parser import PdfParser
 from .parser.pptx_parser import PptxParser
-
-from .converter.image_converter import ImageToPdfConverter
-from .ocr.tesseract_ocr import TesseractOCR
 
 
 class DocumentPipeline(BaseComponent):
