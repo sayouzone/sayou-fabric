@@ -6,17 +6,39 @@ from ..interfaces.base_processor import BaseProcessor
 
 
 class TextCleaner(BaseProcessor):
+    """
+    (Tier 2) Cleans text content using regex and whitespace normalization.
+
+    Operates on 'text' and 'md' blocks to remove noise characters or custom patterns.
+    """
 
     component_name = "TextCleaner"
 
     def initialize(
         self, patterns: List[str] = None, normalize_space: bool = True, **kwargs
     ):
+        """
+        Configure cleaning patterns.
+
+        Args:
+            patterns (List[str]): List of regex patterns to remove from text.
+            normalize_space (bool): If True, collapses multiple spaces/tabs/newlines.
+            **kwargs: Additional arguments.
+        """
         self.normalize_space = normalize_space
         self.patterns = [re.compile(p) for p in (patterns or [])]
         self._space_re = re.compile(r"[ \t]+")
 
     def _do_process(self, blocks: List[ContentBlock]) -> List[ContentBlock]:
+        """
+        Apply cleaning logic to text blocks.
+
+        Args:
+            blocks (List[ContentBlock]): Input blocks.
+
+        Returns:
+            List[ContentBlock]: Cleaned blocks.
+        """
         for block in blocks:
             if block.type not in ["text", "md"]:
                 continue

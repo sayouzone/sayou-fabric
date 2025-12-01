@@ -6,10 +6,25 @@ from ..interfaces.base_processor import BaseProcessor
 
 
 class Deduplicator(BaseProcessor):
+    """
+    (Tier 2) Removes duplicate blocks based on content hashing.
+
+    It computes a hash of the content for each block and filters out
+    subsequent blocks that match an already seen hash.
+    """
 
     component_name = "Deduplicator"
 
     def _do_process(self, blocks: List[ContentBlock]) -> List[ContentBlock]:
+        """
+        Iterate through blocks and remove duplicates.
+
+        Args:
+            blocks (List[ContentBlock]): The input list of blocks.
+
+        Returns:
+            List[ContentBlock]: A new list with duplicates removed.
+        """
         seen_hashes: Set[int] = set()
         unique_blocks: List[ContentBlock] = []
 

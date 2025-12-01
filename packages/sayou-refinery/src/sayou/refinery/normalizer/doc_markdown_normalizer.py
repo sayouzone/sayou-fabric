@@ -6,6 +6,13 @@ from ..interfaces.base_normalizer import BaseNormalizer
 
 
 class DocMarkdownNormalizer(BaseNormalizer):
+    """
+    (Tier 2) Normalizes a Sayou Document Dictionary into Markdown ContentBlocks.
+
+    This engine parses the structured dictionary output from 'sayou-document' and
+    converts individual elements (Text, Table, Image, Chart) into semantically
+    rich Markdown blocks. It also handles metadata conversion to Frontmatter.
+    """
 
     component_name = "DocMarkdownNormalizer"
     SUPPORTED_TYPES = ["standard_doc", "sayou_doc_json"]
@@ -16,11 +23,31 @@ class DocMarkdownNormalizer(BaseNormalizer):
         include_footers: bool = False,
         **kwargs,
     ):
+        """
+        Configure the normalizer's behavior regarding document structure.
+
+        Args:
+            include_headers (bool): If True, processes elements found in page headers.
+            include_footers (bool): If True, processes elements found in page footers.
+            **kwargs: Additional configuration parameters passed to parent.
+        """
         super().initialize(**kwargs)
         self.include_headers = include_headers
         self.include_footers = include_footers
 
     def _do_normalize(self, raw_data: Any) -> List[ContentBlock]:
+        """
+        Execute the normalization logic on the document dictionary.
+
+        Args:
+            raw_data (Any): The input dictionary adhering to Sayou Document Schema.
+
+        Returns:
+            List[ContentBlock]: A list of normalized content blocks (mostly 'md' type).
+
+        Raises:
+            NormalizationError: If `raw_data` is not a valid dictionary.
+        """
         if not isinstance(raw_data, dict):
             raise NormalizationError(
                 f"Input must be a Dictionary, got {type(raw_data).__name__}"
@@ -55,6 +82,17 @@ class DocMarkdownNormalizer(BaseNormalizer):
     def _handle_element(
         self, element: Dict[str, Any], is_header: bool, is_footer: bool
     ) -> List[ContentBlock]:
+        """
+        Dispatch the element to specific handlers based on its 'type' field.
+
+        Args:
+            element (Dict[str, Any]): The element dictionary.
+            is_header (bool): True if the element is part of the page header.
+            is_footer (bool): True if the element is part of the page footer.
+
+        Returns:
+            List[ContentBlock]: The resulting block(s) from the element.
+        """
         if is_footer and not self.include_footers:
             return []
 
@@ -75,6 +113,15 @@ class DocMarkdownNormalizer(BaseNormalizer):
         return []
 
     def _handle_doc_metadata(self, doc_data: Dict[str, Any]) -> List[ContentBlock]:
+        """
+        Convert document-level metadata into a Markdown Frontmatter block.
+
+        Args:
+            doc_data (Dict[str, Any]): The root document dictionary containing 'metadata'.
+
+        Returns:
+            List[ContentBlock]: A single block containing YAML-like frontmatter.
+        """
         md_frontmatter = "---\n"
         metadata = doc_data.get("metadata", {})
 
@@ -98,6 +145,12 @@ class DocMarkdownNormalizer(BaseNormalizer):
     def _handle_text(
         self, element: Dict[str, Any], is_header: bool, is_footer: bool
     ) -> List[ContentBlock]:
+        """
+        Convert a text element to a Markdown block, handling headings and lists.
+
+        Uses 'semantic_type' (heading/list) and 'level' attributes to generate
+        appropriate Markdown syntax (e.g., '# Title', '- Item').
+        """
         text = element.get("text", "").strip()
         if not text:
             return []
@@ -143,6 +196,12 @@ class DocMarkdownNormalizer(BaseNormalizer):
     def _handle_table(
         self, element: Dict[str, Any], is_header: bool, is_footer: bool
     ) -> List[ContentBlock]:
+        """
+        Convert a table element into a Markdown table representation.
+
+        Args:
+            element (Dict[str, Any]): Must contain 'data' (2D list).
+        """
         md_table = ""
         table_data = element.get("data", [])
 
@@ -185,6 +244,12 @@ class DocMarkdownNormalizer(BaseNormalizer):
     def _handle_image(
         self, element: Dict[str, Any], is_header: bool, is_footer: bool
     ) -> List[ContentBlock]:
+        """
+        Process an image element.
+
+        Depending on implementation, this might return an 'image_base64' block
+        or a Markdown image link if an external URL is provided.
+        """
         image_base64 = element.get("image_base64")
         image_base64 = element.get("image_base64")
         if not image_base64:
@@ -215,6 +280,12 @@ class DocMarkdownNormalizer(BaseNormalizer):
     def _handle_chart(
         self, element: Dict[str, Any], is_header: bool, is_footer: bool
     ) -> List[ContentBlock]:
+        """
+        Convert a chart element into its text representation.
+
+        Uses the 'text_representation' field from the element to create
+        a descriptive text block for LLM consumption.
+        """
         text_rep = element.get("text_representation")
         if not text_rep:
             return []

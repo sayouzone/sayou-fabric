@@ -11,11 +11,30 @@ from ..interfaces.base_normalizer import BaseNormalizer
 
 
 class HtmlTextNormalizer(BaseNormalizer):
+    """
+    (Tier 2) Converts HTML string into a clean Text ContentBlock.
+
+    Uses BeautifulSoup to strip tags, scripts, and styles, returning only
+    the visible text content while preserving paragraph structure.
+    """
 
     component_name = "HtmlTextNormalizer"
     SUPPORTED_TYPES = ["html"]
 
     def _do_normalize(self, raw_data: Any) -> List[ContentBlock]:
+        """
+        Parse HTML and extract text.
+
+        Args:
+            raw_data (Any): The input HTML string.
+
+        Returns:
+            List[ContentBlock]: A single block of type 'text'.
+
+        Raises:
+            ImportError: If BeautifulSoup4 is not installed.
+            NormalizationError: If input is not a string.
+        """
         if not BeautifulSoup:
             raise ImportError("BeautifulSoup4 is required for HtmlTextNormalizer.")
 

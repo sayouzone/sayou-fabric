@@ -5,13 +5,40 @@ from ..interfaces.base_processor import BaseProcessor
 
 
 class OutlierHandler(BaseProcessor):
+    """
+    (Tier 2) Handles numerical outliers in 'record' blocks.
+
+    Can either 'drop' the entire block or 'clamp' the value to a boundary
+    if a field violates the defined min/max rules.
+    """
 
     component_name = "OutlierHandler"
 
     def initialize(self, rules: Dict[str, Dict[str, Any]] = None, **kwargs):
+        """
+        Set outlier handling rules.
+
+        Args:
+            rules (Dict[str, Dict[str, Any]]): Mapping of field names to constraints.
+                Example:
+                {
+                    "age": {"min": 0, "max": 120, "action": "drop"},
+                    "score": {"min": 0, "max": 100, "action": "clamp"}
+                }
+            **kwargs: Additional arguments.
+        """
         self.rules = rules or {}
 
     def _do_process(self, blocks: List[ContentBlock]) -> List[ContentBlock]:
+        """
+        Check numerical fields against rules and filter/modify blocks.
+
+        Args:
+            blocks (List[ContentBlock]): Input blocks.
+
+        Returns:
+            List[ContentBlock]: Filtered or modified list of blocks.
+        """
         valid_blocks = []
 
         for block in blocks:
