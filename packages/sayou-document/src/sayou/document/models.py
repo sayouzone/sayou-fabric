@@ -8,7 +8,18 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class BoundingBox(BaseModel):
-    """(x0, y0, x1, y1) Normalized coordinates"""
+    """
+    Represents a rectangular region on a page using absolute coordinates.
+
+    Units depend on the source format (e.g., Points for PDF, EMUs for PPTX).
+    Values are NOT normalized to 0.0-1.0 range.
+    
+    Structure:
+    - x0: Left
+    - y0: Top
+    - x1: Right
+    - y1: Bottom
+    """
 
     x0: float = 0.0
     y0: float = 0.0
@@ -17,7 +28,12 @@ class BoundingBox(BaseModel):
 
 
 class TextStyle(BaseModel):
-    """High-Fidelity Font/Style Information"""
+    """
+    Captures high-fidelity font and styling information for text elements.
+
+    Used to preserve the visual appearance of text, which can be useful for
+    rendering or semantic analysis (e.g., detecting emphasis).
+    """
 
     font_name: Optional[str] = None
     font_size: Optional[float] = None
@@ -28,7 +44,12 @@ class TextStyle(BaseModel):
 
 
 class ElementMetadata(BaseModel):
-    """모든 요소가 공통으로 가지는 메타데이터."""
+    """
+    Common metadata shared by all document elements.
+
+    Stores contextual information like the page number where the element appears,
+    a unique identifier, and optionally a hyperlink if the element is clickable.
+    """
 
     model_config = ConfigDict(extra="allow")  # 정의되지 않은 필드도 허용
 
@@ -44,8 +65,11 @@ class ElementMetadata(BaseModel):
 
 class BaseElement(BaseModel):
     """
-    The building block of any document.
-    Equivalent to 'contents' items in the original schema.
+    The abstract base class for all document content blocks.
+
+    Every piece of content extracted from a document (text, image, table, etc.)
+    inherits from this class. It provides a common interface for ID, type,
+    location (bbox), and raw attributes specific to the source format.
     """
 
     id: str
@@ -58,6 +82,12 @@ class BaseElement(BaseModel):
 
 
 class TextElement(BaseElement):
+    """
+    Represents a block of text.
+
+    This includes paragraphs, headings, list items, and other textual content.
+    It may include styling information via the `style` field.
+    """
     type: Literal["text"] = "text"
     text: str
     style: Optional[TextStyle] = None
@@ -65,7 +95,12 @@ class TextElement(BaseElement):
 
 
 class TableCell(BaseModel):
-    """Atomic unit of a table"""
+    """
+    Represents a single cell within a TableElement.
+
+    Contains the text content of the cell and layout information like row/column
+    spanning, as well as semantic flags (e.g., is_header).
+    """
 
     text: str
     row_span: int = 1
@@ -75,6 +110,13 @@ class TableCell(BaseModel):
 
 
 class TableElement(BaseElement):
+    """
+    Represents a tabular data structure.
+
+    Stores data in two formats:
+    1. `data`: A simplified 2D list of strings (LLM-friendly).
+    2. `cells`: A detailed list of `TableCell` objects (High-fidelity layout).
+    """
     type: Literal["table"] = "table"
     data: List[List[str]]
     cells: List[List[TableCell]] = []
@@ -83,6 +125,12 @@ class TableElement(BaseElement):
 
 
 class ImageElement(BaseElement):
+    """
+    Represents an image embedded in the document.
+
+    Can store the image data as a Base64 string (`image_base64`), a URL (`image_url`),
+    or extracted text via OCR (`ocr_text`).
+    """
     type: Literal["image"] = "image"
     image_url: Optional[str] = None
     image_base64: Optional[str] = None
@@ -92,6 +140,13 @@ class ImageElement(BaseElement):
 
 
 class ChartElement(BaseElement):
+    """
+    Represents a chart or graph.
+
+    Since visual charts are hard to parse directly, this element focuses on
+    extracting the underlying data or a textual description (`text_representation`)
+    that describes the chart's content (e.g., series names, data points).
+    """
     type: Literal["chart"] = "chart"
     chart_title: Optional[str] = None
     chart_type: Optional[str] = None
@@ -105,7 +160,12 @@ class ChartElement(BaseElement):
 
 
 class BasePage(BaseModel):
-    """Abstract container for content"""
+    """
+    Abstract base class for a single page or slide container.
+
+    Holds dimensions (width, height) and a list of content elements found
+    within this container.
+    """
 
     page_num: int
     width: Optional[float] = None
@@ -114,7 +174,12 @@ class BasePage(BaseModel):
 
 
 class Page(BasePage):
-    """For PDF and Word (Sequential Pages)"""
+    """
+    Represents a sequential page in flow documents (PDF, Word).
+
+    Unlike generic pages, this includes specific areas for headers and footers,
+    and a `text` field containing the raw text dump of the page.
+    """
 
     header_elements: List[
         Union[TextElement, TableElement, ImageElement, ChartElement]
@@ -126,7 +191,12 @@ class Page(BasePage):
 
 
 class Slide(BasePage):
-    """For PPT (Presentation Slides)"""
+    """
+    Represents a slide in presentation documents (PowerPoint).
+
+    Includes specific features for presentations, such as speaker notes (`note_text`)
+    and master slide references.
+    """
 
     has_notes: bool = False
     note_text: Optional[str] = None
@@ -134,7 +204,12 @@ class Slide(BasePage):
 
 
 class Sheet(BasePage):
-    """For Excel (Spreadsheet Tabs)"""
+    """
+    Represents a worksheet in spreadsheet documents (Excel).
+
+    Maps the concept of a 'page' to an infinite canvas of cells.
+    Includes metadata like the sheet name and visibility state.
+    """
 
     sheet_name: str
     is_hidden: bool = False
@@ -146,15 +221,21 @@ class Sheet(BasePage):
 # ==============================================================================
 
 
-class Page(BaseModel):
-    page_num: int
-    width: Optional[float] = None
-    height: Optional[float] = None
-    elements: List[Union[TextElement, TableElement, ImageElement]] = []
-    text: Optional[str] = None
+# class Page(BaseModel):
+#     page_num: int
+#     width: Optional[float] = None
+#     height: Optional[float] = None
+#     elements: List[Union[TextElement, TableElement, ImageElement]] = []
+#     text: Optional[str] = None
 
 
 class DocumentMetadata(BaseModel):
+    """
+    Global metadata for the entire document.
+
+    Includes standard properties like title, author, and creation dates,
+    as well as a dictionary for any format-specific extra metadata.
+    """
     title: Optional[str] = None
     author: Optional[str] = None
     created_at: Optional[str] = None
@@ -165,9 +246,11 @@ class DocumentMetadata(BaseModel):
 
 class Document(BaseModel):
     """
-    The Final Artifact.
-    This structure can hold ANY of the 4 document types
-    while preserving their unique structures.
+    The root object representing a fully parsed document.
+
+    This unified structure serves as the standard output for all `sayou-document` parsers.
+    It acts as a container for pages (or slides/sheets) and global metadata,
+    abstracting away the differences between PDF, DOCX, PPTX, and XLSX formats.
     """
 
     file_name: str

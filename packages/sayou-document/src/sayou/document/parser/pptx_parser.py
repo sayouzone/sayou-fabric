@@ -24,10 +24,28 @@ from ..models import (
 
 
 class PptxParser(BaseDocumentParser):
+    """
+    (Tier 2) Parser for Microsoft PowerPoint (.pptx) presentations.
+
+    Iterates through slides, extracting shapes (Text, Picture, Table, Chart).
+    Recursively handles grouped shapes and extracts speaker notes.
+    """
+
     component_name = "PptxParser"
     SUPPORTED_TYPES = [".pptx"]
 
     def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
+        """
+        Parse PPTX bytes into a structured Document.
+
+        Args:
+            file_bytes (bytes): Binary content of the .pptx file.
+            file_name (str): Original filename.
+            **kwargs: Options like 'ocr_images'.
+
+        Returns:
+            Document: A document object with 'doc_type="slide"'.
+        """
         if Presentation is None:
             raise ImportError("python-pptx is required. (pip install python-pptx)")
 
@@ -88,7 +106,20 @@ class PptxParser(BaseDocumentParser):
         )
 
     def _process_shape(self, shape, page_num: int, **kwargs) -> List[BaseElement]:
-        """Shape 타입에 따른 분기 및 ChartElement 처리"""
+        """
+        Convert a PPTX shape into one or more Sayou Elements.
+
+        Handles recursive extraction for Group shapes and type-specific
+        logic for TextFrames, Pictures, Tables, and Charts.
+
+        Args:
+            shape (Shape): The python-pptx Shape object.
+            page_num (int): Slide number.
+            **kwargs: Configuration passed from parse.
+
+        Returns:
+            List[BaseElement]: A list of extracted elements (Text, Image, Table, Chart).
+        """
         extracted = []
 
         # 1. 그룹 (Group) -> 재귀 호출

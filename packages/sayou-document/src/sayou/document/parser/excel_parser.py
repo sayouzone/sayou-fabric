@@ -23,10 +23,31 @@ from ..models import (
 
 
 class ExcelParser(BaseDocumentParser):
+    """
+    (Tier 2) Parser for Microsoft Excel (.xlsx) workbooks.
+
+    Treats each sheet as a 'Page'. Extracts cell data as tables and
+    floating images embedded in the sheet. Includes a robust recovery
+    mechanism for corrupted metadata XML.
+    """
+
     component_name = "ExcelParser"
     SUPPORTED_TYPES = [".xlsx", ".xlsm", ".xltx", ".xltm"]
 
     def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
+        """
+        Parse Excel bytes into a structured Document.
+
+        Args:
+            file_bytes (bytes): Binary content of the .xlsx file.
+            file_name (str): Original filename.
+            **kwargs: 
+                - skip_hidden (bool): If True, ignore hidden sheets.
+                - ocr_images (bool): If True, run OCR on embedded images.
+
+        Returns:
+            Document: A document object with 'doc_type="sheet"'.
+        """
         if openpyxl is None:
             raise ImportError("openpyxl is required for ExcelParser.")
 
@@ -44,8 +65,8 @@ class ExcelParser(BaseDocumentParser):
 
             elements_list: List[BaseElement] = []
 
-            sheet_data = []  # LLM 친화적 2D 리스트
-            rows_cells = []  # High-Fidelity 2D 리스트
+            sheet_data = []
+            rows_cells = []
 
             for r_idx, row in enumerate(sheet.iter_rows()):
                 cleaned_row_data = []
@@ -99,6 +120,17 @@ class ExcelParser(BaseDocumentParser):
         )
 
     def _extract_images(self, sheet, page_num, ocr_enabled) -> List[ImageElement]:
+        """
+        Extract embedded images (drawings) from a worksheet.
+
+        Args:
+            sheet (Worksheet): The openpyxl worksheet object.
+            page_num (int): The sheet index (1-based).
+            ocr_enabled (bool): Whether to perform OCR.
+
+        Returns:
+            List[ImageElement]: Extracted images with position metadata (row/col).
+        """
         images = []
         if hasattr(sheet, "_images"):
             for i, image in enumerate(sheet._images):
@@ -119,7 +151,19 @@ class ExcelParser(BaseDocumentParser):
         return images
 
     def _load_workbook_safe(self, file_bytes: bytes):
-        """custom.xml 오류 자동 복구 로직"""
+        """
+        Load workbook with fallback repair logic.
+
+        Attempts to load normally. If it fails due to common XML errors
+        (e.g., 'custom.xml' issues from 3rd party tools), it rewrites
+        the ZIP structure to exclude the problematic file and retries.
+
+        Args:
+            file_bytes (bytes): The raw file content.
+
+        Returns:
+            Workbook: The loaded openpyxl Workbook object.
+        """
         try:
             return openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
         except (TypeError, KeyError, zipfile.BadZipFile):

@@ -26,10 +26,16 @@ from ..models import (
 
 
 class DocxParser(BaseDocumentParser):
+    """
+    (Tier 2) Parser for Microsoft Word (.docx) documents.
+
+    Uses 'python-docx' to traverse the document tree, extracting paragraphs,
+    tables, and inline images from the body, headers, and footers.
+    It preserves semantic structure (Headings, Lists) in 'raw_attributes'.
+    """
+
     component_name = "DocxParser"
     SUPPORTED_TYPES = [".docx", ".doc"]
-
-    # XML 네임스페이스 정의
     NAMESPACES = {
         "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
         "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
@@ -37,6 +43,17 @@ class DocxParser(BaseDocumentParser):
     }
 
     def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
+        """
+        Parse DOCX bytes into a structured Document.
+
+        Args:
+            file_bytes (bytes): The binary content of the .docx file.
+            file_name (str): Original filename.
+            **kwargs: Options passed to image processing (e.g., ocr_enabled).
+
+        Returns:
+            Document: A document object with 'doc_type="word"'.
+        """
         if DocxDocument is None:
             raise ImportError("python-docx is required.")
 
@@ -133,6 +150,21 @@ class DocxParser(BaseDocumentParser):
         page_num: int,
         meta_id_base: str,
     ) -> List[BaseElement]:
+        """
+        Extract text and inline images from a single paragraph.
+
+        This method handles split runs (mixed text and images) and
+        identifies semantic styles (Heading 1-9, List Bullet/Number).
+
+        Args:
+            para (Paragraph): The python-docx Paragraph object.
+            doc (Document): The root document object (for image part access).
+            page_num (int): Current page number (always 1 for flow documents).
+            meta_id_base (str): Base ID string for generating element IDs.
+
+        Returns:
+            List[BaseElement]: A list of TextElement and ImageElement objects.
+        """
         results = []
         current_text = ""
         style_name = para.style.name if para.style else "Normal"
@@ -203,7 +235,21 @@ class DocxParser(BaseDocumentParser):
     def _extract_inline_image(
         self, run, doc, page_num, ocr_enabled
     ) -> Optional[ImageElement]:
-        """_process_image_data 헬퍼 사용"""
+        """
+        Extract an image embedded within a text run.
+
+        Searches for 'blip' elements in the run's XML and retrieves
+        the binary data from the related document part.
+
+        Args:
+            run (Run): The text run containing the image.
+            doc (Document): The root document.
+            page_num (int): Page number.
+            ocr_enabled (bool): Whether to perform OCR on the extracted image.
+
+        Returns:
+            Optional[ImageElement]: The extracted image element, or None.
+        """
         try:
             blip_elements = run._element.findall(
                 ".//a:blip", namespaces=self.NAMESPACES
@@ -229,7 +275,20 @@ class DocxParser(BaseDocumentParser):
     def _process_table(
         self, table: "Table", page_num: int, meta_id: str
     ) -> TableElement:
-        """[수정] TableCell 객체를 생성하고 meta를 올바르게 설정"""
+        """
+        Convert a DOCX table into a TableElement.
+
+        Iterates through rows and cells to build a 2D data grid and
+        detailed cell objects.
+
+        Args:
+            table (Table): The python-docx Table object.
+            page_num (int): Page number.
+            meta_id (str): Unique ID for the table.
+
+        Returns:
+            TableElement: The structured table.
+        """
         rows_data = []
         rows_cells = []
 

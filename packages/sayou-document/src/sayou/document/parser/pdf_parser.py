@@ -17,18 +17,37 @@ from ..models import (
 
 class PdfParser(BaseDocumentParser):
     """
-    (Tier 2) fitz를 사용하여 PDF를 파싱하고, 'Document Model'을 반환합니다.
+    (Tier 2) Parser for PDF files using PyMuPDF (fitz).
+
+    Supports high-fidelity extraction of text blocks and images.
+    Features 'Smart Scan Detection': automatically applies OCR to whole pages
+    if extracted text content is insufficient.
     """
 
     component_name = "PdfParser"
     SUPPORTED_TYPES = [".pdf"]
 
     def __init__(self, ocr_engine: Optional[BaseOCR] = None):
-        """OCR 엔진을 선택적으로 주입받을 수 있도록 생성자 정의"""
+        """
+        Initialize the parser with an optional OCR engine.
+        """
         super().__init__()
-        self.ocr_engine = ocr_engine
+        if ocr_engine:
+            self.set_ocr_engine(ocr_engine)
 
     def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
+        """
+        Parse PDF bytes into a structured Document.
+
+        Args:
+            file_bytes (bytes): PDF file content.
+            file_name (str): Original filename.
+            **kwargs:
+                - ocr_dpi (int): Resolution for rendering pages for OCR (default: 200).
+
+        Returns:
+            Document: A document object with 'doc_type="pdf"'.
+        """
         # 1. PDF 로드
         doc = self._load_document(file_bytes)
         pages_list = []
@@ -61,7 +80,7 @@ class PdfParser(BaseDocumentParser):
         )
 
     def _load_document(self, file_bytes: bytes) -> fitz.Document:
-        """fitz 문서 로드 및 에러 처리"""
+        """Safe wrapper to open PDF stream with fitz."""
         try:
             return fitz.open(stream=file_bytes, filetype="pdf")
         except Exception as e:
@@ -70,7 +89,20 @@ class PdfParser(BaseDocumentParser):
     def _process_page(
         self, doc: fitz.Document, page_num: int, file_name: str, **kwargs
     ) -> Page:
-        """단일 페이지 처리 로직 (스캔본 감지 추가)"""
+        """
+        Process a single PDF page.
+
+        Checks for 'scanned page' condition (empty text) and triggers
+        full-page OCR if necessary. Otherwise, iterates through layout blocks.
+
+        Args:
+            doc (fitz.Document): The open document handle.
+            page_num (int): 0-based page index.
+            file_name (str): Filename for metadata.
+
+        Returns:
+            Page: Constructed Page object with elements.
+        """
         page = doc.load_page(page_num)
         elements_list = []
         page_text_dump = page.get_text()
@@ -131,7 +163,9 @@ class PdfParser(BaseDocumentParser):
     def _create_element_from_block(
         self, block: Dict[str, Any], page_num: int, file_name: str, **kwargs
     ) -> Optional[BaseElement]:
-        """블록 딕셔너리를 Pydantic Element 객체로 변환"""
+        """
+        Factory method to convert a PyMuPDF text/image block dict into a Pydantic Element.
+        """
         b_type = block.get("type")
         bbox = block.get("bbox")
 
@@ -154,7 +188,7 @@ class PdfParser(BaseDocumentParser):
     def _process_text_block(
         self, block: Dict, bbox: BoundingBox, meta: ElementMetadata
     ) -> Optional[TextElement]:
-        """텍스트 블록 상세 처리"""
+        """Convert a text block dictionary into a TextElement."""
         block_text = ""
         # TODO: High-Fidelity (v0.1.0+) - 폰트/스타일 정보 추출
         for line in block.get("lines", []):
@@ -177,7 +211,7 @@ class PdfParser(BaseDocumentParser):
     def _process_image_block(
         self, block: Dict, bbox: BoundingBox, meta: ElementMetadata, **kwargs
     ) -> Optional[ImageElement]:
-        """이미지 블록 처리: _process_image_data 헬퍼 사용"""
+        """Convert an image block dictionary into an ImageElement (with optional OCR)."""
         try:
             image_bytes = block.get("image")
             if not image_bytes:
