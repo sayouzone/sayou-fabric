@@ -13,7 +13,7 @@ class Imputer(BaseProcessor):
 
     component_name = "Imputer"
 
-    def initialize(self, rules: Dict[str, Any] = None, **kwargs):
+    def initialize(self, imputation_rules: Dict[str, Any] = None, **kwargs):
         """
         Set imputation rules.
 
@@ -22,7 +22,7 @@ class Imputer(BaseProcessor):
                                     Example: {"category": "Unknown", "price": 0.0}
             **kwargs: Additional arguments.
         """
-        self.rules = rules or {}
+        self.rules = imputation_rules or {}
         if not self.rules:
             self._log("Imputer initialized with no rules.", level="warning")
 

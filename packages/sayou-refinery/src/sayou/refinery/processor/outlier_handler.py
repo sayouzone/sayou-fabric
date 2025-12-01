@@ -14,7 +14,7 @@ class OutlierHandler(BaseProcessor):
 
     component_name = "OutlierHandler"
 
-    def initialize(self, rules: Dict[str, Dict[str, Any]] = None, **kwargs):
+    def initialize(self, outlier_rules: Dict[str, Dict[str, Any]] = None, **kwargs):
         """
         Set outlier handling rules.
 
@@ -27,7 +27,7 @@ class OutlierHandler(BaseProcessor):
                 }
             **kwargs: Additional arguments.
         """
-        self.rules = rules or {}
+        self.rules = outlier_rules or {}
 
     def _do_process(self, blocks: List[ContentBlock]) -> List[ContentBlock]:
         """

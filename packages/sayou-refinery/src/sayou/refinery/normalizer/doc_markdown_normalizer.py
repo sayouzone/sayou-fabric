@@ -55,7 +55,9 @@ class DocMarkdownNormalizer(BaseNormalizer):
 
         doc_data = raw_data
         blocks: List[ContentBlock] = []
-        blocks.extend(self._handle_doc_metadata(doc_data))
+
+        if "metadata" in doc_data and doc_data["metadata"]:
+            blocks.extend(self._handle_doc_metadata(doc_data))
 
         for page in doc_data.get("pages", []):
             if self.include_headers and "header_elements" in page:
