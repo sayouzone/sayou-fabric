@@ -1,51 +1,57 @@
-from typing import List, Dict, Any, Optional
-from sayou.core.base_component import BaseComponent
+from typing import Any, Dict, List, Optional
 
-from .core.exceptions import ChunkingError
+from sayou.core.base_component import BaseComponent
+from sayou.core.decorators import safe_run
+
+from .core.exceptions import SplitterError
+from .core.schemas import Chunk
 from .interfaces.base_splitter import BaseSplitter
-from .splitter.recursive import RecursiveSplitter
-from .splitter.fixed_length import FixedLengthSplitter
-from .splitter.structure import StructureSplitter
-from .splitter.semantic import SemanticSplitter
-from .splitter.parent_document import ParentDocumentSplitter
-from .plugins.markdown_plugin import MarkdownPlugin
+from .plugins.markdown_splitter import MarkdownSplitter
+from .splitter.fixed_length_splitter import FixedLengthSplitter
+from .splitter.parent_document_splitter import ParentDocumentSplitter
+from .splitter.recursive_splitter import RecursiveSplitter
+from .splitter.semantic_splitter import SemanticSplitter
+from .splitter.structure_splitter import StructureSplitter
+
 
 class ChunkingPipeline(BaseComponent):
     component_name = "ChunkingPipeline"
 
-    def __init__(
-        self,
-        extra_splitters: Optional[List[BaseSplitter]] = None
-    ):
-        self.handler_map: Dict[str, BaseSplitter] = {}
-        
+    def __init__(self, extra_splitters: Optional[List[BaseSplitter]] = None):
+        super().__init__()
+        self.splitters: Dict[str, BaseSplitter] = {}
+
         default_splitters = [
             RecursiveSplitter(),
             FixedLengthSplitter(),
             StructureSplitter(),
             SemanticSplitter(),
             ParentDocumentSplitter(),
-            MarkdownPlugin()
+            MarkdownSplitter(),
         ]
-        
+
         self._register(default_splitters)
         if extra_splitters:
             self._register(extra_splitters)
 
     def _register(self, splitters: List[BaseSplitter]):
         for s in splitters:
-            for t in s.SUPPORTED_TYPES:
-                self.handler_map[t] = s
+            for t in getattr(s, "SUPPORTED_TYPES", []):
+                self.splitters[t] = s
 
+    @safe_run(default_return=None)
     def initialize(self, **kwargs):
-        for handler in set(self.handler_map.values()):
-            handler.initialize(**kwargs)
+        for s in set(self.splitters.values()):
+            s.initialize(**kwargs)
+        self._log(
+            f"ChunkingPipeline initialized. Strategies: {list(self.splitters.keys())}"
+        )
 
-    def run(self, request: Dict[str, Any]) -> List[Dict[str, Any]]:
-        req_type = request.get("type")
-        handler = self.handler_map.get(req_type)
-        
-        if not handler:
-            raise ChunkingError(f"Unknown split type: '{req_type}'. Available: {list(self.handler_map.keys())}")
-            
-        return handler.split(request)
+    def run(self, input_data: Any, strategy: str = "default") -> List[Chunk]:
+        splitter = self.splitters.get(strategy)
+        if not splitter:
+            raise SplitterError(
+                f"Unknown strategy '{strategy}'. Available: {list(self.splitters.keys())}"
+            )
+
+        return splitter.split(input_data)
