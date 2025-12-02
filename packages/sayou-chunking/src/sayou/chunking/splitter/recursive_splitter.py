@@ -6,12 +6,23 @@ from ..utils.text_segmenter import TextSegmenter
 
 
 class RecursiveSplitter(BaseSplitter):
+    """
+    Standard Recursive Character Splitter.
+
+    Splits text by iteratively trying a list of separators (Paragraph -> Line -> Sentence).
+    It ensures that semantically related text stays together as much as possible
+    within the given `chunk_size`.
+    """
+
     component_name = "RecursiveSplitter"
     SUPPORTED_TYPES = ["recursive", "default"]
 
     DEFAULT_SEPARATORS = ["\n\n", "\n", r"(?<=[.?!])\s+", " ", ""]
 
     def _do_split(self, doc: InputDocument) -> List[Chunk]:
+        """
+        Execute recursive splitting using `TextSegmenter`.
+        """
         config = doc.metadata.get("config", {})
         doc_id = doc.metadata.get("id", "doc")
 

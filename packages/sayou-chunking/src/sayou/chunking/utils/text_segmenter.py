@@ -3,6 +3,13 @@ from typing import List
 
 
 class TextSegmenter:
+    """
+    (Utility) A stateless engine for regex-based text segmentation.
+
+    Provides core logic for recursive splitting while respecting 'protected'
+    blocks (like tables or code snippets) that should not be fragmented.
+    """
+
     @staticmethod
     def split_with_protection(
         text: str,
@@ -11,6 +18,23 @@ class TextSegmenter:
         chunk_size: int,
         chunk_overlap: int,
     ) -> List[str]:
+        """
+        Split text while preserving specific patterns intact.
+
+        1. Identifies blocks matching `protected_patterns` (e.g., Tables).
+        2. Isolates them so they are not split.
+        3. Recursively splits the remaining text using `separators`.
+
+        Args:
+            text (str): The text to split.
+            separators (List[str]): List of separators in order of precedence.
+            protected_patterns (List[str]): Regex patterns to protect from splitting.
+            chunk_size (int): Target size for each chunk.
+            chunk_overlap (int): Number of overlapping characters.
+
+        Returns:
+            List[str]: A list of text segments.
+        """
         if not text:
             return []
 
@@ -48,6 +72,21 @@ class TextSegmenter:
     def recursive_split(
         text: str, separators: List[str], chunk_size: int, chunk_overlap: int
     ) -> List[str]:
+        """
+        Recursively split text using a list of separators.
+
+        Tries to split by the first separator. If chunks are still too large,
+        it moves to the next separator in the list.
+
+        Args:
+            text (str): The text to split.
+            separators (List[str]): Separators (e.g., ["\n\n", "\n", " "]).
+            chunk_size (int): Maximum size of a chunk.
+            chunk_overlap (int): Overlap size.
+
+        Returns:
+            List[str]: A list of text segments.
+        """
         final_chunks = []
 
         if not separators:

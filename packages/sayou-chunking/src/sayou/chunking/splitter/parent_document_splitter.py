@@ -7,10 +7,20 @@ from ..splitter.structure_splitter import StructureSplitter
 
 
 class ParentDocumentSplitter(BaseSplitter):
+    """
+    Parent-Child Chunking Strategy.
+
+    Creates larger 'Parent' chunks to preserve context, and smaller 'Child'
+    chunks for precise retrieval. The child chunks link back to their parent.
+    """
+
     component_name = "ParentDocumentSplitter"
     SUPPORTED_TYPES = ["parent_document"]
 
     def _do_split(self, doc: InputDocument) -> List[Chunk]:
+        """
+        Generate parent chunks first, then recursively split them into children.
+        """
         config = doc.metadata.get("config", {})
 
         parent_strategy = config.get("parent_strategy", "recursive")

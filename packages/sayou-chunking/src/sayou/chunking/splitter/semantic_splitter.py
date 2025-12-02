@@ -7,14 +7,19 @@ from ..interfaces.base_splitter import BaseSplitter
 
 class SemanticSplitter(BaseSplitter):
     """
-    (Tier 2) Semantic Similarity Splitter.
-    Splits text when the topic changes (cosine similarity drops).
+    Semantic Similarity Splitter.
+
+    Identifies breakpoints where the topic changes by calculating the
+    cosine similarity between adjacent sentences.
     """
 
     component_name = "SemanticSplitter"
     SUPPORTED_TYPES = ["semantic"]
 
     def _do_split(self, doc: InputDocument) -> List[Chunk]:
+        """
+        Segment text based on semantic coherence.
+        """
         config = doc.metadata.get("config", {})
         doc_id = doc.metadata.get("id", "doc")
 
@@ -47,7 +52,9 @@ class SemanticSplitter(BaseSplitter):
     def _cluster_sentences(
         self, sentences: List[str], encoder: Callable, threshold: float
     ) -> List[str]:
-        # (기존 로직 동일)
+        """
+        Group sentences together until similarity drops below `threshold`.
+        """
         if len(sentences) < 2:
             return sentences
         vectors = [encoder(s) for s in sentences]
@@ -66,7 +73,10 @@ class SemanticSplitter(BaseSplitter):
         return groups
 
     def _simple_frequency_encoder(self, text: str) -> List[float]:
-        # (기존 로직 동일)
+        """
+        [Mock] A dummy encoder based on character frequency.
+        Should be replaced by a real embedding model in production.
+        """
         vec = [0.0] * 10
         for char in text:
             vec[ord(char) % 10] += 1.0
@@ -74,4 +84,7 @@ class SemanticSplitter(BaseSplitter):
         return [x / mag if mag else 0 for x in vec]
 
     def _cosine_similarity(self, v1: List[float], v2: List[float]) -> float:
+        """
+        Calculate cosine similarity between two vectors.
+        """
         return sum(a * b for a, b in zip(v1, v2))

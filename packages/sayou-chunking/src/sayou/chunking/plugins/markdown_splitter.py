@@ -7,6 +7,14 @@ from ..utils.text_segmenter import TextSegmenter
 
 
 class MarkdownSplitter(RecursiveSplitter):
+    """
+    Markdown-aware Splitter.
+
+    Specialized for Markdown documents. It respects headers (#, ##),
+    protects code blocks and tables from being split, and enriches chunks
+    with semantic metadata (e.g., 'section_title', 'parent_id').
+    """
+
     component_name = "MarkdownSplitter"
     SUPPORTED_TYPES = ["markdown", "md"]
 
@@ -15,6 +23,9 @@ class MarkdownSplitter(RecursiveSplitter):
     SECTION_SPLIT_PATTERN = r"(?m)^(?=#{1,6} |[-*] |\d+\. )"
 
     def _do_split(self, doc: InputDocument) -> List[Chunk]:
+        """
+        Split by Markdown headers first, then recursively split content.
+        """
         config = doc.metadata.get("config", {})
         chunk_size = config.get("chunk_size", 1000)
         doc_id = doc.metadata.get("id", "doc")
@@ -92,11 +103,13 @@ class MarkdownSplitter(RecursiveSplitter):
         return final_chunks
 
     def _clean_meta(self, meta: dict) -> dict:
+        """Remove temporary config data from metadata before saving."""
         m = meta.copy()
         m.pop("config", None)
         return m
 
     def _classify_chunk(self, text: str) -> str:
+        """Identify if a text segment is a table, list, code, or plain text."""
         if text.startswith("|"):
             return "table"
         if text.startswith("```"):

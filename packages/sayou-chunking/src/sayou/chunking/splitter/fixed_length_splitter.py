@@ -5,10 +5,20 @@ from ..interfaces.base_splitter import BaseSplitter
 
 
 class FixedLengthSplitter(BaseSplitter):
+    """
+    Simple Fixed-Length Splitter.
+
+    Splits text strictly by character count, ignoring semantic boundaries.
+    Useful for precise token count control but may break sentences.
+    """
+
     component_name = "FixedLengthSplitter"
     SUPPORTED_TYPES = ["fixed_length"]
 
     def _do_split(self, doc: InputDocument) -> List[Chunk]:
+        """
+        Slice content by `chunk_size` with `chunk_overlap`.
+        """
         config = doc.metadata.get("config", {})
         chunk_size = config.get("chunk_size", 1000)
         chunk_overlap = config.get("chunk_overlap", 0)

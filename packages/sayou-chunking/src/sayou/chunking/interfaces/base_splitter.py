@@ -4,13 +4,17 @@ from typing import Any, Dict, List, Union
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import measure_time
 
-from ..core.exceptions import ChunkingError
+from ..core.exceptions import SplitterError
 from ..core.schemas import Chunk, InputDocument
 
 
 class BaseSplitter(BaseComponent):
     """
-    (Tier 1) Abstract base class for splitting text into chunks.
+    (Tier 1) Abstract base class for all chunking strategies.
+
+    Implements the Template Method pattern:
+    1. `split()`: Validates input, normalizes it to `InputDocument`, and handles errors.
+    2. `_do_split()`: Abstract hook where subclasses implement the algorithm.
     """
 
     component_name = "BaseSplitter"
@@ -18,11 +22,16 @@ class BaseSplitter(BaseComponent):
 
     @measure_time
     def split(self, input_data: Union[Dict[str, Any], InputDocument]) -> List[Chunk]:
-        # 1. Input Normalization
-        doc = self._normalize_input(input_data)
+        """
+        [Template Method] Execute the splitting process.
 
-        # 2. Config Merge (Input metadata overrides defaults)
-        # (Template 구현체에서 self.chunk_size 등을 쓰겠지만, 여기선 doc에 병합해둠)
+        Args:
+            input_data (Union[Dict, InputDocument]): Raw input containing content.
+
+        Returns:
+            List[Chunk]: The resulting chunks.
+        """
+        doc = self._normalize_input(input_data)
         split_config = (
             input_data.get("config", {}) if isinstance(input_data, dict) else {}
         )
@@ -33,13 +42,31 @@ class BaseSplitter(BaseComponent):
             return self._do_split(doc)
         except Exception as e:
             self.logger.error(f"Split failed: {e}", exc_info=True)
-            raise ChunkingError(f"[{self.component_name}] {e}")
+            raise SplitterError(f"[{self.component_name}] {e}")
 
     @abstractmethod
     def _do_split(self, doc: InputDocument) -> List[Chunk]:
+        """
+        [Abstract Hook] Implement the specific splitting logic.
+
+        Args:
+            doc (InputDocument): The normalized input document.
+
+        Returns:
+            List[Chunk]: The generated chunks.
+        """
         raise NotImplementedError
 
     def _normalize_input(self, input_data: Any) -> InputDocument:
+        """
+        Convert various input formats (Dict, ContentBlock) into InputDocument.
+
+        Args:
+            input_data (Any): Raw input.
+
+        Returns:
+            InputDocument: Normalized object.
+        """
         if isinstance(input_data, InputDocument):
             return input_data
 
@@ -53,6 +80,6 @@ class BaseSplitter(BaseComponent):
         )
 
         if content is None:
-            raise ChunkingError("Input must have content.")
+            raise SplitterError("Input must have content.")
 
         return InputDocument(content=str(content), metadata=metadata)

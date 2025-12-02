@@ -1,25 +1,39 @@
 from typing import List
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-
+from ..core.schemas import Chunk, InputDocument
 from ..splitter.recursive_splitter import RecursiveSplitter
+
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+except ImportError:
+    RecursiveCharacterTextSplitter = None
 
 
 class LangChainRecursiveSplitter(RecursiveSplitter):
+    """
+    Adapter for LangChain's RecursiveCharacterTextSplitter.
+    Uses LangChain's logic instead of Sayou's internal TextSegmenter.
+    """
 
     component_name = "LangChainRecursiveSplitter"
-    SUPPORTED_TYPES = ["recursive_char_langchain"]
+    SUPPORTED_TYPES = ["langchain_recursive"]
 
-    def initialize(self, **kwargs):
-        self._log("LangChainRecursiveSplitter (Plugin) is ready.")
+    def _do_split(self, doc: InputDocument) -> List[Chunk]:
+        """
+        Delegate the splitting process to LangChain's splitter.
+        """
+        if RecursiveCharacterTextSplitter is None:
+            raise ImportError("langchain-text-splitters is required for this plugin.")
 
-    def _execute_split_logic(
-        self, text: str, chunk_size: int, chunk_overlap: int, separators: List[str]
-    ) -> List[str]:
-        self._log(f"Executing LangChain recursive split...")
+        config = doc.metadata.get("config", {})
+        chunk_size = config.get("chunk_size", 1000)
+        chunk_overlap = config.get("chunk_overlap", 100)
+        separators = config.get("separators", ["\n\n", "\n", " ", ""])
 
-        lc_splitter = RecursiveCharacterTextSplitter(
+        splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size, chunk_overlap=chunk_overlap, separators=separators
         )
 
-        return lc_splitter.split_text(text)
+        texts = splitter.split_text(doc.content)
+
+        return [Chunk(chunk_content=t, metadata=doc.metadata) for t in texts]
