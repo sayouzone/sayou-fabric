@@ -1,7 +1,8 @@
 import time
 from typing import List
-from sayou.chunking.splitter.fixed_length_splitter import FixedLengthSplitter
+
 from sayou.chunking.core.schemas import Chunk, InputDocument
+from sayou.chunking.splitter.fixed_length_splitter import FixedLengthSplitter
 
 
 class AuditedFixedLengthSplitter(FixedLengthSplitter):
