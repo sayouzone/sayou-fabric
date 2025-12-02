@@ -45,7 +45,7 @@ class RecursiveSplitter(BaseSplitter):
                 metadata={
                     **doc.metadata,
                     "chunk_id": f"{doc_id}_{i}",
-                    "chunk_size": len(text),
+                    "chunk_size": len(text.strip()),
                     "part_index": i,
                 },
             )
