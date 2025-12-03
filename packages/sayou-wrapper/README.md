@@ -1,67 +1,85 @@
 # sayou-wrapper
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/sayouzone/sayou-fabric/ci.yml?branch=main)](https://github.com/sayouzone/sayou-fabric/actions)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://sayouzone.github.io/sayou-fabric/library-guides/wrapper/)
+[![PyPI version](https://img.shields.io/pypi/v/sayou-wrapper.svg?color=blue)](https://pypi.org/project/sayou-wrapper/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/library-guides/wrapper/)
 
-`sayou-wrapper` is a schema normalization library that acts as the **"Gatekeeper"** of the Sayou Data Platform. It transforms heterogeneous data from various sources (Chunks, API responses, CSVs) into the unified **Sayou Standard Schema**.
+**The Ontology Mapper for Sayou Fabric.**
 
-This library ensures that downstream components like `sayou-assembler` do not need to understand the complexity of external data formats. If data passes through the Wrapper, it is guaranteed to be a valid `SayouNode`.
+`sayou-wrapper` takes the fragmented chunks produced by `sayou-chunking` and wraps them into a standardized graph structure (**SayouNode**). This is the final preparation step before data is assembled into a Knowledge Graph or loaded into a Vector DB.
 
-## Philosophy
+It applies the **Sayou Ontology Schema** (Namespace -> Class -> Predicate) to raw data, turning simple text into semantically rich entities.
 
-**"Polymorphic Input, Monomorphic Output."**
-Regardless of whether the input is a Markdown chunk, a Subway API JSON, or a Stock price list, the output must always be a list of standardized `SayouNode` objects. This abstraction allows the Knowledge Graph builder to remain agnostic to the data source.
+## 💡 Core Philosophy
 
-## 🚀 Key Features
+**"From Data to Knowledge."**
 
-* **Standard Schema (`SayouNode`):** Defines the universal atom of the platform with `node_id`, `node_class`, `attributes`, and `relationships`.
-* **Dynamic Adapter Pattern:** Uses a registry-based pipeline to automatically route inputs to the correct adapter (e.g., `DocumentChunkAdapter`).
-* **Built-in Validation:** Leverages Pydantic to strictly validate data integrity upon creation.
-* **Semantic Mapping:** Automatically converts `sayou-chunking` metadata (e.g., `semantic_type`) into Ontology classes (e.g., `sayou:Table`).
+While Chunking slices the data, Wrapper gives it meaning.
+* It assigns **Ontology Classes** (e.g., `sayou:Topic`, `sayou:Table`) based on metadata.
+* It defines **Relationships** (e.g., `sayou:hasParent`) to preserve context.
+* It normalizes IDs into **URIs** (e.g., `sayou:doc:123`) for global uniqueness.
 
 ## 📦 Installation
 
-```python
+```bash
 pip install sayou-wrapper
 ```
 
-## ⚡ Quickstart
-
-The `WrapperPipeline` orchestrates the adaptation process. You don't need to import specific adapters; just specify the `adapter_type`.
+## ⚡ Quick Start
 
 ```python
-import os
-import json
 from sayou.wrapper.pipeline import WrapperPipeline
 
 def run_demo():
-    # 1. Load Input (Output from sayou-chunking)
-    input_file = "chunks_output.json"
-    
-    # 2. Initialize Pipeline
-    # Use 'document_chunk' adapter to process chunking results
-    pipeline = WrapperPipeline(adapter_type="document_chunk")
+    # 1. Initialize
+    pipeline = WrapperPipeline()
     pipeline.initialize()
 
-    # 3. Run Transformation
-    # The pipeline automatically loads the JSON file
-    result = pipeline.run(input_file)
-    
-    # 4. Check Standard Nodes
-    for node in result['nodes'][:2]:
-        print(f"[ID] {node['node_id']}")
-        print(f"[Class] {node['node_class']}")
-        print(f"[Attrs] {node['attributes']}")
-        print("-" * 20)
+    # 2. Input Data (Simulated output from sayou-chunking)
+    chunks = [
+        {
+            "chunk_content": "# Introduction",
+            "metadata": {
+                "chunk_id": "h_1", 
+                "semantic_type": "heading", 
+                "is_header": True
+            }
+        },
+        {
+            "chunk_content": "Sayou is great.",
+            "metadata": {
+                "chunk_id": "p_1", 
+                "parent_id": "h_1",
+                "semantic_type": "text"
+            }
+        }
+    ]
+
+    # 3. Run Wrapper
+    output = pipeline.run(chunks, strategy="document_chunk")
+
+    # 4. Result (SayouNodes)
+    for node in output.nodes:
+        print(f"[{node.node_class}] {node.node_id}")
+        print(f"   Attrs: {node.attributes}")
+        print(f"   Rels : {node.relationships}")
 
 if __name__ == "__main__":
     run_demo()
 ```
 
+## 🔑 Key Components
+
+### Adapters
+* **`DocumentChunkAdapter`**: The standard adapter. Converts document chunks into `sayou:Topic`, `sayou:TextFragment`, etc., and links them via `sayou:hasParent`.
+
+### Schema (Sayouzone Standard)
+* **`SayouNode`**: The atomic unit of the Knowledge Graph. Contains ID, Class, Attributes, and Relationships.
+* **`WrapperOutput`**: A container holding a list of nodes and global metadata.
+
 ## 🤝 Contributing
 
-To support a new data source (e.g., Notion API), simply implement a new `BaseAdapter` plugin and register it with the pipeline.
+We welcome adapters for other data sources (e.g., `SqlRecordAdapter`, `LogAdapter`).
 
 ## 📜 License
 
