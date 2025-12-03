@@ -1,33 +1,59 @@
 from abc import abstractmethod
-from typing import Dict, Any
+from typing import Any, Dict, Union
 
 from sayou.core.base_component import BaseComponent
+from sayou.core.decorators import measure_time
+from sayou.core.schemas import SayouOutput
 
-from ..core.exceptions import AssemblerError
-from ..graph.knowledge_graph import KnowledgeGraph
+from ..core.exceptions import BuildError
+
 
 class BaseBuilder(BaseComponent):
     """
-    (Tier 1) WrapperOutput(Standard Nodes)을 받아 KnowledgeGraph를 조립하는 인터페이스.
+    (Tier 1) Abstract base class for assembling SayouNodes into target formats.
     """
-    component_name = "BaseBuilder"
 
-    def _build(self, wrapper_output: Dict[str, Any]) -> Dict[str, Any]:
+    component_name = "BaseBuilder"
+    SUPPORTED_TYPES = []
+
+    @measure_time
+    def build(self, input_data: Union[SayouOutput, Dict]) -> Any:
         """
-        [Public API] Wrapper 결과를 받아 그래프(Dict)로 반환.
+        Execute the building process.
+
+        Args:
+            input_data (Union[SayouOutput, Dict]): Standardized node data.
+
+        Returns:
+            Any: The assembled payload (Dict, List, Str) ready for Loader.
+
+        Raises:
+            BuildError: If the building process fails.
         """
-        self._log("Starting assembly process...")
+        self._log(f"Building data with {self.component_name}")
+
+        # Input Normalization
+        if isinstance(input_data, dict):
+            try:
+                # 딕셔너리가 들어오면 Pydantic 모델로 변환하여 검증
+                sayou_output = SayouOutput(**input_data)
+            except Exception as e:
+                raise BuildError(f"Invalid input format: {e}")
+        elif isinstance(input_data, SayouOutput):
+            sayou_output = input_data
+        else:
+            raise BuildError(f"Unsupported input type: {type(input_data)}")
+
         try:
-            # 1. 실제 조립 (Tier 2)
-            kg_obj = self.build(wrapper_output)
-            
-            # 2. 결과 반환 (Dict)
-            return kg_obj.to_dict()
-            
+            return self._do_build(sayou_output)
         except Exception as e:
-            raise AssemblerError(f"Assembly failed in {self.component_name}: {e}")
+            wrapped_error = BuildError(f"[{self.component_name}] Failed: {str(e)}")
+            self.logger.error(wrapped_error, exc_info=True)
+            raise wrapped_error
 
     @abstractmethod
-    def build(self, data: Dict[str, Any]) -> KnowledgeGraph:
-        """[구현 필수]"""
+    def _do_build(self, data: SayouOutput) -> Any:
+        """
+        [Abstract Hook] Implement the transformation logic.
+        """
         raise NotImplementedError
