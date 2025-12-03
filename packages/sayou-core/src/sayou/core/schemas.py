@@ -52,7 +52,7 @@ class SayouBlock(BaseModel):
     [Intermediate] The atomic unit of content (Text/Image/Record).
 
     Refinery normalizes raw data into these blocks. Chunking splits these blocks
-    into smaller pieces. (Formerly 'ContentBlock')
+    into smaller pieces.
     """
 
     type: str = Field(

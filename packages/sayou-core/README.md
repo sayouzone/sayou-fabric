@@ -17,7 +17,7 @@ While you might not use `sayou-core` directly in your application, it acts as th
 To build a modular and scalable data pipeline, every component must speak the same language and behave predictably. `sayou-core` enforces this by providing:
 
 1.  **Unified Component Architecture:** Every plugin (Fetcher, Parser, Refiner) inherits from `BaseComponent`, guaranteeing standardized logging and lifecycle management.
-2.  **Strict Data Contracts:** Defines Pydantic schemas like `SayouPacket` and `ContentBlock` to ensure type safety between modules.
+2.  **Strict Data Contracts:** Defines Pydantic schemas like `SayouPacket` and `SayouBlock` to ensure type safety between modules.
 3.  **Resilience Patterns:** Provides decorators for retries, timing, and safe execution, reducing boilerplate code in downstream libraries.
 
 ## 📦 Installation
@@ -34,7 +34,7 @@ To build a modular and scalable data pipeline, every component must speak the sa
 ### Standard Schemas (The Protocol)
 * **`SayouTask`**: Defines a unit of work (e.g., "Download this URL").
 * **`SayouPacket`**: The universal container for transporting raw data between pipelines.
-* **`ContentBlock`**: The atomic unit of refined content (Text, Markdown, Record) used by Refinery and Chunking.
+* **`SayouBlock`**: The atomic unit of refined content (Text, Markdown, Record) used by Refinery and Chunking.
 
 ### Decorators (The Safety Net)
 * **`@safe_run`**: Prevents pipeline crashes by catching exceptions and returning a fallback value.
