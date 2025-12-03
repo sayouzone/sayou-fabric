@@ -1,40 +1,103 @@
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
 
+# ==============================================================================
+# 1. Ingestion Stage (Connector)
+# ==============================================================================
 class SayouTask(BaseModel):
-    source_type: str = Field(..., description="Fetcher 라우팅 키 (e.g., 'file', 'http', 'sqlite')")
-    uri: str = Field(..., description="접근 경로 (File Path, URL, DB Connection String)")
-    params: Dict[str, Any] = Field(default_factory=dict, description="선택자, 쿼리, 옵션 등 상세 설정")
-    meta: Dict[str, Any] = Field(default_factory=dict, description="파일명, 오프셋 등 보조 정보")
+    """
+    [Input] Defines a unit of work for the Connector.
+
+    Generators produce these tasks (e.g., "Download this URL"), and Fetchers
+    execute them.
+    """
+
+    source_type: str = Field(..., description="Routing key (e.g., 'file', 'http')")
+    uri: str = Field(..., description="Resource location")
+    params: Dict[str, Any] = Field(
+        default_factory=dict, description="Execution parameters"
+    )
+    meta: Dict[str, Any] = Field(default_factory=dict, description="Context metadata")
+
 
 class SayouPacket(BaseModel):
-    task: Optional[SayouTask] = Field(None, description="이 패킷을 생성한 원본 지시서")
-    created_at: datetime = Field(default_factory=datetime.now, description="패킷 생성 시간")
-    success: bool = Field(True, description="작업 성공 여부")
-    error: Optional[str] = Field(None, description="실패 시 에러 메시지")
-    data: Any = Field(None, description="단계별 처리 데이터 (Type: Any)")
-    meta: Dict[str, Any] = Field(default_factory=dict, description="파이프라인 제어용 메타데이터")
+    """
+    [Transport] The universal container for raw data transport.
+
+    Produced by Connector, this packet carries the raw payload (bytes, str, or dict)
+    safely across the pipeline boundaries.
+    """
+
+    task: Optional[SayouTask] = Field(
+        None, description="The task that originated this packet"
+    )
+    data: Any = Field(None, description="Raw payload (Bytes, String, or Dict)")
+    success: bool = Field(True, description="Operation status")
+    error: Optional[str] = Field(None, description="Error message if failed")
+    meta: Dict[str, Any] = Field(default_factory=dict, description="Process metadata")
+    created_at: datetime = Field(default_factory=datetime.now)
 
     class Config:
         arbitrary_types_allowed = True
 
-class SayouData(BaseModel):
-    data_id: str
-    content: Any
-    source_metadata: Dict[str, Any] = Field(default_factory=dict)
-    process_metadata: Dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.now)
 
+# ==============================================================================
+# 2. Refinement & Chunking Stage (Refinery / Chunking)
+# ==============================================================================
+class SayouBlock(BaseModel):
+    """
+    [Intermediate] The atomic unit of content (Text/Image/Record).
+
+    Refinery normalizes raw data into these blocks. Chunking splits these blocks
+    into smaller pieces. (Formerly 'ContentBlock')
+    """
+
+    type: str = Field(
+        ..., description="Content type (e.g., 'text', 'md', 'record', 'image')"
+    )
+    content: Union[str, Dict[str, Any], List[Any]] = Field(
+        ..., description="Actual content payload"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Source context (page, lineage)"
+    )
+
+
+# ==============================================================================
+# 3. Knowledge Graph Stage (Wrapper / Assembler / Loader)
+# ==============================================================================
 class SayouNode(BaseModel):
-    node_id: str = Field(..., description="Unique Identifier")
-    node_class: str = Field(..., description="Ontology Class")
-    friendly_name: Optional[str] = None
-    attributes: Dict[str, Any] = Field(default_factory=dict)
-    relationships: Dict[str, List[str]] = Field(default_factory=dict)
+    """
+    [Atom] The standard knowledge entity ready for Graph/Vector DB.
 
-class SayouDataset(BaseModel):
-    nodes: List[SayouNode]
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    Wrapper converts chunks into these nodes, assigning Ontology classes
+    and identifying relationships.
+    """
+
+    node_id: str = Field(..., description="Unique Identifier (URI)")
+    node_class: str = Field(..., description="Ontology Class (e.g., 'sayou:Topic')")
+    friendly_name: Optional[str] = Field(None, description="Human-readable label")
+    attributes: Dict[str, Any] = Field(
+        default_factory=dict, description="Properties/Values"
+    )
+    relationships: Dict[str, List[str]] = Field(
+        default_factory=dict, description="Links to other nodes"
+    )
+    vector: Optional[List[float]] = Field(
+        None, description="Embedding vector (optional)"
+    )
+
+
+class SayouOutput(BaseModel):
+    """
+    [Output] The final container for assembled knowledge.
+
+    Contains a collection of SayouNodes and global metadata. This is what
+    Sayou Assembler produces and Sayou Loader consumes. (Formerly 'WrapperOutput')
+    """
+
+    nodes: List[SayouNode] = Field(default_factory=list, description="List of entities")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Global context")

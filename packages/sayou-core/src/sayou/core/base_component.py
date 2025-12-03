@@ -7,6 +7,7 @@ class BaseComponent(ABC):
     '사유존' 툴킷의 모든 컴포넌트가 상속받는 최상위 추상 베이스 클래스.
     Python 표준 logging 모듈을 통합하여 일관된 로그 관리를 지원합니다.
     """
+
     component_name: str = "BaseComponent"
 
     def __init__(self):
@@ -15,8 +16,7 @@ class BaseComponent(ABC):
         if not self.logger.handlers:
             handler = logging.StreamHandler()
             formatter = logging.Formatter(
-                '%(asctime)s [%(name)s] %(levelname)s: %(message)s', 
-                datefmt='%H:%M:%S'
+                "%(asctime)s [%(name)s] %(levelname)s: %(message)s", datefmt="%H:%M:%S"
             )
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
@@ -25,7 +25,7 @@ class BaseComponent(ABC):
         """
         (선택적) 초기화 시 필요한 설정 또는 상태 등록.
         """
-        pass 
+        pass
 
     def _log(self, msg: str, level: str = "info"):
         if level.lower() == "debug":
