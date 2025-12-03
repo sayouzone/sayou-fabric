@@ -1,7 +1,8 @@
 from typing import Any, List, Union
 
+from sayou.core.vocabulary import SayouAttribute, SayouClass, SayouPredicate
+
 from ..core.schemas import SayouNode, WrapperOutput
-from ..core.vocabulary import SayouAttribute, SayouClass, SayouPredicate
 from ..interfaces.base_adapter import BaseAdapter
 
 
