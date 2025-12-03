@@ -59,7 +59,7 @@ class BaseSplitter(BaseComponent):
 
     def _normalize_input(self, input_data: Any) -> InputDocument:
         """
-        Convert various input formats (Dict, ContentBlock) into InputDocument.
+        Convert various input formats (Dict, SayouBlock) into InputDocument.
 
         Args:
             input_data (Any): Raw input.
