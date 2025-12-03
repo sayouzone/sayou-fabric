@@ -1,67 +1,75 @@
 # sayou-assembler
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/sayouzone/sayou-fabric/ci.yml?branch=main)](https://github.com/sayouzone/sayou-fabric/actions)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://sayouzone.github.io/sayou-fabric/library-guides/assembler/)
+[![PyPI version](https://img.shields.io/pypi/v/sayou-assembler.svg?color=blue)](https://pypi.org/project/sayou-assembler/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/library-guides/assembler/)
 
-`sayou-assembler` is the graph construction engine of the Sayou Data Platform. It takes standardized nodes from `sayou-wrapper` and assembles them into a logical **In-Memory Knowledge Graph**.
+**The Knowledge Builder for Sayou Fabric.**
 
-It is responsible for interpreting relationships (like Parent-Child), generating reverse edges, and ensuring the graph's topological integrity before it is persisted by `sayou-loader`.
+`sayou-assembler` is the construction site of the data pipeline. It takes the standardized `SayouNode` objects produced by the Wrapper and assembles them into target-specific formats ready for loading into databases.
 
-## Philosophy
+It bridges the gap between the abstract data model and concrete storage technologies (Graph DBs, Vector DBs).
 
-**"Structure before Storage."**
-A database is just a container. The value of a Knowledge Graph comes from its structure. `sayou-assembler` focuses on the logic of *connecting* dots (Nodes) to create meaning (Context), independent of the underlying database technology (Neo4j, SQL, NetworkX).
+## 💡 Core Philosophy
 
-## 🚀 Key Features
+**"Build Once, Deploy Anywhere."**
 
-* **In-Memory Graph Model:** Manages `GraphNode` and `GraphEdge` objects efficiently in Python.
-* **Hierarchy Strategy:** Automatically builds tree-like structures using `parent_id` attributes.
-* **Bi-directional Linking:** Automatically generates reverse edges (e.g., `hasChild` from `hasParent`) to enable bidirectional graph traversal.
-* **Strategy Pattern:** Supports pluggable assembly strategies (Hierarchy, Semantic, Chronological).
+The Assembler decouples the *structure* of knowledge from the *syntax* of the database.
+* **Graph Builder:** Constructs a topology of Nodes and Edges (including automatic reverse linking).
+* **Vector Builder:** Transforms nodes into embeddings and metadata payloads.
+* **Query Builder:** Generates specific query languages like Cypher or SQL.
 
 ## 📦 Installation
 
-```python
+```bash
 pip install sayou-assembler
 ```
 
-## ⚡ Quickstart
+## ⚡ Quick Start
 
-The `AssemblerPipeline` creates the graph using a specified strategy (default: `hierarchy`).
+The `AssemblerPipeline` converts standardized data into database payloads.
 
 ```python
-import json
 from sayou.assembler.pipeline import AssemblerPipeline
 
 def run_demo():
-    # 1. Load Standard Nodes (Output from sayou-wrapper)
-    input_file = "wrapped_nodes.json"
-    with open(input_file, "r", encoding="utf-8") as f:
-        wrapper_output = json.load(f)
+    # 1. Initialize (Inject embedding function for Vector Builder)
+    pipeline = AssemblerPipeline()
+    pipeline.initialize(embedding_fn=my_embedding_func)
 
-    # 2. Initialize Pipeline
-    # Uses 'HierarchyBuilder' to link parent-child nodes
-    pipeline = AssemblerPipeline(strategy="hierarchy")
-    pipeline.initialize()
+    # 2. Input Data (from sayou-wrapper)
+    wrapper_output = {
+        "nodes": [
+            {"node_id": "doc_1", "node_class": "sayou:Document", "attributes": {"text": "..."}},
+            # ...
+        ]
+    }
 
-    # 3. Run Assembly
-    kg_result = pipeline.run(wrapper_output)
-
-    # 4. Inspect Graph
-    print(f"Nodes: {kg_result['summary']['node_count']}")
-    print(f"Edges: {kg_result['summary']['edge_count']}")
+    # 3. Build for Graph DB (Nodes + Edges)
+    graph_data = pipeline.run(wrapper_output, strategy="graph")
+    print(f"Edges created: {len(graph_data['edges'])}")
     
-    for edge in kg_result['edges'][:3]:
-        print(f"{edge['source']} --[{edge['type']}]--> {edge['target']}")
+    # 4. Build for Vector DB (Embeddings)
+    vector_data = pipeline.run(wrapper_output, strategy="vector")
+    print(f"Vectors created: {len(vector_data)}")
 
 if __name__ == "__main__":
+    def my_embedding_func(text): return [0.1, 0.2, 0.3] # Dummy
     run_demo()
 ```
 
+## 🔑 Key Components
+
+### Builders
+* **`GraphBuilder`**: Converts nodes into a generic graph structure (Dictionary). Automatically creates reverse edges (e.g., `hasChild` from `hasParent`) to ensure bi-directional traversability.
+* **`VectorBuilder`**: Extracts text from nodes, computes embeddings, and formats payloads for Vector DBs.
+
+### Plugins
+* **`CypherBuilder`**: Generates Neo4j `MERGE` queries to insert nodes and relationships idempotently.
+
 ## 🤝 Contributing
 
-Contributions for new assembly strategies (e.g., constructing graphs based on keyword co-occurrence) are welcome.
+We welcome builders for other targets (e.g., `SqlBuilder`, `GremlinBuilder`).
 
 ## 📜 License
 
