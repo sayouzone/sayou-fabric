@@ -49,7 +49,7 @@ class DocumentChunkAdapter(BaseAdapter):
             else:
                 node_class = SayouClass.TEXT
 
-            # [Refactored] Attributes using Constants
+            # 3. Attributes (Vocabulary 사용)
             attributes = {
                 SayouAttribute.TEXT: content,
                 SayouAttribute.SEMANTIC_TYPE: sem_type,
@@ -57,8 +57,12 @@ class DocumentChunkAdapter(BaseAdapter):
                 SayouAttribute.PART_INDEX: meta.get("part_index"),
                 SayouAttribute.SOURCE: meta.get("source"),
             }
+            # 기타 메타데이터 보존
+            for k, v in meta.items():
+                if k not in ["chunk_id", "semantic_type", "parent_id", "is_header"]:
+                    attributes[f"meta:{k}"] = v
 
-            # 4. Relationships Mapping
+            # 4. Relationships (Vocabulary 사용)
             relationships = {}
             parent_id = meta.get("parent_id")
             if parent_id:
@@ -75,4 +79,4 @@ class DocumentChunkAdapter(BaseAdapter):
             )
             nodes.append(node)
 
-        return WrapperOutput(nodes=nodes, metadata={"source_system": "sayou-chunking"})
+        return WrapperOutput(nodes=nodes, metadata={"source": "sayou-chunking"})
