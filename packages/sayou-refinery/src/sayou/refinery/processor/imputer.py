@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from ..core.schemas import ContentBlock
+from sayou.core.schemas import SayouBlock
 from ..interfaces.base_processor import BaseProcessor
 
 
@@ -26,15 +26,15 @@ class Imputer(BaseProcessor):
         if not self.rules:
             self._log("Imputer initialized with no rules.", level="warning")
 
-    def _do_process(self, blocks: List[ContentBlock]) -> List[ContentBlock]:
+    def _do_process(self, blocks: List[SayouBlock]) -> List[SayouBlock]:
         """
         Apply imputation rules to record blocks.
 
         Args:
-            blocks (List[ContentBlock]): Input blocks.
+            blocks (List[SayouBlock]): Input blocks.
 
         Returns:
-            List[ContentBlock]: Blocks with missing values filled.
+            List[SayouBlock]: Blocks with missing values filled.
         """
         for block in blocks:
             if block.type != "record" or not isinstance(block.content, dict):

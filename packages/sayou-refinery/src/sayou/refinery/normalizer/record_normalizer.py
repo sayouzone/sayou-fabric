@@ -1,22 +1,22 @@
 from typing import Any, Dict, List
 
 from ..core.exceptions import NormalizationError
-from ..core.schemas import ContentBlock
+from sayou.core.schemas import SayouBlock
 from ..interfaces.base_normalizer import BaseNormalizer
 
 
 class RecordNormalizer(BaseNormalizer):
     """
-    (Tier 2) Converts structured data (Dict/List) into 'record' ContentBlocks.
+    (Tier 2) Converts structured data (Dict/List) into 'record' SayouBlocks.
 
     Suitable for processing database rows, CSV records, or JSON API responses.
-    Each dictionary becomes a separate ContentBlock of type 'record'.
+    Each dictionary becomes a separate SayouBlock of type 'record'.
     """
 
     component_name = "RecordNormalizer"
     SUPPORTED_TYPES = ["json", "dict", "db_row", "record"]
 
-    def _do_normalize(self, raw_data: Any) -> List[ContentBlock]:
+    def _do_normalize(self, raw_data: Any) -> List[SayouBlock]:
         """
         Convert dict or list of dicts into record blocks.
 
@@ -24,7 +24,7 @@ class RecordNormalizer(BaseNormalizer):
             raw_data (Any): A Dictionary or a List of Dictionaries.
 
         Returns:
-            List[ContentBlock]: Blocks of type 'record'.
+            List[SayouBlock]: Blocks of type 'record'.
         """
         blocks = []
 
@@ -49,17 +49,17 @@ class RecordNormalizer(BaseNormalizer):
 
         return blocks
 
-    def _create_block(self, data: Dict[str, Any]) -> ContentBlock:
+    def _create_block(self, data: Dict[str, Any]) -> SayouBlock:
         """
-        Helper to wrap a single dictionary into a ContentBlock.
+        Helper to wrap a single dictionary into a SayouBlock.
 
         Args:
             data (Dict[str, Any]): The data record.
 
         Returns:
-            ContentBlock: A block with type='record' and content=data.
+            SayouBlock: A block with type='record' and content=data.
         """
-        return ContentBlock(
+        return SayouBlock(
             type="record",
             content=data,
             metadata={"fields": list(data.keys())},

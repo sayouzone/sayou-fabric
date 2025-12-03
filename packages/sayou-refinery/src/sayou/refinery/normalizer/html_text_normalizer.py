@@ -6,13 +6,13 @@ except ImportError:
 from typing import Any, List
 
 from ..core.exceptions import NormalizationError
-from ..core.schemas import ContentBlock
+from sayou.core.schemas import SayouBlock
 from ..interfaces.base_normalizer import BaseNormalizer
 
 
 class HtmlTextNormalizer(BaseNormalizer):
     """
-    (Tier 2) Converts HTML string into a clean Text ContentBlock.
+    (Tier 2) Converts HTML string into a clean Text SayouBlock.
 
     Uses BeautifulSoup to strip tags, scripts, and styles, returning only
     the visible text content while preserving paragraph structure.
@@ -21,7 +21,7 @@ class HtmlTextNormalizer(BaseNormalizer):
     component_name = "HtmlTextNormalizer"
     SUPPORTED_TYPES = ["html"]
 
-    def _do_normalize(self, raw_data: Any) -> List[ContentBlock]:
+    def _do_normalize(self, raw_data: Any) -> List[SayouBlock]:
         """
         Parse HTML and extract text.
 
@@ -29,7 +29,7 @@ class HtmlTextNormalizer(BaseNormalizer):
             raw_data (Any): The input HTML string.
 
         Returns:
-            List[ContentBlock]: A single block of type 'text'.
+            List[SayouBlock]: A single block of type 'text'.
 
         Raises:
             ImportError: If BeautifulSoup4 is not installed.
@@ -55,5 +55,5 @@ class HtmlTextNormalizer(BaseNormalizer):
         text = re.sub(r"\n{3,}", "\n\n", text).strip()
 
         return [
-            ContentBlock(type="text", content=text, metadata={"source_type": "html"})
+            SayouBlock(type="text", content=text, metadata={"source_type": "html"})
         ]

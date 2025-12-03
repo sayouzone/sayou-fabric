@@ -5,22 +5,22 @@ from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import measure_time
 
 from ..core.exceptions import NormalizationError
-from ..core.schemas import ContentBlock
+from sayou.core.schemas import SayouBlock
 
 
 class BaseNormalizer(BaseComponent):
     """
-    (Tier 1) Abstract base class for converting raw input into ContentBlocks.
+    (Tier 1) Abstract base class for converting raw input into SayouBlock.
 
     Normalizers are responsible for structural transformation:
-    Raw Data (JSON, HTML, DB Row) -> List[ContentBlock]
+    Raw Data (JSON, HTML, DB Row) -> List[SayouBlock]
     """
 
     component_name = "BaseNormalizer"
     SUPPORTED_TYPES = []
 
     @measure_time
-    def normalize(self, raw_data: Any) -> List[ContentBlock]:
+    def normalize(self, raw_data: Any) -> List[SayouBlock]:
         """
         Execute the normalization process.
 
@@ -28,7 +28,7 @@ class BaseNormalizer(BaseComponent):
             raw_data: The raw input data from Connector or Document.
 
         Returns:
-            List[ContentBlock]: A list of normalized content blocks.
+            List[SayouBlock]: A list of normalized content blocks.
 
         Raises:
             NormalizationError: If transformation fails.
@@ -49,14 +49,14 @@ class BaseNormalizer(BaseComponent):
             raise wrapped_error
 
     @abstractmethod
-    def _do_normalize(self, raw_data: Any) -> List[ContentBlock]:
+    def _do_normalize(self, raw_data: Any) -> List[SayouBlock]:
         """
-        [Abstract Hook] Implement logic to convert specific raw format to ContentBlocks.
+        [Abstract Hook] Implement logic to convert specific raw format to SayouBlocks.
 
         Args:
             raw_data: The raw input.
 
         Returns:
-            List[ContentBlock]: The standardized blocks.
+            List[SayouBlock]: The standardized blocks.
         """
         raise NotImplementedError

@@ -1,7 +1,7 @@
 import json
 from typing import List, Set
 
-from ..core.schemas import ContentBlock
+from sayou.core.schemas import SayouBlock
 from ..interfaces.base_processor import BaseProcessor
 
 
@@ -15,18 +15,18 @@ class Deduplicator(BaseProcessor):
 
     component_name = "Deduplicator"
 
-    def _do_process(self, blocks: List[ContentBlock]) -> List[ContentBlock]:
+    def _do_process(self, blocks: List[SayouBlock]) -> List[SayouBlock]:
         """
         Iterate through blocks and remove duplicates.
 
         Args:
-            blocks (List[ContentBlock]): The input list of blocks.
+            blocks (List[SayouBlock]): The input list of blocks.
 
         Returns:
-            List[ContentBlock]: A new list with duplicates removed.
+            List[SayouBlock]: A new list with duplicates removed.
         """
         seen_hashes: Set[int] = set()
-        unique_blocks: List[ContentBlock] = []
+        unique_blocks: List[SayouBlock] = []
 
         for block in blocks:
             # Generate stable hash key

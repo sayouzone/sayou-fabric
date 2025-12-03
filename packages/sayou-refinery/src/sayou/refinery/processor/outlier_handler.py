@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from ..core.schemas import ContentBlock
+from sayou.core.schemas import SayouBlock
 from ..interfaces.base_processor import BaseProcessor
 
 
@@ -29,15 +29,15 @@ class OutlierHandler(BaseProcessor):
         """
         self.rules = outlier_rules or {}
 
-    def _do_process(self, blocks: List[ContentBlock]) -> List[ContentBlock]:
+    def _do_process(self, blocks: List[SayouBlock]) -> List[SayouBlock]:
         """
         Check numerical fields against rules and filter/modify blocks.
 
         Args:
-            blocks (List[ContentBlock]): Input blocks.
+            blocks (List[SayouBlock]): Input blocks.
 
         Returns:
-            List[ContentBlock]: Filtered or modified list of blocks.
+            List[SayouBlock]: Filtered or modified list of blocks.
         """
         valid_blocks = []
 

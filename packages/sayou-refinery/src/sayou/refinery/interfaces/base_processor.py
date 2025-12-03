@@ -5,12 +5,12 @@ from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import measure_time
 
 from ..core.exceptions import ProcessingError
-from ..core.schemas import ContentBlock
+from sayou.core.schemas import SayouBlock
 
 
 class BaseProcessor(BaseComponent):
     """
-    (Tier 1) Abstract base class for processing/cleaning ContentBlocks.
+    (Tier 1) Abstract base class for processing/cleaning SayouBlock.
 
     Processors operate on data that is already normalized. They can modify content
     (e.g., PII masking, Imputation) or filter out blocks (e.g., Deduplication).
@@ -19,15 +19,15 @@ class BaseProcessor(BaseComponent):
     component_name = "BaseProcessor"
 
     @measure_time
-    def process(self, blocks: List[ContentBlock]) -> List[ContentBlock]:
+    def process(self, blocks: List[SayouBlock]) -> List[SayouBlock]:
         """
         Execute the processing logic on a list of blocks.
 
         Args:
-            blocks: Input list of ContentBlocks.
+            blocks: Input list of SayouBlocks.
 
         Returns:
-            List[ContentBlock]: Processed list of ContentBlocks.
+            List[SayouBlock]: Processed list of SayouBlocks.
 
         Raises:
             ProcessingError: If processing logic fails.
@@ -44,14 +44,14 @@ class BaseProcessor(BaseComponent):
             raise wrapped_error
 
     @abstractmethod
-    def _do_process(self, blocks: List[ContentBlock]) -> List[ContentBlock]:
+    def _do_process(self, blocks: List[SayouBlock]) -> List[SayouBlock]:
         """
         [Abstract Hook] Implement cleaning/filtering logic.
 
         Args:
-            blocks: List of input ContentBlocks.
+            blocks: List of input SayouBlocks.
 
         Returns:
-            List[ContentBlock]: Modified list of ContentBlocks.
+            List[SayouBlock]: Modified list of SayouBlocks.
         """
         raise NotImplementedError

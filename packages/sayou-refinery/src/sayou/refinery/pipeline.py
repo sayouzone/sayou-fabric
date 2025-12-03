@@ -4,7 +4,7 @@ from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
 
 from .core.exceptions import RefineryError
-from .core.schemas import ContentBlock
+from sayou.core.schemas import SayouBlock
 from .interfaces.base_normalizer import BaseNormalizer
 from .interfaces.base_processor import BaseProcessor
 from .normalizer.doc_markdown_normalizer import DocMarkdownNormalizer
@@ -20,7 +20,7 @@ from .processor.text_cleaner import TextCleaner
 class RefineryPipeline(BaseComponent):
     """
     Orchestrates the data refinement process.
-    1. Selects a Normalizer to convert raw data into standard ContentBlocks.
+    1. Selects a Normalizer to convert raw data into standard SayouBlocks.
     2. Runs a chain of Processors to clean and transform the blocks.
     """
 
@@ -78,7 +78,7 @@ class RefineryPipeline(BaseComponent):
 
     def run(
         self, raw_data: Any, source_type: str = "standard_doc"
-    ) -> List[ContentBlock]:
+    ) -> List[SayouBlock]:
         """
         Execute the refinement pipeline.
 
@@ -87,7 +87,7 @@ class RefineryPipeline(BaseComponent):
             source_type: The type of input data (e.g., 'standard_doc', 'html', 'json')
 
         Returns:
-            List[ContentBlock]: A list of clean, normalized blocks.
+            List[SayouBlock]: A list of clean, normalized blocks.
         """
         # Step 1: Normalize (Structure Transformation)
         normalizer = self.normalizers.get(source_type)

@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from ..core.schemas import ContentBlock
+from sayou.core.schemas import SayouBlock
 from ..interfaces.base_processor import BaseProcessor
 
 
@@ -29,15 +29,15 @@ class TextCleaner(BaseProcessor):
         self.patterns = [re.compile(p) for p in (patterns or [])]
         self._space_re = re.compile(r"[ \t]+")
 
-    def _do_process(self, blocks: List[ContentBlock]) -> List[ContentBlock]:
+    def _do_process(self, blocks: List[SayouBlock]) -> List[SayouBlock]:
         """
         Apply cleaning logic to text blocks.
 
         Args:
-            blocks (List[ContentBlock]): Input blocks.
+            blocks (List[SayouBlock]): Input blocks.
 
         Returns:
-            List[ContentBlock]: Cleaned blocks.
+            List[SayouBlock]: Cleaned blocks.
         """
         for block in blocks:
             if block.type not in ["text", "md"]:

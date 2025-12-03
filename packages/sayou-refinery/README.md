@@ -8,7 +8,7 @@
 
 `sayou-refinery` acts as the "Cleaning Plant" in your data pipeline.
 
-It transforms heterogeneous raw data (JSON Documents, HTML, DB Records) into a standardized stream of **ContentBlocks**, ensuring that downstream components (like Chunkers or LLMs) receive clean, uniform data regardless of the original source format.
+It transforms heterogeneous raw data (JSON Documents, HTML, DB Records) into a standardized stream of **SayouBlocks**, ensuring that downstream components (like Chunkers or LLMs) receive clean, uniform data regardless of the original source format.
 
 ## 💡 Core Philosophy
 
@@ -16,7 +16,7 @@ It transforms heterogeneous raw data (JSON Documents, HTML, DB Records) into a s
 
 Refinery operates in two distinct stages to guarantee data quality:
 
-1.  **Normalization (Shape Shifting):** Converts complex structures (nested JSON, HTML trees, DB Rows) into a linear list of `ContentBlocks`.
+1.  **Normalization (Shape Shifting):** Converts complex structures (nested JSON, HTML trees, DB Rows) into a linear list of `SayouBlocks`.
 2.  **Processing (Cleaning):** Applies a chain of cleaning agents (Regex, Masking, Deduplication) to improve data hygiene.
 
 ## 📦 Installation

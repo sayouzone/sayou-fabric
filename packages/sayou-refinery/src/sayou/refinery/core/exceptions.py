@@ -11,7 +11,7 @@ class RefineryError(SayouCoreError):
 
 class NormalizationError(RefineryError):
     """
-    Raised when raw data cannot be converted to ContentBlocks.
+    Raised when raw data cannot be converted to SayouBlocks.
     (e.g., Malformed JSON, Unsupported format)
     """
 

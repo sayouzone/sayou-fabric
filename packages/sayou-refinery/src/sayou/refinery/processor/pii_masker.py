@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from ..core.schemas import ContentBlock
+from sayou.core.schemas import SayouBlock
 from ..interfaces.base_processor import BaseProcessor
 
 
@@ -30,15 +30,15 @@ class PiiMasker(BaseProcessor):
         # Simple phone regex (customizable)
         self._phone_re = re.compile(r"\d{3}[-\.\s]??\d{3,4}[-\.\s]??\d{4}")
 
-    def _do_process(self, blocks: List[ContentBlock]) -> List[ContentBlock]:
+    def _do_process(self, blocks: List[SayouBlock]) -> List[SayouBlock]:
         """
         Apply masking regex to text content.
 
         Args:
-            blocks (List[ContentBlock]): Input blocks.
+            blocks (List[SayouBlock]): Input blocks.
 
         Returns:
-            List[ContentBlock]: Blocks with sensitive info replaced by tokens.
+            List[SayouBlock]: Blocks with sensitive info replaced by tokens.
         """
         for block in blocks:
             if block.type not in ["text", "md"] or not isinstance(block.content, str):
