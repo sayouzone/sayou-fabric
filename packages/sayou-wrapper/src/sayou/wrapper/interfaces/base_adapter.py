@@ -11,6 +11,10 @@ from ..core.schemas import WrapperOutput
 class BaseAdapter(BaseComponent):
     """
     (Tier 1) Abstract base class for converting external data into Sayou Standard Schema.
+
+    Implements the Template Method pattern:
+    1. `adapt()`: Handles logging, timing, and error wrapping.
+    2. `_do_adapt()`: Abstract hook for the specific mapping logic.
     """
 
     component_name = "BaseAdapter"
@@ -19,16 +23,16 @@ class BaseAdapter(BaseComponent):
     @measure_time
     def adapt(self, input_data: Any) -> WrapperOutput:
         """
-        Execute the adaptation process.
+        [Template Method] Execute the adaptation process.
 
         Args:
-            input_data (Any): Can be List[Chunk], List[Dict], or raw data object.
+            input_data (Any): Raw input data (Chunks, Dicts, etc.).
 
         Returns:
-            WrapperOutput: Container holding standardized SayouNodes.
+            WrapperOutput: The standardized output containing nodes and metadata.
 
         Raises:
-            AdaptationError: If adaptation fails.
+            AdaptationError: If the adaptation logic fails.
         """
         self._log(f"Adapting data (Type: {type(input_data).__name__})")
 
@@ -46,6 +50,12 @@ class BaseAdapter(BaseComponent):
     @abstractmethod
     def _do_adapt(self, input_data: Any) -> WrapperOutput:
         """
-        [Abstract Hook] Implement the mapping logic.
+        [Abstract Hook] Implement the mapping logic to create SayouNodes.
+
+        Args:
+            input_data (Any): Input data.
+
+        Returns:
+            WrapperOutput: The constructed output object.
         """
         raise NotImplementedError

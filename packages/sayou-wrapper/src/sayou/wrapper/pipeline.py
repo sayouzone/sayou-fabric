@@ -10,9 +10,23 @@ from .interfaces.base_adapter import BaseAdapter
 
 
 class WrapperPipeline(BaseComponent):
+    """
+    Orchestrates the data wrapping process.
+
+    This pipeline acts as the final gateway before data storage. It receives
+    processed data (usually chunks) and delegates it to a specific `Adapter`
+    to convert it into the standard `SayouNode` format.
+    """
+
     component_name = "WrapperPipeline"
 
     def __init__(self, extra_adapters: Optional[List[BaseAdapter]] = None):
+        """
+        Initialize the pipeline with default and optional custom adapters.
+
+        Args:
+            extra_adapters (List[BaseAdapter], optional): Custom adapters to register.
+        """
         super().__init__()
         self.adapters: Dict[str, BaseAdapter] = {}
 
@@ -23,12 +37,24 @@ class WrapperPipeline(BaseComponent):
             self._register(extra_adapters)
 
     def _register(self, adapters: List[BaseAdapter]):
+        """
+        Register a list of adapters into the internal strategy map.
+
+        Args:
+            adapters (List[BaseAdapter]): Adapter instances to register.
+        """
         for a in adapters:
             for t in getattr(a, "SUPPORTED_TYPES", []):
                 self.adapters[t] = a
 
     @safe_run(default_return=None)
     def initialize(self, **kwargs):
+        """
+        Initialize all registered adapters.
+
+        Propagates global configuration to all adapters, although adapters
+        are typically stateless.
+        """
         for adapter in set(self.adapters.values()):
             if hasattr(adapter, "initialize"):
                 adapter.initialize(**kwargs)
@@ -38,11 +64,17 @@ class WrapperPipeline(BaseComponent):
 
     def run(self, input_data: Any, strategy: str = "default") -> WrapperOutput:
         """
-        Run the wrapper pipeline.
+        Execute the wrapping strategy.
 
         Args:
-            input_data: List of Chunks or Dicts.
-            strategy: 'document_chunk' or 'default'.
+            input_data (Any): The input data (e.g., List[Chunk] or raw Dict).
+            strategy (str): The adapter strategy to use (default: 'default').
+
+        Returns:
+            WrapperOutput: A container holding the list of standardized SayouNodes.
+
+        Raises:
+            AdaptationError: If the strategy is unknown or execution fails.
         """
         adapter = self.adapters.get(strategy)
         if not adapter:

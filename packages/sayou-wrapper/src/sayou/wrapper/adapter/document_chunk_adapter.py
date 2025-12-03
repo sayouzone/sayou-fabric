@@ -8,13 +8,28 @@ from ..interfaces.base_adapter import BaseAdapter
 class DocumentChunkAdapter(BaseAdapter):
     """
     Standard Adapter for Sayou Chunking results.
-    Converts Chunks into semantic SayouNodes (Topic, Table, Code, TextFragment).
+
+    Converts `Chunk` objects (from sayou-chunking) into semantic `SayouNodes`.
+    It maps metadata like 'semantic_type' to Ontology Classes (e.g., sayou:Topic)
+    and preserves relationships like 'parent_id' as 'sayou:hasParent'.
     """
 
     component_name = "DocumentChunkAdapter"
     SUPPORTED_TYPES = ["document_chunk"]
 
     def _do_adapt(self, input_data: Union[List[Any], Any]) -> WrapperOutput:
+        """
+        Convert chunks into a list of SayouNodes.
+
+        Handles both Pydantic Chunk objects and dictionary representations.
+        Generates deterministic URIs for nodes based on chunk IDs.
+
+        Args:
+            input_data (Union[List[Any], Any]): A single Chunk or list of Chunks.
+
+        Returns:
+            WrapperOutput: The output containing the graph of nodes.
+        """
         if not isinstance(input_data, list):
             input_data = [input_data]
 
