@@ -1,6 +1,7 @@
 from typing import Any, List, Union
 
 from ..core.schemas import SayouNode, WrapperOutput
+from ..core.vocabulary import SayouAttribute, SayouClass, SayouPredicate
 from ..interfaces.base_adapter import BaseAdapter
 
 
@@ -38,23 +39,23 @@ class DocumentChunkAdapter(BaseAdapter):
             is_header = meta.get("is_header", False)
 
             if is_header:
-                node_class = "sayou:Topic"
+                node_class = SayouClass.TOPIC
             elif sem_type == "table":
-                node_class = "sayou:Table"
+                node_class = SayouClass.TABLE
             elif sem_type == "code_block":
-                node_class = "sayou:Code"
+                node_class = SayouClass.CODE
             elif sem_type == "list_item":
-                node_class = "sayou:ListItem"
+                node_class = SayouClass.LIST_ITEM
             else:
-                node_class = "sayou:TextFragment"
+                node_class = SayouClass.TEXT
 
-            # 3. Attributes Mapping
+            # [Refactored] Attributes using Constants
             attributes = {
-                "schema:text": content,
-                "sayou:semanticType": sem_type,
-                "sayou:pageIndex": meta.get("page_num"),
-                "sayou:partIndex": meta.get("part_index"),
-                "sayou:source": meta.get("source"),
+                SayouAttribute.TEXT: content,
+                SayouAttribute.SEMANTIC_TYPE: sem_type,
+                SayouAttribute.PAGE_INDEX: meta.get("page_num"),
+                SayouAttribute.PART_INDEX: meta.get("part_index"),
+                SayouAttribute.SOURCE: meta.get("source"),
             }
 
             # 4. Relationships Mapping
@@ -62,7 +63,7 @@ class DocumentChunkAdapter(BaseAdapter):
             parent_id = meta.get("parent_id")
             if parent_id:
                 std_parent_id = f"sayou:doc:{parent_id}"
-                relationships["sayou:hasParent"] = [std_parent_id]
+                relationships[SayouPredicate.HAS_PARENT] = [std_parent_id]
 
             # 5. Create Node
             node = SayouNode(
