@@ -2,9 +2,9 @@ from typing import Any, Dict, List, Optional
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
+from sayou.core.schemas import SayouBlock
 
 from .core.exceptions import RefineryError
-from sayou.core.schemas import SayouBlock
 from .interfaces.base_normalizer import BaseNormalizer
 from .interfaces.base_processor import BaseProcessor
 from .normalizer.doc_markdown_normalizer import DocMarkdownNormalizer
@@ -76,9 +76,7 @@ class RefineryPipeline(BaseComponent):
             f"Refinery initialized with {len(self.processors)} processors in chain."
         )
 
-    def run(
-        self, raw_data: Any, source_type: str = "standard_doc"
-    ) -> List[SayouBlock]:
+    def run(self, raw_data: Any, source_type: str = "standard_doc") -> List[SayouBlock]:
         """
         Execute the refinement pipeline.
 

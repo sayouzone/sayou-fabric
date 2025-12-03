@@ -3,9 +3,9 @@ from typing import List
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import measure_time
+from sayou.core.schemas import SayouBlock
 
 from ..core.exceptions import ProcessingError
-from sayou.core.schemas import SayouBlock
 
 
 class BaseProcessor(BaseComponent):

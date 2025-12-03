@@ -2,6 +2,7 @@ import re
 from typing import List
 
 from sayou.core.schemas import SayouBlock
+
 from ..interfaces.base_processor import BaseProcessor
 
 

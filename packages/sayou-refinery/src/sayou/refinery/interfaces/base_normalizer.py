@@ -3,9 +3,9 @@ from typing import Any, List
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import measure_time
+from sayou.core.schemas import SayouBlock
 
 from ..core.exceptions import NormalizationError
-from sayou.core.schemas import SayouBlock
 
 
 class BaseNormalizer(BaseComponent):

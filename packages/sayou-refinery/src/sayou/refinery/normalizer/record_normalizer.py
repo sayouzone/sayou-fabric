@@ -1,7 +1,8 @@
 from typing import Any, Dict, List
 
-from ..core.exceptions import NormalizationError
 from sayou.core.schemas import SayouBlock
+
+from ..core.exceptions import NormalizationError
 from ..interfaces.base_normalizer import BaseNormalizer
 
 

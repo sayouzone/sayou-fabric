@@ -5,8 +5,9 @@ except ImportError:
 
 from typing import Any, List
 
-from ..core.exceptions import NormalizationError
 from sayou.core.schemas import SayouBlock
+
+from ..core.exceptions import NormalizationError
 from ..interfaces.base_normalizer import BaseNormalizer
 
 
@@ -54,6 +55,4 @@ class HtmlTextNormalizer(BaseNormalizer):
 
         text = re.sub(r"\n{3,}", "\n\n", text).strip()
 
-        return [
-            SayouBlock(type="text", content=text, metadata={"source_type": "html"})
-        ]
+        return [SayouBlock(type="text", content=text, metadata={"source_type": "html"})]

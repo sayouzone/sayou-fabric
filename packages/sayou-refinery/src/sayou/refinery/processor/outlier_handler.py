@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from sayou.core.schemas import SayouBlock
+
 from ..interfaces.base_processor import BaseProcessor
 
 
