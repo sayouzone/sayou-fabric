@@ -25,7 +25,7 @@ pip install sayou-refinery
 * **Path A: Document Refining**
     * **Input:** A single, large `Dict` (JSON) object from `sayou-document`.
     * **Action:** Interprets high-fidelity metadata (`raw_attributes`) to generate semantic content.
-    * **Output:** A `List[ContentBlock]` (e.g., Markdown text, image data) ready for `sayou-chunk`.
+    * **Output:** A `List[SayouBlock]` (e.g., Markdown text, image data) ready for `sayou-chunk`.
 
 * **Path B: DataAtom Refining**
     * **Input:** A `List[DataAtom]` (e.g., from `sayou-connector` or `sayou-wrapper`).
@@ -91,7 +91,7 @@ It does *not* accept arbitrary JSON. It expects a `Dict` with the following stru
 
 ### 4.1. Document Refiners (Tier 1: `BaseDocRefiner`)
 
-This component transforms a `sayou-document` dictionary into `ContentBlock` objects.
+This component transforms a `sayou-document` dictionary into `SayouBlock` objects.
 
 * **Tier 2 (`doc/markdown.py`): `DocToMarkdownRefiner`**
     * This is the high-fidelity default engine. It reads the `raw_attributes` ("style", "semantic_type", "placeholder_type") to generate the richest possible Markdown, including headings (`#`), lists (`-`), tables, and image data.
@@ -109,7 +109,7 @@ with open("my_document_output.json", "r", encoding="utf-8") as f:
 refiner = DocToMarkdownRefiner()
 refiner.initialize(include_footers=False) # (Default: False)
 
-# 3. Refine the dict into a list of ContentBlocks
+# 3. Refine the dict into a list of SayouBlocks
 # This list is the input for 'sayou-chunk'
 content_blocks = refiner.refine(doc_data)
 
@@ -121,9 +121,9 @@ content_blocks = refiner.refine(doc_data)
 # content_blocks[2].content -> "iVBORw0KGgo..."
 ```
 
-* **Output: `ContentBlock`**
-    * The `refine()` method returns a `List[ContentBlock]`.
-    * A `ContentBlock` is a simple dataclass with `type` (e.g., "md", "image_base64"), `content` (the data), and `metadata`.
+* **Output: `SayouBlock`**
+    * The `refine()` method returns a `List[SayouBlock]`.
+    * A `SayouBlock` is a simple dataclass with `type` (e.g., "md", "image_base64"), `content` (the data), and `metadata`.
     * `sayou-chunk` consumes this list directly.
 
 ### 4.2. DataAtom Refiners (Tier 1: `BaseProcessor`, `BaseAggregator`, `BaseMerger`)
@@ -196,7 +196,7 @@ For example, the default `DocToMarkdownRefiner`(T2) converts `semantic_type: "he
 
 ```python
 from sayou.refinery.processor.doc_to_markdown import DocToMarkdownRefiner
-from sayou.refinery.interfaces.base_doc_refiner import ContentBlock
+from sayou.refinery.interfaces.base_doc_refiner import SayouBlock
 from typing import Dict, Any, List
 
 class HtmlRefinerPlugin(DocToMarkdownRefiner):
@@ -205,7 +205,7 @@ class HtmlRefinerPlugin(DocToMarkdownRefiner):
     """
     component_name = "HtmlRefinerPlugin"
     
-    def _handle_text(self, element: Dict[str, Any], is_header: bool, is_footer: bool) -> List[ContentBlock]:
+    def _handle_text(self, element: Dict[str, Any], is_header: bool, is_footer: bool) -> List[SayouBlock]:
         """
         Overrides the _handle_text method.
         """
@@ -225,7 +225,7 @@ class HtmlRefinerPlugin(DocToMarkdownRefiner):
         else:
             content = f"<p>{text}</p>"
 
-        return [ContentBlock(
+        return [SayouBlock(
             type="html", 
             content=content, 
             metadata={
