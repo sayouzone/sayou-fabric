@@ -1,46 +1,54 @@
 from typing import Any, Dict, List, Optional
 
 from sayou.core.base_component import BaseComponent
+from sayou.core.decorators import safe_run
 
-from .core.exceptions import WrapperError
+from .adapter.document_chunk_adapter import DocumentChunkAdapter
+from .core.exceptions import AdaptationError
+from .core.schemas import WrapperOutput
 from .interfaces.base_adapter import BaseAdapter
-from .adapter.document_adapter import DocumentChunkAdapter
+
 
 class WrapperPipeline(BaseComponent):
     component_name = "WrapperPipeline"
 
-    def __init__(
-        self,
-        extra_adapters: Optional[List[BaseAdapter]] = None
-    ):
-        self.handler_map: Dict[str, BaseAdapter] = {}
+    def __init__(self, extra_adapters: Optional[List[BaseAdapter]] = None):
+        super().__init__()
+        self.adapters: Dict[str, BaseAdapter] = {}
 
-        default_adapters = [
-            DocumentChunkAdapter(),
-        ]
+        defaults = [DocumentChunkAdapter()]
+        self._register(defaults)
 
-        self._register(default_adapters)
         if extra_adapters:
             self._register(extra_adapters)
 
     def _register(self, adapters: List[BaseAdapter]):
-        for adapter in adapters:
-            for t in getattr(adapter, "SUPPORTED_TYPES", []):
-                self.handler_map[t] = adapter
+        for a in adapters:
+            for t in getattr(a, "SUPPORTED_TYPES", []):
+                self.adapters[t] = a
 
+    @safe_run(default_return=None)
     def initialize(self, **kwargs):
-        for handler in set(self.handler_map.values()):
-            handler.initialize(**kwargs)
+        for adapter in set(self.adapters.values()):
+            if hasattr(adapter, "initialize"):
+                adapter.initialize(**kwargs)
+        self._log(
+            f"WrapperPipeline initialized. Strategies: {list(self.adapters.keys())}"
+        )
 
-    def run(self, raw_data: Any, adapter_type: str = "document_chunk") -> Dict[str, Any]:
-        handler = self.handler_map.get(adapter_type)
-        
-        if not handler:
-            raise WrapperError(f"Unknown adapter type: '{adapter_type}'. Available: {list(self.handler_map.keys())}")
-            
-        self._log(f"Routing to {handler.component_name}...")
-        try:
-            return handler.adapt(raw_data)
-        except Exception as e:
-            self._log(f"Pipeline Error: {e}")
-            raise WrapperError(e)
+    def run(self, input_data: Any, strategy: str = "default") -> WrapperOutput:
+        """
+        Run the wrapper pipeline.
+
+        Args:
+            input_data: List of Chunks or Dicts.
+            strategy: 'document_chunk' or 'default'.
+        """
+        adapter = self.adapters.get(strategy)
+        if not adapter:
+            raise AdaptationError(
+                f"Unknown strategy '{strategy}'. Available: {list(self.adapters.keys())}"
+            )
+
+        self._log(f"Wrapping using strategy: {strategy}")
+        return adapter.adapt(input_data)
