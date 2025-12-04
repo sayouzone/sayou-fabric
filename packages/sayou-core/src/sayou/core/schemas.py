@@ -45,7 +45,7 @@ class SayouPacket(BaseModel):
 
 
 # ==============================================================================
-# 2. Refinement & Chunking Stage (Refinery / Chunking)
+# 2. Refinement Stage (Refinery Output)
 # ==============================================================================
 class SayouBlock(BaseModel):
     """
@@ -64,6 +64,26 @@ class SayouBlock(BaseModel):
     metadata: Dict[str, Any] = Field(
         default_factory=dict, description="Source context (page, lineage)"
     )
+
+
+# ==============================================================================
+# 3. Chunking Stage (Chunking Output)
+# ==============================================================================
+class SayouChunk(BaseModel):
+    """
+    [Intermediate] The segmented text unit ready for Embedding.
+
+    Chunking splits a `SayouBlock` into multiple `SayouChunk`s.
+    """
+
+    content: str = Field(..., description="The split text segment")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Context (chunk_id, parent_id, source)"
+    )
+
+    def update_metadata(self, **kwargs):
+        """Helper to update metadata in-place."""
+        self.metadata.update(kwargs)
 
 
 # ==============================================================================
