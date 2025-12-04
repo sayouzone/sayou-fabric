@@ -1,6 +1,7 @@
 from typing import List
 
-from ..core.schemas import Chunk, InputDocument
+from sayou.core.schemas import SayouBlock, SayouChunk
+
 from ..interfaces.base_splitter import BaseSplitter
 from ..splitter.recursive_splitter import RecursiveSplitter
 from ..splitter.structure_splitter import StructureSplitter
@@ -17,7 +18,7 @@ class ParentDocumentSplitter(BaseSplitter):
     component_name = "ParentDocumentSplitter"
     SUPPORTED_TYPES = ["parent_document"]
 
-    def _do_split(self, doc: InputDocument) -> List[Chunk]:
+    def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """
         Generate parent chunks first, then recursively split them into children.
         """
@@ -37,7 +38,7 @@ class ParentDocumentSplitter(BaseSplitter):
         parent_config = config.copy()
         parent_config["chunk_size"] = config.get("parent_chunk_size", 2000)
 
-        parent_doc = InputDocument(
+        parent_doc = SayouBlock(
             content=doc.content, metadata={**doc.metadata, "config": parent_config}
         )
 
@@ -49,7 +50,7 @@ class ParentDocumentSplitter(BaseSplitter):
             p_chunk.update_metadata(chunk_id=parent_id, doc_level="parent")
             final_chunks.append(p_chunk)
 
-            child_doc = InputDocument(
+            child_doc = SayouBlock(
                 content=p_chunk.chunk_content,
                 metadata={**doc.metadata, "config": config, "parent_id": parent_id},
             )

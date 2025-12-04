@@ -1,6 +1,7 @@
 from typing import List
 
-from ..core.schemas import Chunk, InputDocument
+from sayou.core.schemas import SayouBlock, SayouChunk
+
 from ..interfaces.base_splitter import BaseSplitter
 from ..utils.text_segmenter import TextSegmenter
 
@@ -19,7 +20,7 @@ class RecursiveSplitter(BaseSplitter):
 
     DEFAULT_SEPARATORS = ["\n\n", "\n", r"(?<=[.?!])\s+", " ", ""]
 
-    def _do_split(self, doc: InputDocument) -> List[Chunk]:
+    def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """
         Execute recursive splitting using `TextSegmenter`.
         """
@@ -40,7 +41,7 @@ class RecursiveSplitter(BaseSplitter):
         )
 
         return [
-            Chunk(
+            SayouChunk(
                 chunk_content=text.strip(),
                 metadata={
                     **doc.metadata,

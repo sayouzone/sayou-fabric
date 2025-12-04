@@ -1,7 +1,8 @@
 import re
 from typing import List, Optional
 
-from ..core.schemas import Chunk, InputDocument
+from sayou.core.schemas import SayouBlock, SayouChunk
+
 from ..splitter.recursive_splitter import RecursiveSplitter
 from ..utils.text_segmenter import TextSegmenter
 
@@ -22,7 +23,7 @@ class MarkdownSplitter(RecursiveSplitter):
     PROTECTED_PATTERNS = [r"(?s)```.*?```", r"(?m)^(?:\|[^\n]*\|(?:\n|$))+"]
     SECTION_SPLIT_PATTERN = r"(?m)^(?=#{1,6} |[-*] |\d+\. )"
 
-    def _do_split(self, doc: InputDocument) -> List[Chunk]:
+    def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """
         Split by Markdown headers first, then recursively split content.
         """
@@ -49,7 +50,7 @@ class MarkdownSplitter(RecursiveSplitter):
                 header_level = len(header_match.group(1))
                 header_text = header_match.group(2).strip()
                 header_chunk_id = f"{doc_id}_h_{global_idx}"
-                header_chunk = Chunk(
+                header_chunk = SayouChunk(
                     chunk_content=f"{header_match.group(1)} {header_text}",
                     metadata={
                         **self._clean_meta(doc.metadata),
@@ -97,7 +98,7 @@ class MarkdownSplitter(RecursiveSplitter):
                         "section_title": current_parent_text,
                     }
                 )
-                final_chunks.append(Chunk(chunk_content=part, metadata=meta))
+                final_chunks.append(SayouChunk(chunk_content=part, metadata=meta))
                 global_idx += 1
 
         return final_chunks

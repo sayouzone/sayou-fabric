@@ -1,7 +1,8 @@
 import re
 from typing import List
 
-from ..core.schemas import Chunk, InputDocument
+from sayou.core.schemas import SayouBlock, SayouChunk
+
 from ..splitter.recursive_splitter import RecursiveSplitter
 from ..utils.text_segmenter import TextSegmenter
 
@@ -17,7 +18,7 @@ class StructureSplitter(RecursiveSplitter):
     component_name = "StructureSplitter"
     SUPPORTED_TYPES = ["structure"]
 
-    def _do_split(self, doc: InputDocument) -> List[Chunk]:
+    def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """
         Split by structure regex first, then fall back to recursive splitting
         for sections larger than `chunk_size`.
@@ -50,9 +51,11 @@ class StructureSplitter(RecursiveSplitter):
                 )
                 for part in sub_parts:
                     final_chunks.append(
-                        Chunk(chunk_content=part, metadata=doc.metadata)
+                        SayouChunk(chunk_content=part, metadata=doc.metadata)
                     )
             else:
-                final_chunks.append(Chunk(chunk_content=section, metadata=doc.metadata))
+                final_chunks.append(
+                    SayouChunk(chunk_content=section, metadata=doc.metadata)
+                )
 
         return final_chunks

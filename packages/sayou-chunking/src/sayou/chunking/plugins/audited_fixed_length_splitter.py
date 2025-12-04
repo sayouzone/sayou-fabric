@@ -1,8 +1,9 @@
 import time
 from typing import List
 
-from sayou.chunking.core.schemas import Chunk, InputDocument
-from sayou.chunking.splitter.fixed_length_splitter import FixedLengthSplitter
+from sayou.core.schemas import SayouBlock, SayouChunk
+
+from ..splitter.fixed_length_splitter import FixedLengthSplitter
 
 
 class AuditedFixedLengthSplitter(FixedLengthSplitter):
@@ -16,7 +17,7 @@ class AuditedFixedLengthSplitter(FixedLengthSplitter):
     component_name = "AuditedFixedLengthSplitter"
     SUPPORTED_TYPES = ["audited_fixed"]
 
-    def _do_split(self, doc: InputDocument) -> List[Chunk]:
+    def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """
         Perform fixed splitting and inject audit info into metadata.
         """

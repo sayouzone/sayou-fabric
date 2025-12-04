@@ -1,6 +1,7 @@
 from typing import List
 
-from ..core.schemas import Chunk, InputDocument
+from sayou.core.schemas import SayouBlock, SayouChunk
+
 from ..interfaces.base_splitter import BaseSplitter
 
 
@@ -15,7 +16,7 @@ class FixedLengthSplitter(BaseSplitter):
     component_name = "FixedLengthSplitter"
     SUPPORTED_TYPES = ["fixed_length"]
 
-    def _do_split(self, doc: InputDocument) -> List[Chunk]:
+    def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """
         Slice content by `chunk_size` with `chunk_overlap`.
         """
@@ -32,4 +33,4 @@ class FixedLengthSplitter(BaseSplitter):
         for i in range(0, len(content), step):
             text_chunks.append(content[i : i + chunk_size])
 
-        return [Chunk(chunk_content=t, metadata=doc.metadata) for t in text_chunks]
+        return [SayouChunk(chunk_content=t, metadata=doc.metadata) for t in text_chunks]

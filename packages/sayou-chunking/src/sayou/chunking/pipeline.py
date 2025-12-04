@@ -2,9 +2,9 @@ from typing import Any, Dict, List, Optional
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
+from sayou.core.schemas import SayouChunk
 
 from .core.exceptions import SplitterError
-from .core.schemas import Chunk
 from .interfaces.base_splitter import BaseSplitter
 from .splitter.agentic_splitter import AgenticSplitter
 from .splitter.fixed_length_splitter import FixedLengthSplitter
@@ -73,7 +73,7 @@ class ChunkingPipeline(BaseComponent):
             f"ChunkingPipeline initialized. Strategies: {list(self.splitters.keys())}"
         )
 
-    def run(self, input_data: Any, strategy: str = "default") -> List[Chunk]:
+    def run(self, input_data: Any, strategy: str = "default") -> List[SayouChunk]:
         """
         Execute the chunking strategy on the input data.
 
@@ -82,7 +82,7 @@ class ChunkingPipeline(BaseComponent):
             strategy (str): The splitting strategy to use (default: 'default').
 
         Returns:
-            List[Chunk]: A list of generated Chunk objects.
+            List[SayouChunk]: A list of generated Chunk objects.
 
         Raises:
             SplitterError: If the strategy is unknown or execution fails.

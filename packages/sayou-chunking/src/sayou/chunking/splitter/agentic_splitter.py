@@ -1,6 +1,7 @@
 from typing import List
 
-from ..core.schemas import Chunk, InputDocument
+from sayou.core.schemas import SayouBlock, SayouChunk
+
 from ..interfaces.base_splitter import BaseSplitter
 
 
@@ -15,7 +16,7 @@ class AgenticSplitter(BaseSplitter):
     component_name = "AgenticSplitter"
     SUPPORTED_TYPES = ["llm_agent"]
 
-    def _do_split(self, doc: InputDocument) -> List[Chunk]:
+    def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """
         Delegate splitting logic to an LLM (Mock implementation).
         """
@@ -24,4 +25,4 @@ class AgenticSplitter(BaseSplitter):
             "Agentic splitting is not fully implemented yet. Returning raw content."
         )
 
-        return [Chunk(chunk_content=doc.content, metadata=doc.metadata)]
+        return [SayouChunk(chunk_content=doc.content, metadata=doc.metadata)]

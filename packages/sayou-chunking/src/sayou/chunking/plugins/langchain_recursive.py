@@ -1,6 +1,7 @@
 from typing import List
 
-from ..core.schemas import Chunk, InputDocument
+from sayou.core.schemas import SayouBlock, SayouChunk
+
 from ..splitter.recursive_splitter import RecursiveSplitter
 
 try:
@@ -18,7 +19,7 @@ class LangChainRecursiveSplitter(RecursiveSplitter):
     component_name = "LangChainRecursiveSplitter"
     SUPPORTED_TYPES = ["langchain_recursive"]
 
-    def _do_split(self, doc: InputDocument) -> List[Chunk]:
+    def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """
         Delegate the splitting process to LangChain's splitter.
         """
@@ -36,4 +37,4 @@ class LangChainRecursiveSplitter(RecursiveSplitter):
 
         texts = splitter.split_text(doc.content)
 
-        return [Chunk(chunk_content=t, metadata=doc.metadata) for t in texts]
+        return [SayouChunk(chunk_content=t, metadata=doc.metadata) for t in texts]

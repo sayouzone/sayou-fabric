@@ -1,7 +1,8 @@
 import math
 from typing import Callable, List
 
-from ..core.schemas import Chunk, InputDocument
+from sayou.core.schemas import SayouBlock, SayouChunk
+
 from ..interfaces.base_splitter import BaseSplitter
 
 
@@ -16,7 +17,7 @@ class SemanticSplitter(BaseSplitter):
     component_name = "SemanticSplitter"
     SUPPORTED_TYPES = ["semantic"]
 
-    def _do_split(self, doc: InputDocument) -> List[Chunk]:
+    def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """
         Segment text based on semantic coherence.
         """
@@ -38,7 +39,7 @@ class SemanticSplitter(BaseSplitter):
         grouped_texts = self._cluster_sentences(sentences, encoder, threshold)
 
         return [
-            Chunk(
+            SayouChunk(
                 chunk_content=text,
                 metadata={
                     **doc.metadata,
