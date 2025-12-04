@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from sayou.core.schemas import SayouOutput
 
@@ -9,15 +9,18 @@ class GraphBuilder(BaseBuilder):
     """
     Assembles SayouNodes into a standard Graph Structure (Nodes + Edges).
 
-    Integrated Features:
-    - Node/Edge extraction
-    - Automatic Reverse Linking (e.g., hasParent -> hasChild)
+    Suitable for loading into graph databases (like NetworkX) or visualization.
+    Automatically generates reverse relationships (e.g., hasParent -> hasChild)
+    to ensure bi-directional traversal capabilities.
     """
 
     component_name = "GraphBuilder"
     SUPPORTED_TYPES = ["graph", "hierarchy", "default"]
 
     def _do_build(self, data: SayouOutput) -> Dict[str, Any]:
+        """
+        Convert Nodes and Relationships into a flat Node/Edge list dictionary.
+        """
         nodes_map = {}
         edges_list = []
 
@@ -66,7 +69,10 @@ class GraphBuilder(BaseBuilder):
         }
 
     def _get_reverse_type(self, rel_type: str) -> str:
-        """Determines the reverse relationship name."""
+        """
+        Determine the name of the reverse relationship.
+        e.g., 'sayou:hasParent' -> 'sayou:hasChild'.
+        """
         if "hasParent" in rel_type:
             return "sayou:hasChild"
         if "belongsTo" in rel_type:

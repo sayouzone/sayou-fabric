@@ -11,6 +11,10 @@ from ..core.exceptions import BuildError
 class BaseBuilder(BaseComponent):
     """
     (Tier 1) Abstract base class for assembling SayouNodes into target formats.
+
+    Implements the Template Method pattern:
+    1. `build()`: Validates input, converts Dict to Pydantic Model if needed.
+    2. `_do_build()`: Abstract hook for the specific transformation logic.
     """
 
     component_name = "BaseBuilder"
@@ -19,16 +23,16 @@ class BaseBuilder(BaseComponent):
     @measure_time
     def build(self, input_data: Union[SayouOutput, Dict]) -> Any:
         """
-        Execute the building process.
+        [Template Method] Execute the building process.
 
         Args:
             input_data (Union[SayouOutput, Dict]): Standardized node data.
 
         Returns:
-            Any: The assembled payload (Dict, List, Str) ready for Loader.
+            Any: The assembled payload.
 
         Raises:
-            BuildError: If the building process fails.
+            BuildError: If input is invalid or building fails.
         """
         self._log(f"Building data with {self.component_name}")
 
@@ -55,5 +59,11 @@ class BaseBuilder(BaseComponent):
     def _do_build(self, data: SayouOutput) -> Any:
         """
         [Abstract Hook] Implement the transformation logic.
+
+        Args:
+            data (SayouOutput): Validated input data.
+
+        Returns:
+            Any: Target format payload.
         """
         raise NotImplementedError

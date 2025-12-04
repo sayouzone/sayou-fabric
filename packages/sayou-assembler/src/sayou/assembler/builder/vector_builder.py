@@ -8,15 +8,28 @@ from ..interfaces.base_builder import BaseBuilder
 class VectorBuilder(BaseBuilder):
     """
     Builds Vector Payloads from SayouNodes.
+
+    Extracts text content from nodes, computes embeddings using an injected function,
+    and formats the data for Vector DBs (ID + Vector + Metadata).
     """
 
     component_name = "VectorBuilder"
     SUPPORTED_TYPES = ["vector"]
 
     def initialize(self, embedding_fn: Callable = None, **kwargs):
+        """
+        Inject the embedding function.
+
+        Args:
+            embedding_fn (Callable[[str], List[float]]): Function to generate vectors.
+            **kwargs: Other arguments.
+        """
         self.embedding_fn = embedding_fn
 
     def _do_build(self, data: SayouOutput) -> List[Dict[str, Any]]:
+        """
+        Generate a list of vector payloads.
+        """
         payloads = []
         for node in data.nodes:
             text_content = node.attributes.get("schema:text", "")

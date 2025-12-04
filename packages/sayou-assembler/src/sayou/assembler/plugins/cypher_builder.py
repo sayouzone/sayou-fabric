@@ -9,13 +9,18 @@ from ..interfaces.base_builder import BaseBuilder
 class CypherBuilder(BaseBuilder):
     """
     Converts SayouNodes into Neo4j Cypher Queries.
-    Returns a list of query strings.
+
+    Generates 'MERGE' statements for nodes and relationships to ensure idempotency.
+    Returns a list of query strings executable by a Neo4j driver.
     """
 
     component_name = "CypherBuilder"
     SUPPORTED_TYPES = ["cypher", "neo4j"]
 
     def _do_build(self, data: SayouOutput) -> List[str]:
+        """
+        Generate Cypher query strings.
+        """
         queries = []
 
         # 1. Create Nodes (UNWIND batching is better, but simple MERGE here for clarity)
@@ -51,13 +56,17 @@ class CypherBuilder(BaseBuilder):
         return queries
 
     def _dict_to_cypher_props(self, props: dict) -> str:
-        """Python dict to Cypher map string."""
+        """
+        Helper to convert a Python dictionary into a Cypher map string.
+        """
         # json.dumps를 쓰면 따옴표 처리가 됨.
         # 단, Cypher 키에는 따옴표가 없어야 예쁘므로 정규식 처리 등을 할 수 있으나
         # 여기선 단순하게 JSON 문자열로 변환 후 키의 따옴표 제거는 생략 (Neo4j는 JSON 호환됨)
         return json.dumps(props, ensure_ascii=False)
 
     def _clean_label(self, label: str) -> str:
-        """'sayou:Topic' -> 'Topic' (Optional simplification)"""
+        """
+        Sanitize or format the ontology label for Cypher syntax.
+        """
         # 네임스페이스 콜론(:)은 Cypher 라벨에서 이스케이프 필요.
         return label
