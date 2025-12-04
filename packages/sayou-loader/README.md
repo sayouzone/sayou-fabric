@@ -1,68 +1,90 @@
 # sayou-loader
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/sayouzone/sayou-fabric/ci.yml?branch=main)](https://github.com/sayouzone/sayou-fabric/actions)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://sayouzone.github.io/sayou-fabric/library-guides/loader/)
+[![PyPI version](https://img.shields.io/pypi/v/sayou-loader.svg?color=blue)](https://pypi.org/project/sayou-loader/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/library-guides/loader/)
 
-`sayou-loader` is the **data persistence layer** of the Sayou Data Platform. It handles the final step of the ETL pipeline: saving the constructed Knowledge Graph or Vector Embeddings to permanent storage.
+**The Universal Data Transport Engine for Sayou Fabric.**
 
-It prioritizes **Safety** and **Flexibility**. Whether you are saving to a local JSON file for debugging or a Neo4j cluster for production, `sayou-loader` provides a consistent interface with a built-in safety net.
+`sayou-loader` is the final mile delivery system.
 
-## Philosophy
+It takes the assembled payloads (Graph structures, Vector lists, SQL queries) produced by `sayou-assembler` and reliably transports them to their final destination—whether it's a local file system, a data warehouse, or a vector database.
 
-**"Safe Landing."**
-After expensive processing (Parsing -> Chunking -> Embedding), data must not be lost.
-`sayou-loader` implements a **Smart Fallback** mechanism. If the target database (e.g., Neo4j) is unreachable or the specific loader is missing, it automatically falls back to local file storage, ensuring data integrity.
+## 💡 Core Philosophy
 
-## 🚀 Key Features
+**"Safe Delivery, Guaranteed."**
 
-* **Unified Interface:** Single `load()` method for all destination types (File, GraphDB, VectorDB).
-* **Smart Fallback:** Automatically saves to disk if the primary storage strategy fails or is unavailable.
-* **Format Agnostic:** Handles Dictionaries, Lists, Strings, and Bytes seamlessly.
-* **Extensible:** Tier 3 Plugin architecture makes it easy to add support for new databases (e.g., Pinecone, Milvus, PostgreSQL).
+Writing to external systems is the most fragile part of any pipeline due to network issues or database locks. `sayou-loader` ensures stability through:
+
+1.  **Unified Interface:** A single `.write()` method covers Files, SQL, NoSQL, and Vector DBs.
+2.  **Resilience:** Built-in `@retry` logic with exponential backoff for network operations.
+3.  **Flexibility:** Supports various formats (JSON, JSONL, Pickle) and destinations out-of-the-box.
+
+```mermaid
+flowchart LR
+    Payload[Assembled Payload] --> Pipeline[Loader Pipeline]
+    Pipeline -->|Strategy: file| File[Local File System]
+    Pipeline -->|Strategy: neo4j| GraphDB[(Graph DB)]
+    Pipeline -->|Strategy: vector| VectorDB[(Vector DB)]
+    Pipeline -->|Strategy: console| Stdout[Console/Log]
+```
 
 ## 📦 Installation
 
-```python
+```bash
 pip install sayou-loader
 ```
 
-## ⚡ Quickstart
+## ⚡ Quick Start
 
-The `LoaderPipeline` intelligently routes data to the correct destination handler.
+The `LoaderPipeline` routes data to the appropriate writer.
 
 ```python
 from sayou.loader.pipeline import LoaderPipeline
 
 def run_demo():
-    # 1. Data to Save (e.g., Knowledge Graph)
-    data = {"nodes": [{"id": "1", "label": "Test"}], "edges": []}
-
-    # 2. Initialize Pipeline
+    # 1. Initialize
     pipeline = LoaderPipeline()
     pipeline.initialize()
 
-    # 3. Save to Local File
+    # 2. Prepare Data (Simulated output from Assembler)
+    graph_data = {
+        "nodes": [{"id": "1", "label": "Topic"}],
+        "edges": [{"source": "1", "target": "2", "type": "LINK"}]
+    }
+
+    # 3. Load to File (JSON)
     pipeline.run(
-        data=data,
-        destination="./output/graph.json",
-        target_type="file"
+        data=graph_data, 
+        destination="./output/graph.json", 
+        strategy="file"
     )
     
-    # 4. Save to Neo4j (If configured, otherwise Fallback to File)
+    # 4. Load to Console (Debug)
     pipeline.run(
-        data=data,
-        destination="bolt://localhost:7687",
-        target_type="neo4j" # or custom plugin type
+        data="Deploying to Production DB...", 
+        destination="STDOUT", 
+        strategy="console"
     )
 
 if __name__ == "__main__":
     run_demo()
 ```
 
+## 🔑 Key Components
+
+### Templates
+* **`FileWriter`**: Saves data to local disk. Supports JSON, JSONL, and Pickle formats automatically based on data type or extension.
+* **`JsonLineWriter`**: Efficiently writes large lists of dictionaries line-by-line (NDJSON), ideal for streaming data.
+* **`ConsoleWriter`**: Prints data to stdout. Useful for debugging pipelines without side effects.
+
+### Plugins
+* **`Neo4jWriter`**: Executes Cypher queries against a Neo4j database.
+* **`VectorDbWriter`**: Upserts vector payloads to Pinecone, Chroma, etc.
+
 ## 🤝 Contributing
 
-Contributions for new Database Plugins (e.g., ChromaDB, ElasticSearch) are highly appreciated.
+We welcome writers for cloud storages (e.g., `S3Writer`, `GCSWriter`) or specific databases.
 
 ## 📜 License
 
