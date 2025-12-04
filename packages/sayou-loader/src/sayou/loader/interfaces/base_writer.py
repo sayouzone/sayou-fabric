@@ -2,49 +2,60 @@ from abc import abstractmethod
 from typing import Any
 
 from sayou.core.base_component import BaseComponent
+from sayou.core.decorators import measure_time, retry
 
 from ..core.exceptions import WriterError
 
+
 class BaseWriter(BaseComponent):
     """
-    (Tier 1) 데이터를 목적지에 적재하는 모든 Writer의 인터페이스.
-    Template Method 패턴을 사용하여 로깅과 예외 처리를 강제합니다.
-    """
-    component_name = "BaseWriter"
-    SUPPORTED_TYPES = [] 
+    (Tier 1) Abstract base class for data writers (Loaders).
 
+    Implements the Template Method pattern with built-in retries and logging.
+    """
+
+    component_name = "BaseWriter"
+    SUPPORTED_TYPES = []
+
+    @measure_time
+    @retry(max_retries=3, delay=1.0)
     def write(self, data: Any, destination: str, **kwargs) -> bool:
         """
-        [공통 골격] 적재 프로세스를 제어합니다. (Override 금지 권장)
-        """
-        self._log(f"Starting write to '{destination}' (Type: {type(data).__name__})...")
-        
-        try:
-            # Pre-check logic (옵션)
-            if not data:
-                self._log("Data is empty. Skipping write.")
-                return False
+        [Template Method] Execute the write operation.
 
-            # Tier 2/3의 실제 구현 호출
+        Args:
+            data (Any): The payload to write (from Assembler).
+            destination (str): Target location (File path, DB connection string, Table name).
+            **kwargs: Additional options (mode, encoding, etc.).
+
+        Returns:
+            bool: True if successful.
+
+        Raises:
+            WriterError: If writing fails after retries.
+        """
+        self._log(f"Writing to '{destination}' (Type: {type(data).__name__})")
+
+        if not data:
+            self._log("Data is empty. Skipping write.", level="warning")
+            return False
+
+        try:
             result = self._do_write(data, destination, **kwargs)
-            
             if result:
                 self._log("Write completed successfully.")
             else:
-                self._log("Write completed but returned False.")
-            
+                self._log("Write completed but returned False.", level="warning")
             return result
 
         except Exception as e:
-            self._log(f"Wite failed: {e}")
-            # 여기서 에러를 삼킬지, 다시 던질지는 정책 결정
-            # 파이프라인의 중단을 막으려면 False 반환, 멈추려면 raise
-            return False 
+            wrapped_error = WriterError(f"[{self.component_name}] Failed: {str(e)}")
+            self.logger.error(wrapped_error, exc_info=True)
+            raise wrapped_error
 
     @abstractmethod
     def _do_write(self, data: Any, destination: str, **kwargs) -> bool:
         """
-        [구현 필수] 실제 적재 로직을 구현하세요.
-        성공 시 True, 실패 시 False를 반환하세요.
+        [Abstract Hook] Implement the actual I/O logic.
         """
         raise NotImplementedError

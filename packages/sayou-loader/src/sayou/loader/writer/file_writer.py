@@ -5,32 +5,43 @@ from typing import Any
 
 from ..interfaces.base_writer import BaseWriter
 
+
 class FileWriter(BaseWriter):
-    """(Tier 2) 로컬 파일 시스템 저장 템플릿"""
+    """
+    Writes data to the local file system.
+
+    Automatically handles format serialization:
+    - Dict/List -> JSON
+    - Str -> Text file
+    - Bytes -> Binary file
+    - Others -> Pickle
+    """
+
     component_name = "FileWriter"
-    SUPPORTED_TYPES = ["file", "local"]
+    SUPPORTED_TYPES = ["file", "local", "json"]
 
     def _do_write(self, data: Any, destination: str, **kwargs) -> bool:
-        # 1. 만약 destination이 기존에 존재하는 '폴더'라면?
+        """
+        Write data to file. Creates parent directories if they don't exist.
+        """
+        # 1. Handle Directory Destination
         if os.path.isdir(destination):
-            # 기본 파일명을 붙여줌
             destination = os.path.join(destination, "output.json")
             self._log(f"Destination is a directory. Appended filename: {destination}")
 
-        # 2. 디렉토리 생성 (파일의 상위 폴더가 없으면 생성)
+        # 2. Create Parent Directory
         folder = os.path.dirname(destination)
         if folder:
             os.makedirs(folder, exist_ok=True)
 
-        # 데이터 타입별 저장 로직
+        mode = kwargs.get("mode", "w")
+        encoding = kwargs.get("encoding", "utf-8")
+
+        # 3. Determine Content & Mode
         if isinstance(data, (dict, list)):
             content = json.dumps(data, indent=2, ensure_ascii=False)
-            mode = "w"
-            encoding = "utf-8"
         elif isinstance(data, str):
             content = data
-            mode = "w"
-            encoding = "utf-8"
         elif isinstance(data, bytes):
             content = data
             mode = "wb"
@@ -41,8 +52,8 @@ class FileWriter(BaseWriter):
                 pickle.dump(data, f)
             return True
 
-        # 파일 쓰기
+        # 4. Write File
         with open(destination, mode, encoding=encoding) as f:
             f.write(content)
-            
+
         return True
