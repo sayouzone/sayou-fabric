@@ -2,10 +2,10 @@ from typing import Any, Dict, List, Optional
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
+from sayou.core.schemas import SayouOutput
 
 from .adapter.document_chunk_adapter import DocumentChunkAdapter
 from .core.exceptions import AdaptationError
-from .core.schemas import WrapperOutput
 from .interfaces.base_adapter import BaseAdapter
 
 
@@ -62,7 +62,7 @@ class WrapperPipeline(BaseComponent):
             f"WrapperPipeline initialized. Strategies: {list(self.adapters.keys())}"
         )
 
-    def run(self, input_data: Any, strategy: str = "default") -> WrapperOutput:
+    def run(self, input_data: Any, strategy: str = "default") -> SayouOutput:
         """
         Execute the wrapping strategy.
 
@@ -71,7 +71,7 @@ class WrapperPipeline(BaseComponent):
             strategy (str): The adapter strategy to use (default: 'default').
 
         Returns:
-            WrapperOutput: A container holding the list of standardized SayouNodes.
+            SayouOutput: A container holding the list of standardized SayouNodes.
 
         Raises:
             AdaptationError: If the strategy is unknown or execution fails.

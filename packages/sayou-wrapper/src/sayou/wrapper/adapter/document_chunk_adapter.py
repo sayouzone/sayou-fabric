@@ -1,8 +1,8 @@
 from typing import Any, List, Union
 
+from sayou.core.schemas import SayouNode, SayouOutput
 from sayou.core.vocabulary import SayouAttribute, SayouClass, SayouPredicate
 
-from ..core.schemas import SayouNode, WrapperOutput
 from ..interfaces.base_adapter import BaseAdapter
 
 
@@ -18,7 +18,7 @@ class DocumentChunkAdapter(BaseAdapter):
     component_name = "DocumentChunkAdapter"
     SUPPORTED_TYPES = ["document_chunk"]
 
-    def _do_adapt(self, input_data: Union[List[Any], Any]) -> WrapperOutput:
+    def _do_adapt(self, input_data: Union[List[Any], Any]) -> SayouOutput:
         """
         Convert chunks into a list of SayouNodes.
 
@@ -29,7 +29,7 @@ class DocumentChunkAdapter(BaseAdapter):
             input_data (Union[List[Any], Any]): A single Chunk or list of Chunks.
 
         Returns:
-            WrapperOutput: The output containing the graph of nodes.
+            SayouOutput: The output containing the graph of nodes.
         """
         if not isinstance(input_data, list):
             input_data = [input_data]
@@ -95,4 +95,4 @@ class DocumentChunkAdapter(BaseAdapter):
             )
             nodes.append(node)
 
-        return WrapperOutput(nodes=nodes, metadata={"source": "sayou-chunking"})
+        return SayouOutput(nodes=nodes, metadata={"source": "sayou-chunking"})

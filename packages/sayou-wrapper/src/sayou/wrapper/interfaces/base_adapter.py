@@ -3,9 +3,9 @@ from typing import Any, List
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import measure_time
+from sayou.core.schemas import SayouOutput
 
 from ..core.exceptions import AdaptationError
-from ..core.schemas import WrapperOutput
 
 
 class BaseAdapter(BaseComponent):
@@ -21,7 +21,7 @@ class BaseAdapter(BaseComponent):
     SUPPORTED_TYPES: List[str] = []
 
     @measure_time
-    def adapt(self, input_data: Any) -> WrapperOutput:
+    def adapt(self, input_data: Any) -> SayouOutput:
         """
         [Template Method] Execute the adaptation process.
 
@@ -29,7 +29,7 @@ class BaseAdapter(BaseComponent):
             input_data (Any): Raw input data (Chunks, Dicts, etc.).
 
         Returns:
-            WrapperOutput: The standardized output containing nodes and metadata.
+            SayouOutput: The standardized output containing nodes and metadata.
 
         Raises:
             AdaptationError: If the adaptation logic fails.
@@ -48,7 +48,7 @@ class BaseAdapter(BaseComponent):
             raise wrapped_error
 
     @abstractmethod
-    def _do_adapt(self, input_data: Any) -> WrapperOutput:
+    def _do_adapt(self, input_data: Any) -> SayouOutput:
         """
         [Abstract Hook] Implement the mapping logic to create SayouNodes.
 
@@ -56,6 +56,6 @@ class BaseAdapter(BaseComponent):
             input_data (Any): Input data.
 
         Returns:
-            WrapperOutput: The constructed output object.
+            SayouOutput: The constructed output object.
         """
         raise NotImplementedError
