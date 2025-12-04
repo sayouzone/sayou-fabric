@@ -28,12 +28,12 @@ dependencies = [
     "sayou-connector ~= 0.1.5",
     "sayou-document ~= 0.1.10",
     "sayou-refinery ~= 0.1.8",
-    "sayou-chunking ~= 0.1.6",
-    "sayou-wrapper ~= 0.1.5",
-    "sayou-assembler ~= 0.1.2",
-    "sayou-loader ~= 0.1.1",
-    "sayou-extractor ~= 0.0.3",
-    "sayou-llm ~= 0.0.3"
+    "sayou-chunking ~= 0.1.7",
+    "sayou-wrapper ~= 0.1.6",
+    "sayou-assembler ~= 0.1.3",
+    "sayou-loader ~= 0.1.3",
+    # "sayou-extractor ~= 0.0.3",
+    # "sayou-llm ~= 0.0.3"
 ]
 
 # -----------------
