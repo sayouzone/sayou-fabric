@@ -68,17 +68,21 @@ class BaseSplitter(BaseComponent):
             SayouBlock: Normalized object.
         """
         if isinstance(input_data, SayouBlock):
+            if not isinstance(input_data.content, str):
+                input_data.content = str(input_data.content)
             return input_data
-
-        content = (
-            getattr(input_data, "content", None)
-            or input_data.get("content")
-        )
-        metadata = getattr(input_data, "metadata", None) or input_data.get(
-            "metadata", {}
-        )
-
+        
+        content = getattr(input_data, "content", None) or \
+                    input_data.get("content") or \
+                    input_data.get("chunk_content")
+        
+        metadata = getattr(input_data, "metadata", None) or \
+                    input_data.get("metadata", {})
+        
         if content is None:
-            raise SplitterError("Input must have content.")
-
-        return SayouBlock(content=str(content), metadata=metadata)
+            content = ""
+        
+        if not isinstance(content, str):
+            content = str(content)
+            
+        return SayouBlock(type="text", content=content, metadata=metadata)
