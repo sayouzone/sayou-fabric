@@ -1,86 +1,117 @@
 # sayou-brain
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/sayouzone/sayou-fabric/ci.yml?branch=main)](https://github.com/sayouzone/sayou-fabric/actions)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://sayouzone.github.io/sayou-fabric/sayou-agent/overview/)
+[![PyPI version](https://img.shields.io/pypi/v/sayou-brain.svg?color=blue)](https://pypi.org/project/sayou-brain/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/sayou-agent/overview/)
 
-`sayou-brain` is the **orchestrator** of the Sayou Data Platform. It integrates all individual libraries (`sayou-document`, `sayou-chunking`, `sayou-assembler`, etc.) into a single, coherent pipeline for Retrieval-Augmented Generation.
+**The Central Nervous System of Sayou Fabric.**
 
-While other libraries focus on specific tasks (parsing, splitting, assembling), `sayou-brain` focuses on the **lifecycle of data**—from ingestion to inference. It serves as the primary entry point for developers building data-centric AI applications.
+`sayou-brain` is the all-in-one orchestrator that connects and manages the entire lifecycle of data within the Sayou ecosystem. Instead of manually wiring `connector` → `document` → `refinery` → ... → `loader`, you simply ask the Brain to **"Ingest this"**, and it handles the rest.
 
-## Philosophy
+It serves as the **Control Plane**, managing configurations, routing data based on types, and executing the ETL pipeline efficiently.
 
-**"One Interface, Two Worlds."**
-Brain consists of two distinct phases: **Ingestion** (Write/ETL) and **Inference** (Read/QA).
-`sayou-brain` provides a unified `StandardPipeline` that abstracts away the complexity of underlying modules, offering simple methods like `ingest()` and `ask()` to bridge these two worlds.
+## 💡 Core Philosophy
 
-## 🚀 Key Features
+**"Simplicity for Users, Power for Developers."**
 
-* **Unified Control Tower:** Manages the entire flow from raw documents to LLM answers.
-* **Smart Routing:** Automatically detects input types (File vs. Database) and routes data to the appropriate ETL path.
-* **Dual-Mode Pipeline:**
-    * **Ingestion Mode:** `File -> Document -> Refinery -> Chunking -> Wrapper -> Assembler -> Loader`
-    * **Inference Mode:** `Query -> Extractor -> LLM`
-* **Modular & Mockable:** Built on a 3-Tier architecture, allowing easy replacement of components (e.g., switching from local file storage to Neo4j/Pinecone).
+* **For Users:** A single entry point (`StandardPipeline`) to build complex RAG pipelines without boilerplate code.
+* **For Developers:** A modular architecture where every stage (Parse, Chunk, Embed) is swappable via strategies and plugins.
+
+```mermaid
+flowchart LR
+    User -->|Ingest(source, dest)| Brain[StandardPipeline]
+    Brain --> Connector
+    Brain --> Document
+    Brain --> Refinery
+    Brain --> Chunking
+    Brain --> Wrapper
+    Brain --> Assembler
+    Brain --> Loader
+    Loader -->|Save| DB[(Database)]
+```
 
 ## 📦 Installation
 
-```python
+Installing `sayou-brain` automatically installs all core dependencies and sub-modules.
+
+```bash
 pip install sayou-brain
 ```
 
-## ⚡ Quickstart
+## ⚡ Quick Start
 
-You don't need to import individual libraries. The `StandardPipeline` handles everything internally.
+#### 1. Basic Usage (Zero Config)
 
-### 1. Initialize the Pipeline
-
-```python
-from sayou.brain.pipeline.standard import StandardPipeline
-
-# Initialize the orchestrator (loads all sub-pipelines)
-brain = StandardPipeline()
-brain.initialize()
-```
-
-### 2. Ingest Data (ETL)
-
-Simply provide a file path. The pipeline creates a Knowledge Graph automatically.
+The simplest way to ingest a local folder into a Knowledge Graph file.
 
 ```python
-# This triggers: Document -> Refinery -> Chunking -> Wrapper -> Assembler -> Loader
-target_file = "company_report.pdf"
+from sayou.brain.pipelines.standard import StandardPipeline
 
-result = brain.ingest(target_file, save_to="knowledge_graph.json")
-print(f"Ingestion Status: {result['status']}")
+def run_simple():
+    # 1. Initialize
+    brain = StandardPipeline()
+    brain.initialize()
+
+    # 2. Ingest Data (End-to-End)
+    # Reads local files -> Parses -> Chunks -> Assembles Graph -> Saves JSON
+    result = brain.ingest(
+        source="./my_documents",
+        destination="./output_graph.json"
+    )
+    
+    print(f"Processed: {result['processed']} files.")
+
+if __name__ == "__main__":
+    run_simple()
 ```
 
-### 3. Ask Questions (Inference)
+#### 2. Advanced Usage (With Configuration & Strategies)
 
-Ask questions based on the ingested data.
+Customize behavior using `config` and specific `strategies`.
 
 ```python
-query = "What is the revenue growth this year?"
+import yaml
+from sayou.brain.pipelines.standard import StandardPipeline
 
-# This triggers: Extractor -> LLM
-answer = brain.ask(query, load_from="knowledge_graph.json")
-print(f"Answer: {answer}")
+def run_advanced():
+    # 1. Load Configuration (e.g., for PII masking, Chunk size)
+    config_yaml = """
+    refinery:
+      mask_email: true
+    chunking:
+      chunk_size: 500
+    """
+    config = yaml.safe_load(config_yaml)
+
+    # 2. Initialize Brain with Config
+    brain = StandardPipeline()
+    brain.initialize(config=config)
+
+    # 3. Ingest with specific strategies
+    result = brain.ingest(
+        source="https://news.daum.net/tech",
+        destination="./news_graph.json",
+        strategies={
+            "connector": "web_crawl",    # Crawl the web
+            "chunking": "markdown",      # Respect markdown structure
+            "assembler": "graph",        # Build a knowledge graph
+            "loader": "file"             # Save to local file
+        }
+    )
+    print(f"Result: {result}")
 ```
 
-## 🗺️ Architecture
+## 🔑 Key Components
 
-`sayou-brain` delegates tasks to specialized workers:
-
-* **Parsing:** `sayou-document`
-* **Cleaning:** `sayou-refinery`
-* **Splitting:** `sayou-chunking`
-* **Standardization:** `sayou-wrapper`
-* **Construction:** `sayou-assembler`
-* **Storage/Retrieval:** `sayou-loader` / `sayou-extractor` (Internal Mocks or Plugins)
+- `StandardPipeline`: The default ETL flow. It intelligently routes data based on file types.
+    - Images → Auto-converted to PDF → OCR
+    - Markdown/Text → Bypasses Parser → Direct to Refinery
+    - JSON/DB Rows → Treated as structured Records
+- `Config`: Centralized configuration management. Parameters passed to `brain.initialize()` are propagated down to every sub-module.
 
 ## 🤝 Contributing
 
-We welcome contributions! Please check the individual library repositories for specific logic improvements, or contribute here to improve the orchestration flow.
+We welcome contributions for new pipeline flows (e.g., `RealtimePipeline` for streaming data, `RagPipeline` for inference).
 
 ## 📜 License
 
