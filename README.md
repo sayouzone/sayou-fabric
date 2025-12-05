@@ -121,11 +121,15 @@ The output is a structured JSON ready for Graph Databases or Vector Stores.
       "attributes": { "schema:text": "Financial Summary Q1" },
       "relationships": {}
     },
-    ...
+    { "……" }
   ],
-  "edges": [...]
+  "edges": [
+    { "……" }
+  ]
 }
 ```
+
+---
 
 ## 5. Documentation
 

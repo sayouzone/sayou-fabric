@@ -80,9 +80,10 @@ pip install sayou-chunking sayou-document
 ### Step 1: Initialize the Brain
 
 ```python
-from sayou.brain.pipeline.standard import StandardPipeline
+from sayou.brain.pipelines.standard import StandardPipeline
 
-# 오케스트레이터 초기화 (하위 파이프라인 자동 로드)
+# Initialize the orchestrator (automatically loads all sub-pipelines)
+# You can pass a config dict here for customization (e.g., chunk_size, PII masking)
 brain = StandardPipeline()
 brain.initialize()
 ```
@@ -92,30 +93,41 @@ brain.initialize()
 파일 경로나 URL만 입력하세요. 연결, 파싱, 정제, 청킹, 포장, 조립, 적재까지의 모든 과정을 자동으로 수행합니다.
 
 ```python
-# 예제: PDF 파일 적재
-# 지식 그래프를 생성하고 'knowledge_graph.json'에 저장합니다.
+# Example: Ingest a PDF file or a folder
+# This creates a Knowledge Graph structure and saves it to 'knowledge_graph.json'
 result = brain.ingest(
     source="./reports/financial_q1.pdf",
-    strategy="local_scan",
-    save_to="knowledge_graph.json"
+    destination="knowledge_graph.json",
+    strategies={
+        "connector": "local_scan", # How to fetch
+        "chunking": "markdown",    # How to split (if applicable)
+        "assembler": "graph",      # How to build structure
+        "loader": "file"           # Where to save
+    }
 )
 
-print(f"Ingestion Complete: {result['status']}")
-print(f"Total Nodes Created: {result['total_nodes']}")
+print(f"Ingestion Complete. Processed: {result['processed']}")
 ```
 
-### Step 3: Ask Questions (Inference)
+### Step 3: Check Result
 
-구조화된 지식을 바탕으로 질문합니다.
+그래프 데이터베이스나 벡터 스토어에 적합한 구조화된 JSON가 출력됩니다.
 
-```python
-# 적재된 지식 그래프를 기반으로 답변 생성
-answer = brain.ask(
-    query="1분기 순이익은 얼마인가요?",
-    load_from="knowledge_graph.json"
-)
-
-print(f"Answer: {answer}")
+```json
+{
+  "nodes": [
+    {
+      "node_id": "sayou:doc:1_h_0",
+      "node_class": "sayou:Topic",
+      "attributes": { "schema:text": "Financial Summary Q1" },
+      "relationships": {}
+    },
+    { "……" }
+  ],
+  "edges": [
+    { "……" }
+  ]
+}
 ```
 
 ---
