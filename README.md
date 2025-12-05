@@ -98,7 +98,7 @@ result = brain.ingest(
     source="./reports/financial_q1.pdf",
     destination="knowledge_graph.json",
     strategies={
-        "connector": "local_scan", # How to fetch
+        "connector": "file",       # How to fetch
         "chunking": "markdown",    # How to split (if applicable)
         "assembler": "graph",      # How to build structure
         "loader": "file"           # Where to save

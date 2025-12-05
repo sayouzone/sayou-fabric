@@ -45,7 +45,7 @@ def run_demo():
     # Returns an iterator of 'SayouPacket' objects
     packets = pipeline.run(
         source="https://news.daum.net/tech",
-        strategy="web_crawl",
+        strategy="requests",
         link_pattern=r"https://v\.daum\.net/v/\d+",
         max_depth=1
     )
