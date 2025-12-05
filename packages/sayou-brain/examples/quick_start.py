@@ -46,7 +46,6 @@ def load_config(path="config.yaml"):
 def prepare_test_data(input_dir):
     """테스트용 더미 데이터를 생성합니다."""
 
-    # 1. Markdown File (구조적 분할 테스트)
     md_content = """
 # Sayou Fabric Guide
 Sayou is a modular data pipeline.
@@ -61,10 +60,9 @@ Brain orchestrates the whole process.
     with open(f"{input_dir}/guide_demo.md", "w", encoding="utf-8") as f:
         f.write(md_content)
 
-    # 2. JSON File (Record 정제 테스트)
     json_data = [
         {"id": 1, "name": "Alice", "email": "alice@test.com", "score": 95},
-        {"id": 2, "name": "Bob", "email": "bob@test.com", "score": 15000},  # Outlier
+        {"id": 2, "name": "Bob", "email": "bob@test.com", "score": 15000},
     ]
     with open(f"{input_dir}/users_demo.json", "w", encoding="utf-8") as f:
         json.dump(json_data, f)
@@ -78,7 +76,7 @@ def run_demo():
     # 1. Config 로드
     config = load_config("config.yaml")
 
-    # 2. Brain 초기화 (Config 주입)
+    # 2. Brain 초기화
     markdown_splitter = MarkdownSplitter()
     brain = StandardPipeline(extra_splitters=[markdown_splitter])
     brain.initialize(config=config)
@@ -88,11 +86,7 @@ def run_demo():
     OUTPUT_FILE = "examples/kg_demo.json"
     prepare_test_data(INPUT_DIR)
 
-    # 4. Ingest 실행 (전략 지정)
-    # Connector: 로컬 폴더 스캔
-    # Chunking: 마크다운 구조 인식
-    # Assembler: 그래프 구조 생성
-    # Loader: 파일로 저장
+    # 4. Ingest 실행
     print(f">>> Starting Ingestion from '{INPUT_DIR}'...")
 
     result = brain.ingest(
@@ -128,10 +122,6 @@ def run_demo():
             # (RecordNormalizer 등은 schema:text 대신 다른 키를 쓸 수 있으나,
             #  여기서는 간단히 출력)
             print(f"     * {node['node_id']}: {str(content)[:50]}...")
-
-    # Cleanup
-    # shutil.rmtree(INPUT_DIR)
-    # if os.path.exists(OUTPUT_FILE): os.remove(OUTPUT_FILE)
 
 
 if __name__ == "__main__":
