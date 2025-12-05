@@ -8,18 +8,18 @@
 
 `sayou-brain` is the all-in-one orchestrator that connects and manages the entire lifecycle of data within the Sayou ecosystem. Instead of manually wiring `connector` → `document` → `refinery` → ... → `loader`, you simply ask the Brain to **"Ingest this"**, and it handles the rest.
 
-It serves as the **Control Plane**, managing configurations, routing data based on types, and executing the ETL pipeline efficiently.
+It serves as the **Control Plane**, managing configurations, intelligently routing data based on file types, and executing the ETL pipeline efficiently.
 
 ## 💡 Core Philosophy
 
 **"Simplicity for Users, Power for Developers."**
 
-* **For Users:** A single entry point (`StandardPipeline`) to build complex RAG pipelines without boilerplate code.
-* **For Developers:** A modular architecture where every stage (Parse, Chunk, Embed) is swappable via strategies and plugins.
+* **Smart Routing:** Automatically determines whether to parse a file (PDF/Images) or read it directly (Markdown/JSON) and selects the appropriate strategy.
+* **Centralized Config:** Manages settings for all sub-modules (PII masking rules, Chunk sizes, DB credentials) in one place.
 
 ```mermaid
 flowchart LR
-    User -->|Ingest(source, dest)| Brain[StandardPipeline]
+    User -->| "Ingest(source, dest)" | Brain[StandardPipeline]
     Brain --> Connector
     Brain --> Document
     Brain --> Refinery
@@ -65,35 +65,33 @@ if __name__ == "__main__":
     run_simple()
 ```
 
-#### 2. Advanced Usage (With Configuration & Strategies)
+#### 2. Advanced Usage (With Configuration)
 
-Customize behavior using `config` and specific `strategies`.
+Control the behavior of sub-modules using a configuration dictionary (or YAML).
 
 ```python
 import yaml
 from sayou.brain.pipelines.standard import StandardPipeline
 
 def run_advanced():
-    # 1. Load Configuration (e.g., for PII masking, Chunk size)
-    config_yaml = """
-    refinery:
-      mask_email: true
-    chunking:
-      chunk_size: 500
-    """
-    config = yaml.safe_load(config_yaml)
+    # 1. Configuration (e.g., PII masking, Chunk size)
+    config = {
+        "refinery": {"mask_email": True},
+        "chunking": {"chunk_size": 500},
+        "loader": {"mode": "w"}
+    }
 
     # 2. Initialize Brain with Config
     brain = StandardPipeline()
     brain.initialize(config=config)
 
     # 3. Ingest with specific strategies
+    # Brain automatically detects file types, but you can enforce strategies.
     result = brain.ingest(
         source="https://news.daum.net/tech",
         destination="./news_graph.json",
         strategies={
-            "connector": "web_crawl",    # Crawl the web
-            "chunking": "markdown",      # Respect markdown structure
+            "connector": "file",    # Crawl the web
             "assembler": "graph",        # Build a knowledge graph
             "loader": "file"             # Save to local file
         }
