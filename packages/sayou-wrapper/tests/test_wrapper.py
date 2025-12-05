@@ -1,6 +1,7 @@
 import unittest
 
-from sayou.wrapper.core.vocabulary import SayouClass, SayouPredicate
+from sayou.core.vocabulary import SayouClass, SayouPredicate
+
 from sayou.wrapper.pipeline import WrapperPipeline
 
 
