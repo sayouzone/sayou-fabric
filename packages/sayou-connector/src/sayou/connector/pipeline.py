@@ -76,7 +76,7 @@ class ConnectorPipeline(BaseComponent):
         self._log("ConnectorPipeline initialized.")
 
     def run(
-        self, source: str, strategy: str = "local_scan", **kwargs
+        self, source: str, strategy: str = "file", **kwargs
     ) -> Iterator[SayouPacket]:
         """
         Execute the collection pipeline.
@@ -86,7 +86,7 @@ class ConnectorPipeline(BaseComponent):
 
         Args:
             source (str): The root source (e.g., file path, URL, connection string).
-            strategy (str): The name of the generator strategy to use (default: "local_scan").
+            strategy (str): The name of the generator strategy to use (default: "file").
             **kwargs: Additional arguments passed to the Generator's initialize method.
 
         Yields:

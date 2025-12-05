@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 
 
 # --- Helper: 더미 DB 생성 ---
-def create_dummy_db(path="test_users.db"):
+def create_dummy_db(path="examples/user_demo.db"):
     if os.path.exists(path):
         os.remove(path)
     conn = sqlite3.connect(path)
@@ -45,9 +45,9 @@ def run_demo():
     print("\n=== [1] Local File Scan Demo ===")
     file_root = create_dummy_files()
 
-    # strategy="local_scan" 사용
+    # strategy="file" 사용
     packets = pipeline.run(
-        source=file_root, strategy="local_scan", extensions=[".txt"], recursive=True
+        source=file_root, strategy="file", extensions=[".txt"], recursive=True
     )
 
     for i, packet in enumerate(packets):
@@ -66,10 +66,10 @@ def run_demo():
     print("\n=== [2] SQLite DB Demo ===")
     db_path = create_dummy_db()
 
-    # strategy="sql_scan" 사용
+    # strategy="sqlite" 사용
     # 배치 사이즈 10 -> 총 25개이므로 3번(10, 10, 5) Fetch 발생 예상
     db_packets = pipeline.run(
-        source=db_path, strategy="sql_scan", query="SELECT * FROM users", batch_size=10
+        source=db_path, strategy="sqlite", query="SELECT * FROM users", batch_size=10
     )
 
     for i, packet in enumerate(db_packets):
@@ -94,7 +94,7 @@ def run_demo():
     try:
         web_packets = pipeline.run(
             source=target_url,
-            strategy="web_crawl",
+            strategy="requests",
             link_pattern=link_pattern,
             selectors={
                 "title": ".head_view",
