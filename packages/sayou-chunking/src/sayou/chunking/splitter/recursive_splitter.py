@@ -42,7 +42,7 @@ class RecursiveSplitter(BaseSplitter):
 
         return [
             SayouChunk(
-                chunk_content=text.strip(),
+                content=text.strip(),
                 metadata={
                     **doc.metadata,
                     "chunk_id": f"{doc_id}_{i}",

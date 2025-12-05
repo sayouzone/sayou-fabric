@@ -49,9 +49,9 @@ Chunking is crucial for RAG. It splits large texts into smaller pieces.
 
     for i, chunk in enumerate(chunks):
         print(
-            f"[{i}] Type: {chunk.metadata.get('semantic_type')} | Len: {len(chunk.chunk_content)}"
+            f"[{i}] Type: {chunk.metadata.get('semantic_type')} | Len: {len(chunk.content)}"
         )
-        print(f"    Content: {chunk.chunk_content[:50]}...")
+        print(f"    Content: {chunk.content[:50]}...")
 
     print("\n=== [2] Audited Fixed Chunking ===")
     request_fixed = {
@@ -64,7 +64,7 @@ Chunking is crucial for RAG. It splits large texts into smaller pieces.
 
     for i, chunk in enumerate(chunks_audit):
         audit_info = chunk.metadata.get("audit", {})
-        print(f"[{i}] Content: {chunk.chunk_content}")
+        print(f"[{i}] Content: {chunk.content}")
         print(f"    Audit Info: {audit_info}")
 
     output_data = [c.model_dump() for c in chunks]

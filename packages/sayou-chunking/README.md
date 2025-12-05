@@ -61,7 +61,7 @@ def run_demo():
     # 4. Result
     for i, chunk in enumerate(chunks):
         print(f"[{i}] Type: {chunk.metadata.get('semantic_type')}")
-        print(f"    Content: {chunk.chunk_content}")
+        print(f"    Content: {chunk.content}")
 
 if __name__ == "__main__":
     run_demo()

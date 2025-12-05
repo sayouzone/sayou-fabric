@@ -40,7 +40,7 @@ class SemanticSplitter(BaseSplitter):
 
         return [
             SayouChunk(
-                chunk_content=text,
+                content=text,
                 metadata={
                     **doc.metadata,
                     "chunk_id": f"{doc_id}_{i}",

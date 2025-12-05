@@ -73,7 +73,6 @@ class BaseSplitter(BaseComponent):
         content = (
             getattr(input_data, "content", None)
             or input_data.get("content")
-            or input_data.get("chunk_content")
         )
         metadata = getattr(input_data, "metadata", None) or input_data.get(
             "metadata", {}

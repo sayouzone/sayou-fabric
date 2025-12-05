@@ -51,7 +51,7 @@ class MarkdownSplitter(RecursiveSplitter):
                 header_text = header_match.group(2).strip()
                 header_chunk_id = f"{doc_id}_h_{global_idx}"
                 header_chunk = SayouChunk(
-                    chunk_content=f"{header_match.group(1)} {header_text}",
+                    content=f"{header_match.group(1)} {header_text}",
                     metadata={
                         **self._clean_meta(doc.metadata),
                         "chunk_id": header_chunk_id,
@@ -98,7 +98,7 @@ class MarkdownSplitter(RecursiveSplitter):
                         "section_title": current_parent_text,
                     }
                 )
-                final_chunks.append(SayouChunk(chunk_content=part, metadata=meta))
+                final_chunks.append(SayouChunk(content=part, metadata=meta))
                 global_idx += 1
 
         return final_chunks

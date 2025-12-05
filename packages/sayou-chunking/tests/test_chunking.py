@@ -18,7 +18,7 @@ class TestChunkingPipeline(unittest.TestCase):
             {"content": text, "config": {"chunk_size": 10}}, strategy="recursive"
         )
         self.assertGreater(len(chunks), 1)
-        self.assertEqual(chunks[0].chunk_content, "Hello.")
+        self.assertEqual(chunks[0].content, "Hello.")
 
     def test_markdown_splitter(self):
         """마크다운 헤더 분할 테스트"""
@@ -38,8 +38,8 @@ class TestChunkingPipeline(unittest.TestCase):
             strategy="fixed_length",
         )
         self.assertEqual(len(chunks), 2)
-        self.assertEqual(chunks[0].chunk_content, "12345")
-        self.assertEqual(chunks[1].chunk_content, "67890")
+        self.assertEqual(chunks[0].content, "12345")
+        self.assertEqual(chunks[1].content, "67890")
 
     def test_parent_document_splitter(self):
         """부모-자식 관계 생성 테스트"""

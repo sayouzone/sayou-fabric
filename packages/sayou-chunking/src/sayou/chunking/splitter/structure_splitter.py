@@ -51,11 +51,11 @@ class StructureSplitter(RecursiveSplitter):
                 )
                 for part in sub_parts:
                     final_chunks.append(
-                        SayouChunk(chunk_content=part, metadata=doc.metadata)
+                        SayouChunk(content=part, metadata=doc.metadata)
                     )
             else:
                 final_chunks.append(
-                    SayouChunk(chunk_content=section, metadata=doc.metadata)
+                    SayouChunk(content=section, metadata=doc.metadata)
                 )
 
         return final_chunks

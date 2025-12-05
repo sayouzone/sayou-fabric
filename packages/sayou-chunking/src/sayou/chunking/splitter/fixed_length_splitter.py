@@ -33,4 +33,4 @@ class FixedLengthSplitter(BaseSplitter):
         for i in range(0, len(content), step):
             text_chunks.append(content[i : i + chunk_size])
 
-        return [SayouChunk(chunk_content=t, metadata=doc.metadata) for t in text_chunks]
+        return [SayouChunk(content=t, metadata=doc.metadata) for t in text_chunks]

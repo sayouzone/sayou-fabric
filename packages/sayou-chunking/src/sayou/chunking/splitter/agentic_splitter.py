@@ -25,4 +25,4 @@ class AgenticSplitter(BaseSplitter):
             "Agentic splitting is not fully implemented yet. Returning raw content."
         )
 
-        return [SayouChunk(chunk_content=doc.content, metadata=doc.metadata)]
+        return [SayouChunk(content=doc.content, metadata=doc.metadata)]

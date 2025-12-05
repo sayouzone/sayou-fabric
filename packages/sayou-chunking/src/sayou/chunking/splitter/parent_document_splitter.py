@@ -51,7 +51,7 @@ class ParentDocumentSplitter(BaseSplitter):
             final_chunks.append(p_chunk)
 
             child_doc = SayouBlock(
-                content=p_chunk.chunk_content,
+                content=p_chunk.content,
                 metadata={**doc.metadata, "config": config, "parent_id": parent_id},
             )
             child_chunks = child_splitter._do_split(child_doc)

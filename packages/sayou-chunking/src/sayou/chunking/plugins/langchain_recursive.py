@@ -37,4 +37,4 @@ class LangChainRecursiveSplitter(RecursiveSplitter):
 
         texts = splitter.split_text(doc.content)
 
-        return [SayouChunk(chunk_content=t, metadata=doc.metadata) for t in texts]
+        return [SayouChunk(content=t, metadata=doc.metadata) for t in texts]
