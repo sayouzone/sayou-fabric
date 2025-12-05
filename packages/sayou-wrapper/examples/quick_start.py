@@ -13,7 +13,7 @@ def run_demo():
 
     chunks_data = [
         {
-            "chunk_content": "# Introduction to AI",
+            "content": "# Introduction to AI",
             "metadata": {
                 "chunk_id": "doc1_h_0",
                 "semantic_type": "h1",
@@ -23,7 +23,7 @@ def run_demo():
             },
         },
         {
-            "chunk_content": "AI stands for Artificial Intelligence.",
+            "content": "AI stands for Artificial Intelligence.",
             "metadata": {
                 "chunk_id": "doc1_p_0",
                 "semantic_type": "text",
@@ -33,7 +33,7 @@ def run_demo():
             },
         },
         {
-            "chunk_content": "| Model | Type |",
+            "content": "| Model | Type |",
             "metadata": {
                 "chunk_id": "doc1_t_0",
                 "semantic_type": "table",

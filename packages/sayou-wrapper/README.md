@@ -38,7 +38,7 @@ def run_demo():
     # 2. Input Data (Simulated output from sayou-chunking)
     chunks = [
         {
-            "chunk_content": "# Introduction",
+            "content": "# Introduction",
             "metadata": {
                 "chunk_id": "h_1", 
                 "semantic_type": "heading", 
@@ -46,7 +46,7 @@ def run_demo():
             }
         },
         {
-            "chunk_content": "Sayou is great.",
+            "content": "Sayou is great.",
             "metadata": {
                 "chunk_id": "p_1", 
                 "parent_id": "h_1",

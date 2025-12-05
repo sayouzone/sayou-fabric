@@ -13,7 +13,7 @@ class TestWrapperPipeline(unittest.TestCase):
     def test_topic_conversion(self):
         """헤더(is_header=True)가 Topic 노드로 변환되는지 확인"""
         chunk = {
-            "chunk_content": "# Heading",
+            "content": "# Heading",
             "metadata": {
                 "chunk_id": "test_h1",
                 "semantic_type": "h1",
@@ -29,7 +29,7 @@ class TestWrapperPipeline(unittest.TestCase):
     def test_table_conversion(self):
         """테이블(semantic_type='table')이 Table 노드로 변환되는지 확인"""
         chunk = {
-            "chunk_content": "| Col |",
+            "content": "| Col |",
             "metadata": {"chunk_id": "test_t1", "semantic_type": "table"},
         }
         output = self.pipeline.run([chunk], strategy="document_chunk")
@@ -39,7 +39,7 @@ class TestWrapperPipeline(unittest.TestCase):
     def test_relationships(self):
         """부모-자식 관계가 올바른 Predicate로 연결되는지 확인"""
         chunk = {
-            "chunk_content": "Child text",
+            "content": "Child text",
             "metadata": {"chunk_id": "child_1", "parent_id": "parent_1"},
         }
         output = self.pipeline.run([chunk], strategy="document_chunk")

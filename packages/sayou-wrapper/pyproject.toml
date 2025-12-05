@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-wrapper"
-version = "0.1.6"
+version = "0.1.7"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
@@ -24,7 +24,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 dependencies = [
-    "sayou-core ~= 0.1.5"
+    "sayou-core ~= 0.1.6"
 ]
 
 # -----------------

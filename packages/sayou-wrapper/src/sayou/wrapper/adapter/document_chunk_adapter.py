@@ -43,7 +43,7 @@ class DocumentChunkAdapter(BaseAdapter):
                 self._log(f"Skipping invalid chunk data: {type(item)}", level="warning")
                 continue
 
-            content = chunk_data.get("chunk_content") or chunk_data.get("content", "")
+            content = chunk_data.get("content", "")
             meta = chunk_data.get("metadata", {})
 
             # 1. ID Mapping (Prefix 'sayou:doc:' added)
