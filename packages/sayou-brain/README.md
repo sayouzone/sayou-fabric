@@ -19,17 +19,15 @@ It serves as the **Control Plane**, managing configurations, intelligently routi
 
 ```mermaid
 flowchart LR
-    User -->|Ingest(source, dest)| Brain[StandardPipeline]
-
-    Brain --> ConnectorNode[Connector]
-    Brain --> DocumentNode[Document]
-    Brain --> RefineryNode[Refinery]
-    Brain --> ChunkingNode[Chunking]
-    Brain --> WrapperNode[Wrapper]
-    Brain --> AssemblerNode[Assembler]
-    Brain --> LoaderNode[Loader]
-
-    LoaderNode -->|Save| DB[(Database)]
+    User -- "Ingest(source, dest)" --> Brain[StandardPipeline]
+    Brain --> Connector
+    Brain --> Document
+    Brain --> Refinery
+    Brain --> Chunking
+    Brain --> Wrapper
+    Brain --> Assembler
+    Brain --> Loader
+    Loader -- Save --> DB[(Database)]
 ```
 
 ## 📦 Installation
