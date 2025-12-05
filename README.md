@@ -74,14 +74,15 @@ pip install sayou-chunking sayou-document
 
 ## 4. Quick Start
 
-The `StandardPipeline` in `sayou-brain` acts as a Facade, abstracting away the complexity of the underlying modules. It automatically routes data based on input type.
+The `StandardPipeline` in `sayou-brain` acts as a Facade, abstracting away the complexity of the underlying modules. It intelligently routes data based on file types (PDF, Markdown, JSON, etc.).
 
-### Step 1: Initialize the Brain
+### Step 1: Install & Initialize
 
 ```python
-from sayou.brain.pipeline.standard import StandardPipeline
+from sayou.brain.pipelines.standard import StandardPipeline
 
 # Initialize the orchestrator (automatically loads all sub-pipelines)
+# You can pass a config dict here for customization (e.g., chunk_size, PII masking)
 brain = StandardPipeline()
 brain.initialize()
 ```
@@ -91,30 +92,39 @@ brain.initialize()
 Just point to a file or a URL. The brain handles **Connecting -> Parsing -> Refining -> Chunking -> Wrapping -> Assembling -> Loading**.
 
 ```python
-# Example: Ingest a PDF file
-# This creates a Knowledge Graph and saves it to 'knowledge_graph.json'
+# Example: Ingest a PDF file or a folder
+# This creates a Knowledge Graph structure and saves it to 'knowledge_graph.json'
 result = brain.ingest(
     source="./reports/financial_q1.pdf",
-    strategy="local_scan",
-    save_to="knowledge_graph.json"
+    destination="knowledge_graph.json",
+    strategies={
+        "connector": "local_scan", # How to fetch
+        "chunking": "markdown",    # How to split (if applicable)
+        "assembler": "graph",      # How to build structure
+        "loader": "file"           # Where to save
+    }
 )
 
-print(f"Ingestion Complete: {result['status']}")
-print(f"Total Nodes Created: {result['total_nodes']}")
+print(f"Ingestion Complete. Processed: {result['processed']}")
 ```
 
-### Step 3: Ask Questions (Inference)
+### Step 3: Check Result
 
-Query the structured knowledge you just created.
+The output is a structured JSON ready for Graph Databases or Vector Stores.
 
-```python
-# Ask a question based on the ingested knowledge graph
-answer = brain.ask(
-    query="What is the net profit for Q1?",
-    load_from="knowledge_graph.json"
-)
-
-print(f"Answer: {answer}")
+```json
+{
+  "nodes": [
+    {
+      "node_id": "sayou:doc:1_h_0",
+      "node_class": "sayou:Topic",
+      "attributes": { "schema:text": "Financial Summary Q1" },
+      "relationships": {}
+    },
+    ...
+  ],
+  "edges": [...]
+}
 ```
 
 ## 5. Documentation
