@@ -19,6 +19,28 @@ class FileGenerator(BaseGenerator):
     component_name = "FileGenerator"
     SUPPORTED_TYPES = ["file"]
 
+    @classmethod
+    def can_handle(cls, source: str) -> float:
+        """
+        Evaluates whether this generator can handle the given source.
+
+        Analyzes the source string to determine if it matches the pattern or format
+        supported by this generator. Returns a confidence score between 0.0 and 1.0.
+
+        Args:
+            source (str): The input source string to evaluate.
+
+        Returns:
+            float: A confidence score where 1.0 means full confidence,
+                    0.0 means the source is incompatible, and intermediate values
+                    indicate partial matches or heuristics.
+        """
+        if os.path.exists(source):
+            return 1.0
+        if source.startswith("/") or source.startswith("./") or ":\\" in source:
+            return 0.8
+        return 0.0
+
     def initialize(
         self,
         source: str,

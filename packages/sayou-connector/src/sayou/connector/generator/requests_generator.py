@@ -19,6 +19,32 @@ class RequestsGenerator(BaseGenerator):
     component_name = "RequestsGenerator"
     SUPPORTED_TYPES = ["requests"]
 
+    @classmethod
+    def can_handle(cls, source: str) -> float:
+        """
+        Evaluates whether this generator can handle the given source.
+
+        Analyzes the source string to determine if it matches the pattern or format
+        supported by this generator. Returns a confidence score between 0.0 and 1.0.
+
+        Args:
+            source (str): The input source string to evaluate.
+
+        Returns:
+            float: A confidence score where 1.0 means full confidence,
+                    0.0 means the source is incompatible, and intermediate values
+                    indicate partial matches or heuristics.
+        """
+        s = source.strip().lower()
+
+        if s.startswith("http://") or s.startswith("https://"):
+            return 1.0
+
+        if s.startswith("www."):
+            return 0.8
+
+        return 0.0
+
     def initialize(
         self,
         source: str,

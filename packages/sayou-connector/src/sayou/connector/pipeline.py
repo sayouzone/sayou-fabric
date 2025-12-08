@@ -76,7 +76,7 @@ class ConnectorPipeline(BaseComponent):
         self._log("ConnectorPipeline initialized.")
 
     def run(
-        self, source: str, strategy: str = "file", **kwargs
+        self, source: str, strategy: str = "auto", **kwargs
     ) -> Iterator[SayouPacket]:
         """
         Execute the collection pipeline.
@@ -86,7 +86,7 @@ class ConnectorPipeline(BaseComponent):
 
         Args:
             source (str): The root source (e.g., file path, URL, connection string).
-            strategy (str): The name of the generator strategy to use (default: "file").
+            strategy (str): The name of the generator strategy to use (default: "auto").
             **kwargs: Additional arguments passed to the Generator's initialize method.
 
         Yields:
@@ -96,9 +96,12 @@ class ConnectorPipeline(BaseComponent):
             ValueError: If the specified strategy is not registered.
         """
         # 1. Generator 선택
-        generator = self.gen_map.get(strategy)
-        if not generator:
-            raise ValueError(f"Unknown strategy: {strategy}")
+        # v0.1.x
+        # generator = self.gen_map.get(strategy)
+        # if not generator:
+        #     raise ValueError(f"Unknown strategy: {strategy}")
+        # v0.2.0
+        generator = self._resolve_generator(source, strategy)
 
         # 2. Generator 초기화
         generator.initialize(source=source, **kwargs)
@@ -138,3 +141,49 @@ class ConnectorPipeline(BaseComponent):
             count += 1
 
         self._log(f"Connector finished. Processed: {count}, Success: {success_count}")
+
+    def _resolve_generator(self, source: str, strategy: str) -> BaseGenerator:
+        """
+        Determines the appropriate generator strategy to use.
+
+        Prioritizes the strategy explicitly specified by the user. If the strategy
+        is set to 'auto' or None, it attempts to detect the most suitable generator
+        based on the source string using the `can_handle` method of registered generators.
+
+        Args:
+            source (str): The input source string (e.g., file path, URL, connection string).
+            strategy (str): The name of the strategy to use (e.g., 'file', 'sqlite').
+                            If 'auto' or None, automatic detection is performed.
+
+        Returns:
+            BaseGenerator: The initialized generator instance ready for execution.
+
+        Raises:
+            ValueError: If a specific strategy is requested but not found in the registry.
+        """
+        if strategy and strategy != "auto":
+            gen = self.gen_map.get(strategy)
+            if not gen:
+                raise ValueError(f"Unknown strategy: {strategy}")
+            return gen
+
+        best_score = 0.0
+        best_gen = None
+
+        for gen in self.gen_map.values():
+            score = gen.can_handle(source)
+            if score > best_score:
+                best_score = score
+                best_gen = gen
+
+        if best_gen and best_score > 0.5:
+            self._log(
+                f"Auto-detected strategy: '{best_gen.component_name}' (Score: {best_score})"
+            )
+            return best_gen
+
+        self._log(
+            "Auto-detection failed. Falling back to default strategy 'file'.",
+            level="warning",
+        )
+        return self.gen_map["file"]
