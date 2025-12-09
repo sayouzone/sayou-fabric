@@ -5,7 +5,7 @@ import sqlite3
 from sayou.connector.pipeline import ConnectorPipeline
 
 try:
-    from sayou.visualizer import GraphTracer, VisualizerPipeline
+    from sayou.visualizer.pipeline import VisualizerPipeline
     VISUALIZER_AVAILABLE = True
 except ImportError:
     VISUALIZER_AVAILABLE = False
@@ -44,11 +44,10 @@ def run_demo():
     pipeline = ConnectorPipeline()
     pipeline.initialize()
 
-    tracer = None
     if VISUALIZER_AVAILABLE:
-        print("[Demo] Visualizer detected! Attaching tracer...")
-        tracer = GraphTracer()
-        pipeline.add_callback(tracer)
+        print("[Demo] Visualizer detected! Attaching pipeline...")
+        viz = VisualizerPipeline()
+        viz.attach_to(pipeline)
 
     # ---------------------------------------------------------
     # Scenario 1: Local File Scan
@@ -72,6 +71,10 @@ def run_demo():
             print(f"    Content: {content[:20]}...")
         else:
             print(f"[{i}] Error: {packet.error}")
+
+    if VISUALIZER_AVAILABLE:
+        viz.report("examples/visualizer_file_demo.html")
+        print(f"[Demo] Report generated: visualizer_file_demo.html")
 
     # ---------------------------------------------------------
     # Scenario 2: SQLite DB Fetching (Pagination)
@@ -97,6 +100,10 @@ def run_demo():
                 print(f"    Sample: {rows[0]}")
         else:
             print(f"Batch {i+1} Failed: {packet.error}")
+
+    if VISUALIZER_AVAILABLE:
+        viz.report("examples/visualizer_sqlite_demo.html")
+        print(f"[Demo] Report generated: visualizer_sqlite_demo.html")
 
     # ---------------------------------------------------------
     # Scenario 3: Web Crawling (Real World)
@@ -139,10 +146,9 @@ def run_demo():
     except Exception as e:
         print(f"Skipping Web Demo: {e}")
 
-    if tracer and VISUALIZER_AVAILABLE:
-        viz = VisualizerPipeline()
-        viz.run(tracer.graph, output_path="demo_report.html")
-        print(f"[Demo] Report generated: demo_report.html")
+    if VISUALIZER_AVAILABLE:
+        viz.report("examples/visualizer_requests_demo.html")
+        print(f"[Demo] Report generated: visualizer_requests_demo.html")
 
     # Cleanup
     if os.path.exists("test_users.db"):
