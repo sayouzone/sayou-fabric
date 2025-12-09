@@ -126,6 +126,9 @@ class ConnectorPipeline(BaseComponent):
         generator_cls = self._resolve_generator(source, strategy)
         generator = generator_cls()
 
+        for cb in self._callbacks:
+            generator.add_callback(cb)
+
         # 2. Generator 초기화
         generator.initialize(source=source, **kwargs)
         self._log(f"Connector started using strategy '{strategy}' on '{source}'")
@@ -150,6 +153,9 @@ class ConnectorPipeline(BaseComponent):
                         f"Skipping task {task.uri}: No fetcher for type '{task.source_type}'"
                     )
                     continue
+
+                for cb in self._callbacks:
+                    fetcher.add_callback(cb)
 
                 # 5. Fetch 수행
                 packet = fetcher.fetch(task)
