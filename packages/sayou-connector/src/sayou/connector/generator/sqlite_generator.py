@@ -48,7 +48,7 @@ class SqliteGenerator(BaseGenerator):
 
         return 0.0
 
-    def initialize(self, source: str, query: str, batch_size: int = 1000, **kwargs):
+    def initialize(self, source: str, query: str = None, batch_size: int = 1000, **kwargs):
         """
         Configure the SQL scanning strategy with pagination.
 
@@ -58,11 +58,35 @@ class SqliteGenerator(BaseGenerator):
             batch_size (int): Number of rows to fetch per task.
             **kwargs: Ignored additional arguments.
         """
-        self.conn_str = source
-        self.base_query = query.strip().rstrip(";")
+        self.conn_str = self._clean_source(source)
+        self.base_query = (
+            query.strip().rstrip(";")
+            if query
+            else "SELECT name FROM sqlite_master WHERE type='table'"
+        )
         self.batch_size = batch_size
         self.current_offset = 0
         self.stop_flag = False
+
+    def _clean_source(self, source: str) -> str:
+        """
+        Extracts the actual file path from a source URI.
+
+        Removes prefixes like 'sqlite:///' or 'sqlite://' from the source string
+        to return a clean file path compatible with the standard `sqlite3` connect method.
+
+        Args:
+            source (str): The input source string (e.g., 'sqlite:///data/test.db').
+
+        Returns:
+            str: The cleaned file path (e.g., '/data/test.db').
+        """
+        s = source.strip()
+        if s.lower().startswith("sqlite:///"):
+            return s[10:]
+        elif s.lower().startswith("sqlite://"):
+            return s[9:]
+        return s
 
     def _do_generate(self) -> Iterator[SayouTask]:
         """

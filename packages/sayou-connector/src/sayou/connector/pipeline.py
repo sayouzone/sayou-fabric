@@ -71,11 +71,14 @@ class ConnectorPipeline(BaseComponent):
         Populates local component maps from the global registry.
 
         Iterates through the global `COMPONENT_REGISTRY` to retrieve registered
-        generator and fetcher classes. It instantiates or stores references to these
-        classes in `self.gen_map` and `self.fetch_map` for quick access during execution.
+        generator and fetcher classes. It stores references to these classes in
+        `self.gen_map` and instantiates fetchers in `self.fetch_map`.
         """
         for name, cls in COMPONENT_REGISTRY["generator"].items():
             self.gen_map[name] = cls
+            supported = getattr(cls, "SUPPORTED_TYPES", [])
+            for t in supported:
+                self.gen_map[t] = cls
 
         for name, cls in COMPONENT_REGISTRY["fetcher"].items():
             instance = cls()
@@ -116,7 +119,8 @@ class ConnectorPipeline(BaseComponent):
             ValueError: If the specified strategy is not registered.
         """
         # 1. Generator 선택
-        generator = self._resolve_generator(source, strategy)
+        generator_cls = self._resolve_generator(source, strategy)
+        generator = generator_cls()
 
         # 2. Generator 초기화
         generator.initialize(source=source, **kwargs)
