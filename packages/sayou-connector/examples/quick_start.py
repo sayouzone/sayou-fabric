@@ -4,6 +4,12 @@ import sqlite3
 
 from sayou.connector.pipeline import ConnectorPipeline
 
+try:
+    from sayou.visualizer import GraphTracer, VisualizerPipeline
+    VISUALIZER_AVAILABLE = True
+except ImportError:
+    VISUALIZER_AVAILABLE = False
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 
 
@@ -14,7 +20,6 @@ def create_dummy_db(path="examples/user_demo.db"):
     conn = sqlite3.connect(path)
     cur = conn.cursor()
     cur.execute("CREATE TABLE users (id INTEGER, name TEXT, role TEXT)")
-    # 25개 데이터 생성 (배치 테스트용)
     for i in range(25):
         role = "admin" if i % 5 == 0 else "user"
         cur.execute("INSERT INTO users VALUES (?, ?, ?)", (i, f"User_{i}", role))
@@ -39,6 +44,12 @@ def run_demo():
     pipeline = ConnectorPipeline()
     pipeline.initialize()
 
+    tracer = None
+    if VISUALIZER_AVAILABLE:
+        print("[Demo] Visualizer detected! Attaching tracer...")
+        tracer = GraphTracer()
+        pipeline.add_callback(tracer)
+
     # ---------------------------------------------------------
     # Scenario 1: Local File Scan
     # ---------------------------------------------------------
@@ -47,13 +58,15 @@ def run_demo():
 
     # strategy="file" 사용
     packets = pipeline.run(
-        source=file_root, strategy="file", extensions=[".txt"], recursive=True
+        source=file_root,
+        # strategy="file",
+        extensions=[".txt"],
+        recursive=True
     )
 
     for i, packet in enumerate(packets):
         # SayouPacket 구조 활용
         if packet.success:
-            # FileFetcher는 bytes를 반환하므로 decoding 필요
             content = packet.data.decode("utf-8")
             print(f"[{i}] File: {packet.task.meta['filename']}")
             print(f"    Content: {content[:20]}...")
@@ -69,7 +82,10 @@ def run_demo():
     # strategy="sqlite" 사용
     # 배치 사이즈 10 -> 총 25개이므로 3번(10, 10, 5) Fetch 발생 예상
     db_packets = pipeline.run(
-        source=db_path, strategy="sqlite", query="SELECT * FROM users", batch_size=10
+        source=db_path,
+        # strategy="sqlite",
+        query="SELECT * FROM users",
+        batch_size=10
     )
 
     for i, packet in enumerate(db_packets):
@@ -88,19 +104,18 @@ def run_demo():
     print("\n=== [3] Web Crawling Demo ===")
 
     target_url = "https://news.daum.net/tech"
-    # 예시: 다음 뉴스 패턴
     link_pattern = r"https://v\.daum\.net/v/\d+"
 
     try:
         web_packets = pipeline.run(
             source=target_url,
-            strategy="requests",
+            # strategy="requests",
             link_pattern=link_pattern,
             selectors={
                 "title": ".head_view",
                 "content": ".article_view",
-            },  # 실제 선택자는 다를 수 있음
-            max_depth=1,  # 1단계만 (메인 -> 기사)
+            },
+            max_depth=1,
         )
 
         count = 0
@@ -108,13 +123,11 @@ def run_demo():
             if not packet.success:
                 continue
 
-            data = packet.data  # Dict
-            # 메타데이터 제외하고 본문 내용만 확인
+            data = packet.data
             display_data = {
                 k: v[:30] + "..." for k, v in data.items() if not k.startswith("__")
             }
 
-            # 제목이 잡힌 경우만 출력 (메인 페이지 등은 선택자 매칭 안될 수 있음)
             if display_data.get("title"):
                 print(f"[{count}] URL: {packet.task.uri}")
                 print(f"    Data: {display_data}")
@@ -125,6 +138,11 @@ def run_demo():
 
     except Exception as e:
         print(f"Skipping Web Demo: {e}")
+
+    if tracer and VISUALIZER_AVAILABLE:
+        viz = VisualizerPipeline()
+        viz.run(tracer.graph, output_path="demo_report.html")
+        print(f"[Demo] Report generated: demo_report.html")
 
     # Cleanup
     if os.path.exists("test_users.db"):
