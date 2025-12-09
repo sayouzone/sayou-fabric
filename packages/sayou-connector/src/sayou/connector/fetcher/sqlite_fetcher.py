@@ -1,11 +1,13 @@
 import sqlite3
 from typing import Any, Dict, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouTask
 
 from ..interfaces.base_fetcher import BaseFetcher
 
 
+@register_component("fetcher")
 class SqliteFetcher(BaseFetcher):
     """
     Concrete implementation of BaseFetcher for SQLite databases.

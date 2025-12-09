@@ -1,15 +1,12 @@
-from typing import Dict, Iterator, List, Optional
+import importlib
+import pkgutil
+from typing import Iterator
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
+from sayou.core.registry import COMPONENT_REGISTRY
 from sayou.core.schemas import SayouPacket, SayouTask
 
-from .fetcher.file_fetcher import FileFetcher
-from .fetcher.requests_fetcher import RequestsFetcher
-from .fetcher.sqlite_fetcher import SqliteFetcher
-from .generator.file_generator import FileGenerator
-from .generator.requests_generator import RequestsGenerator
-from .generator.sqlite_generator import SqliteGenerator
 from .interfaces.base_fetcher import BaseFetcher
 from .interfaces.base_generator import BaseGenerator
 
@@ -21,46 +18,69 @@ class ConnectorPipeline(BaseComponent):
 
     component_name = "ConnectorPipeline"
 
-    def __init__(
-        self,
-        extra_generators: Optional[List[BaseGenerator]] = None,
-        extra_fetchers: Optional[List[BaseFetcher]] = None,
-    ):
+    def __init__(self, **kwargs):
         """
-        Initialize the pipeline with default and optional plugins.
+        Initializes the pipeline and discovers available components.
+
+        Sets up the internal storage for generators and fetchers, scans specific
+        package paths to automatically discover plugins, and loads them from the
+        global registry into the local mapping.
 
         Args:
-            extra_generators (Optional[List[BaseGenerator]]): Custom generators to register.
-            extra_fetchers (Optional[List[BaseFetcher]]): Custom fetchers to register.
+            **kwargs: Configuration arguments passed to the parent component.
         """
         super().__init__()
 
-        self.gen_map: Dict[str, BaseGenerator] = {}
-        self.fetch_map: Dict[str, BaseFetcher] = {}
+        self.gen_map = {}
+        self.fetch_map = {}
 
-        self._register(
-            self.gen_map, [FileGenerator(), SqliteGenerator(), RequestsGenerator()]
-        )
-        self._register(
-            self.fetch_map, [FileFetcher(), SqliteFetcher(), RequestsFetcher()]
-        )
+        self._register("sayou.connector.generator") 
+        self._register("sayou.connector.fetcher")
+        self._register("sayou.connector.plugins")
 
-        if extra_generators:
-            self._register(self.gen_map, extra_generators)
-        if extra_fetchers:
-            self._register(self.fetch_map, extra_fetchers)
+        self._load_from_registry()
 
-    def _register(self, target_map, components):
+    def _register(self, package_name: str):
         """
-        Register a list of components into the target mapping.
+        Automatically discovers and registers plugins from the specified package.
+
+        Scans the directory of the given package name and attempts to import all
+        submodules found. Importing these modules triggers the `@register_component`
+        decorator attached to the classes, effectively registering them into the
+        global `COMPONENT_REGISTRY`.
 
         Args:
-            target_map (dict): The dictionary to store the components (key: type).
-            components (list): List of component instances to register.
+            package_name (str): The dot-separated Python package path to scan
+                                (e.g., "sayou.connector.generator").
         """
-        for c in components:
-            for t in getattr(c, "SUPPORTED_TYPES", []):
-                target_map[t] = c
+        try:
+            package = importlib.import_module(package_name)
+            if hasattr(package, "__path__"):
+                for _, name, _ in pkgutil.iter_modules(package.__path__):
+                    full_name = f"{package_name}.{name}"
+                    try:
+                        importlib.import_module(full_name)
+                        self._log(f"Discovered module: {full_name}", level="debug")
+                    except Exception as e:
+                        self._log(f"Failed to import module {full_name}: {e}", level="warning")
+        except ImportError as e:
+            self._log(f"Package not found: {package_name} ({e})", level="warning")
+
+    def _load_from_registry(self):
+        """
+        Populates local component maps from the global registry.
+
+        Iterates through the global `COMPONENT_REGISTRY` to retrieve registered
+        generator and fetcher classes. It instantiates or stores references to these
+        classes in `self.gen_map` and `self.fetch_map` for quick access during execution.
+        """
+        for name, cls in COMPONENT_REGISTRY["generator"].items():
+            self.gen_map[name] = cls
+
+        for name, cls in COMPONENT_REGISTRY["fetcher"].items():
+            instance = cls()
+            for t in getattr(instance, "SUPPORTED_TYPES", []):
+                self.fetch_map[t] = instance
 
     @safe_run(default_return=None)
     def initialize(self, **kwargs):
@@ -96,11 +116,6 @@ class ConnectorPipeline(BaseComponent):
             ValueError: If the specified strategy is not registered.
         """
         # 1. Generator 선택
-        # v0.1.x
-        # generator = self.gen_map.get(strategy)
-        # if not generator:
-        #     raise ValueError(f"Unknown strategy: {strategy}")
-        # v0.2.0
         generator = self._resolve_generator(source, strategy)
 
         # 2. Generator 초기화

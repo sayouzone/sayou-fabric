@@ -7,11 +7,13 @@ try:
 except ImportError:
     BeautifulSoup = None
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouTask
 
 from ..interfaces.base_fetcher import BaseFetcher
 
 
+@register_component("fetcher")
 class RequestsFetcher(BaseFetcher):
     """
     Concrete implementation of BaseFetcher for static web pages.

@@ -1,10 +1,12 @@
 import os
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouTask
 
 from ..interfaces.base_fetcher import BaseFetcher
 
 
+@register_component("fetcher")
 class FileFetcher(BaseFetcher):
     """
     Concrete implementation of BaseFetcher for local file systems.

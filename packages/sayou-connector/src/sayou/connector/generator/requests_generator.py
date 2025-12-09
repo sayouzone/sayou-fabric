@@ -2,11 +2,13 @@ import re
 from collections import deque
 from typing import Iterator
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouPacket, SayouTask
 
 from ..interfaces.base_generator import BaseGenerator
 
 
+@register_component("generator")
 class RequestsGenerator(BaseGenerator):
     """
     Concrete implementation of BaseGenerator for web crawling.

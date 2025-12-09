@@ -2,11 +2,13 @@ import fnmatch
 import os
 from typing import Iterator
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouTask
 
 from ..interfaces.base_generator import BaseGenerator
 
 
+@register_component("generator")
 class FileGenerator(BaseGenerator):
     """
     Concrete implementation of BaseGenerator for file system traversal.
