@@ -120,6 +120,8 @@ class ConnectorPipeline(BaseComponent):
         Raises:
             ValueError: If the specified strategy is not registered.
         """
+        self._emit("on_start", input_data={"source": source, "strategy": strategy})
+
         # 1. Generator 선택
         generator_cls = self._resolve_generator(source, strategy)
         generator = generator_cls()
@@ -132,34 +134,42 @@ class ConnectorPipeline(BaseComponent):
         count = 0
         success_count = 0
 
-        for task in generator.generate():
-            if not isinstance(task, SayouTask):
-                self._log(
-                    f"Invalid task type from generator: {type(task)}", level="warning"
-                )
-                continue
+        try:
+            for task in generator.generate():
+                if not isinstance(task, SayouTask):
+                    self._log(
+                        f"Invalid task type from generator: {type(task)}",
+                        level="warning",
+                    )
+                    continue
 
-            # 4. Fetcher 라우팅
-            fetcher = self.fetch_map.get(task.source_type)
-            if not fetcher:
-                self._log(
-                    f"Skipping task {task.uri}: No fetcher for type '{task.source_type}'"
-                )
-                continue
+                # 4. Fetcher 라우팅
+                fetcher = self.fetch_map.get(task.source_type)
+                if not fetcher:
+                    self._log(
+                        f"Skipping task {task.uri}: No fetcher for type '{task.source_type}'"
+                    )
+                    continue
 
-            # 5. Fetch 수행
-            packet = fetcher.fetch(task)
+                # 5. Fetch 수행
+                packet = fetcher.fetch(task)
 
-            # 6. 결과 처리
-            if packet.success:
-                success_count += 1
-                yield packet
-            else:
-                self._log(f"Fetch failed: {packet.error}")
+                # 6. 결과 처리
+                if packet.success:
+                    success_count += 1
+                    yield packet
+                else:
+                    self._log(f"Fetch failed: {packet.error}")
 
-            # 7. Feedback Loop
-            generator.feedback(packet)
-            count += 1
+                # 7. Feedback Loop
+                generator.feedback(packet)
+                count += 1
+
+            self._emit("on_finish", result_data={"count": count}, success=True)
+
+        except Exception as e:
+            self._emit("on_error", error=e)
+            raise e
 
         self._log(f"Connector finished. Processed: {count}, Success: {success_count}")
 

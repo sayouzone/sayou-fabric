@@ -48,17 +48,21 @@ class BaseGenerator(BaseComponent):
         Yields:
             Iterator[SayouTask]: An iterator of tasks to be processed by Fetchers.
         """
+        self._emit("on_start", input_data={"component": self.component_name})
         self._log(f"Starting generation strategy: {self.component_name}")
         count = 0
         try:
             for task in self._do_generate():
                 count += 1
                 yield task
+            self._emit("on_finish", result_data={"total_tasks": count}, success=True)
         except Exception as e:
             wrapped_error = GeneratorError(
                 f"[{self.component_name}] Strategy crashed: {str(e)}"
             )
             self.logger.error(wrapped_error, exc_info=True)
+            self._emit("on_error", error=wrapped_error)
+            raise wrapped_error
         finally:
             self._log(f"Generator finished. Total tasks yielded: {count}")
 

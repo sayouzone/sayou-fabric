@@ -36,13 +36,17 @@ class BaseFetcher(BaseComponent):
             SayouPacket: A packet containing the fetched data (on success)
                         or error details (on failure).
         """
+        self._emit("on_start", input_data=task)
         self._log(f"Fetching: {task.uri} ({task.source_type})", level="debug")
 
         try:
             data = self._do_fetch(task)
-            return SayouPacket(task=task, data=data, success=True)
+            packet = SayouPacket(task=task, data=data, success=True)
+            self._emit("on_finish", result_data=packet, success=True)
+            return packet
 
         except Exception as e:
+            self._emit("on_error", error=e)
             wrapped_error = FetcherError(
                 f"[{self.component_name}] Failed to fetch: {str(e)}"
             )
