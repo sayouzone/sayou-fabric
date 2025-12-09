@@ -30,20 +30,24 @@ class TestConnectorPipeline(unittest.TestCase):
         with open(file_path, "w") as f:
             f.write("Hello Sayou")
 
-        # 2. 파이프라인 실행
-        iterator = self.pipeline.run(
-            source=self.test_dir, strategy="file", extensions=[".txt"]
-        )
-        packets = list(iterator)
+        test_cases = ["file", "auto", None]
+        for strategy_input in test_cases:
+            with self.subTest(strategy=strategy_input):
 
-        # 3. 검증
-        self.assertEqual(len(packets), 1)
-        packet = packets[0]
+                # 2. 파이프라인 실행
+                iterator = self.pipeline.run(
+                    source=self.test_dir, strategy=strategy_input, extensions=[".txt"]
+                )
+                packets = list(iterator)
 
-        self.assertIsInstance(packet, SayouPacket)
-        self.assertTrue(packet.success)
-        self.assertEqual(packet.data, b"Hello Sayou")
-        self.assertEqual(packet.task.source_type, "file")
+                # 3. 검증
+                self.assertEqual(len(packets), 1)
+                packet = packets[0]
+
+                self.assertIsInstance(packet, SayouPacket)
+                self.assertTrue(packet.success)
+                self.assertEqual(packet.data, b"Hello Sayou")
+                self.assertEqual(packet.task.source_type, "file")
 
     def test_sqlite_strategy_pagination(self):
         """[Integration] SQL 페이지네이션 로직 테스트"""
@@ -58,22 +62,30 @@ class TestConnectorPipeline(unittest.TestCase):
         conn.commit()
         conn.close()
 
-        # 2. 파이프라인 실행 (Batch Size = 10)
-        iterator = self.pipeline.run(
-            source=db_path, strategy="sqlite", query="SELECT * FROM data", batch_size=10
-        )
-        packets = list(iterator)
+        test_cases = ["sqlite", "auto", None]
+        for strategy_input in test_cases:
+            with self.subTest(strategy=strategy_input):
 
-        # 3. 검증 (총 3개의 패킷: 10개, 10개, 5개)
-        self.assertEqual(len(packets), 3)
+                run_kwargs = {
+                    "source": db_path,
+                    "query": "SELECT * FROM data",
+                    "batch_size": 10,
+                }
+                if strategy_input:
+                    run_kwargs["strategy"] = strategy_input
 
-        # 첫 번째 배치
-        self.assertEqual(len(packets[0].data), 10)
-        self.assertEqual(packets[0].task.meta["offset"], 0)
+                # 2. 파이프라인 실행 (Batch Size = 10)
+                if strategy_input == "auto" or strategy_input is None:
+                    run_kwargs["source"] = f"sqlite:///{db_path}"
 
-        # 마지막 배치
-        self.assertEqual(len(packets[2].data), 5)
-        self.assertEqual(packets[2].task.meta["offset"], 20)
+                iterator = self.pipeline.run(**run_kwargs)
+                packets = list(iterator)
+
+                self.assertEqual(len(packets), 3)
+                self.assertEqual(len(packets[0].data), 10)
+                self.assertEqual(packets[0].task.meta["offset"], 0)
+                self.assertEqual(len(packets[2].data), 5)
+                self.assertEqual(packets[2].task.meta["offset"], 20)
 
     def test_error_handling(self):
         """[Unit] 존재하지 않는 파일 요청 시 에러 핸들링"""
