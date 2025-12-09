@@ -34,7 +34,7 @@ class ConnectorPipeline(BaseComponent):
         self.gen_map = {}
         self.fetch_map = {}
 
-        self._register("sayou.connector.generator") 
+        self._register("sayou.connector.generator")
         self._register("sayou.connector.fetcher")
         self._register("sayou.connector.plugins")
 
@@ -62,7 +62,9 @@ class ConnectorPipeline(BaseComponent):
                         importlib.import_module(full_name)
                         self._log(f"Discovered module: {full_name}", level="debug")
                     except Exception as e:
-                        self._log(f"Failed to import module {full_name}: {e}", level="warning")
+                        self._log(
+                            f"Failed to import module {full_name}: {e}", level="warning"
+                        )
         except ImportError as e:
             self._log(f"Package not found: {package_name} ({e})", level="warning")
 

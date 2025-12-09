@@ -48,7 +48,9 @@ class SqliteGenerator(BaseGenerator):
 
         return 0.0
 
-    def initialize(self, source: str, query: str = None, batch_size: int = 1000, **kwargs):
+    def initialize(
+        self, source: str, query: str = None, batch_size: int = 1000, **kwargs
+    ):
         """
         Configure the SQL scanning strategy with pagination.
 
