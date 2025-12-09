@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 # 1. 패키지 기본 정보
 # -----------------
 [project]
-name = "sayou-visulaizer"
+name = "sayou-visualizer"
 version = "0.0.1"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
