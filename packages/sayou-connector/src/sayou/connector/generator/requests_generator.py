@@ -81,7 +81,7 @@ class RequestsGenerator(BaseGenerator):
         while self.queue:
             url, depth = self.queue.popleft()
             yield SayouTask(
-                source_type="http" if url.startswith("http") else "https",
+                source_type="requests",
                 uri=url,
                 params={"selectors": self.selectors, "depth": depth},
             )
