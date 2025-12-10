@@ -1,8 +1,8 @@
 import json
 import queue
 import threading
-import websocket  # pip install websocket-client
 
+import websocket
 from sayou.core.callbacks import BaseCallback
 
 

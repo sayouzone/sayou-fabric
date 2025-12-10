@@ -1,5 +1,4 @@
 from pyvis.network import Network
-
 from sayou.core.base_component import BaseComponent
 
 

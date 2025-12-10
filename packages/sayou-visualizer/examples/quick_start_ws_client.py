@@ -1,22 +1,8 @@
-import os
-import sys
 import time
-
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = CURRENT_DIR
-while not os.path.exists(os.path.join(ROOT_DIR, "packages")):
-    parent = os.path.dirname(ROOT_DIR)
-    if parent == ROOT_DIR:
-        raise FileNotFoundError("'packages' folder not found.")
-    ROOT_DIR = parent
-
-PACKAGES_ROOT = os.path.join(ROOT_DIR, "packages")
-sys.path.insert(0, os.path.join(PACKAGES_ROOT, "sayou-connector", "."))
-sys.path.insert(0, os.path.join(PACKAGES_ROOT, "sayou-visualizer", "."))
 
 from sayou.connector.pipeline import ConnectorPipeline
 
-from src.sayou.visualizer.pipeline import VisualizerPipeline
+from sayou.visualizer.pipeline import VisualizerPipeline
 
 
 def main():

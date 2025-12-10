@@ -3,7 +3,6 @@ from rich.live import Live
 from rich.panel import Panel
 from rich.spinner import Spinner
 from rich.tree import Tree
-
 from sayou.core.callbacks import BaseCallback
 
 
@@ -20,11 +19,9 @@ class RichConsoleTracer(BaseCallback):
         )
 
     def on_start(self, component_name, input_data, **kwargs):
-        # 라이브 컨텍스트가 꺼져있으면 켬 (최초 1회)
         if not self.live.is_started:
             self.live.start()
 
-        # 1. 컴포넌트 브랜치 생성 (없으면)
         if component_name not in self.comp_branches:
             if "ConnectorPipeline" in component_name:
                 branch = self.root_tree
@@ -34,7 +31,6 @@ class RichConsoleTracer(BaseCallback):
 
             self.comp_branches[component_name] = branch
 
-        # 2. 데이터 노드 추가 (스피너와 함께)
         branch = self.comp_branches[component_name]
         data_id = self._get_simple_id(input_data)
 
@@ -53,7 +49,6 @@ class RichConsoleTracer(BaseCallback):
         self.live.refresh()
 
     def stop(self):
-        """파이프라인 종료 시 호출"""
         self.root_tree.add("✅ [bold green]Finished[/]")
         self.live.stop()
 

@@ -36,7 +36,7 @@ async def log_handler(websocket):
 async def main():
     print("📡 WebSocket Server listening on ws://localhost:8765...")
     async with websockets.serve(log_handler, "localhost", 8765):
-        await asyncio.Future()  # run forever
+        await asyncio.Future()
 
 
 if __name__ == "__main__":
