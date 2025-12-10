@@ -1,4 +1,5 @@
 import networkx as nx
+
 from sayou.core.callbacks import BaseCallback
 
 

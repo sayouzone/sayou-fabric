@@ -1,4 +1,5 @@
 from pyvis.network import Network
+
 from sayou.core.base_component import BaseComponent
 
 
@@ -35,7 +36,7 @@ class PyVisRenderer(BaseComponent):
                     "strokeWidth": 0,
                     "strokeColor": "#ffffff"
                 }
-            },
+            },F
             "edges": {
                 "color": {
                     "color": "#505050",
