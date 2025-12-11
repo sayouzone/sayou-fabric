@@ -47,7 +47,10 @@ class BaseConverter(BaseComponent):
         Raises:
             ConversionError: If conversion fails.
         """
-        self._emit("on_start", input_data={"filename": file_name, "converter": self.component_name})
+        self._emit(
+            "on_start",
+            input_data={"filename": file_name, "converter": self.component_name},
+        )
         self._log(f"Converting file: {file_name}...")
         try:
             converted_bytes = self._do_convert(file_bytes, file_name, **kwargs)
@@ -56,7 +59,9 @@ class BaseConverter(BaseComponent):
                 raise ConversionError("Converter returned empty bytes.")
 
             self._log(f"Conversion successful. ({len(converted_bytes)} bytes)")
-            self._emit("on_finish", result_data={"size": len(converted_bytes)}, success=True)
+            self._emit(
+                "on_finish", result_data={"size": len(converted_bytes)}, success=True
+            )
             return converted_bytes
 
         except Exception as e:

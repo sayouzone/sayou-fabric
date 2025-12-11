@@ -20,9 +20,9 @@ class BaseDocumentParser(BaseComponent):
     component_name = "BaseDocumentParser"
     SUPPORTED_TYPES: List[str] = []
 
-    def __init__(self):
+    def __init__(self, ocr_engine=None):
         super().__init__()
-        self.ocr_engine: Optional[BaseOCR] = None
+        self.ocr_engine: Optional[BaseOCR] = ocr_engine
 
     def set_ocr_engine(self, ocr_engine: Optional[BaseOCR]):
         """
@@ -65,7 +65,10 @@ class BaseDocumentParser(BaseComponent):
         Raises:
             ParserError: If parsing logic encounters a critical error.
         """
-        self._emit("on_start", input_data={"filename": file_name, "parser": self.component_name})
+        self._emit(
+            "on_start",
+            input_data={"filename": file_name, "parser": self.component_name},
+        )
         self._log(f"Parsing file: {file_name} ({len(file_bytes)} bytes)")
 
         if not file_bytes:

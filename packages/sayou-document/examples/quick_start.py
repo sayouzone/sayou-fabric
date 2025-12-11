@@ -36,10 +36,7 @@ def run_demo():
             file_bytes = f.read()
 
         try:
-            ocr_config = {
-                "engine_path": "",
-                "lang": "kor+eng"
-            }
+            ocr_config = {"engine_path": "", "lang": "kor+eng"}
 
             # doc = pipeline.run(file_bytes, img_path, ocr=ocr_config)
             doc = pipeline.run(file_bytes, img_path)
