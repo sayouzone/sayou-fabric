@@ -1,141 +1,195 @@
-import os
-from typing import Dict, List, Optional
+import importlib
+import pkgutil
+from typing import Any, Dict, Optional, Type
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
+from sayou.core.registry import COMPONENT_REGISTRY
 
-from .converter.image_converter import ImageToPdfConverter
 from .core.exceptions import ParserError
 from .interfaces.base_converter import BaseConverter
 from .interfaces.base_ocr import BaseOCR
 from .interfaces.base_parser import BaseDocumentParser
 from .models import Document
-from .ocr.tesseract_ocr import TesseractOCR
-from .parser.docx_parser import DocxParser
-from .parser.excel_parser import ExcelParser
-from .parser.pdf_parser import PdfParser
-from .parser.pptx_parser import PptxParser
 
 
 class DocumentPipeline(BaseComponent):
     """
-    Orchestrates the document parsing process.
+    Orchestrates the document parsing process using a dynamic registry system.
 
     Features:
-    - Automatic Parser selection based on file extension.
-    - Smart Image Handling: Converts Images -> PDF -> Parsed via PdfParser(OCR).
-    - OCR Injection for scanned documents.
+    - Dynamic Parser Discovery via Registry.
+    - Score-based Routing (Magic Bytes detection).
+    - Unified Image-to-PDF pre-processing.
+    - Runtime OCR Engine Injection.
     """
 
     component_name = "DocumentPipeline"
 
-    def __init__(
-        self,
-        ocr_engine: Optional[BaseOCR] = None,
-        extra_parsers: Optional[List[BaseDocumentParser]] = None,
-        use_default_ocr: bool = False,
-    ):
+    def __init__(self, **kwargs):
+        """
+        Initializes the pipeline and discovers available parsers.
+
+        Args:
+            ocr_engine (Optional[BaseOCR]): Pre-initialized OCR engine instance.
+            use_default_ocr (bool): If True, attempts to load TesseractOCR if no engine is provided.
+            **kwargs: Additional configuration passed to components.
+        """
         super().__init__()
 
-        self.ocr_engine = ocr_engine
-        if not self.ocr_engine and use_default_ocr:
-            if TesseractOCR:
-                try:
-                    self.ocr_engine = TesseractOCR()
-                    self._log("Default TesseractOCR engine loaded.")
-                except Exception as e:
-                    self._log(
-                        f"Failed to initialize TesseractOCR: {e}", level="warning"
-                    )
-            else:
-                self._log(
-                    "TesseractOCR requested but 'pytesseract' not installed.",
-                    level="warning",
-                )
+        self.converter_cls_map: Dict[str, Type[BaseConverter]] = {}
+        self.ocr_cls_map: Dict[str, Type[BaseOCR]] = {}
+        self.parser_cls_map: Dict[str, Type[BaseDocumentParser]] = {}
 
-        self.handler_map: Dict[str, BaseDocumentParser] = {}
-        self.image_converter: BaseConverter = ImageToPdfConverter()
+        self._register("sayou.document.converter")
+        self._register("sayou.document.ocr")
+        self._register("sayou.document.parser")
+        self._register("sayou.document.plugins")
 
-        default_parsers = [
-            PdfParser(ocr_engine=self.ocr_engine),
-            DocxParser(),
-            PptxParser(),
-            ExcelParser(),
-        ]
+        self._load_from_registry()
 
-        if self.ocr_engine:
-            for p in default_parsers:
-                p.set_ocr_engine(self.ocr_engine)
+        self.global_config = kwargs
 
-        self._register(default_parsers)
+    def _register(self, package_name: str):
+        """
+        Automatically discovers and registers plugins from the specified package.
+        """
+        try:
+            package = importlib.import_module(package_name)
+            if hasattr(package, "__path__"):
+                for _, name, _ in pkgutil.iter_modules(package.__path__):
+                    full_name = f"{package_name}.{name}"
+                    try:
+                        importlib.import_module(full_name)
+                    except Exception as e:
+                        self._log(
+                            f"Failed to import module {full_name}: {e}", level="warning"
+                        )
+        except ImportError as e:
+            self._log(f"Package not found: {package_name} ({e})", level="debug")
 
-        if extra_parsers:
-            self._register(extra_parsers)
+    def _load_from_registry(self):
+        """
+        Populates local parser map from the global registry.
+        """
+        if "converter" in COMPONENT_REGISTRY:
+            self.converter_cls_map.update(COMPONENT_REGISTRY["converter"])
 
-    def _register(self, parsers: List[BaseDocumentParser]):
-        for parser in parsers:
-            for ext in getattr(parser, "SUPPORTED_TYPES", []):
-                self.handler_map[ext.lower()] = parser
+        if "ocr" in COMPONENT_REGISTRY:
+            self.ocr_cls_map.update(COMPONENT_REGISTRY["ocr"])
+
+        if "parser" in COMPONENT_REGISTRY:
+            self.parser_cls_map.update(COMPONENT_REGISTRY["parser"])
 
     @safe_run(default_return=None)
     def initialize(self, **kwargs):
         """
         Initialize all registered parsers, converter, and the OCR engine.
         """
-        if self.ocr_engine:
-            self.ocr_engine.initialize(**kwargs)
+        self.global_config.update(kwargs)
+        total_plugins = (
+            len(self.converter_cls_map)
+            + len(self.ocr_cls_map)
+            + len(self.parser_cls_map)
+        )
+        self._log(f"DocumentPipeline initialized. Loaded Plugins: {total_plugins}")
 
-        self.image_converter.initialize(**kwargs)
-
-        for parser in set(self.handler_map.values()):
-            parser.initialize(**kwargs)
-
-        self._log(f"DocumentPipeline initialized. Handlers: {len(self.handler_map)}")
-
-    def run(self, file_bytes: bytes, file_name: str) -> Optional[Document]:
+    def run(self, file_bytes: bytes, file_name: str, **kwargs) -> Optional[Document]:
         """
-        Parse a document file.
+        Executes the document parsing pipeline.
 
-        [Smart Routing]
-        If the input is an image (jpg, png, etc.), it is converted to PDF first,
-        and then processed by the PdfParser to leverage its OCR capabilities.
+        1. Handles Image -> PDF conversion if applicable.
+        2. Selects the appropriate Parser class using Score-based routing (can_handle).
+        3. Instantiates the Parser and injects the OCR engine.
+        4. Parses and returns the Document.
 
         Args:
-            file_bytes (bytes): File content.
-            file_name (str): Filename with extension.
+            file_bytes (bytes): Binary content of the file.
+            file_name (str): Original filename.
+            **kwargs: Runtime options (e.g., tesseract_path, ocr_dpi).
 
         Returns:
-            Document: Parsed document object.
+            Optional[Document]: The parsed document or None on failure.
         """
         if not file_bytes:
             raise ParserError("Input file bytes are empty.")
 
-        ext = os.path.splitext(file_name)[1].lower()
+        run_config = {**self.global_config, **kwargs}
 
-        if ext in self.image_converter.SUPPORTED_TYPES:
-            self._log(f"Image detected ({ext}). Converting to PDF for processing...")
+        self._emit("on_start", input_data={"filename": file_name})
+
+        # ---------------------------------------------------------
+        # Phase 1: Pre-processing (Converter)
+        # ---------------------------------------------------------
+        converter_cls = self._resolve_component(
+            self.converter_cls_map, file_bytes, file_name
+        )
+
+        if converter_cls:
+            self._log(f"Converter selected: {converter_cls.component_name}")
+            converter = converter_cls()
+            converter.initialize(**run_config)
+
             try:
-                pdf_bytes = self.image_converter.convert(file_bytes, file_name)
-                if pdf_bytes:
-                    file_bytes = pdf_bytes
-                    ext = ".pdf"
-                    self._log(
-                        "Image converted to PDF successfully. Proceeding to OCR..."
-                    )
+                converted = converter.convert(file_bytes, file_name, **run_config)
+                if converted:
+                    file_bytes = converted
+                    file_name = f"{file_name}.pdf"
             except Exception as e:
-                self._log(f"Image conversion failed: {e}", level="error")
+                self._log(f"Conversion warning: {e}", level="warning")
                 raise ParserError(f"Failed to convert image {file_name}: {e}")
 
-        handler = self.handler_map.get(ext)
+        # ---------------------------------------------------------
+        # Phase 2: OCR Engine Resolution
+        # ---------------------------------------------------------
+        ocr_cls = self._resolve_component(self.ocr_cls_map, b"", "default")
 
-        if not handler:
-            supported = (
-                list(self.handler_map.keys()) + self.image_converter.SUPPORTED_TYPES
-            )
-            raise ParserError(
-                f"No parser found for extension '{ext}'. Supported: {supported}"
-            )
+        ocr_instance = None
+        if ocr_cls:
+            self._log(f"OCR Engine selected: {ocr_cls.component_name}")
+            ocr_instance = ocr_cls()
+            ocr_instance.initialize(**run_config)
 
-        self._log(f"Routing '{file_name}' to {handler.component_name}...")
+        # ---------------------------------------------------------
+        # Phase 3: Parser Selection & Execution
+        # ---------------------------------------------------------
+        parser_cls = self._resolve_component(self.parser_cls_map, file_bytes, file_name)
 
-        return handler.parse(file_bytes, file_name)
+        if not parser_cls:
+            raise ParserError(f"No suitable parser found for {file_name}")
+
+        self._log(f"Routing '{file_name}' to {parser_cls.component_name}...")
+
+        parser = parser_cls(ocr_engine=ocr_instance)
+        parser.initialize(**run_config)
+
+        try:
+            doc = parser.parse(file_bytes, file_name, **run_config)
+            self._emit("on_finish", result_data=doc, success=True)
+            return doc
+        except Exception as e:
+            self._emit("on_error", error=e)
+            raise e
+
+    def _resolve_component(
+        self, cls_map: Dict[str, Type[Any]], file_bytes: bytes, identifier: str
+    ) -> Optional[Type[Any]]:
+        """
+        Selects the best parser class based on magic bytes and filename.
+        """
+        best_score = 0.0
+        best_cls = None
+
+        for cls in set(cls_map.values()):
+            try:
+                score = cls.can_handle(file_bytes, identifier)
+                if score > best_score:
+                    best_score = score
+                    best_cls = cls
+            except Exception:
+                continue
+
+        if best_cls and best_score > 0.1:
+            return best_cls
+
+        return None
