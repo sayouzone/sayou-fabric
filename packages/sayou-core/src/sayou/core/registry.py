@@ -20,7 +20,7 @@ COMPONENT_REGISTRY = {
     # Extractor Group
     # LLM Group
     # Visualizer Group
-    "parser": {},
+    "tracer": {},
     "renderer": {},
 }
 
