@@ -46,11 +46,11 @@ class BaseOCR(BaseComponent):
 
         try:
             text = self._do_ocr(image_bytes, **kwargs)
-            clean_text = text.strip()
+            clean_text = text.strip() if text else ""
             self._emit(
                 "on_finish", result_data={"text_len": len(clean_text)}, success=True
             )
-            return text.strip()
+            return clean_text
         except Exception as e:
             self._emit("on_error", error=e)
             self._log(f"OCR execution failed: {e}", level="warning")

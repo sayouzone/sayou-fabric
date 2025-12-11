@@ -36,6 +36,7 @@ class TesseractOCR(BaseOCR):
             **kwargs: Additional options.
         """
         self.lang = lang
+        self.default_path = kwargs.get("engine_path") or kwargs.get("tesseract_path")
 
     def _do_ocr(self, image_bytes: bytes, **kwargs) -> str:
         """
@@ -43,7 +44,7 @@ class TesseractOCR(BaseOCR):
 
         Args:
             image_bytes (bytes): Binary image data.
-            **kwargs: Must contain 'tesseract_path' if not in PATH.
+            **kwargs: Must contain 'engine_path' if not in PATH.
 
         Returns:
             str: Extracted text.
@@ -51,9 +52,11 @@ class TesseractOCR(BaseOCR):
         if not pytesseract:
             raise ImportError("pytesseract and Pillow are required for TesseractOCR.")
 
-        tesseract_path = kwargs.get("tesseract_path")
-        if tesseract_path:
-            pytesseract.pytesseract.tesseract_cmd = tesseract_path
+        run_path = kwargs.get("engine_path") or kwargs.get("tesseract_path")
+        target_path = run_path or getattr(self, "default_path", None)
+
+        if target_path:
+            pytesseract.pytesseract.tesseract_cmd = target_path
 
         try:
             image = Image.open(io.BytesIO(image_bytes))

@@ -95,7 +95,7 @@ class TextElement(BaseElement):
     """
 
     type: Literal["text"] = "text"
-    text: str
+    # text: str
     style: Optional[TextStyle] = None
     meta: ElementMetadata
 

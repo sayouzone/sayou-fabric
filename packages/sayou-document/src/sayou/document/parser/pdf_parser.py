@@ -128,7 +128,7 @@ class PdfParser(BaseDocumentParser):
                 # 페이지를 고해상도 이미지로 렌더링
                 pix = page.get_pixmap(dpi=kwargs.get("ocr_dpi", 200))
                 img_bytes = pix.tobytes("png")
-                ocr_text = self.ocr_engine.ocr_bytes(img_bytes, **kwargs)
+                ocr_text = self.ocr_engine.ocr(img_bytes, **kwargs)
 
                 if ocr_text:
                     # 페이지 전체를 하나의 TextElement로 생성
