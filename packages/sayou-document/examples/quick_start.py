@@ -24,12 +24,11 @@ def create_dummy_text_image(filename="test_image.png"):
 def run_demo():
     print(">>> Initializing Sayou Document Pipeline...")
 
-    # use_default_ocr=True로 설정하면 Tesseract가 설치된 경우 자동 로드됨
     pipeline = DocumentPipeline(use_default_ocr=True)
     pipeline.initialize()
 
     # --- Scenario: Image to Document (Auto Conversion + OCR) ---
-    img_path = "test_image.png"
+    img_path = "examples/image_demo.png"
     if create_dummy_text_image(img_path):
         print(f"\n=== Processing Image: {img_path} ===")
 
@@ -37,7 +36,12 @@ def run_demo():
             file_bytes = f.read()
 
         try:
-            # PNG 파일이지만 내부적으로 PDF로 변환되어 PdfParser가 처리함
+            ocr_config = {
+                "engine_path": "",
+                "lang": "kor+eng"
+            }
+
+            # doc = pipeline.run(file_bytes, img_path, ocr=ocr_config)
             doc = pipeline.run(file_bytes, img_path)
 
             if doc:
@@ -45,13 +49,11 @@ def run_demo():
                 print(f"   Type: {doc.doc_type}")
                 print(f"   Pages: {doc.page_count}")
 
-                # 결과 일부 출력
                 first_page = doc.pages[0]
                 if first_page.elements:
                     print(f"   Content: {first_page.elements[0].text[:50]}...")
 
-                # JSON 저장
-                output_path = f"result_{img_path}.json"
+                output_path = f"{img_path}_demo.json"
                 with open(output_path, "w", encoding="utf-8") as f:
                     f.write(doc.model_dump_json(indent=2))
                 print(f"   Saved to {output_path}")
