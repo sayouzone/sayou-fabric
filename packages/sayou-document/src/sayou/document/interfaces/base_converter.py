@@ -15,6 +15,23 @@ class BaseConverter(BaseComponent):
     component_name = "BaseConverter"
     SUPPORTED_TYPES: List[str] = []
 
+    @classmethod
+    def can_handle(cls, file_bytes: bytes, file_name: str) -> float:
+        """
+        Determines if this converter handles the given file.
+
+        Args:
+            file_bytes (bytes): File content header.
+            file_name (str): Filename with extension.
+
+        Returns:
+            float: Confidence score (0.0 - 1.0).
+        """
+        for ext in cls.SUPPORTED_TYPES:
+            if file_name.lower().endswith(ext):
+                return 1.0
+        return 0.0
+
     @measure_time
     def convert(self, file_bytes: bytes, file_name: str, **kwargs) -> bytes:
         """
@@ -30,6 +47,7 @@ class BaseConverter(BaseComponent):
         Raises:
             ConversionError: If conversion fails.
         """
+        self._emit("on_start", input_data={"filename": file_name, "converter": self.component_name})
         self._log(f"Converting file: {file_name}...")
         try:
             converted_bytes = self._do_convert(file_bytes, file_name, **kwargs)
@@ -38,9 +56,11 @@ class BaseConverter(BaseComponent):
                 raise ConversionError("Converter returned empty bytes.")
 
             self._log(f"Conversion successful. ({len(converted_bytes)} bytes)")
+            self._emit("on_finish", result_data={"size": len(converted_bytes)}, success=True)
             return converted_bytes
 
         except Exception as e:
+            self._emit("on_error", error=e)
             wrapped_error = ConversionError(
                 f"[{self.component_name}] Failed to convert {file_name}: {str(e)}"
             )

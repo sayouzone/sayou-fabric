@@ -11,6 +11,8 @@ except ImportError:
 
 from typing import List, Optional
 
+from sayou.core.registry import register_component
+
 from ..interfaces.base_parser import BaseDocumentParser
 from ..models import (
     BaseElement,
@@ -25,6 +27,7 @@ from ..models import (
 )
 
 
+@register_component("parser")
 class DocxParser(BaseDocumentParser):
     """
     (Tier 2) Parser for Microsoft Word (.docx) documents.
@@ -42,7 +45,23 @@ class DocxParser(BaseDocumentParser):
         "wp": "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",
     }
 
-    def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
+    @classmethod
+    def can_handle(cls, file_bytes: bytes, file_name: str) -> float:
+        """
+        Checks for Zip signature (PK..) or OLE signature.
+        """
+        # DOCX (Zip)
+        if file_bytes.startswith(b"PK\x03\x04") and file_name.lower().endswith(".docx"):
+            return 1.0
+        # Legacy DOC
+        if file_bytes.startswith(b"\xd0\xcf\x11\xe0"):
+            return 1.0
+        # Extension fallback
+        if any(file_name.lower().endswith(t) for t in cls.SUPPORTED_TYPES):
+            return 0.8
+        return 0.0
+
+    def _do_parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
         """
         Parse DOCX bytes into a structured Document.
 

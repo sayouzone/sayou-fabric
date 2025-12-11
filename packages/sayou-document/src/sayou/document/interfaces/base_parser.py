@@ -14,7 +14,7 @@ class BaseDocumentParser(BaseComponent):
     (Tier 1) Abstract base class for all document parsers.
 
     Provides common functionality for logging, error handling, and OCR engine integration.
-    Implements the Template Method pattern via `parse` -> `_parse`.
+    Implements the Template Method pattern via `parse` -> `_do_parse`.
     """
 
     component_name = "BaseDocumentParser"
@@ -35,6 +35,20 @@ class BaseDocumentParser(BaseComponent):
         if ocr_engine:
             self._log(f"OCR Engine '{ocr_engine.component_name}' attached.")
 
+    @classmethod
+    def can_handle(cls, file_bytes: bytes, file_name: str) -> float:
+        """
+        Determines if the parser can handle the given file based on content (magic bytes) and name.
+
+        Args:
+            file_bytes (bytes): The beginning bytes of the file.
+            file_name (str): The name of the file.
+
+        Returns:
+            float: Confidence score (0.0 to 1.0).
+        """
+        return 0.0
+
     @measure_time
     def parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Optional[Document]:
         """
@@ -51,6 +65,7 @@ class BaseDocumentParser(BaseComponent):
         Raises:
             ParserError: If parsing logic encounters a critical error.
         """
+        self._emit("on_start", input_data={"filename": file_name, "parser": self.component_name})
         self._log(f"Parsing file: {file_name} ({len(file_bytes)} bytes)")
 
         if not file_bytes:
@@ -58,18 +73,24 @@ class BaseDocumentParser(BaseComponent):
             return None
 
         try:
-            document = self._parse(file_bytes, file_name, **kwargs)
+            tesseract_path = kwargs.get("tesseract_path")
+            document = self._do_parse(
+                file_bytes, file_name, tesseract_path=tesseract_path, **kwargs
+            )
 
             if document:
                 self._log(
                     f"Successfully extracted {len(document.pages)} pages from {file_name}."
                 )
+                self._emit("on_finish", result_data=document, success=True)
             else:
                 self._log("Parser returned None.", level="warning")
+                self._emit("on_finish", result_data=None, success=False)
 
             return document
 
         except Exception as e:
+            self._emit("on_error", error=e)
             wrapped_error = ParserError(
                 f"[{self.component_name}] Failed to parse {file_name}: {str(e)}"
             )
@@ -77,7 +98,7 @@ class BaseDocumentParser(BaseComponent):
             raise wrapped_error
 
     @abstractmethod
-    def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
+    def _do_parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
         """
         [Abstract Hook] Implement the actual parsing logic.
 
@@ -120,7 +141,7 @@ class BaseDocumentParser(BaseComponent):
 
         if ocr_enabled and self.ocr_engine:
             try:
-                extracted = self.ocr_engine.ocr_bytes(image_bytes)
+                extracted = self.ocr_engine.ocr(image_bytes)
                 if extracted and extracted.strip():
                     ocr_text = extracted.strip()
                     self._log(

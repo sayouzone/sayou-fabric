@@ -7,7 +7,9 @@ try:
 except ImportError:
     openpyxl = None
 
-from typing import List, Optional
+from typing import List
+
+from sayou.core.registry import register_component
 
 from ..interfaces.base_parser import BaseDocumentParser
 from ..models import (
@@ -22,6 +24,7 @@ from ..models import (
 )
 
 
+@register_component("parser")
 class ExcelParser(BaseDocumentParser):
     """
     (Tier 2) Parser for Microsoft Excel (.xlsx) workbooks.
@@ -34,7 +37,23 @@ class ExcelParser(BaseDocumentParser):
     component_name = "ExcelParser"
     SUPPORTED_TYPES = [".xlsx", ".xlsm", ".xltx", ".xltm"]
 
-    def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
+    @classmethod
+    def can_handle(cls, file_bytes: bytes, file_name: str) -> float:
+        """
+        Checks for Zip signature (PK..) or OLE signature.
+        """
+        # XLSX (Zip)
+        if file_bytes.startswith(b"PK\x03\x04") and file_name.lower().endswith(".xlsx"):
+            return 1.0
+        # Legacy XLS
+        if file_bytes.startswith(b"\xd0\xcf\x11\xe0"):
+            return 1.0
+        # Extension fallback
+        if any(file_name.lower().endswith(t) for t in cls.SUPPORTED_TYPES):
+            return 0.8
+        return 0.0
+
+    def _do_parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
         """
         Parse Excel bytes into a structured Document.
 

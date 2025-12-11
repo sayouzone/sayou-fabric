@@ -11,8 +11,22 @@ class BaseOCR(BaseComponent):
 
     component_name = "BaseOCR"
 
+    @classmethod
+    def can_handle(cls, image_bytes: bytes, lang: str = "eng") -> float:
+        """
+        Determines if the OCR engine can handle the image/language.
+
+        Args:
+            image_bytes (bytes): Image content.
+            lang (str): Language code.
+
+        Returns:
+            float: Confidence score.
+        """
+        return 0.5
+
     @measure_time
-    def ocr_bytes(self, image_bytes: bytes, **kwargs) -> str:
+    def ocr(self, image_bytes: bytes, **kwargs) -> str:
         """
         Execute OCR on image bytes.
 
@@ -25,10 +39,20 @@ class BaseOCR(BaseComponent):
         if not image_bytes:
             return ""
 
+        self._emit(
+            "on_start",
+            input_data={"image_size": len(image_bytes), "engine": self.component_name},
+        )
+
         try:
             text = self._do_ocr(image_bytes, **kwargs)
+            clean_text = text.strip()
+            self._emit(
+                "on_finish", result_data={"text_len": len(clean_text)}, success=True
+            )
             return text.strip()
         except Exception as e:
+            self._emit("on_error", error=e)
             self._log(f"OCR execution failed: {e}", level="warning")
             return ""
 

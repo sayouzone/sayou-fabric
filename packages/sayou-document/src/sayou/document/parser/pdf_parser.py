@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional
 
 import fitz
+from sayou.core.registry import register_component
 
 from ..interfaces.base_ocr import BaseOCR
 from ..interfaces.base_parser import BaseDocumentParser
@@ -15,6 +16,7 @@ from ..models import (
 )
 
 
+@register_component("parser")
 class PdfParser(BaseDocumentParser):
     """
     (Tier 2) Parser for PDF files using PyMuPDF (fitz).
@@ -27,6 +29,17 @@ class PdfParser(BaseDocumentParser):
     component_name = "PdfParser"
     SUPPORTED_TYPES = [".pdf"]
 
+    @classmethod
+    def can_handle(cls, file_bytes: bytes, file_name: str) -> float:
+        """
+        Checks for PDF signature (%PDF) or extension.
+        """
+        if file_bytes.startswith(b"%PDF"):
+            return 1.0
+        if file_name.lower().endswith(".pdf"):
+            return 0.8
+        return 0.0
+
     def __init__(self, ocr_engine: Optional[BaseOCR] = None):
         """
         Initialize the parser with an optional OCR engine.
@@ -35,7 +48,7 @@ class PdfParser(BaseDocumentParser):
         if ocr_engine:
             self.set_ocr_engine(ocr_engine)
 
-    def _parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
+    def _do_parse(self, file_bytes: bytes, file_name: str, **kwargs) -> Document:
         """
         Parse PDF bytes into a structured Document.
 
