@@ -2,13 +2,26 @@ COMPONENT_REGISTRY = {
     # Connector Group
     "generator": {},
     "fetcher": {},
+    # Document Group
+    "parser": {},
+    "converter": {},
+    "ocr": {},
+    # Refinery Group
+    "normalizer": {},
+    "processor": {},
+    # Chunking Group
+    "splitter": {},
+    # Wrapper Group
+    "adapter": {},
+    # Assembler Group
+    "builder": {},
+    # Loader Group
+    "writer": {},
+    # Extractor Group
+    # LLM Group
     # Visualizer Group
     "parser": {},
     "renderer": {},
-    # Refinery Group
-    "refinery": {},
-    # Chunking Group
-    "splitter": {},
 }
 
 
