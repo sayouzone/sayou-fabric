@@ -130,17 +130,25 @@ class DocumentPipeline(BaseComponent):
 
         # 1-2. Converter Fallback (If no parser found)
         if not parser_cls:
-            converter_cls = self._resolve_component(self.converter_cls_map, file_bytes, file_name)
+            converter_cls = self._resolve_component(
+                self.converter_cls_map, file_bytes, file_name
+            )
             if converter_cls:
-                self._log(f"No direct parser found. Attempting conversion via {converter_cls.component_name}...")
+                self._log(
+                    f"No direct parser found. Attempting conversion via {converter_cls.component_name}..."
+                )
                 converter = converter_cls()
                 converter.initialize(**run_config)
                 try:
-                    converted_bytes = converter.convert(file_bytes, file_name, **run_config)
+                    converted_bytes = converter.convert(
+                        file_bytes, file_name, **run_config
+                    )
                     if converted_bytes:
                         file_bytes = converted_bytes
-                        file_name = f"{file_name}.pdf" 
-                        parser_cls = self._resolve_component(self.parser_cls_map, file_bytes, file_name)
+                        file_name = f"{file_name}.pdf"
+                        parser_cls = self._resolve_component(
+                            self.parser_cls_map, file_bytes, file_name
+                        )
                 except Exception as e:
                     self._log(f"Conversion warning: {e}", level="warning")
 
@@ -154,7 +162,7 @@ class DocumentPipeline(BaseComponent):
         if ocr:
             target_engine = ocr.get("engine_name", "default")
             ocr_cls = self._resolve_component(self.ocr_cls_map, b"", target_engine)
-            
+
             if ocr_cls:
                 ocr_instance = ocr_cls()
                 ocr_instance.initialize(**ocr)
@@ -164,7 +172,7 @@ class DocumentPipeline(BaseComponent):
         # Phase 3: Execution
         # ---------------------------------------------------------------------
         parser = parser_cls()
-        
+
         if ocr_instance and hasattr(parser, "set_ocr_engine"):
             parser.set_ocr_engine(ocr_instance)
 
