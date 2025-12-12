@@ -47,6 +47,17 @@ class DocumentPipeline(BaseComponent):
 
         self.global_config = kwargs
 
+        self.initialize(**kwargs)
+
+    @classmethod
+    def process(cls, file_bytes: bytes, file_name: str, **kwargs) -> Optional[Document]:
+        """
+        [Facade] 1-Line Execution Method.
+        Creates an instance, runs it, and returns the result immediately.
+        """
+        instance = cls(**kwargs)
+        return instance.run(file_bytes, file_name, **kwargs)
+
     def _register(self, package_name: str):
         """
         Automatically discovers and registers plugins from the specified package.
@@ -58,6 +69,7 @@ class DocumentPipeline(BaseComponent):
                     full_name = f"{package_name}.{name}"
                     try:
                         importlib.import_module(full_name)
+                        self._log(f"Discovered module: {full_name}", level="debug")
                     except Exception as e:
                         self._log(
                             f"Failed to import module {full_name}: {e}", level="warning"
