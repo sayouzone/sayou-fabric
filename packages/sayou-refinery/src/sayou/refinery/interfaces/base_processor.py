@@ -24,7 +24,11 @@ class BaseProcessor(BaseComponent):
         Processors are usually explicitly chained, but this allows for
         future smart-selection (e.g., auto-detecting PII).
         """
-        if isinstance(blocks, list) and len(blocks) > 0 and isinstance(blocks[0], SayouBlock):
+        if (
+            isinstance(blocks, list)
+            and len(blocks) > 0
+            and isinstance(blocks[0], SayouBlock)
+        ):
             return 0.5
         return 0.0
 

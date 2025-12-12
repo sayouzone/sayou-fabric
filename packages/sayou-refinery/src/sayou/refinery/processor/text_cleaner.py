@@ -1,11 +1,13 @@
 import re
 from typing import List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock
 
 from ..interfaces.base_processor import BaseProcessor
 
 
+@register_component("processor")
 class TextCleaner(BaseProcessor):
     """
     (Tier 2) Cleans text content using regex and whitespace normalization.
@@ -14,6 +16,12 @@ class TextCleaner(BaseProcessor):
     """
 
     component_name = "TextCleaner"
+
+    @classmethod
+    def can_handle(cls, blocks: list) -> float:
+        if super().can_handle(blocks) > 0:
+            return 1.0
+        return 0.0
 
     def initialize(
         self, patterns: List[str] = None, normalize_space: bool = True, **kwargs

@@ -52,8 +52,8 @@ def run_demo():
     }
 
     # 3. Run Pipeline
-    # source_type: 'standard_doc', 'html', 'json', etc.
-    blocks = pipeline.run(raw_doc, source_type="standard_doc")
+    # strategy: 'standard_doc', 'html', 'json', etc.
+    blocks = pipeline.run(raw_doc, strategy="standard_doc")
 
     # 4. Result
     for block in blocks:
