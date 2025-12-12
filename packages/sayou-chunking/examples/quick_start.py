@@ -13,10 +13,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 def run_demo():
     print(">>> Initializing Sayou Chunking Pipeline...")
 
-    markdown_plugin = MarkdownSplitter()
-    audited_plugin = AuditedFixedLengthSplitter()
-    pipeline = ChunkingPipeline(extra_splitters=[markdown_plugin, audited_plugin])
-    pipeline.initialize()
+    pipeline = ChunkingPipeline(extra_splitters=[MarkdownSplitter, AuditedFixedLengthSplitter])
 
     md_content = """
 # Sayou Chunking Demo
@@ -68,9 +65,9 @@ Chunking is crucial for RAG. It splits large texts into smaller pieces.
         print(f"    Audit Info: {audit_info}")
 
     output_data = [c.model_dump() for c in chunks]
-    with open("chunks_output.json", "w", encoding="utf-8") as f:
+    with open("examples/example_demo.json", "w", encoding="utf-8") as f:
         json.dump(output_data, f, indent=2, ensure_ascii=False)
-    print("\n✅ Saved results to chunks_output.json")
+    print("\n✅ Saved results to example_demo.json")
 
 
 if __name__ == "__main__":

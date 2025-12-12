@@ -7,8 +7,7 @@ from sayou.chunking.plugins.markdown_splitter import MarkdownSplitter
 class TestChunkingPipeline(unittest.TestCase):
 
     def setUp(self):
-        markdown_plugin = MarkdownSplitter()
-        self.pipeline = ChunkingPipeline(extra_splitters=[markdown_plugin])
+        self.pipeline = ChunkingPipeline(extra_splitters=[MarkdownSplitter])
         self.pipeline.initialize()
 
     def test_recursive_splitter(self):
