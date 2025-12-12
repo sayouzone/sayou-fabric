@@ -1,11 +1,13 @@
 import json
 from typing import List, Set
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock
 
 from ..interfaces.base_processor import BaseProcessor
 
 
+@register_component("processor")
 class Deduplicator(BaseProcessor):
     """
     (Tier 2) Removes duplicate blocks based on content hashing.
@@ -15,6 +17,12 @@ class Deduplicator(BaseProcessor):
     """
 
     component_name = "Deduplicator"
+
+    @classmethod
+    def can_handle(cls, blocks: list) -> float:
+        if isinstance(blocks, list) and len(blocks) > 1:
+            return 1.0
+        return 0.0
 
     def _do_process(self, blocks: List[SayouBlock]) -> List[SayouBlock]:
         """

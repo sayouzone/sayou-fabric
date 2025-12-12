@@ -1,10 +1,12 @@
 from typing import Any, Dict, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock
 
 from ..interfaces.base_processor import BaseProcessor
 
 
+@register_component("processor")
 class OutlierHandler(BaseProcessor):
     """
     (Tier 2) Handles numerical outliers in 'record' blocks.
@@ -14,6 +16,10 @@ class OutlierHandler(BaseProcessor):
     """
 
     component_name = "OutlierHandler"
+
+    @classmethod
+    def can_handle(cls, blocks: list) -> float:
+        return 0.8 if super().can_handle(blocks) > 0 else 0.0
 
     def initialize(self, outlier_rules: Dict[str, Dict[str, Any]] = None, **kwargs):
         """

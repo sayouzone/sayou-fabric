@@ -1,11 +1,13 @@
 from typing import Any, Dict, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock
 
 from ..core.exceptions import NormalizationError
 from ..interfaces.base_normalizer import BaseNormalizer
 
 
+@register_component("normalizer")
 class RecordNormalizer(BaseNormalizer):
     """
     (Tier 2) Converts structured data (Dict/List) into 'record' SayouBlocks.
@@ -16,6 +18,22 @@ class RecordNormalizer(BaseNormalizer):
 
     component_name = "RecordNormalizer"
     SUPPORTED_TYPES = ["json", "dict", "db_row", "record"]
+
+    @classmethod
+    def can_handle(cls, raw_data: Any, strategy: str = "auto") -> float:
+        if strategy in ["json", "record", "db", "dict"]:
+            return 1.0
+
+        if isinstance(raw_data, dict):
+            return 0.9
+        if (
+            isinstance(raw_data, list)
+            and len(raw_data) > 0
+            and isinstance(raw_data[0], dict)
+        ):
+            return 0.9
+
+        return 0.0
 
     def _do_normalize(self, raw_data: Any) -> List[SayouBlock]:
         """

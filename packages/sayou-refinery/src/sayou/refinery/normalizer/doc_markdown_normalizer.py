@@ -1,11 +1,13 @@
 from typing import Any, Dict, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock
 
 from ..core.exceptions import NormalizationError
 from ..interfaces.base_normalizer import BaseNormalizer
 
 
+@register_component("normalizer")
 class DocMarkdownNormalizer(BaseNormalizer):
     """
     (Tier 2) Normalizes a Sayou Document Dictionary into Markdown SayouBlocks.
@@ -17,6 +19,22 @@ class DocMarkdownNormalizer(BaseNormalizer):
 
     component_name = "DocMarkdownNormalizer"
     SUPPORTED_TYPES = ["standard_doc", "sayou_doc_json"]
+
+    @classmethod
+    def can_handle(cls, raw_data: Any, strategy: str = "auto") -> float:
+        if hasattr(raw_data, "doc_type") and hasattr(raw_data, "pages"):
+            return 1.0
+
+        if isinstance(raw_data, str):
+            if strategy == "markdown" or strategy == "standard_doc":
+                return 1.0
+            if any(
+                line.strip().startswith(("#", "-", "* "))
+                for line in raw_data.splitlines()[:10]
+            ):
+                return 0.8
+
+        return 0.0
 
     def initialize(
         self,

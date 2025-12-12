@@ -5,12 +5,14 @@ except ImportError:
 
 from typing import Any, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock
 
 from ..core.exceptions import NormalizationError
 from ..interfaces.base_normalizer import BaseNormalizer
 
 
+@register_component("normalizer")
 class HtmlTextNormalizer(BaseNormalizer):
     """
     (Tier 2) Converts HTML string into a clean Text SayouBlock.
@@ -21,6 +23,18 @@ class HtmlTextNormalizer(BaseNormalizer):
 
     component_name = "HtmlTextNormalizer"
     SUPPORTED_TYPES = ["html"]
+
+    @classmethod
+    def can_handle(cls, raw_data: Any, strategy: str = "auto") -> float:
+        if isinstance(raw_data, str):
+            if strategy == "html":
+                return 1.0
+
+            sample = raw_data[:1000].lower()
+            if "<html" in sample or "<body" in sample or "<div" in sample:
+                return 0.9
+
+        return 0.0
 
     def _do_normalize(self, raw_data: Any) -> List[SayouBlock]:
         """
@@ -55,4 +69,4 @@ class HtmlTextNormalizer(BaseNormalizer):
 
         text = re.sub(r"\n{3,}", "\n\n", text).strip()
 
-        return [SayouBlock(type="text", content=text, metadata={"source_type": "html"})]
+        return [SayouBlock(type="text", content=text, metadata={"strategy": "html"})]

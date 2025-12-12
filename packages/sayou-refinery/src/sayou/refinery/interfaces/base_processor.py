@@ -18,6 +18,16 @@ class BaseProcessor(BaseComponent):
 
     component_name = "BaseProcessor"
 
+    @classmethod
+    def can_handle(cls, blocks: List[SayouBlock]) -> float:
+        """
+        Processors are usually explicitly chained, but this allows for
+        future smart-selection (e.g., auto-detecting PII).
+        """
+        if isinstance(blocks, list) and len(blocks) > 0 and isinstance(blocks[0], SayouBlock):
+            return 0.5
+        return 0.0
+
     @measure_time
     def process(self, blocks: List[SayouBlock]) -> List[SayouBlock]:
         """
@@ -32,13 +42,19 @@ class BaseProcessor(BaseComponent):
         Raises:
             ProcessingError: If processing logic fails.
         """
+        self._emit("on_start", input_data={"blocks": len(blocks)})
         try:
             if not blocks:
                 return []
 
-            return self._do_process(blocks)
+            result = self._do_process(blocks)
+
+            self._emit("on_finish", result_data={"blocks": len(result)}, success=True)
+
+            return result
 
         except Exception as e:
+            self._emit("on_error", error=e)
             wrapped_error = ProcessingError(f"[{self.component_name}] Failed: {str(e)}")
             self.logger.error(wrapped_error, exc_info=True)
             raise wrapped_error

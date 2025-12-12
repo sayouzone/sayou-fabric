@@ -19,6 +19,20 @@ class BaseNormalizer(BaseComponent):
     component_name = "BaseNormalizer"
     SUPPORTED_TYPES = []
 
+    @classmethod
+    def can_handle(cls, raw_data: Any, strategy: str = "auto") -> float:
+        """
+        Determines if this normalizer can handle the raw input data.
+
+        Args:
+            raw_data: The input data (dict, str, Document object, etc.)
+            strategy: Explicit type hint from user (e.g. 'html', 'json')
+
+        Returns:
+            float: Confidence score (0.0 to 1.0)
+        """
+        return 0.0
+
     @measure_time
     def normalize(self, raw_data: Any) -> List[SayouBlock]:
         """
@@ -33,15 +47,22 @@ class BaseNormalizer(BaseComponent):
         Raises:
             NormalizationError: If transformation fails.
         """
+        self._emit("on_start", input_data={"type": type(raw_data).__name__})
+
         self._log(f"Normalizing data (Type: {type(raw_data).__name__})")
+
         try:
             blocks = self._do_normalize(raw_data)
+
+            self._emit("on_finish", result_data={"blocks": len(blocks)}, success=True)
+
             if not isinstance(blocks, list):
                 raise NormalizationError(f"Output must be a list, got {type(blocks)}")
 
             return blocks
 
         except Exception as e:
+            self._emit("on_error", error=e)
             wrapped_error = NormalizationError(
                 f"[{self.component_name}] Failed: {str(e)}"
             )

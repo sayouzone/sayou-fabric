@@ -1,11 +1,13 @@
 import re
 from typing import List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock
 
 from ..interfaces.base_processor import BaseProcessor
 
 
+@register_component("processor")
 class PiiMasker(BaseProcessor):
     """
     (Tier 2) Masks Personally Identifiable Information (PII) in text blocks.
@@ -15,6 +17,10 @@ class PiiMasker(BaseProcessor):
     """
 
     component_name = "PiiMasker"
+
+    @classmethod
+    def can_handle(cls, blocks: list) -> float:
+        return 1.0 if super().can_handle(blocks) > 0 else 0.0
 
     def initialize(self, mask_email: bool = True, mask_phone: bool = True, **kwargs):
         """

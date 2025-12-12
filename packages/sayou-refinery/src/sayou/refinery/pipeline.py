@@ -1,64 +1,101 @@
-from typing import Any, Dict, List, Optional
+import importlib
+import pkgutil
+from typing import Any, Dict, List, Optional, Type
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
+from sayou.core.registry import COMPONENT_REGISTRY
 from sayou.core.schemas import SayouBlock
 
 from .core.exceptions import RefineryError
 from .interfaces.base_normalizer import BaseNormalizer
 from .interfaces.base_processor import BaseProcessor
-from .normalizer.doc_markdown_normalizer import DocMarkdownNormalizer
-from .normalizer.html_text_normalizer import HtmlTextNormalizer
-from .normalizer.record_normalizer import RecordNormalizer
-from .processor.deduplicator import Deduplicator
-from .processor.imputer import Imputer
-from .processor.outlier_handler import OutlierHandler
-from .processor.pii_masker import PiiMasker
-from .processor.text_cleaner import TextCleaner
 
 
 class RefineryPipeline(BaseComponent):
     """
-    Orchestrates the data refinement process.
-    1. Selects a Normalizer to convert raw data into standard SayouBlocks.
-    2. Runs a chain of Processors to clean and transform the blocks.
+    Orchestrates the data refinement process via dynamic registry.
+
+    Workflow:
+    1. Normalization: Converts raw input (Document, HTML, JSON) into standard SayouBlocks.
+    2. Processing: Applies a chain of processors (Cleaning, Masking, Dedup) to the blocks.
     """
 
     component_name = "RefineryPipeline"
 
-    def __init__(
-        self,
-        extra_normalizers: Optional[List[BaseNormalizer]] = None,
-        processors: Optional[List[BaseProcessor]] = None,
-    ):
+    def __init__(self, **kwargs):
+        """
+        Initializes the pipeline and discovers available plugins.
+
+        Args:
+            **kwargs: Global configuration passed down to components.
+                    e.g., processors=["cleaner", "pii_masker"]
+        """
+
         super().__init__()
-        self.normalizers: Dict[str, BaseNormalizer] = {}
 
-        # 1. Register Default Normalizers
-        defaults = [DocMarkdownNormalizer(), HtmlTextNormalizer(), RecordNormalizer()]
-        self._register(defaults)
+        self.normalizer_cls_map: Dict[str, Type[BaseNormalizer]] = {}
+        self.processor_cls_map: Dict[str, Type[BaseProcessor]] = {}
 
-        # 2. Register User Extras
-        if extra_normalizers:
-            self._register(extra_normalizers)
+        self._register("sayou.refinery.normalizer")
+        self._register("sayou.refinery.processor")
+        self._register("sayou.refinery.plugins")
 
-        # 3. Setup Processors Chain
-        self.processors = (
-            processors
-            if processors is not None
-            else [
-                TextCleaner(),
-                PiiMasker(),
-                Deduplicator(),
-                Imputer(),
-                OutlierHandler(),
-            ]
-        )
+        self._load_from_registry()
 
-    def _register(self, comps: List[BaseNormalizer]):
-        for c in comps:
-            for t in getattr(c, "SUPPORTED_TYPES", []):
-                self.normalizers[t] = c
+        self.global_config = kwargs
+
+        self.initialize(**kwargs)
+
+    @classmethod
+    def process(
+        cls, raw_data: Any, strategy: str = "auto", **kwargs
+    ) -> List[SayouBlock]:
+        """
+        [Facade] One-line execution method.
+
+        Args:
+            raw_data (Any): Input data to refine.
+            strategy (str): Hint for normalizer selection (default: 'auto').
+            **kwargs: Configuration options.
+
+        Returns:
+            List[SayouBlock]: Refined data blocks.
+        """
+        instance = cls(**kwargs)
+        return instance.run(raw_data, strategy, **kwargs)
+
+    def _register(self, package_name: str):
+        """
+        Automatically discovers and registers plugins from the specified package.
+
+        Args:
+            package_name (str): The dot-separated package path (e.g., 'sayou.refinery.plugins').
+        """
+        try:
+            package = importlib.import_module(package_name)
+            if hasattr(package, "__path__"):
+                for _, name, _ in pkgutil.iter_modules(package.__path__):
+                    full_name = f"{package_name}.{name}"
+                    try:
+                        importlib.import_module(full_name)
+                        self._log(f"Discovered module: {full_name}", level="debug")
+                    except Exception as e:
+                        self._log(
+                            f"Failed to import module {full_name}: {e}", level="warning"
+                        )
+        except ImportError as e:
+            self._log(f"Package not found: {package_name} ({e})", level="debug")
+
+    def _load_from_registry(self):
+        """
+        Populates local component maps from the global registry.
+        """
+        if "normalizer" in COMPONENT_REGISTRY:
+            self.normalizer_cls_map.update(COMPONENT_REGISTRY["normalizer"])
+
+        if "processor" in COMPONENT_REGISTRY:
+            self.processor_cls_map.update(COMPONENT_REGISTRY["processor"])
 
     @safe_run(default_return=None)
     def initialize(self, **kwargs):
@@ -66,44 +103,140 @@ class RefineryPipeline(BaseComponent):
         Initialize all sub-components (Normalizers and Processors).
         Passes global configuration (like PII masking rules) down to components.
         """
-        for norm in set(self.normalizers.values()):
-            norm.initialize(**kwargs)
+        """
+        Updates global configuration and logs status.
+        Actual component instantiation happens lazily during run().
+        
+        Args:
+            **kwargs: Updates to the global configuration.
+        """
+        self.global_config.update(kwargs)
 
-        for proc in self.processors:
-            proc.initialize(**kwargs)
-
+        n_norm = len(self.normalizer_cls_map)
+        n_proc = len(self.processor_cls_map)
         self._log(
-            f"Refinery initialized with {len(self.processors)} processors in chain."
+            f"RefineryPipeline initialized. Available: {n_norm} Normalizers, {n_proc} Processors."
         )
 
-    def run(self, raw_data: Any, source_type: str = "standard_doc") -> List[SayouBlock]:
+    def run(
+        self,
+        raw_data: Any,
+        strategy: str = "auto",
+        processors: Optional[List[str]] = None,
+        **kwargs,
+    ) -> List[SayouBlock]:
         """
-        Execute the refinement pipeline.
+        Executes the refinement pipeline: Normalize -> Process Chain.
 
         Args:
-            raw_data: The raw input data (dict, html string, db row list, etc.)
-            source_type: The type of input data (e.g., 'standard_doc', 'html', 'json')
+            raw_data (Any): Input data (Document object, dict, string, etc.).
+            strategy (str): Hint for normalizer (default: 'auto').
+            processors (List[str], optional): List of processor names to execute in order.
+                                            If None, executes all registered processors (or a default set).
+            **kwargs: Runtime configuration.
 
         Returns:
             List[SayouBlock]: A list of clean, normalized blocks.
         """
-        # Step 1: Normalize (Structure Transformation)
-        normalizer = self.normalizers.get(source_type)
-        if not normalizer:
-            supported = list(self.normalizers.keys())
-            raise RefineryError(
-                f"Unknown source_type '{source_type}'. Supported: {supported}"
-            )
-
-        try:
-            blocks = normalizer.normalize(raw_data)
-        except Exception as e:
-            self.logger.error(f"Normalization step failed: {e}")
+        if raw_data is None:
             return []
 
-        # Step 2: Process (Content Cleaning)
-        # Processors modify blocks in-place or return new lists
-        for processor in self.processors:
-            blocks = processor.process(blocks)
+        run_config = {**self.global_config, **kwargs}
 
+        self._emit("on_start", input_data={"strategy": strategy})
+
+        # ---------------------------------------------------------
+        # Step 1: Normalize (Smart Routing)
+        # ---------------------------------------------------------
+        normalizer_cls = self._resolve_normalizer(raw_data, strategy)
+
+        if not normalizer_cls:
+            error_msg = f"No suitable normalizer found for strategy='{strategy}'"
+            self._emit("on_error", error=Exception(error_msg))
+            raise RefineryError(error_msg)
+
+        # Instantiate Normalizer
+        normalizer = normalizer_cls()
+        normalizer.initialize(**run_config)
+
+        try:
+            self._log(f"Normalizing with {normalizer.component_name}...")
+            blocks = normalizer.normalize(raw_data)
+        except Exception as e:
+            self._emit("on_error", error=e)
+            self._log(f"Normalization failed: {e}", level="error")
+            return []
+
+        # ---------------------------------------------------------
+        # Step 2: Process Chain (Dynamic Execution)
+        # ---------------------------------------------------------
+        chain_names = (
+            processors if processors is not None else run_config.get("processors", [])
+        )
+
+        if not chain_names and not processors:
+            chain_names = []
+
+        active_processors = []
+
+        for name in chain_names:
+            proc_cls = self._resolve_processor_by_name(name)
+            if proc_cls:
+                proc = proc_cls()
+                proc.initialize(**run_config)
+                active_processors.append(proc)
+            else:
+                self._log(f"Processor '{name}' not found in registry.", level="warning")
+
+        for proc in active_processors:
+            try:
+                self._log(f"Running Processor: {proc.component_name}")
+                blocks = proc.process(blocks)
+            except Exception as e:
+                self._log(f"Processor {proc.component_name} failed: {e}", level="error")
+
+        self._emit("on_finish", result_data={"blocks_count": len(blocks)}, success=True)
         return blocks
+
+    def _resolve_normalizer(
+        self, raw_data: Any, strategy: str
+    ) -> Optional[Type[BaseNormalizer]]:
+        """
+        Selects the best normalizer based on score or explicit type match.
+        """
+        best_score = 0.0
+        best_cls = None
+
+        # 1. Score-based Check (can_handle)
+        for cls in set(self.normalizer_cls_map.values()):
+            try:
+                score = cls.can_handle(raw_data, strategy)
+                if score > best_score:
+                    best_score = score
+                    best_cls = cls
+            except Exception:
+                continue
+
+        if best_cls and best_score > 0.0:
+            return best_cls
+
+        # 2. Type-based Fallback (Explicit String Match)
+        if strategy in self.normalizer_cls_map:
+            return self.normalizer_cls_map[strategy]
+
+        return None
+
+    def _resolve_processor_by_name(self, name: str) -> Optional[Type[BaseProcessor]]:
+        """
+        Finds a processor class by its component_name or registry key.
+        """
+        # 1. Exact Key Match
+        if name in self.processor_cls_map:
+            return self.processor_cls_map[name]
+
+        # 2. Component Name Match (Loop search)
+        for cls in self.processor_cls_map.values():
+            if getattr(cls, "component_name", "") == name:
+                return cls
+
+        return None

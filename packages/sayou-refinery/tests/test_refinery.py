@@ -30,7 +30,7 @@ class TestRefineryPipeline(unittest.TestCase):
             ]
         }
 
-        blocks = self.pipeline.run(raw_doc, source_type="standard_doc")
+        blocks = self.pipeline.run(raw_doc, strategy="standard_doc")
 
         self.assertEqual(len(blocks), 1)
         self.assertEqual(blocks[0].type, "md")
@@ -49,7 +49,7 @@ class TestRefineryPipeline(unittest.TestCase):
                 }
             ]
         }
-        blocks = self.pipeline.run(raw_doc, source_type="standard_doc")
+        blocks = self.pipeline.run(raw_doc, strategy="standard_doc")
 
         # 3개 입력 -> 2개 출력 (중복 제거)
         self.assertEqual(len(blocks), 2)
@@ -66,7 +66,7 @@ class TestRefineryPipeline(unittest.TestCase):
             {"id": 3, "tag": "B", "score": 90},  # 정상
         ]
 
-        blocks = self.pipeline.run(raw_records, source_type="json")
+        blocks = self.pipeline.run(raw_records, strategy="json")
 
         # 3개 입력 -> 2개 출력
         self.assertEqual(len(blocks), 2)

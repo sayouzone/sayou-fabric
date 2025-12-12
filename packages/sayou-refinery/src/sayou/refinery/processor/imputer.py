@@ -1,10 +1,12 @@
 from typing import Any, Dict, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock
 
 from ..interfaces.base_processor import BaseProcessor
 
 
+@register_component("processor")
 class Imputer(BaseProcessor):
     """
     (Tier 2) Fills missing values in 'record' type blocks using defined rules.
@@ -13,6 +15,12 @@ class Imputer(BaseProcessor):
     """
 
     component_name = "Imputer"
+
+    @classmethod
+    def can_handle(cls, blocks: list) -> float:
+        if super().can_handle(blocks) > 0:
+            return 0.8
+        return 0.0
 
     def initialize(self, imputation_rules: Dict[str, Any] = None, **kwargs):
         """
