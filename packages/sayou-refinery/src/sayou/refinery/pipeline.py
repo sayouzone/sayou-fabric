@@ -49,7 +49,11 @@ class RefineryPipeline(BaseComponent):
 
     @classmethod
     def process(
-        cls, raw_data: Any, strategy: str = "auto", **kwargs
+        cls,
+        raw_data: Any,
+        strategy: str = "auto",
+        processors: List[str] = None,
+        **kwargs,
     ) -> List[SayouBlock]:
         """
         [Facade] One-line execution method.
@@ -63,7 +67,7 @@ class RefineryPipeline(BaseComponent):
             List[SayouBlock]: Refined data blocks.
         """
         instance = cls(**kwargs)
-        return instance.run(raw_data, strategy, **kwargs)
+        return instance.run(raw_data, strategy, processors, **kwargs)
 
     def _register(self, package_name: str):
         """

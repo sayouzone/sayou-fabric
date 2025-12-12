@@ -26,10 +26,10 @@ class HtmlTextNormalizer(BaseNormalizer):
 
     @classmethod
     def can_handle(cls, raw_data: Any, strategy: str = "auto") -> float:
-        if isinstance(raw_data, str):
-            if strategy == "html":
-                return 1.0
+        if strategy in ["html"]:
+            return 1.0
 
+        if isinstance(raw_data, str):
             sample = raw_data[:1000].lower()
             if "<html" in sample or "<body" in sample or "<div" in sample:
                 return 0.9

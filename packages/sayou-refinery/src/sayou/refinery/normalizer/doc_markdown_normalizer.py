@@ -22,12 +22,13 @@ class DocMarkdownNormalizer(BaseNormalizer):
 
     @classmethod
     def can_handle(cls, raw_data: Any, strategy: str = "auto") -> float:
+        if strategy in ["markdown", "standard_doc"]:
+            return 1.0
+
         if hasattr(raw_data, "doc_type") and hasattr(raw_data, "pages"):
             return 1.0
 
         if isinstance(raw_data, str):
-            if strategy == "markdown" or strategy == "standard_doc":
-                return 1.0
             if any(
                 line.strip().startswith(("#", "-", "* "))
                 for line in raw_data.splitlines()[:10]
