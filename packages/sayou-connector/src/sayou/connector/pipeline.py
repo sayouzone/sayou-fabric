@@ -40,6 +40,18 @@ class ConnectorPipeline(BaseComponent):
 
         self._load_from_registry()
 
+        self.initialize(**kwargs)
+
+    @classmethod
+    def process(cls, source: str, strategy: str = "auto", **kwargs) -> Iterator[SayouPacket]:
+        """
+        [Facade] 1-Line Execution Method.
+        Creates an instance, runs it, and returns the result immediately.
+        """
+        instance = cls(**kwargs)
+        return instance.run(source, strategy, **kwargs)
+    
+
     def _register(self, package_name: str):
         """
         Automatically discovers and registers plugins from the specified package.
