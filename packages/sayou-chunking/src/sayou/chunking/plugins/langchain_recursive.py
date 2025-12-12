@@ -1,5 +1,6 @@
-from typing import List
+from typing import Any, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock, SayouChunk
 
 from ..splitter.recursive_splitter import RecursiveSplitter
@@ -10,6 +11,7 @@ except ImportError:
     RecursiveCharacterTextSplitter = None
 
 
+@register_component("splitter")
 class LangChainRecursiveSplitter(RecursiveSplitter):
     """
     Adapter for LangChain's RecursiveCharacterTextSplitter.
@@ -18,6 +20,12 @@ class LangChainRecursiveSplitter(RecursiveSplitter):
 
     component_name = "LangChainRecursiveSplitter"
     SUPPORTED_TYPES = ["langchain_recursive"]
+
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        if strategy in ["langchain_recursive"]:
+            return 1.0
+        return 0.0
 
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """

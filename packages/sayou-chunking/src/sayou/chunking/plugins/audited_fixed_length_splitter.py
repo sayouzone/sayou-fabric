@@ -1,11 +1,13 @@
 import time
-from typing import List
+from typing import Any, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock, SayouChunk
 
 from ..splitter.fixed_length_splitter import FixedLengthSplitter
 
 
+@register_component("splitter")
 class AuditedFixedLengthSplitter(FixedLengthSplitter):
     """
     Fixed Splitter with auditing.
@@ -16,6 +18,12 @@ class AuditedFixedLengthSplitter(FixedLengthSplitter):
 
     component_name = "AuditedFixedLengthSplitter"
     SUPPORTED_TYPES = ["audited_fixed"]
+
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        if strategy == "audited_fixed":
+            return 1.0
+        return 0.0
 
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """

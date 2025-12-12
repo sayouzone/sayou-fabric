@@ -1,12 +1,14 @@
 import re
-from typing import List, Optional
+from typing import Any, List, Optional
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock, SayouChunk
 
 from ..splitter.recursive_splitter import RecursiveSplitter
 from ..utils.text_segmenter import TextSegmenter
 
 
+@register_component("splitter")
 class MarkdownSplitter(RecursiveSplitter):
     """
     Markdown-aware Splitter.
@@ -22,6 +24,51 @@ class MarkdownSplitter(RecursiveSplitter):
     MARKDOWN_SEPARATORS = [r"\n#{1,6} ", "\n\n", "\n", r"(?<=[.?!])\s+", " ", ""]
     PROTECTED_PATTERNS = [r"(?s)```.*?```", r"(?m)^(?:\|[^\n]*\|(?:\n|$))+"]
     SECTION_SPLIT_PATTERN = r"(?m)^(?=#{1,6} |[-*] |\d+\. )"
+
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        """
+        Smart detection logic to identify Markdown/Structural content.
+
+        Prioritizes:
+        1. Explicit strategy requests.
+        2. SayouBlock metadata (from Refinery).
+        3. Raw string regex patterns (Headers, Tables, Fences).
+        """
+        if strategy in ["markdown", "md"]:
+            return 1.0
+
+        if isinstance(input_data, list) and len(input_data) > 0:
+            sample_block = input_data[0]
+            if isinstance(sample_block, SayouBlock):
+                if sample_block.type in ["md", "markdown", "html", "table"]:
+                    return 0.95
+
+                if isinstance(sample_block.content, str):
+                    input_data = sample_block.content
+                else:
+                    return 0.0
+
+        if isinstance(input_data, str):
+            score = 0.0
+
+            if re.search(r"(?m)^#{1,6}\s", input_data):
+                score += 0.5
+
+            if re.search(r"(?m)^\|.*\|.*\|$", input_data) and re.search(
+                r"(?m)^\|?[\s-]*\|[\s-]*\|?$", input_data
+            ):
+                score += 0.3
+
+            if "```" in input_data or "~~~" in input_data:
+                score += 0.2
+
+            if re.search(r"<(?:\w+)(?:\s+[^>]*)?>", input_data):
+                score += 0.2
+
+            return min(score, 0.95)
+
+        return 0.0
 
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """

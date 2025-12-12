@@ -1,96 +1,207 @@
-from typing import Any, Dict, List, Optional
+import importlib
+import pkgutil
+from typing import Any, Dict, List, Optional, Type
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
+from sayou.core.registry import COMPONENT_REGISTRY
 from sayou.core.schemas import SayouChunk
 
 from .core.exceptions import SplitterError
 from .interfaces.base_splitter import BaseSplitter
-from .splitter.agentic_splitter import AgenticSplitter
-from .splitter.fixed_length_splitter import FixedLengthSplitter
-from .splitter.parent_document_splitter import ParentDocumentSplitter
-from .splitter.recursive_splitter import RecursiveSplitter
-from .splitter.semantic_splitter import SemanticSplitter
-from .splitter.structure_splitter import StructureSplitter
 
 
 class ChunkingPipeline(BaseComponent):
     """
-    Orchestrates the text chunking process.
+    Orchestrates the text chunking process via dynamic registry.
 
-    This pipeline acts as a factory and dispatcher, routing the input data
-    to the specific splitter strategy (e.g., recursive, markdown, semantic)
-    requested by the user.
+    This pipeline acts as a factory and dispatcher, routing input data
+    to the most appropriate splitter strategy (Recursive, Semantic, Markdown, etc.)
+    based on 'can_handle' scores or explicit strategy requests.
     """
 
     component_name = "ChunkingPipeline"
 
-    def __init__(self, extra_splitters: Optional[List[BaseSplitter]] = None):
+    def __init__(self, **kwargs):
         """
-        Initialize the pipeline with default and optional custom splitters.
+        Initialize the pipeline and discover available splitters.
 
         Args:
-            extra_splitters (List[BaseSplitter], optional): Custom splitters to register.
+            **kwargs: Global configuration passed down to splitters.
         """
         super().__init__()
-        self.splitters: Dict[str, BaseSplitter] = {}
 
-        default_splitters = [
-            AgenticSplitter(),
-            RecursiveSplitter(),
-            FixedLengthSplitter(),
-            StructureSplitter(),
-            SemanticSplitter(),
-            ParentDocumentSplitter(),
-        ]
+        self.splitters_cls_map: Dict[str, Type[BaseSplitter]] = {}
 
-        self._register(default_splitters)
-        if extra_splitters:
-            print("======")
-            self._register(extra_splitters)
+        self._register("sayou.chunking.splitter")
+        self._register("sayou.chunking.plugins")
 
-    def _register(self, splitters: List[BaseSplitter]):
+        self._load_from_registry()
+
+        self.global_config = kwargs
+
+        self.initialize(**kwargs)
+
+    @classmethod
+    def process(
+        cls,
+        input_data: Any,
+        strategy: str = "auto",
+        **kwargs,
+    ) -> List[SayouChunk]:
         """
-        Register a list of splitters into the internal strategy map.
+        [Facade] One-line execution method.
+
+        Instantiates the pipeline and runs the chunking process immediately.
 
         Args:
-            splitters (List[BaseSplitter]): Splitter instances to register.
+            input_data (Any): Input text or data structure to chunk.
+            strategy (str): Splitting strategy hint (default: 'auto').
+            **kwargs: Configuration options (chunk_size, etc.).
+
+        Returns:
+            List[SayouChunk]: A list of generated text chunks.
         """
-        for s in splitters:
-            for t in getattr(s, "SUPPORTED_TYPES", []):
-                self.splitters[t] = s
+        instance = cls(**kwargs)
+        return instance.run(input_data, strategy, **kwargs)
+
+    def _register(self, package_name: str):
+        """
+        Automatically discovers and registers plugins from the specified package.
+
+        Args:
+            package_name (str): The dot-separated package path.
+        """
+        try:
+            package = importlib.import_module(package_name)
+            if hasattr(package, "__path__"):
+                for _, name, _ in pkgutil.iter_modules(package.__path__):
+                    full_name = f"{package_name}.{name}"
+                    try:
+                        importlib.import_module(full_name)
+                        self._log(f"Discovered module: {full_name}", level="debug")
+                    except Exception as e:
+                        self._log(
+                            f"Failed to import module {full_name}: {e}", level="warning"
+                        )
+        except ImportError as e:
+            self._log(f"Package not found: {package_name} ({e})", level="debug")
+
+    def _load_from_registry(self):
+        """
+        Populates local component maps from the global registry.
+        """
+        if "normalizer" in COMPONENT_REGISTRY:
+            self.splitters_cls_map.update(COMPONENT_REGISTRY["normalizer"])
 
     @safe_run(default_return=None)
     def initialize(self, **kwargs):
         """
-        Initialize all registered splitters.
+        Initialize all sub-components (Splitters).
 
-        Passes global configuration (e.g., default chunk_size) to all splitters.
+        Updates global configuration and logs status.
+        Actual component instantiation happens lazily during run().
+
+        Args:
+            **kwargs: Updates to the global configuration.
         """
-        for s in set(self.splitters.values()):
-            s.initialize(**kwargs)
-        self._log(
-            f"ChunkingPipeline initialized. Strategies: {list(self.splitters.keys())}"
-        )
+        self.global_config.update(kwargs)
 
-    def run(self, input_data: Any, strategy: str = "default") -> List[SayouChunk]:
+        n_split = len(self.splitters_cls_map)
+        self._log(f"ChunkingPipeline initialized. Available: {n_split} Splitters")
+
+    def run(
+        self,
+        input_data: Any,
+        strategy: str = "auto",
+        **kwargs,
+    ) -> List[SayouChunk]:
         """
         Execute the chunking strategy on the input data.
 
+        Orchestration Flow:
+        1. Merge Configurations (Global + Runtime).
+        2. Resolve Splitter (Strategy > Score).
+        3. Instantiate & Initialize Splitter.
+        4. Execute Splitter.
+
         Args:
-            input_data (Any): Text string, Dict, or InputDocument object.
-            strategy (str): The splitting strategy to use (default: 'default').
+            input_data (Any): Text string, Dict, or SayouBlock list.
+            strategy (str): The splitting strategy to use (default: 'auto').
+            **kwargs: Runtime configuration options.
 
         Returns:
             List[SayouChunk]: A list of generated Chunk objects.
 
         Raises:
-            SplitterError: If the strategy is unknown or execution fails.
+            SplitterError: If no suitable splitter is found or execution fails.
         """
-        splitter = self.splitters.get(strategy)
-        if not splitter:
-            raise SplitterError(
-                f"Unknown strategy '{strategy}'. Available: {list(self.splitters.keys())}"
-            )
+        if not input_data:
+            return []
 
-        return splitter.split(input_data)
+        # 1. Config Merge
+        run_config = {**self.global_config, **kwargs}
+
+        self._emit("on_start", input_data={"strategy": strategy})
+
+        # 2. Resolve Splitter
+        splitter_cls = self._resolve_splitter(input_data, strategy)
+
+        if not splitter_cls:
+            error_msg = f"No suitable splitter found for strategy='{strategy}'"
+            self._emit("on_error", error=Exception(error_msg))
+            raise SplitterError(error_msg)
+
+        # 3. Instantiate & Initialize (Lazy Loading)
+        splitter = splitter_cls()
+        splitter.initialize(**run_config)
+
+        self._log(f"Routing to splitter: {splitter.component_name}")
+
+        try:
+            # 4. Execute
+            chunks = splitter.split(input_data)
+
+            self._emit(
+                "on_finish", result_data={"chunks_count": len(chunks)}, success=True
+            )
+            return chunks
+
+        except Exception as e:
+            self._emit("on_error", error=e)
+            raise e
+
+    def _resolve_splitter(
+        self, raw_data: Any, strategy: str
+    ) -> Optional[Type[BaseSplitter]]:
+        """
+        Selects the best splitter based on score or explicit type match.
+
+        Args:
+            raw_data (Any): The input data to evaluate.
+            strategy (str): The requested strategy name.
+
+        Returns:
+            Optional[Type[BaseSplitter]]: The selected splitter class or None.
+        """
+        best_score = 0.0
+        best_cls = None
+
+        # 1. Score-based Check (can_handle)
+        for cls in set(self.splitters_cls_map.values()):
+            try:
+                score = cls.can_handle(raw_data, strategy)
+                if score > best_score:
+                    best_score = score
+                    best_cls = cls
+            except Exception:
+                continue
+
+        if best_cls and best_score > 0.0:
+            return best_cls
+
+        # 2. Type-based Fallback (Explicit String Match via Registry Key)
+        if strategy in self.splitters_cls_map:
+            return self.splitters_cls_map[strategy]
+
+        return None

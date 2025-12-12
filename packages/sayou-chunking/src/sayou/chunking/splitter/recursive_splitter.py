@@ -1,11 +1,13 @@
-from typing import List
+from typing import Any, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock, SayouChunk
 
 from ..interfaces.base_splitter import BaseSplitter
 from ..utils.text_segmenter import TextSegmenter
 
 
+@register_component("splitter")
 class RecursiveSplitter(BaseSplitter):
     """
     Standard Recursive Character Splitter.
@@ -19,6 +21,16 @@ class RecursiveSplitter(BaseSplitter):
     SUPPORTED_TYPES = ["recursive", "default"]
 
     DEFAULT_SEPARATORS = ["\n\n", "\n", r"(?<=[.?!])\s+", " ", ""]
+
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        if strategy in ["recursive", "default"]:
+            return 1.0
+        
+        if strategy == "auto":
+            return 0.6
+            
+        return 0.0
 
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """

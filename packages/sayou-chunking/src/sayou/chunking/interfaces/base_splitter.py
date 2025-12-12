@@ -20,6 +20,12 @@ class BaseSplitter(BaseComponent):
     component_name = "BaseSplitter"
     SUPPORTED_TYPES: List[str] = []
 
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        """
+        """
+        return 0.0
+
     @measure_time
     def split(self, input_data: Union[Dict[str, Any], SayouBlock]) -> List[SayouChunk]:
         """
@@ -31,6 +37,8 @@ class BaseSplitter(BaseComponent):
         Returns:
             List[SayouChunk]: The resulting chunks.
         """
+        self._emit("on_start", input_data={"strategy": self.component_name})
+
         doc = self._normalize_input(input_data)
         split_config = (
             input_data.get("config", {}) if isinstance(input_data, dict) else {}
@@ -39,8 +47,12 @@ class BaseSplitter(BaseComponent):
             doc.metadata["config"] = {**doc.metadata.get("config", {}), **split_config}
 
         try:
-            return self._do_split(doc)
+            chunks = self._do_split(input_data)
+            
+            self._emit("on_finish", result_data={"chunks": len(chunks)}, success=True)
+            return chunks
         except Exception as e:
+            self._emit("on_error", error=e)
             self.logger.error(f"Split failed: {e}", exc_info=True)
             raise SplitterError(f"[{self.component_name}] {e}")
 

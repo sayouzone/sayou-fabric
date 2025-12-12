@@ -1,10 +1,12 @@
-from typing import List
+from typing import Any, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock, SayouChunk
 
 from ..interfaces.base_splitter import BaseSplitter
 
 
+@register_component("splitter")
 class AgenticSplitter(BaseSplitter):
     """
     LLM-based Splitter (Placeholder).
@@ -15,6 +17,11 @@ class AgenticSplitter(BaseSplitter):
 
     component_name = "AgenticSplitter"
     SUPPORTED_TYPES = ["llm_agent"]
+
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        if strategy in ["llm_agent"]: return 1.0
+        return 0.0
 
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """

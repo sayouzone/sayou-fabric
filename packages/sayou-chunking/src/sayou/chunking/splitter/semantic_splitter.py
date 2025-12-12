@@ -1,11 +1,13 @@
 import math
-from typing import Callable, List
+from typing import Any, Callable, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock, SayouChunk
 
 from ..interfaces.base_splitter import BaseSplitter
 
 
+@register_component("splitter")
 class SemanticSplitter(BaseSplitter):
     """
     Semantic Similarity Splitter.
@@ -16,6 +18,12 @@ class SemanticSplitter(BaseSplitter):
 
     component_name = "SemanticSplitter"
     SUPPORTED_TYPES = ["semantic"]
+
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        if strategy in ["semantic"]:
+            return 1.0
+        return 0.0
 
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """

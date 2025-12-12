@@ -1,5 +1,6 @@
-from typing import List
+from typing import Any, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock, SayouChunk
 
 from ..interfaces.base_splitter import BaseSplitter
@@ -7,6 +8,7 @@ from ..splitter.recursive_splitter import RecursiveSplitter
 from ..splitter.structure_splitter import StructureSplitter
 
 
+@register_component("splitter")
 class ParentDocumentSplitter(BaseSplitter):
     """
     Parent-Child Chunking Strategy.
@@ -17,6 +19,12 @@ class ParentDocumentSplitter(BaseSplitter):
 
     component_name = "ParentDocumentSplitter"
     SUPPORTED_TYPES = ["parent_document"]
+
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        if strategy in ["parent_document"]:
+            return 1.0
+        return 0.0
 
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         """
