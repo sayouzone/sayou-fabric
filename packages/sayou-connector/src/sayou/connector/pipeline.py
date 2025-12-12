@@ -1,6 +1,6 @@
 import importlib
 import pkgutil
-from typing import Iterator
+from typing import Dict, Iterator, Type
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
@@ -31,8 +31,8 @@ class ConnectorPipeline(BaseComponent):
         """
         super().__init__()
 
-        self.gen_map = {}
-        self.fetch_map = {}
+        self.gen_map: Dict[str, Type[BaseGenerator]] = {}
+        self.fetch_map: Dict[str, Type[BaseFetcher]] = {}
 
         self._register("sayou.connector.generator")
         self._register("sayou.connector.fetcher")
@@ -40,17 +40,20 @@ class ConnectorPipeline(BaseComponent):
 
         self._load_from_registry()
 
+        self.global_config = kwargs
+
         self.initialize(**kwargs)
 
     @classmethod
-    def process(cls, source: str, strategy: str = "auto", **kwargs) -> Iterator[SayouPacket]:
+    def process(
+        cls, source: str, strategy: str = "auto", **kwargs
+    ) -> Iterator[SayouPacket]:
         """
         [Facade] 1-Line Execution Method.
         Creates an instance, runs it, and returns the result immediately.
         """
         instance = cls(**kwargs)
         return instance.run(source, strategy, **kwargs)
-    
 
     def _register(self, package_name: str):
         """
@@ -110,6 +113,7 @@ class ConnectorPipeline(BaseComponent):
         Args:
             **kwargs: Global configuration parameters.
         """
+        self.global_config.update(kwargs)
         self._log("ConnectorPipeline initialized.")
 
     def run(
