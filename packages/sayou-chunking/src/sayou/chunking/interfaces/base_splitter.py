@@ -22,8 +22,6 @@ class BaseSplitter(BaseComponent):
 
     @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
-        """
-        """
         return 0.0
 
     @measure_time
@@ -47,8 +45,8 @@ class BaseSplitter(BaseComponent):
             doc.metadata["config"] = {**doc.metadata.get("config", {}), **split_config}
 
         try:
-            chunks = self._do_split(input_data)
-            
+            chunks = self._do_split(doc)
+
             self._emit("on_finish", result_data={"chunks": len(chunks)}, success=True)
             return chunks
         except Exception as e:
@@ -83,17 +81,17 @@ class BaseSplitter(BaseComponent):
             if not isinstance(input_data.content, str):
                 input_data.content = str(input_data.content)
             return input_data
-        
-        content = getattr(input_data, "content", None) or \
-                    input_data.get("content")
-        
-        metadata = getattr(input_data, "metadata", None) or \
-                    input_data.get("metadata", {})
-        
+
+        content = getattr(input_data, "content", None) or input_data.get("content")
+
+        metadata = getattr(input_data, "metadata", None) or input_data.get(
+            "metadata", {}
+        )
+
         if content is None:
             content = ""
-        
+
         if not isinstance(content, str):
             content = str(content)
-            
+
         return SayouBlock(type="text", content=content, metadata=metadata)

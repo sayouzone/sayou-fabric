@@ -22,12 +22,15 @@ class ChunkingPipeline(BaseComponent):
 
     component_name = "ChunkingPipeline"
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self, extra_splitters: Optional[List[Type[BaseSplitter]]] = None, **kwargs
+    ):
         """
         Initialize the pipeline and discover available splitters.
 
         Args:
-            **kwargs: Global configuration passed down to splitters.
+            extra_splitters: List of custom splitter CLASSES (not instances).
+            **kwargs: Global configuration.
         """
         super().__init__()
 
@@ -38,9 +41,26 @@ class ChunkingPipeline(BaseComponent):
 
         self._load_from_registry()
 
+        if extra_splitters:
+            for cls in extra_splitters:
+                self._register_manual(cls)
+
         self.global_config = kwargs
 
         self.initialize(**kwargs)
+
+    def _register_manual(self, cls):
+        """
+        Safely registers a user-provided class.
+        """
+        if not isinstance(cls, type):
+            raise TypeError(
+                f"Invalid splitter: {cls}. "
+                f"Please pass the CLASS itself (e.g., MySplitter), not an instance (MySplitter())."
+            )
+
+        name = getattr(cls, "component_name", cls.__name__)
+        self.splitters_cls_map[name] = cls
 
     @classmethod
     def process(
@@ -91,8 +111,8 @@ class ChunkingPipeline(BaseComponent):
         """
         Populates local component maps from the global registry.
         """
-        if "normalizer" in COMPONENT_REGISTRY:
-            self.splitters_cls_map.update(COMPONENT_REGISTRY["normalizer"])
+        if "splitter" in COMPONENT_REGISTRY:
+            self.splitters_cls_map.update(COMPONENT_REGISTRY["splitter"])
 
     @safe_run(default_return=None)
     def initialize(self, **kwargs):
