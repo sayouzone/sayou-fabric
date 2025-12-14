@@ -20,6 +20,10 @@ class BaseAdapter(BaseComponent):
     component_name = "BaseAdapter"
     SUPPORTED_TYPES: List[str] = []
 
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        return 0.0
+
     @measure_time
     def adapt(self, input_data: Any) -> SayouOutput:
         """
