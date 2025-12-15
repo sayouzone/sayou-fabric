@@ -1,11 +1,13 @@
 from typing import Any, List, Union
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouNode, SayouOutput
 from sayou.core.vocabulary import SayouAttribute, SayouClass, SayouPredicate
 
 from ..interfaces.base_adapter import BaseAdapter
 
 
+@register_component("adapter")
 class DocumentChunkAdapter(BaseAdapter):
     """
     Standard Adapter for Sayou Chunking results.
@@ -17,6 +19,25 @@ class DocumentChunkAdapter(BaseAdapter):
 
     component_name = "DocumentChunkAdapter"
     SUPPORTED_TYPES = ["document_chunk"]
+
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        if strategy in ["document_chunk"]:
+            return 1.0
+
+        if isinstance(input_data, list) and len(input_data) > 0:
+            first = input_data[0]
+            if hasattr(first, "doc_type") or (
+                isinstance(first, dict) and "chunk_id" in first
+            ):
+                return 0.9
+
+        if hasattr(input_data, "doc_type") or (
+            isinstance(input_data, dict) and "chunk_id" in input_data
+        ):
+            return 0.9
+
+        return 0.0
 
     def _do_adapt(self, input_data: Union[List[Any], Any]) -> SayouOutput:
         """

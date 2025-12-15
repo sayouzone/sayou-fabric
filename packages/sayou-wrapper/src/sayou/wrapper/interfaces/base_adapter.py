@@ -39,17 +39,19 @@ class BaseAdapter(BaseComponent):
             AdaptationError: If the adaptation logic fails.
         """
         self._log(f"Adapting data (Type: {type(input_data).__name__})")
+        self._emit("on_start", input_data={"strategy": self.component_name})
 
         try:
             output = self._do_adapt(input_data)
 
+            self._emit("on_finish", result_data={"output": output}, success=True)
             self._log(f"Adaptation complete. Generated {len(output.nodes)} nodes.")
             return output
 
         except Exception as e:
-            wrapped_error = AdaptationError(f"[{self.component_name}] Failed: {str(e)}")
-            self.logger.error(wrapped_error, exc_info=True)
-            raise wrapped_error
+            self._emit("on_error", error=e)
+            self.logger.error(f"Adaptation failed: {e}", exc_info=True)
+            raise AdaptationError(f"[{self.component_name}] {str(e)}")
 
     @abstractmethod
     def _do_adapt(self, input_data: Any) -> SayouOutput:

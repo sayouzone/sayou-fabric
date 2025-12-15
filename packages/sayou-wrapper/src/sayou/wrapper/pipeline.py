@@ -1,10 +1,12 @@
-from typing import Any, Dict, List, Optional
+import importlib
+import pkgutil
+from typing import Any, Dict, List, Optional, Type
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
+from sayou.core.registry import COMPONENT_REGISTRY
 from sayou.core.schemas import SayouOutput
 
-from .adapter.document_chunk_adapter import DocumentChunkAdapter
 from .core.exceptions import AdaptationError
 from .interfaces.base_adapter import BaseAdapter
 
@@ -20,32 +22,102 @@ class WrapperPipeline(BaseComponent):
 
     component_name = "WrapperPipeline"
 
-    def __init__(self, extra_adapters: Optional[List[BaseAdapter]] = None):
+    def __init__(
+        self, extra_adapters: Optional[List[Type[BaseAdapter]]] = None, **kwargs
+    ):
         """
         Initialize the pipeline with default and optional custom adapters.
 
         Args:
-            extra_adapters (List[BaseAdapter], optional): Custom adapters to register.
+            extra_adapters (List[Type[BaseAdapter]], optional): Custom adapters to register.
         """
         super().__init__()
-        self.adapters: Dict[str, BaseAdapter] = {}
 
-        defaults = [DocumentChunkAdapter()]
-        self._register(defaults)
+        self.adapters_cls_map: Dict[str, Type[BaseAdapter]] = {}
+
+        self._register("sayou.wrapper.adapter")
+        self._register("sayou.wrapper.plugins")
+
+        self._load_from_registry()
 
         if extra_adapters:
-            self._register(extra_adapters)
+            for cls in extra_adapters:
+                self._register_manual(cls)
 
-    def _register(self, adapters: List[BaseAdapter]):
+        self.global_config = kwargs
+
+        self.initialize(**kwargs)
+
+    def _register_manual(self, cls):
         """
-        Register a list of adapters into the internal strategy map.
+        Safely registers a user-provided class.
+        """
+        if not isinstance(cls, type):
+            raise TypeError(
+                f"Invalid adapter: {cls}. "
+                f"Please pass the CLASS itself (e.g., MyAdapter), not an instance (MyAdapter())."
+            )
+
+        name = getattr(cls, "component_name", cls.__name__)
+        self.adapters_cls_map[name] = cls
+
+    @classmethod
+    def process(
+        cls,
+        input_data: Any,
+        strategy: str = "auto",
+        **kwargs,
+    ) -> SayouOutput:
+        """
+        [Facade] One-line execution method.
+
+        Instantiates the pipeline and executes the wrapping strategy immediately.
 
         Args:
-            adapters (List[BaseAdapter]): Adapter instances to register.
+            input_data (Any): The raw input data to be wrapped.
+                Typically a List[SayouChunk] from the ChunkingPipeline,
+                or a raw dictionary/list representing the content.
+            strategy (str): The explicit adapter strategy to use (default: 'auto').
+                If set to 'auto', the pipeline attempts to detect the best adapter
+                based on the input data structure.
+            **kwargs: Additional configuration options passed to the pipeline
+                initialization and the adapter's execution context.
+
+        Returns:
+            SayouOutput: A standardized container holding the graph of nodes
+                and associated metadata ready for the Assembler/Loader.
         """
-        for a in adapters:
-            for t in getattr(a, "SUPPORTED_TYPES", []):
-                self.adapters[t] = a
+        instance = cls(**kwargs)
+        return instance.run(input_data, strategy, **kwargs)
+
+    def _register(self, package_name: str):
+        """
+        Automatically discovers and registers plugins from the specified package.
+
+        Args:
+            package_name (str): The dot-separated package path.
+        """
+        try:
+            package = importlib.import_module(package_name)
+            if hasattr(package, "__path__"):
+                for _, name, _ in pkgutil.iter_modules(package.__path__):
+                    full_name = f"{package_name}.{name}"
+                    try:
+                        importlib.import_module(full_name)
+                        self._log(f"Discovered module: {full_name}", level="debug")
+                    except Exception as e:
+                        self._log(
+                            f"Failed to import module {full_name}: {e}", level="warning"
+                        )
+        except ImportError as e:
+            self._log(f"Package not found: {package_name} ({e})", level="debug")
+
+    def _load_from_registry(self):
+        """
+        Populates local component maps from the global registry.
+        """
+        if "adapter" in COMPONENT_REGISTRY:
+            self.adapters_cls_map.update(COMPONENT_REGISTRY["adapter"])
 
     @safe_run(default_return=None)
     def initialize(self, **kwargs):
@@ -54,21 +126,28 @@ class WrapperPipeline(BaseComponent):
 
         Propagates global configuration to all adapters, although adapters
         are typically stateless.
-        """
-        for adapter in set(self.adapters.values()):
-            if hasattr(adapter, "initialize"):
-                adapter.initialize(**kwargs)
-        self._log(
-            f"WrapperPipeline initialized. Strategies: {list(self.adapters.keys())}"
-        )
 
-    def run(self, input_data: Any, strategy: str = "default") -> SayouOutput:
+        Args:
+            **kwargs: Updates to the global configuration.
+        """
+        self.global_config.update(kwargs)
+
+        n_adap = len(self.adapters_cls_map)
+        self._log(f"WrapperPipeline initialized. Strategies: {n_adap} Adapters")
+
+    def run(
+        self,
+        input_data: Any,
+        strategy: str = "auto",
+        **kwargs,
+    ) -> SayouOutput:
         """
         Execute the wrapping strategy.
 
         Args:
             input_data (Any): The input data (e.g., List[Chunk] or raw Dict).
-            strategy (str): The adapter strategy to use (default: 'default').
+            strategy (str): The adapter strategy to use (default: 'auto').
+            **kwargs: Additional keyword arguments to pass to the adapter.
 
         Returns:
             SayouOutput: A container holding the list of standardized SayouNodes.
@@ -76,11 +155,70 @@ class WrapperPipeline(BaseComponent):
         Raises:
             AdaptationError: If the strategy is unknown or execution fails.
         """
-        adapter = self.adapters.get(strategy)
-        if not adapter:
-            raise AdaptationError(
-                f"Unknown strategy '{strategy}'. Available: {list(self.adapters.keys())}"
-            )
+        if not input_data:
+            return SayouOutput(nodes=[])
 
-        self._log(f"Wrapping using strategy: {strategy}")
-        return adapter.adapt(input_data)
+        # 1. Config Merge
+        run_config = {**self.global_config, **kwargs}
+
+        self._emit("on_start", input_data={"strategy": strategy})
+
+        # 2. Resolve Adapter
+        adapter_cls = self._resolve_adapter(input_data, strategy)
+
+        if not adapter_cls:
+            error_msg = f"No suitable adapter found for strategy='{strategy}'"
+            self._emit("on_error", error=Exception(error_msg))
+            raise AdaptationError(error_msg)
+
+        # 3. Instantiate & Initialize (Lazy Loading)
+        adapter = adapter_cls()
+        adapter.initialize(**run_config)
+
+        self._log(f"Routing to adapter: {adapter.component_name}")
+
+        try:
+            # 4. Execute
+            output = adapter.adapt(input_data)
+
+            self._emit("on_finish", result_data={"output": output}, success=True)
+            return output
+
+        except Exception as e:
+            self._emit("on_error", error=e)
+            raise e
+
+    def _resolve_adapter(
+        self, raw_data: Any, strategy: str
+    ) -> Optional[Type[BaseAdapter]]:
+        """
+        Selects the best adapter based on score or explicit type match.
+
+        Args:
+            raw_data (Any): The input data to evaluate.
+            strategy (str): The requested strategy name.
+
+        Returns:
+            Optional[Type[BaseAdapter]]: The selected adapter class or None.
+        """
+        best_score = 0.0
+        best_cls = None
+
+        # 1. Score-based Check (can_handle)
+        for cls in set(self.adapters_cls_map.values()):
+            try:
+                score = cls.can_handle(raw_data, strategy)
+                if score > best_score:
+                    best_score = score
+                    best_cls = cls
+            except Exception:
+                continue
+
+        if best_cls and best_score > 0.0:
+            return best_cls
+
+        # 2. Type-based Fallback (Explicit String Match via Registry Key)
+        if strategy in self.adapters_cls_map:
+            return self.adapters_cls_map[strategy]
+
+        return None
