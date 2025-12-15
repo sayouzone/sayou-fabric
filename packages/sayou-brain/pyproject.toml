@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-brain"
-version = "0.2.1"
+version = "0.2.2"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
@@ -24,12 +24,12 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 dependencies = [
-    "sayou-core == 0.2.0",
-    "sayou-connector ~= 0.2.8",
-    "sayou-document ~= 0.2.0",
-    "sayou-refinery ~= 0.2.0",
-    "sayou-chunking ~= 0.2.0",
-    "sayou-wrapper ~= 0.2.0",
+    "sayou-core == 0.2.4",
+    "sayou-connector ~= 0.2.10",
+    "sayou-document ~= 0.2.4",
+    "sayou-refinery ~= 0.2.3",
+    "sayou-chunking ~= 0.2.3",
+    "sayou-wrapper ~= 0.2.1",
     "sayou-assembler ~= 0.2.0",
     "sayou-loader ~= 0.2.0",
     # "sayou-extractor ~= 0.0.3",
