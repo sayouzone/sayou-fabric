@@ -21,7 +21,7 @@ class SemanticSplitter(BaseSplitter):
 
     @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
-        if strategy in ["semantic"]:
+        if strategy in ["semantic", "embedding"]:
             return 1.0
         return 0.0
 

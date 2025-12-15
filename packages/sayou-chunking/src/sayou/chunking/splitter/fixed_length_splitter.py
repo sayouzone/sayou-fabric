@@ -20,12 +20,12 @@ class FixedLengthSplitter(BaseSplitter):
 
     @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
-        if strategy in ["fixed_length"]:
+        if strategy in ["fixed", "token", "char", "length"]:
             return 1.0
 
-        if strategy == "auto":
-            return 0.5
-            
+        if isinstance(input_data, str) or isinstance(input_data, list):
+            return 0.4
+
         return 0.0
 
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:

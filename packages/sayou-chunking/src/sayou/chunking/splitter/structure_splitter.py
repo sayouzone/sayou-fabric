@@ -22,15 +22,27 @@ class StructureSplitter(RecursiveSplitter):
 
     @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
-        if strategy in ["structure"]:
+        if strategy in ["structure", "markdown", "md", "html"]:
             return 1.0
-        
+
         if isinstance(input_data, list) and len(input_data) > 0:
-            first_block = input_data[0]
-            if isinstance(first_block, SayouBlock):
-                if first_block.type in ["md", "markdown", "html"]:
-                    return 0.9
-        
+            first = input_data[0]
+            if hasattr(first, "type") and first.type in [
+                "md",
+                "markdown",
+                "html",
+                "table",
+            ]:
+                return 0.95
+
+        if isinstance(input_data, str):
+            if (
+                re.search(r"(?m)^#{1,6}\s", input_data)
+                or "```" in input_data
+                or re.search(r"<[^>]+>", input_data)
+            ):
+                return 0.9
+
         return 0.0
 
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:

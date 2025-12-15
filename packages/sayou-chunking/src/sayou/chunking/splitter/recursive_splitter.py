@@ -26,10 +26,10 @@ class RecursiveSplitter(BaseSplitter):
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
         if strategy in ["recursive", "default"]:
             return 1.0
-        
-        if strategy == "auto":
+
+        if isinstance(input_data, str) or isinstance(input_data, list):
             return 0.6
-            
+
         return 0.0
 
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
