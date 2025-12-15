@@ -1,11 +1,13 @@
 import json
-from typing import List
+from typing import Any, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouOutput
 
 from ..interfaces.base_builder import BaseBuilder
 
 
+@register_component("builder")
 class CypherBuilder(BaseBuilder):
     """
     Converts SayouNodes into Neo4j Cypher Queries.
@@ -16,6 +18,13 @@ class CypherBuilder(BaseBuilder):
 
     component_name = "CypherBuilder"
     SUPPORTED_TYPES = ["cypher", "neo4j"]
+
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        if strategy in ["cypher", "neo4j"]:
+            return 1.0
+
+        return 0.0
 
     def _do_build(self, data: SayouOutput) -> List[str]:
         """
@@ -68,5 +77,4 @@ class CypherBuilder(BaseBuilder):
         """
         Sanitize or format the ontology label for Cypher syntax.
         """
-        # 네임스페이스 콜론(:)은 Cypher 라벨에서 이스케이프 필요.
-        return label
+        return label.replace(":", "_")

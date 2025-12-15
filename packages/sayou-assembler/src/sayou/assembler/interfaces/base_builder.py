@@ -20,6 +20,10 @@ class BaseBuilder(BaseComponent):
     component_name = "BaseBuilder"
     SUPPORTED_TYPES = []
 
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        return 0.0
+
     @measure_time
     def build(self, input_data: Union[SayouOutput, Dict]) -> Any:
         """
@@ -34,6 +38,7 @@ class BaseBuilder(BaseComponent):
         Raises:
             BuildError: If input is invalid or building fails.
         """
+        self._emit("on_start", input_data={"strategy": self.component_name})
         self._log(f"Building data with {self.component_name}")
 
         # Input Normalization
@@ -49,11 +54,14 @@ class BaseBuilder(BaseComponent):
             raise BuildError(f"Unsupported input type: {type(input_data)}")
 
         try:
-            return self._do_build(sayou_output)
+            output = self._do_build(sayou_output)
+
+            self._emit("on_finish", result_data={"output": output}, success=True)
+            return output
         except Exception as e:
-            wrapped_error = BuildError(f"[{self.component_name}] Failed: {str(e)}")
-            self.logger.error(wrapped_error, exc_info=True)
-            raise wrapped_error
+            self._emit("on_error", error=e)
+            self.logger.error(f"Build failed: {e}", exc_info=True)
+            raise BuildError(f"[{self.component_name}] Failed: {str(e)}")
 
     @abstractmethod
     def _do_build(self, data: SayouOutput) -> Any:

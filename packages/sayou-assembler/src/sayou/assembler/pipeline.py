@@ -1,10 +1,11 @@
-from typing import Any, Dict, List, Optional
+import importlib
+import pkgutil
+from typing import Any, Dict, List, Optional, Type
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
+from sayou.core.registry import COMPONENT_REGISTRY
 
-from .builder.graph_builder import GraphBuilder
-from .builder.vector_builder import VectorBuilder
 from .core.exceptions import BuildError
 from .interfaces.base_builder import BaseBuilder
 
@@ -20,66 +21,185 @@ class AssemblerPipeline(BaseComponent):
 
     component_name = "AssemblerPipeline"
 
-    def __init__(self, extra_builders: Optional[List[BaseBuilder]] = None):
+    def __init__(
+        self, extra_builders: Optional[List[Type[BaseBuilder]]] = None, **kwargs
+    ):
         """
         Initialize the pipeline with default and custom builders.
 
         Args:
-            extra_builders (List[BaseBuilder], optional): Custom builders to register.
+            extra_builders: List of custom builders CLASSES (not instances).
+            **kwargs: Global configuration.
         """
         super().__init__()
-        self.builders: Dict[str, BaseBuilder] = {}
 
-        defaults = [GraphBuilder(), VectorBuilder()]
-        self._register(defaults)
+        self.builders_cls_map: Dict[str, Type[BaseBuilder]] = {}
+
+        self._register("sayou.assembler.builder")
+        self._register("sayou.assembler.plugins")
+
+        self._load_from_registry()
 
         if extra_builders:
-            self._register(extra_builders)
+            for cls in extra_builders:
+                self._register_manual(cls)
 
-    def _register(self, builders: List[BaseBuilder]):
+        self.global_config = kwargs
+
+        self.initialize(**kwargs)
+
+    def _register_manual(self, cls):
         """
-        Register builders into the internal strategy map.
+        Safely registers a user-provided class.
+        """
+        if not isinstance(cls, type):
+            raise TypeError(
+                f"Invalid assembler: {cls}. "
+                f"Please pass the CLASS itself (e.g., MyAssembler), not an instance (MyAssembler())."
+            )
+
+        name = getattr(cls, "component_name", cls.__name__)
+        self.builders_cls_map[name] = cls
+
+    @classmethod
+    def process(
+        cls,
+        input_data: Any,
+        strategy: str = "auto",
+        **kwargs,
+    ) -> Any:
+        """
+        [Facade] One-line execution method.
 
         Args:
-            builders (List[BaseBuilder]): Builder instances to register.
+            input_data (Any):
+            strategy (str):
+            **kwargs:
+
+        Returns:
+            Any:
         """
-        for b in builders:
-            for t in getattr(b, "SUPPORTED_TYPES", []):
-                self.builders[t] = b
+        instance = cls(**kwargs)
+        return instance.run(input_data, strategy, **kwargs)
+
+    def _register(self, package_name: str):
+        """
+        Automatically discovers and registers plugins from the specified package.
+
+        Args:
+            package_name (str): The dot-separated package path.
+        """
+        try:
+            package = importlib.import_module(package_name)
+            if hasattr(package, "__path__"):
+                for _, name, _ in pkgutil.iter_modules(package.__path__):
+                    full_name = f"{package_name}.{name}"
+                    try:
+                        importlib.import_module(full_name)
+                        self._log(f"Discovered module: {full_name}", level="debug")
+                    except Exception as e:
+                        self._log(
+                            f"Failed to import module {full_name}: {e}", level="warning"
+                        )
+        except ImportError as e:
+            self._log(f"Package not found: {package_name} ({e})", level="debug")
+
+    def _load_from_registry(self):
+        """
+        Populates local component maps from the global registry.
+        """
+        if "builder" in COMPONENT_REGISTRY:
+            self.builders_cls_map.update(COMPONENT_REGISTRY["builder"])
 
     @safe_run(default_return=None)
     def initialize(self, **kwargs):
         """
-        Initialize all registered builders.
+        Initialize all sub-components (Builders).
 
-        Passes global configuration (e.g., embedding functions) to builders.
-        """
-        for b in set(self.builders.values()):
-            if hasattr(b, "initialize"):
-                b.initialize(**kwargs)
-        self._log(
-            f"AssemblerPipeline initialized. Strategies: {list(self.builders.keys())}"
-        )
-
-    def run(self, input_data: Any, strategy: str = "graph") -> Any:
-        """
-        Execute the assembly strategy.
+        Updates global configuration and logs status.
+        Actual component instantiation happens lazily during run().
 
         Args:
-            input_data (Any): WrapperOutput object or Dictionary.
-            strategy (str): The building strategy (default: 'graph').
+            **kwargs: Updates to the global configuration.
+        """
+        self.global_config.update(kwargs)
+
+        n_builder = len(self.builders_cls_map)
+        self._log(f"AssemblerPipeline initialized. Available: {n_builder} Builders")
+
+    def run(
+        self,
+        input_data: Any,
+        strategy: str = "auto",
+        **kwargs,
+    ) -> Any:
+        """ """
+        if not input_data:
+            return []
+
+        # 1. Config Merge
+        run_config = {**self.global_config, **kwargs}
+
+        self._emit("on_start", input_data={"strategy": strategy})
+
+        # 2. Resolve Builder
+        builder_cls = self._resolve_builder(input_data, strategy)
+
+        if not builder_cls:
+            error_msg = f"No suitable builder found for strategy='{strategy}'"
+            self._emit("on_error", error=Exception(error_msg))
+            raise BuildError(error_msg)
+
+        # 3. Instantiate & Initialize (Lazy Loading)
+        builder = builder_cls()
+        builder.initialize(**run_config)
+
+        self._log(f"Routing to builder: {builder.component_name}")
+
+        try:
+            # 4. Execute
+            chunks = builder.build(input_data)
+
+            self._emit(
+                "on_finish", result_data={"chunks_count": len(chunks)}, success=True
+            )
+            return chunks
+
+        except Exception as e:
+            self._emit("on_error", error=e)
+            raise e
+
+    def _resolve_builder(
+        self, raw_data: Any, strategy: str
+    ) -> Optional[Type[BaseBuilder]]:
+        """
+        Selects the best splitter based on score or explicit type match.
+
+        Args:
+            raw_data (Any): The input data to evaluate.
+            strategy (str): The requested strategy name.
 
         Returns:
-            Any: The assembled payload (Dict, List, or Str) ready for Loader.
-
-        Raises:
-            BuildError: If the strategy is unknown or execution fails.
+            Optional[Type[BaseBuilder]]: The selected splitter class or None.
         """
-        builder = self.builders.get(strategy)
-        if not builder:
-            raise BuildError(
-                f"Unknown strategy '{strategy}'. Available: {list(self.builders.keys())}"
-            )
+        best_score = 0.0
+        best_cls = None
 
-        self._log(f"Assembling using strategy: {strategy}")
-        return builder.build(input_data)
+        # 1. Score-based Check (can_handle)
+        for cls in set(self.builders_cls_map.values()):
+            try:
+                score = cls.can_handle(raw_data, strategy)
+                if score > best_score:
+                    best_score = score
+                    best_cls = cls
+            except Exception:
+                continue
+
+        if best_cls and best_score > 0.0:
+            return best_cls
+
+        # 2. Type-based Fallback (Explicit String Match via Registry Key)
+        if strategy in self.builders_cls_map:
+            return self.builders_cls_map[strategy]
+
+        return None

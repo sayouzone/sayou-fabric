@@ -1,10 +1,12 @@
 from typing import Any, Callable, Dict, List
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouOutput
 
 from ..interfaces.base_builder import BaseBuilder
 
 
+@register_component("builder")
 class VectorBuilder(BaseBuilder):
     """
     Builds Vector Payloads from SayouNodes.
@@ -15,6 +17,13 @@ class VectorBuilder(BaseBuilder):
 
     component_name = "VectorBuilder"
     SUPPORTED_TYPES = ["vector"]
+
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        if strategy in ["vector"]:
+            return 1.0
+
+        return 0.0
 
     def initialize(self, embedding_fn: Callable = None, **kwargs):
         """

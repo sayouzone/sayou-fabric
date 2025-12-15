@@ -1,10 +1,12 @@
 from typing import Any, Dict
 
+from sayou.core.registry import register_component
 from sayou.core.schemas import SayouOutput
 
 from ..interfaces.base_builder import BaseBuilder
 
 
+@register_component("builder")
 class GraphBuilder(BaseBuilder):
     """
     Assembles SayouNodes into a standard Graph Structure (Nodes + Edges).
@@ -16,6 +18,16 @@ class GraphBuilder(BaseBuilder):
 
     component_name = "GraphBuilder"
     SUPPORTED_TYPES = ["graph", "hierarchy", "default"]
+
+    @classmethod
+    def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
+        if strategy in cls.SUPPORTED_TYPES:
+            return 1.0
+
+        if strategy == "auto":
+            return 0.8
+
+        return 0.0
 
     def _do_build(self, data: SayouOutput) -> Dict[str, Any]:
         """
