@@ -68,6 +68,9 @@ class DocMarkdownNormalizer(BaseNormalizer):
         Raises:
             NormalizationError: If `raw_data` is not a valid dictionary.
         """
+        if isinstance(raw_data, str):
+            return [SayouBlock(type="md", content=raw_data, metadata={})]
+
         if not isinstance(raw_data, dict):
             raise NormalizationError(
                 f"Input must be a Dictionary, got {type(raw_data).__name__}"
