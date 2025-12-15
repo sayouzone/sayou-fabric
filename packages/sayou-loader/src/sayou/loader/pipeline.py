@@ -1,13 +1,13 @@
-from typing import Any, Dict, List, Optional
+import importlib
+import pkgutil
+from typing import Any, Dict, List, Optional, Type
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
+from sayou.core.registry import COMPONENT_REGISTRY
 
 from .core.exceptions import WriterError
 from .interfaces.base_writer import BaseWriter
-from .writer.console_writer import ConsoleWriter
-from .writer.file_writer import FileWriter
-from .writer.jsonl_writer import JsonLineWriter
 
 
 class LoaderPipeline(BaseComponent):
@@ -20,40 +20,60 @@ class LoaderPipeline(BaseComponent):
 
     component_name = "LoaderPipeline"
 
-    def __init__(self, extra_writers: Optional[List[BaseWriter]] = None):
+    def __init__(
+        self,
+        extra_writers: Optional[List[Type[BaseWriter]]] = None,
+        **kwargs,
+    ):
         """
         Initialize all registered writers.
         Passes global configuration (e.g., DB connection pools) to writers.
         """
         super().__init__()
-        self.writers: Dict[str, BaseWriter] = {}
 
-        defaults = [FileWriter(), JsonLineWriter(), ConsoleWriter()]
-        self._register(defaults)
+        self.writers_cls_map: Dict[str, Type[BaseWriter]] = {}
+
+        self._register("sayou.loader.writer")
+        self._register("sayou.loader.plugins")
+
+        self._load_from_registry()
 
         if extra_writers:
-            self._register(extra_writers)
+            for cls in extra_writers:
+                self._register_manual(cls)
 
-    def _register(self, writers: List[BaseWriter]):
-        for w in writers:
-            for t in getattr(w, "SUPPORTED_TYPES", []):
-                self.writers[t] = w
+        self.global_config = kwargs
 
-    @safe_run(default_return=None)
-    def initialize(self, **kwargs):
-        for w in set(self.writers.values()):
-            if hasattr(w, "initialize"):
-                w.initialize(**kwargs)
-        self._log(f"LoaderPipeline initialized. Writers: {list(self.writers.keys())}")
+        self.initialize(**kwargs)
 
-    def run(
-        self, data: Any, destination: str, strategy: str = "file", **kwargs
+    def _register_manual(self, cls):
+        """
+        Safely registers a user-provided class.
+        """
+        if not isinstance(cls, type):
+            raise TypeError(
+                f"Invalid writer: {cls}. "
+                f"Please pass the CLASS itself (e.g., MyWriter), not an instance (MyWriter())."
+            )
+
+        name = getattr(cls, "component_name", cls.__name__)
+        self.writers_cls_map[name] = cls
+
+    @classmethod
+    def process(
+        cls,
+        input_data: Any,
+        destination: str,
+        strategy: str = "auto",
+        **kwargs,
     ) -> bool:
         """
-        Execute the loading strategy.
+        [Facade] One-line execution method.
+
+        Instantiates the pipeline and runs the chunking process immediately.
 
         Args:
-            data (Any): The payload to write.
+            input_data (Any): The payload to write.
             destination (str): Target location/URI.
             strategy (str): The writer strategy to use (default: 'file').
             **kwargs: Additional writer-specific options (auth, mode).
@@ -64,11 +84,142 @@ class LoaderPipeline(BaseComponent):
         Raises:
             WriterError: If the strategy is unknown or writing fails.
         """
-        writer = self.writers.get(strategy)
-        if not writer:
-            raise WriterError(
-                f"Unknown strategy '{strategy}'. Available: {list(self.writers.keys())}"
-            )
+        instance = cls(**kwargs)
+        return instance.run(input_data, destination, strategy, **kwargs)
 
-        self._log(f"Loading using strategy: {strategy}")
-        return writer.write(data, destination, **kwargs)
+    def _register(self, package_name: str):
+        """
+        Automatically discovers and registers plugins from the specified package.
+
+        Args:
+            package_name (str): The dot-separated package path.
+        """
+        try:
+            package = importlib.import_module(package_name)
+            if hasattr(package, "__path__"):
+                for _, name, _ in pkgutil.iter_modules(package.__path__):
+                    full_name = f"{package_name}.{name}"
+                    try:
+                        importlib.import_module(full_name)
+                        self._log(f"Discovered module: {full_name}", level="debug")
+                    except Exception as e:
+                        self._log(
+                            f"Failed to import module {full_name}: {e}", level="warning"
+                        )
+        except ImportError as e:
+            self._log(f"Package not found: {package_name} ({e})", level="debug")
+
+    def _load_from_registry(self):
+        """
+        Populates local component maps from the global registry.
+        """
+        if "writer" in COMPONENT_REGISTRY:
+            self.writers_cls_map.update(COMPONENT_REGISTRY["writer"])
+
+    @safe_run(default_return=None)
+    def initialize(self, **kwargs):
+        """
+        Initialize all sub-components (Writers).
+
+        Updates global configuration and logs status.
+        Actual component instantiation happens lazily during run().
+
+        Args:
+            **kwargs: Updates to the global configuration.
+        """
+        self.global_config.update(kwargs)
+
+        n_writer = len(self.writers_cls_map)
+        self._log(f"LoaderPipeline initialized. Available: {n_writer} Writers")
+
+    def run(
+        self,
+        input_data: Any,
+        destination: str,
+        strategy: str = "auto",
+        **kwargs,
+    ) -> bool:
+        """
+        Execute the loading strategy.
+
+        Args:
+            input_data (Any): The payload to write.
+            destination (str): Target location/URI.
+            strategy (str): The writer strategy to use (default: 'file').
+            **kwargs: Additional writer-specific options (auth, mode).
+
+        Returns:
+            bool: True if operation was successful.
+
+        Raises:
+            WriterError: If the strategy is unknown or writing fails.
+        """
+        if not input_data:
+            return True
+
+        # 1. Config Merge
+        run_config = {**self.global_config, **kwargs}
+
+        self._emit("on_start", input_data={"strategy": strategy})
+
+        # 2. Resolve Writer
+        writer_cls = self._resolve_writer(input_data, destination, strategy)
+
+        if not writer_cls:
+            error_msg = f"No suitable writer found for strategy='{strategy}'"
+            self._emit("on_error", error=Exception(error_msg))
+            raise WriterError(error_msg)
+
+        # 3. Instantiate & Initialize (Lazy Loading)
+        writer = writer_cls()
+        writer.initialize(**run_config)
+
+        self._log(f"Routing to writer: {writer.component_name}")
+
+        try:
+            # 4. Execute
+            writer.write(input_data, destination)
+
+            self._emit(
+                "on_finish", result_data={"destination": destination}, success=True
+            )
+            return True
+
+        except Exception as e:
+            self._emit("on_error", error=e)
+            raise e
+
+    def _resolve_writer(
+        self, raw_data: Any, destination: str, strategy: str
+    ) -> Optional[Type[BaseWriter]]:
+        """
+        Selects the best writer based on score or explicit type match.
+
+        Args:
+            raw_data (Any): The input data to evaluate.
+            strategy (str): The requested strategy name.
+
+        Returns:
+            Optional[Type[BaseSplitter]]: The selected splitter class or None.
+        """
+        best_score = 0.0
+        best_cls = None
+
+        # 1. Score-based Check (can_handle)
+        for cls in set(self.writers_cls_map.values()):
+            try:
+                score = cls.can_handle(raw_data, destination, strategy)
+                if score > best_score:
+                    best_score = score
+                    best_cls = cls
+            except Exception:
+                continue
+
+        if best_cls and best_score > 0.0:
+            return best_cls
+
+        # 2. Type-based Fallback (Explicit String Match via Registry Key)
+        if strategy in self.writers_cls_map:
+            return self.writers_cls_map[strategy]
+
+        return None

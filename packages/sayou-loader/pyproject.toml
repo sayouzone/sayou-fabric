@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-loader"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
@@ -19,12 +19,12 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: Apache Softwware License",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 dependencies = [
-    "sayou-core ~= 0.2.0"
+    "sayou-core ~= 0.2.4"
 ]
 
 # -----------------
