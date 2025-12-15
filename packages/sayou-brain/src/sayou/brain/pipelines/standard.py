@@ -3,8 +3,10 @@ from typing import Any, Dict, List, Optional
 
 from sayou.assembler.pipeline import AssemblerPipeline
 from sayou.chunking.pipeline import ChunkingPipeline
+
 # Sub-pipelines
 from sayou.connector.pipeline import ConnectorPipeline
+
 # Core
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import measure_time, safe_run
@@ -179,12 +181,27 @@ class StandardPipeline(BaseComponent):
                 # 2. Document
                 doc_obj = None
                 if isinstance(raw_data, bytes):
-                    doc_obj = self.document.run(
-                        raw_data,
-                        file_name,
-                        strategy=strategies.get("document", "auto"),
-                        **run_config,
-                    )
+                    try:
+                        doc_obj = self.document.run(
+                            raw_data,
+                            file_name,
+                            strategy=strategies.get("document", "auto"),
+                            **run_config,
+                        )
+                    except Exception as e:
+                        self._log(
+                            f"No binary parser for {file_name}. Fallback to text decoding.",
+                            level="debug",
+                        )
+                        try:
+                            raw_data = raw_data.decode("utf-8")
+                        except UnicodeDecodeError:
+                            self._log(
+                                f"Failed to decode {file_name}. It might be an unsupported binary.",
+                                level="error",
+                            )
+                            stats["failed"] += 1
+                            continue
 
                 refine_input = doc_obj if doc_obj else raw_data
 
