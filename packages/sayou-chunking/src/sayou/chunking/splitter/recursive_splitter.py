@@ -30,6 +30,9 @@ class RecursiveSplitter(BaseSplitter):
         if isinstance(input_data, str) or isinstance(input_data, list):
             return 0.6
 
+        if input_data is not None:
+            return 0.1
+
         return 0.0
 
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
