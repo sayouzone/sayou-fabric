@@ -1,7 +1,8 @@
-import unittest
-import shutil
-import os
 import json
+import os
+import shutil
+import unittest
+
 from sayou.brain.pipelines.standard import StandardPipeline
 
 

@@ -80,7 +80,7 @@ def run_demo():
     brain = StandardPipeline(extra_splitters=[MarkdownSplitter])
 
     # 3. 데이터 준비
-    INPUT_DIR = "examples/tests"
+    INPUT_DIR = "examples"
     OUTPUT_FILE = "examples/kg_demo.json"
     prepare_test_data(INPUT_DIR)
 
