@@ -30,10 +30,16 @@ class FileWriter(BaseWriter):
         if strategy in cls.SUPPORTED_TYPES:
             return 1.0
 
-        if strategy == "auto" and destination:
-            ext = os.path.splitext(destination)[1].lower()
-            if ext in [".json", ".txt", ".pkl", ".bin", ""]:
-                return 0.9
+        if not destination:
+            return 0.0
+
+        if "://" not in destination:
+            if destination.endswith(".jsonl"):
+                return 0.5
+            return 0.9
+
+        if destination.startswith("file://"):
+            return 1.0
 
         return 0.0
 

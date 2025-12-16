@@ -2,7 +2,7 @@ import json
 import os
 from typing import Any
 
-from sayou.core.registry import register_component  # [New]
+from sayou.core.registry import register_component
 
 from ..interfaces.base_writer import BaseWriter
 
@@ -21,12 +21,12 @@ class JsonLineWriter(BaseWriter):
 
     @classmethod
     def can_handle(
-        cls, input_data: Any, destination: str, strategy: str = "auto"
+        cls, input_data: Any, destination: str, trategy: str = "auto"
     ) -> float:
         if strategy in cls.SUPPORTED_TYPES:
             return 1.0
 
-        if strategy == "auto" and destination and destination.endswith(".jsonl"):
+        if destination and destination.endswith(".jsonl"):
             return 1.0
 
         return 0.0

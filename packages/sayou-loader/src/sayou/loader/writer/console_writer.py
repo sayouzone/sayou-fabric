@@ -1,12 +1,12 @@
 import json
 from typing import Any
 
-from sayou.core.registry import register_component  # [New]
+from sayou.core.registry import register_component
 
 from ..interfaces.base_writer import BaseWriter
 
 
-@register_component("writer")  # [New]
+@register_component("writer")
 class ConsoleWriter(BaseWriter):
     """
     (Tier 2) Prints data to stdout. Useful for debugging pipelines.
@@ -19,12 +19,10 @@ class ConsoleWriter(BaseWriter):
     def can_handle(
         cls, input_data: Any, destination: str, strategy: str = "auto"
     ) -> float:
-        # 1. 명시적 전략
         if strategy in cls.SUPPORTED_TYPES:
             return 1.0
 
-        # 2. 목적지 감지 (stdout, console)
-        if strategy == "auto" and destination.lower() in ["stdout", "console"]:
+        if destination and destination.lower() in ["stdout", "console", "print"]:
             return 1.0
 
         return 0.0
