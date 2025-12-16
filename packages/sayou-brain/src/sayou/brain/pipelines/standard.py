@@ -215,9 +215,14 @@ class StandardPipeline(BaseComponent):
                     continue
 
                 # 4. Chunking
-                chunk_strat = strategies.get("chunking", "auto")
                 all_chunks = []
+                chunk_strat = strategies.get("chunking", "auto")
                 for block in blocks:
+                    if not block.metadata:
+                        block.metadata = {}
+                    if "filename" not in block.metadata:
+                        block.metadata["filename"] = file_name
+
                     chunks = self.chunking.run(
                         block, strategy=chunk_strat, **run_config
                     )
