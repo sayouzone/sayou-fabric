@@ -20,7 +20,7 @@ class AgenticSplitter(BaseSplitter):
 
     @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
-        if strategy in ["llm_agent", "auto"]:
+        if strategy in ["llm_agent"]:
             return 1.0
         return 0.0
 

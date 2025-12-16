@@ -18,13 +18,13 @@ class RecursiveSplitter(BaseSplitter):
     """
 
     component_name = "RecursiveSplitter"
-    SUPPORTED_TYPES = ["recursive", "default"]
+    SUPPORTED_TYPES = ["recursive"]
 
     DEFAULT_SEPARATORS = ["\n\n", "\n", r"(?<=[.?!])\s+", " ", ""]
 
     @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
-        if strategy in ["recursive", "default"]:
+        if strategy in ["recursive"]:
             return 1.0
 
         if isinstance(input_data, str) or isinstance(input_data, list):

@@ -22,7 +22,7 @@ class StructureSplitter(RecursiveSplitter):
 
     @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
-        if strategy in ["structure", "markdown", "md", "html"]:
+        if strategy in ["structure"]:
             return 1.0
 
         if isinstance(input_data, list) and len(input_data) > 0:
