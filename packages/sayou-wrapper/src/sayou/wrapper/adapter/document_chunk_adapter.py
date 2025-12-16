@@ -22,20 +22,29 @@ class DocumentChunkAdapter(BaseAdapter):
 
     @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
-        if strategy in ["document_chunk"]:
+        if strategy in cls.SUPPORTED_TYPES:
             return 1.0
 
-        if isinstance(input_data, list) and len(input_data) > 0:
+        if isinstance(input_data, list):
+            if len(input_data) == 0:
+                return 0.1
+
             first = input_data[0]
+
             if hasattr(first, "doc_type") or (
                 isinstance(first, dict) and "chunk_id" in first
             ):
-                return 0.9
+                return 0.95
+
+            if isinstance(first, dict):
+                return 0.6
+
+            return 0.3
 
         if hasattr(input_data, "doc_type") or (
             isinstance(input_data, dict) and "chunk_id" in input_data
         ):
-            return 0.9
+            return 0.95
 
         return 0.0
 
