@@ -17,15 +17,17 @@ class GraphBuilder(BaseBuilder):
     """
 
     component_name = "GraphBuilder"
-    SUPPORTED_TYPES = ["graph", "hierarchy", "default"]
+    SUPPORTED_TYPES = ["graph", "hierarchy"]
 
     @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
         if strategy in cls.SUPPORTED_TYPES:
             return 1.0
 
-        if strategy == "auto":
-            return 0.8
+        if isinstance(input_data, SayouOutput) or (
+            isinstance(input_data, dict) and "nodes" in input_data
+        ):
+            return 0.9
 
         return 0.0
 
