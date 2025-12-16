@@ -1,15 +1,12 @@
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from sayou.assembler.pipeline import AssemblerPipeline
 from sayou.chunking.pipeline import ChunkingPipeline
-
-# Sub-pipelines
 from sayou.connector.pipeline import ConnectorPipeline
-
-# Core
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import measure_time, safe_run
+from sayou.core.schemas import SayouOutput
 from sayou.document.pipeline import DocumentPipeline
 from sayou.loader.pipeline import LoaderPipeline
 from sayou.refinery.pipeline import RefineryPipeline
@@ -30,7 +27,6 @@ class StandardPipeline(BaseComponent):
 
     def __init__(
         self,
-        # --- Plugin Injection (Pass-through) ---
         extra_generators=None,
         extra_fetchers=None,
         extra_parsers=None,
@@ -40,7 +36,6 @@ class StandardPipeline(BaseComponent):
         extra_adapters=None,
         extra_builders=None,
         extra_writers=None,
-        # --- Configuration ---
         config: Dict[str, Any] = None,
         **kwargs,
     ):
@@ -49,13 +44,11 @@ class StandardPipeline(BaseComponent):
         """
         super().__init__()
 
-        # 1. Config Setup
         full_config = config or {}
         full_config.update(kwargs)
         self.config = SayouConfig(full_config)
         cfg = self.config
 
-        # 2. Sub-Pipeline Instantiation
         self.connector = ConnectorPipeline(
             extra_generators=extra_generators,
             extra_fetchers=extra_fetchers,
@@ -155,7 +148,8 @@ class StandardPipeline(BaseComponent):
             destination = f"./{os.path.splitext(base_name)[0]}.json"
             self._log(f"No destination provided. Defaulting to: {destination}")
 
-        stats = {"processed": 0, "failed": 0}
+        accumulated_nodes = []
+        stats = {"processed": 0, "failed": 0, "files_count": 0}
 
         # Runtime Config Merge (Highest Priority)
         run_config = {**self.config._config, **kwargs}
@@ -167,7 +161,11 @@ class StandardPipeline(BaseComponent):
             source, strategy=strategies.get("connector", "auto"), **run_config
         )
 
+        # -----------------------------------------------------------
+        # Loop: Process each file individually
+        # -----------------------------------------------------------
         for packet in packets:
+            stats["files_count"] += 1
             if not packet.success:
                 self._log(f"Fetch failed: {packet.error}", level="warning")
                 stats["failed"] += 1
@@ -234,26 +232,47 @@ class StandardPipeline(BaseComponent):
                     all_chunks, strategy=wrap_strat, **run_config
                 )
 
-                # 6. Assembler
-                asm_strat = strategies.get("assembler", "auto")
-                payload = self.assembler.run(
-                    wrapper_out, strategy=asm_strat, **run_config
-                )
-
-                # 7. Loader
-                load_strat = strategies.get("loader", "auto")
-                success = self.loader.run(
-                    payload, destination, strategy=load_strat, **run_config
-                )
-
-                if success:
+                if wrapper_out and wrapper_out.nodes:
+                    accumulated_nodes.extend(wrapper_out.nodes)
                     stats["processed"] += 1
-                else:
-                    stats["failed"] += 1
 
             except Exception as e:
-                self._log(f"Pipeline Error on {file_name}: {e}", level="error")
+                self._log(f"Pipeline Error on {packet.task.uri}: {e}", level="error")
                 stats["failed"] += 1
+
+        # -----------------------------------------------------------
+        # Finalize: Assemble & Load ONCE
+        # -----------------------------------------------------------
+        if not accumulated_nodes:
+            self._log("No nodes generated from any source.", level="warning")
+            return stats
+
+        self._log(
+            f"Accumulated {len(accumulated_nodes)} nodes from {stats['processed']} files. assembling..."
+        )
+
+        try:
+            final_output = SayouOutput(
+                nodes=accumulated_nodes,
+                metadata={"source_count": stats["processed"], "origin": source},
+            )
+
+            # 6. Assembler
+            asm_strat = strategies.get("assembler", "auto")
+            payload = self.assembler.run(final_output, strategy=asm_strat, **run_config)
+
+            # 7. Loader
+            load_strat = strategies.get("loader", "auto")
+            success = self.loader.run(
+                payload, destination, strategy=load_strat, **run_config
+            )
+
+            if not success:
+                self._log("Final Write failed.", level="error")
+
+        except Exception as e:
+            self._log(f"Final Assembly/Load Error: {e}", level="error")
+            stats["failed"] += 1
 
         self._log(f"--- Ingestion Complete. Stats: {stats} ---")
         return stats
