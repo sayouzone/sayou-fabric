@@ -78,7 +78,18 @@ class DocumentChunkAdapter(BaseAdapter):
 
             # 1. ID Mapping (Prefix 'sayou:doc:' added)
             raw_id = meta.get("chunk_id", "unknown")
-            node_id = f"sayou:doc:{raw_id}"
+            if not raw_id or raw_id == "unknown":
+                if content:
+                    raw_id = hashlib.md5(content.encode("utf-8")).hexdigest()
+                else:
+                    raw_id = str(uuid.uuid4())
+
+            source_name = meta.get("filename") or meta.get("source")
+            if source_name:
+                safe_name = source_name.replace(" ", "_").replace(":", "")
+                node_id = f"sayou:doc:{safe_name}:{raw_id}"
+            else:
+                node_id = f"sayou:doc:{raw_id}"
 
             # 2. Node Class Decision (Semantic Type Mapping)
             sem_type = meta.get("semantic_type", "text")
