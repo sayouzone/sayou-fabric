@@ -26,12 +26,10 @@ class RecordNormalizer(BaseNormalizer):
 
         if isinstance(raw_data, dict):
             return 0.9
-        if (
-            isinstance(raw_data, list)
-            and len(raw_data) > 0
-            and isinstance(raw_data[0], dict)
-        ):
-            return 0.9
+        if isinstance(raw_data, list):
+            if len(raw_data) > 0 and isinstance(raw_data[0], dict):
+                return 0.9
+            return 0.1
 
         return 0.0
 

@@ -34,6 +34,7 @@ class DocMarkdownNormalizer(BaseNormalizer):
                 for line in raw_data.splitlines()[:10]
             ):
                 return 0.8
+            return 0.1
 
         return 0.0
 
