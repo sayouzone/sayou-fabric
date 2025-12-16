@@ -1,12 +1,12 @@
 project_name: "Sayouzone Data Pipeline"
-version: "0.2.0"
+version: "0.3.0"
 
 connector:
   timeout: 30
   user_agent: "SayouBot/1.0"
 
 document:
-  use_default_ocr: true
+  ocr: true
   ocr_lang: "eng+kor"
 
 refinery:

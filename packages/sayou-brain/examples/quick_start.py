@@ -77,27 +77,19 @@ def run_demo():
     config = load_config("config.yaml")
 
     # 2. Brain 초기화
-    markdown_splitter = MarkdownSplitter()
-    brain = StandardPipeline(extra_splitters=[markdown_splitter])
-    brain.initialize(config=config)
+    brain = StandardPipeline(extra_splitters=[MarkdownSplitter])
 
     # 3. 데이터 준비
-    INPUT_DIR = "examples"
+    INPUT_DIR = "examples/tests"
     OUTPUT_FILE = "examples/kg_demo.json"
     prepare_test_data(INPUT_DIR)
 
     # 4. Ingest 실행
     print(f">>> Starting Ingestion from '{INPUT_DIR}'...")
 
-    result = brain.ingest(
+    result = brain.process(
         source=INPUT_DIR,
         destination=OUTPUT_FILE,
-        strategies={
-            "connector": "file",
-            "chunking": "markdown",
-            "assembler": "graph",
-            "loader": "file",
-        },
     )
 
     print("\n=== Ingestion Result ===")

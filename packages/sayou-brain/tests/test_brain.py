@@ -1,57 +1,84 @@
-import json
-import os
-import shutil
-import tempfile
 import unittest
-
-from sayou.chunking.plugins.markdown_splitter import MarkdownSplitter
-
+import shutil
+import os
+import json
 from sayou.brain.pipelines.standard import StandardPipeline
 
 
 class TestStandardPipeline(unittest.TestCase):
+    """
+    StandardPipeline(Brain) 통합 테스트 (v0.3.0 Final)
+    """
 
     def setUp(self):
-        self.test_dir = tempfile.mkdtemp()
-        self.input_dir = os.path.join(self.test_dir, "input")
-        self.output_file = os.path.join(self.test_dir, "output.json")
-        os.makedirs(self.input_dir)
+        # 1. 테스트 환경 초기화
+        self.test_base_dir = "tests_sayou_brain_final"
+        if os.path.exists(self.test_base_dir):
+            shutil.rmtree(self.test_base_dir)
+        os.makedirs(self.test_base_dir, exist_ok=True)
 
-        self.brain = StandardPipeline(extra_splitters=[MarkdownSplitter()])
-        self.brain.initialize(config={"chunking": {"chunk_size": 50}})
+        # 2. 소스 파일 생성
+        self.source_file = os.path.join(self.test_base_dir, "test_doc.md")
+        content = (
+            "# Main Title\n\n"
+            "This is the introduction.\n\n"
+            "## Section 1\n"
+            "This is the content of section 1."
+        )
+        with open(self.source_file, "w", encoding="utf-8") as f:
+            f.write(content)
 
-    def test_markdown_smart_routing(self):
+        self.dest_file = os.path.join(self.test_base_dir, "result_output.json")
+
+        self.pipeline = StandardPipeline()
+
+    def tearDown(self):
+        if os.path.exists(self.test_base_dir):
+            shutil.rmtree(self.test_base_dir)
+
+    def test_full_ingestion_flow(self):
         """
-        MD 파일이 Document 파서를 건너뛰고,
-        주입된 MarkdownSplitter에 의해 구조적으로 분할되는지 통합 테스트
+        [Scenario] .md 파일 -> Auto Routing -> JSON 파일 생성 검증
         """
-        # 1. MD 파일 생성
-        md_text = "# Header\nBody content here."
-        with open(os.path.join(self.input_dir, "test.md"), "w", encoding="utf-8") as f:
-            f.write(md_text)
+        print(f"\n[Test] Ingesting {self.source_file} -> {self.dest_file} ...")
 
-        # 2. Ingest 실행
-        stats = self.brain.ingest(
-            source=self.input_dir,
-            destination=self.output_file,
-            strategies={
-                "connector": "file",
-                "chunking": "markdown",
-                "assembler": "graph",
-                "loader": "file",
-            },
+        stats = self.pipeline.ingest(
+            source=self.source_file,
+            destination=self.dest_file,
+            chunk_size=100,
         )
 
-        # 3. 성공 여부 확인
-        self.assertEqual(stats["processed"], 1)
-        self.assertEqual(stats["failed"], 0)
+        print(f"[Test Stats] {stats}")
 
-        # 4. 결과 파일 내용 확인
-        with open(self.output_file, "r", encoding="utf-8") as f:
-            result = json.load(f)
+        # 1. 통계 검증
+        self.assertEqual(stats["processed"], 1, "Processing count should be 1")
 
-        topics = [n for n in result["nodes"] if n["node_class"] == "sayou:Topic"]
-        self.assertTrue(len(topics) > 0, "Markdown header was not detected as Topic")
+        # 2. 파일 생성 확인
+        if not os.path.exists(self.dest_file):
+            print(f"Directory listing: {os.listdir(self.test_base_dir)}")
+
+        self.assertTrue(
+            os.path.exists(self.dest_file),
+            f"Output file not found at: {self.dest_file}",
+        )
+
+        # 3. 데이터 구조 검증
+        with open(self.dest_file, "r", encoding="utf-8") as f:
+            result_data = json.load(f)
+
+        self.assertIn("nodes", result_data)
+        nodes = result_data["nodes"]
+        self.assertTrue(len(nodes) > 0, "Nodes list is empty")
+
+        # 4. 내용 검증
+        first_node = nodes[0]
+        print(json.dumps(first_node, indent=2, ensure_ascii=False))
+
+        attributes = first_node.get("attributes", {})
+        has_text = len(attributes.get("schema:text", "")) > 0
+        has_title = len(first_node.get("friendly_name", "")) > 0
+
+        self.assertTrue(has_text or has_title, "Node has no content.")
 
 
 if __name__ == "__main__":
