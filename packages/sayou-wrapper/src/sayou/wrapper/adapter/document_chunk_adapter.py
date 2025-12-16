@@ -123,9 +123,15 @@ class DocumentChunkAdapter(BaseAdapter):
 
             # 4. Relationships (Vocabulary 사용)
             relationships = {}
-            parent_id = meta.get("parent_id")
-            if parent_id:
-                std_parent_id = f"sayou:doc:{parent_id}"
+            raw_parent_id = meta.get("parent_id")
+
+            if raw_parent_id:
+                if source_name:
+                    safe_name = source_name.replace(" ", "_").replace(":", "")
+                    std_parent_id = f"sayou:doc:{safe_name}:{raw_parent_id}"
+                else:
+                    std_parent_id = f"sayou:doc:{raw_parent_id}"
+
                 relationships[SayouPredicate.HAS_PARENT] = [std_parent_id]
 
             # 5. Create Node
