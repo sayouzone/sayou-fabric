@@ -4,12 +4,12 @@ from typing import Any, List, Optional
 from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock, SayouChunk
 
-from ..splitter.recursive_splitter import RecursiveSplitter
+from ..interfaces.base_splitter import BaseSplitter
 from ..utils.text_segmenter import TextSegmenter
 
 
 @register_component("splitter")
-class MarkdownSplitter(RecursiveSplitter):
+class MarkdownSplitter(BaseSplitter):
     """
     Markdown-aware Splitter.
 
@@ -35,14 +35,23 @@ class MarkdownSplitter(RecursiveSplitter):
         2. SayouBlock metadata (from Refinery).
         3. Raw string regex patterns (Headers, Tables, Fences).
         """
+        if isinstance(input_data, SayouChunk):
+            return 0.0
+        if (
+            isinstance(input_data, list)
+            and input_data
+            and isinstance(input_data[0], SayouChunk)
+        ):
+            return 0.0
+
         if strategy in ["markdown", "md"]:
             return 1.0
 
         if isinstance(input_data, list) and len(input_data) > 0:
             sample_block = input_data[0]
             if isinstance(sample_block, SayouBlock):
-                if sample_block.type in ["md", "markdown", "html", "table"]:
-                    return 0.95
+                if sample_block.type in ["md", "markdown"]:
+                    return 0.99
 
                 if isinstance(sample_block.content, str):
                     input_data = sample_block.content
