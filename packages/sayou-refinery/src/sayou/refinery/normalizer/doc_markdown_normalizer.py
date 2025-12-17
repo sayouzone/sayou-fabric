@@ -69,41 +69,76 @@ class DocMarkdownNormalizer(BaseNormalizer):
         Raises:
             NormalizationError: If `raw_data` is not a valid dictionary.
         """
+        # 1. Input Handling (Dict/Object/Str Safe Conversion)
         if isinstance(raw_data, str):
             return [SayouBlock(type="md", content=raw_data, metadata={})]
 
-        if not isinstance(raw_data, dict):
+        # Handle Pydantic models or objects safely
+        if hasattr(raw_data, "model_dump"):
+            doc_data = raw_data.model_dump()
+        elif hasattr(raw_data, "dict"):
+            doc_data = raw_data.dict()
+        elif hasattr(raw_data, "__dict__"):
+            doc_data = raw_data.__dict__
+        elif isinstance(raw_data, dict):
+            doc_data = raw_data
+        else:
             raise NormalizationError(
-                f"Input must be a Dictionary, got {type(raw_data).__name__}"
+                f"Input must be convertible to Dictionary, got {type(raw_data).__name__}"
             )
 
-        doc_data = raw_data
-        blocks: List[SayouBlock] = []
+        normalized_blocks: List[SayouBlock] = []
 
-        if "metadata" in doc_data and doc_data["metadata"]:
-            blocks.extend(self._handle_doc_metadata(doc_data))
+        doc_meta = doc_data.get("metadata", {})
 
+        # 2. Iterate Pages
         for page in doc_data.get("pages", []):
-            if self.include_headers and "header_elements" in page:
-                for element in page.get("header_elements", []):
-                    blocks.extend(
-                        self._handle_element(element, is_header=True, is_footer=False)
-                    )
+            page_content_buffer = []
+            page_num = page.get("page_index", 0)
 
-            for element in page.get("elements", []):
-                blocks.extend(
-                    self._handle_element(element, is_header=False, is_footer=False)
+            # Helper to extract text from elements using existing logic
+            def collect_text(elements, is_header=False, is_footer=False):
+                if not elements:
+                    return
+                for element in elements:
+                    sub_blocks = self._handle_element(element, is_header, is_footer)
+                    for sb in sub_blocks:
+                        if sb.content and sb.content.strip():
+                            page_content_buffer.append(sb.content.strip())
+
+            # A. Header Elements
+            if self.include_headers:
+                collect_text(page.get("header_elements", []), is_header=True)
+
+            # B. Body Elements (Main Content)
+            collect_text(page.get("elements", []), is_header=False)
+
+            # C. Footer Elements
+            if self.include_footers:
+                collect_text(page.get("footer_elements", []), is_footer=True)
+
+            # 3. Aggregate: Create ONE Block per Page
+            if page_content_buffer:
+                full_page_text = "\n\n".join(page_content_buffer)
+
+                block_meta = doc_meta.copy()
+                block_meta.update(
+                    {
+                        "page_num": page_num,
+                        "origin_type": "page_aggregated",
+                        "source": doc_meta.get("filename", "unknown"),
+                    }
                 )
 
-            if self.include_footers and "footer_elements" in page:
-                for element in page.get("footer_elements", []):
-                    # T2의 기본 규칙: include_footers가 True여도 _handle_element에서
-                    # is_footer=True 플래그를 보고 무시할 수 있음 (T3가 오버라이드 가능)
-                    blocks.extend(
-                        self._handle_element(element, is_header=False, is_footer=True)
+                normalized_blocks.append(
+                    SayouBlock(
+                        type="md",
+                        content=full_page_text,
+                        metadata=block_meta,
                     )
+                )
 
-        return blocks
+        return normalized_blocks
 
     def _handle_element(
         self, element: Dict[str, Any], is_header: bool, is_footer: bool
