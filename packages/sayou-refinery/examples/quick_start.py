@@ -1,3 +1,4 @@
+import json
 import logging
 
 from sayou.refinery.pipeline import RefineryPipeline
@@ -50,7 +51,7 @@ def run_demo():
         ],
     }
 
-    blocks = pipeline.run(raw_doc, source_type="standard_doc")
+    blocks = pipeline.run(raw_doc, strategy="standard_doc")
 
     for b in blocks:
         print(f"[{b.type}] {b.content}")
@@ -71,7 +72,7 @@ def run_demo():
     </html>
     """
 
-    blocks = pipeline.run(dirty_html, source_type="html")
+    blocks = pipeline.run(dirty_html, strategy="html")
     for b in blocks:
         print(f"[{b.type}] {repr(b.content)}")
 
@@ -96,7 +97,7 @@ def run_demo():
         },  # 이상치 (-> 1000 Clamp)
     ]
 
-    blocks = pipeline.run(db_rows, source_type="json")
+    blocks = pipeline.run(db_rows, strategy="json")
 
     for b in blocks:
         print(f"[{b.type}] {b.content}")
