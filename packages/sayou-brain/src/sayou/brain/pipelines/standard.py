@@ -217,16 +217,26 @@ class StandardPipeline(BaseComponent):
                 # 4. Chunking
                 all_chunks = []
                 chunk_strat = strategies.get("chunking", "auto")
-                for block in blocks:
-                    if not block.metadata:
-                        block.metadata = {}
-                    if "filename" not in block.metadata:
-                        block.metadata["filename"] = file_name
+                all_chunks = self.chunking.run(
+                    blocks, strategy=chunk_strat, **run_config
+                )
 
-                    chunks = self.chunking.run(
-                        block, strategy=chunk_strat, **run_config
-                    )
-                    all_chunks.extend(chunks)
+                if all_chunks:
+                    self._log(f"\n[DEBUG] File: {file_name}")
+                    self._log(f" - Total Chunks: {len(all_chunks)}")
+                    for i, chunk in enumerate(all_chunks[:3]):
+                        c_data = (
+                            chunk.model_dump()
+                            if hasattr(chunk, "model_dump")
+                            else chunk
+                        )
+                        self._log(
+                            f" - Chunk[{i}] ID: {c_data.get('metadata', {}).get('chunk_id')}"
+                        )
+                        self._log(
+                            f" - Chunk[{i}] Parent: {c_data.get('metadata', {}).get('parent_id')}"
+                        )
+                    self._log("--------------------------------------------------\n")
 
                 if not all_chunks:
                     continue
