@@ -91,6 +91,14 @@ class DocMarkdownNormalizer(BaseNormalizer):
 
         doc_meta = doc_data.get("metadata", {})
 
+        def sanitize_text(text: str) -> str:
+            if not text:
+                return ""
+            text = text.replace("\x0b", "\n")
+            text = text.replace("\r", "\n")
+            text = text.replace("\f", "\n")
+            return text
+
         # 2. Iterate Pages
         for page in doc_data.get("pages", []):
             page_content_buffer = []
@@ -104,7 +112,8 @@ class DocMarkdownNormalizer(BaseNormalizer):
                     sub_blocks = self._handle_element(element, is_header, is_footer)
                     for sb in sub_blocks:
                         if sb.content and sb.content.strip():
-                            page_content_buffer.append(sb.content.strip())
+                            clean_content = sanitize_text(sb.content.strip())
+                            page_content_buffer.append(clean_content)
 
             # A. Header Elements
             if self.include_headers:
