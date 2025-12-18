@@ -20,14 +20,20 @@ class BaseComponent(ABC):
         Initialize the component with a logger and an empty callback list.
         """
         self.logger = logging.getLogger(self.component_name)
+        self.logger.propagate = False
+
+        if self.logger.hasHandlers():
+            self.logger.handlers.clear()
+
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+            datefmt="%H:%M:%S",
+        )
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
         self.logger.setLevel(logging.INFO)
-        if not self.logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                "%(asctime)s [%(name)s] %(levelname)s: %(message)s", datefmt="%H:%M:%S"
-            )
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
+
         self._callbacks: List[BaseCallback] = []
 
     def initialize(self, **kwargs):
