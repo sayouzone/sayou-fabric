@@ -46,7 +46,10 @@ class ConnectorPipeline(BaseComponent):
 
     @classmethod
     def process(
-        cls, source: str, strategy: str = "auto", **kwargs
+        cls,
+        source: str,
+        strategy: str = "auto",
+        **kwargs,
     ) -> Iterator[SayouPacket]:
         """
         [Facade] 1-Line Execution Method.
@@ -117,7 +120,10 @@ class ConnectorPipeline(BaseComponent):
         self._log("ConnectorPipeline initialized.")
 
     def run(
-        self, source: str, strategy: str = "auto", **kwargs
+        self,
+        source: str,
+        strategy: str = "auto",
+        **kwargs,
     ) -> Iterator[SayouPacket]:
         """
         Execute the collection pipeline.
@@ -195,7 +201,11 @@ class ConnectorPipeline(BaseComponent):
 
         self._log(f"Connector finished. Processed: {count}, Success: {success_count}")
 
-    def _resolve_generator(self, source: str, strategy: str) -> BaseGenerator:
+    def _resolve_generator(
+        self,
+        source: str,
+        strategy: str,
+    ) -> BaseGenerator:
         """
         Determines the appropriate generator strategy to use.
 
