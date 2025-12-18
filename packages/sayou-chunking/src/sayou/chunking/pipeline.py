@@ -332,9 +332,6 @@ class ChunkingPipeline(BaseComponent):
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-                print("========")
-                print(cls)
-                print(self._log(log_lines))
 
             except Exception as e:
                 log_lines.append(f"   - {cls.__name__}: Error ({e})")
