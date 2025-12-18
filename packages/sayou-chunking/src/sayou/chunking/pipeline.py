@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Type
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
 from sayou.core.registry import COMPONENT_REGISTRY
-from sayou.core.schemas import SayouChunk
+from sayou.core.schemas import SayouBlock, SayouChunk
 
 from .core.exceptions import SplitterError
 from .interfaces.base_splitter import BaseSplitter
@@ -161,35 +161,142 @@ class ChunkingPipeline(BaseComponent):
 
         # 1. Config Merge
         run_config = {**self.global_config, **kwargs}
-
         self._emit("on_start", input_data={"strategy": strategy})
 
-        # 2. Resolve Splitter
-        splitter_cls = self._resolve_splitter(input_data, strategy)
+        # ----------------------------------------------------------------------
+        # 2. Flattening & Content Extraction (The Critical Fix)
+        # ----------------------------------------------------------------------
 
-        if not splitter_cls:
-            error_msg = f"No suitable splitter found for strategy='{strategy}'"
-            self._emit("on_error", error=Exception(error_msg))
-            raise SplitterError(error_msg)
+        raw_items = input_data if isinstance(input_data, list) else [input_data]
+        flattened_blocks: List[SayouBlock] = []
 
-        # 3. Instantiate & Initialize (Lazy Loading)
-        splitter = splitter_cls()
-        splitter.initialize(**run_config)
+        def _extract_and_flatten(item: Any, parent_meta: dict = None):
+            """Helper to recursively extract content and maintain metadata."""
+            if parent_meta is None:
+                parent_meta = {}
 
-        self._log(f"Routing to splitter: {splitter.component_name}")
+            # Case A: List -> Recurse
+            if isinstance(item, list):
+                for sub in item:
+                    _extract_and_flatten(sub, parent_meta)
+                return
 
-        try:
-            # 4. Execute
-            chunks = splitter.split(input_data)
+            # Case B: Dict -> Extract keys -> Recurse or Create Block
+            if isinstance(item, dict):
+                content = item.get("content")
+                current_meta = parent_meta.copy()
+                current_meta.update(item.get("metadata", {}))
 
-            self._emit(
-                "on_finish", result_data={"chunks_count": len(chunks)}, success=True
+                doc_type = item.get("type", "text")
+
+                if isinstance(content, list):
+                    _extract_and_flatten(content, current_meta)
+                elif content:
+                    flattened_blocks.append(
+                        SayouBlock(
+                            content=str(content), metadata=current_meta, type=doc_type
+                        )
+                    )
+                return
+
+            # Case C: SayouBlock -> Check content
+            if isinstance(item, SayouBlock):
+                if isinstance(item.content, list):
+                    _extract_and_flatten(item.content, item.metadata)
+                else:
+                    flattened_blocks.append(item)
+                return
+
+            # Case D: String -> Create Block
+            if isinstance(item, str) and item.strip():
+                flattened_blocks.append(
+                    SayouBlock(content=item, metadata=parent_meta, type="text")
+                )
+
+        for raw in raw_items:
+            try:
+                _extract_and_flatten(raw)
+            except Exception as e:
+                self._log(f"❌ Error during flattening: {e}", level="error")
+
+        self._log(
+            f"🔎 [PIPELINE] Flattened input into {len(flattened_blocks)} clean blocks."
+        )
+
+        # ----------------------------------------------------------------------
+        # 3. Process Flattened Blocks
+        # ----------------------------------------------------------------------
+        all_results = []
+
+        for i, target_block in enumerate(flattened_blocks):
+            if not target_block.content:
+                continue
+
+            splitter_cls = self._resolve_splitter(target_block, strategy)
+
+            if not splitter_cls:
+                self._log(
+                    f"⚠️ No suitable splitter for item {i}. Preserving.", level="warning"
+                )
+                all_results.append(
+                    SayouChunk(
+                        content=target_block.content,
+                        metadata={**target_block.metadata, "error": "no_splitter"},
+                    )
+                )
+                continue
+
+            self._log(
+                f"Routing Item {i} ({target_block.type}) -> {splitter_cls.component_name}"
             )
-            return chunks
 
-        except Exception as e:
-            self._emit("on_error", error=e)
-            raise e
+            splitter = splitter_cls()
+            splitter.initialize(**run_config)
+
+            try:
+                chunks = splitter.split(target_block)
+
+                if isinstance(chunks, list):
+                    all_results.extend(chunks)
+                else:
+                    all_results.append(chunks)
+
+            except Exception as e:
+                self._log(f"❌ Splitter Execution Failed: {e}", level="error")
+                self._emit("on_error", error=e)
+                all_results.append(
+                    SayouChunk(
+                        content=target_block.content,
+                        metadata={
+                            "error": str(e),
+                            "failed_splitter": splitter.component_name,
+                        },
+                    )
+                )
+
+        self._log(f"🔎 [PIPELINE] Finished. Generated {len(all_results)} chunks.")
+
+        for idx, res in enumerate(all_results):
+            if not hasattr(res, "model_dump"):
+                self._log(
+                    f"🚨 [CRITICAL] Result {idx} is NOT a Pydantic model! Type: {type(res)}",
+                    level="error",
+                )
+
+        self._emit(
+            "on_finish", result_data={"chunks_count": len(all_results)}, success=True
+        )
+
+        return all_results
+
+    def _is_valid_item(self, item: Any) -> bool:
+        if isinstance(item, (SayouBlock, SayouChunk)):
+            return bool(item.content)
+        if isinstance(item, dict):
+            return "content" in item
+        if isinstance(item, str):
+            return True
+        return False
 
     def _resolve_splitter(
         self, raw_data: Any, strategy: str
@@ -204,24 +311,40 @@ class ChunkingPipeline(BaseComponent):
         Returns:
             Optional[Type[BaseSplitter]]: The selected splitter class or None.
         """
-        best_score = 0.0
-        best_cls = None
-
-        # 1. Score-based Check (can_handle)
-        for cls in set(self.splitters_cls_map.values()):
-            try:
-                score = cls.can_handle(raw_data, strategy)
-                if score > best_score:
-                    best_score = score
-                    best_cls = cls
-            except Exception:
-                continue
-
-        if best_cls and best_score > 0.0:
-            return best_cls
-
-        # 2. Type-based Fallback (Explicit String Match via Registry Key)
         if strategy in self.splitters_cls_map:
             return self.splitters_cls_map[strategy]
 
+        best_score = 0.0
+        best_cls = None
+
+        candidates = {}
+
+        log_lines = [
+            f"Scoring for Item (Type: {raw_data.type}, Len: {len(raw_data.content)}):",
+            f"Content: {raw_data.content[:30]}",
+        ]
+
+        for cls in set(self.splitters_cls_map.values()):
+            try:
+                score = cls.can_handle(raw_data, strategy)
+                candidates[cls.__name__] = score
+
+                if score > best_score:
+                    best_score = score
+                    best_cls = cls
+                print("========")
+                print(cls)
+                print(self._log(log_lines))
+
+            except Exception as e:
+                log_lines.append(f"   - {cls.__name__}: Error ({e})")
+
+        if best_cls and best_score > 0.0:
+            log_lines.append(f"   - {best_cls}: {best_score} 👑")
+            self._log("\n".join(log_lines))
+            return best_cls
+
+        self._log(
+            "⚠️ No suitable splitter found (Score 0). Fallback to RecursiveSplitter."
+        )
         return None

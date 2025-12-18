@@ -38,8 +38,6 @@ class TextSegmenter:
         if not text:
             return []
 
-        final_chunks = []
-
         if not protected_patterns:
             return TextSegmenter.recursive_split(
                 text, separators, chunk_size, chunk_overlap
@@ -48,24 +46,17 @@ class TextSegmenter:
         combined_pattern = f"({'|'.join(protected_patterns)})"
         parts = re.split(combined_pattern, text, flags=re.MULTILINE | re.DOTALL)
 
-        for part in parts:
+        final_chunks = []
+        for i, part in enumerate(parts):
             if not part:
                 continue
-
-            is_protected = False
-            for pat in protected_patterns:
-                if re.fullmatch(pat, part, flags=re.MULTILINE | re.DOTALL):
-                    is_protected = True
-                    break
-
-            if is_protected:
+            if i % 2 == 1:
                 final_chunks.append(part)
             else:
                 sub_chunks = TextSegmenter.recursive_split(
                     part, separators, chunk_size, chunk_overlap
                 )
                 final_chunks.extend(sub_chunks)
-
         return final_chunks
 
     @staticmethod
@@ -87,51 +78,80 @@ class TextSegmenter:
         Returns:
             List[str]: A list of text segments.
         """
-        final_chunks = []
+        if len(text) <= chunk_size:
+            return [text]
+
+        # -------------------------------------------------------------------------
+        # [CRITICAL FIX 1] Prevent 'character-based decomposition'
+        # -------------------------------------------------------------------------
+        def safe_slice(txt, size, overlap):
+            step = size - overlap
+            return [txt[i : i + size] for i in range(0, len(txt), step)]
 
         if not separators:
-            return [text]
+            print(f"✂️ [Force Slice] No separators left. Slicing {len(text)} chars.")
+            return safe_slice(text, chunk_size, chunk_overlap)
 
         separator = separators[0]
         next_separators = separators[1:]
 
         if separator == "":
-            return list(text)
+            return safe_slice(text, chunk_size, chunk_overlap)
 
+        # -------------------------------------------------------------------------
+        # [DEBUG PROBE] Verify text identity (identify cause of delimiter failure)
+        # -------------------------------------------------------------------------
         try:
             splits = re.split(f"({separator})", text)
-        except:
+        except Exception:
             splits = [text]
 
+        # Cause analysis log when segmentation fails
+        if len(splits) == 1 and len(text) > chunk_size:
+            snippet = repr(text[:50])
+            print(f"⚠️ [Split Failed] Sep='{separator}' failed on text start: {snippet}")
+
+            return TextSegmenter.recursive_split(
+                text, next_separators, chunk_size, chunk_overlap
+            )
+
+        # -------------------------------------------------------------------------
+        # [NORMAL LOGIC] Merge split results
+        # -------------------------------------------------------------------------
+        final_chunks = []
         current_doc = []
         total_len = 0
 
-        for split in splits:
+        for i, split in enumerate(splits):
             if not split:
                 continue
-            if split == separator:
+
+            is_separator = i % 2 == 1
+
+            if is_separator:
                 if current_doc:
                     current_doc[-1] += split
                 continue
 
-            if total_len + len(split) > chunk_size:
+            split_len = len(split)
+
+            if total_len + split_len > chunk_size:
                 if current_doc:
                     final_chunks.append("".join(current_doc))
                     current_doc = []
                     total_len = 0
 
-                if len(split) > chunk_size:
-                    final_chunks.extend(
-                        TextSegmenter.recursive_split(
-                            split, next_separators, chunk_size, chunk_overlap
-                        )
+                if split_len > chunk_size:
+                    sub_chunks = TextSegmenter.recursive_split(
+                        split, next_separators, chunk_size, chunk_overlap
                     )
+                    final_chunks.extend(sub_chunks)
                 else:
                     current_doc.append(split)
-                    total_len += len(split)
+                    total_len += split_len
             else:
                 current_doc.append(split)
-                total_len += len(split)
+                total_len += split_len
 
         if current_doc:
             final_chunks.append("".join(current_doc))

@@ -24,21 +24,16 @@ class RecursiveSplitter(BaseSplitter):
 
     @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
-        if isinstance(input_data, SayouChunk):
-            return 0.0
-
-        if isinstance(input_data, list) and len(input_data) > 0:
-            if isinstance(input_data[0], SayouChunk):
-                return 0.0
-
         if strategy in ["recursive"]:
             return 1.0
 
-        if isinstance(input_data, str) or isinstance(input_data, list):
-            return 0.6
-
-        if input_data is not None:
+        if isinstance(input_data, SayouBlock):
+            if input_data.type in ["text", "txt", "string"]:
+                return 1.0
             return 0.1
+
+        if isinstance(input_data, str):
+            return 0.6
 
         return 0.0
 

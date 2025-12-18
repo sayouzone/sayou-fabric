@@ -20,32 +20,26 @@ class StructureSplitter(BaseSplitter):
     component_name = "StructureSplitter"
     SUPPORTED_TYPES = ["structure"]
 
+    DEFAULT_SEPARATORS = ["\n\n", "\n", r"(?<=[.?!])\s+", " ", ""]
+
     @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
         if strategy in ["structure"]:
             return 1.0
 
-        if isinstance(input_data, list) and len(input_data) > 0:
-            first = input_data[0]
-            if hasattr(first, "type") and first.type in [
-                "md",
-                "markdown",
-                "html",
-                "table",
-            ]:
-                return 0.95
-
-        if isinstance(input_data, str):
-            import re
-
-            if re.search(r"(?m)^#{1,6}\s", input_data) or "```" in input_data:
-                return 0.95
-
-            if "#" in input_data and "Title" in input_data:
+        if isinstance(input_data, SayouBlock):
+            if input_data.type in ["md", "markdown"]:
                 return 0.9
 
-        if hasattr(input_data, "type") and input_data.type in ["md", "markdown"]:
-            return 1.0
+            if input_data.type in ["html", "table", "json"]:
+                return 1.0
+
+            content = input_data.content
+            if isinstance(content, str):
+                if content.strip().startswith(("<html", "<!DOCTYPE", "<div")):
+                    return 1.0
+                if "```" in content or "~~~" in content:
+                    return 0.9
 
         return 0.0
 

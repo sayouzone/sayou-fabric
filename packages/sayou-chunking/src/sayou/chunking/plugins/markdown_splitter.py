@@ -21,8 +21,20 @@ class MarkdownSplitter(BaseSplitter):
     component_name = "MarkdownSplitter"
     SUPPORTED_TYPES = ["markdown", "md"]
 
-    MARKDOWN_SEPARATORS = [r"\n#{1,6} ", "\n\n", "\n", r"(?<=[.?!])\s+", " ", ""]
-    PROTECTED_PATTERNS = [r"(?s)```.*?```", r"(?m)^(?:\|[^\n]*\|(?:\n|$))+"]
+    MARKDOWN_SEPARATORS = [
+        r"(?m)^\s*#{1,6}\s+",
+        r"(?m)\n\s*\n",
+        "\n",
+        r"(?<=[.?!])\s+",
+        " ",
+        "",
+    ]
+    PROTECTED_PATTERNS = [
+        r"(?s)```.*?```",
+        r"(?m)^(?:\|[^\n]*\|(?:\n|$))+",
+        r"data:image\/[a-zA-Z]+;base64,[a-zA-Z0-9+/=]+",
+        r"(?:(?:[A-Za-z0-9+/]{4}){100,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)",
+    ]
     SECTION_SPLIT_PATTERN = r"(?m)^(?=#{1,6} |[-*] |\d+\. )"
 
     @classmethod
@@ -35,47 +47,22 @@ class MarkdownSplitter(BaseSplitter):
         2. SayouBlock metadata (from Refinery).
         3. Raw string regex patterns (Headers, Tables, Fences).
         """
-        if isinstance(input_data, SayouChunk):
-            return 0.0
-        if (
-            isinstance(input_data, list)
-            and input_data
-            and isinstance(input_data[0], SayouChunk)
-        ):
-            return 0.0
-
         if strategy in ["markdown", "md"]:
             return 1.0
 
-        if isinstance(input_data, list) and len(input_data) > 0:
-            sample_block = input_data[0]
-            if isinstance(sample_block, SayouBlock):
-                if sample_block.type in ["md", "markdown"]:
-                    return 0.99
+        if isinstance(input_data, SayouBlock):
+            if input_data.type in ["md", "markdown"]:
+                return 1.0
 
-                if isinstance(sample_block.content, str):
-                    input_data = sample_block.content
-                else:
-                    return 0.0
+            if isinstance(input_data.content, str):
+                score = 0.0
+                if re.search(r"(?m)^#{1,6}\s", input_data.content):
+                    score = 0.95
+                return score
 
         if isinstance(input_data, str):
-            score = 0.0
-
             if re.search(r"(?m)^#{1,6}\s", input_data):
-                score += 0.5
-
-            if re.search(r"(?m)^\|.*\|.*\|$", input_data) and re.search(
-                r"(?m)^\|?[\s-]*\|[\s-]*\|?$", input_data
-            ):
-                score += 0.3
-
-            if "```" in input_data or "~~~" in input_data:
-                score += 0.2
-
-            if re.search(r"<(?:\w+)(?:\s+[^>]*)?>", input_data):
-                score += 0.2
-
-            return min(score, 0.95)
+                return 0.95
 
         return 0.0
 
@@ -83,8 +70,11 @@ class MarkdownSplitter(BaseSplitter):
         """
         Split by Markdown headers first, then recursively split content.
         """
-        config = doc.metadata.get("config", {})
-        chunk_size = config.get("chunk_size", 1000)
+        pipeline_config = getattr(self, "config", {})
+        doc_config = doc.metadata.get("config", {})
+        chunk_size = doc_config.get(
+            "chunk_size", pipeline_config.get("chunk_size", 1000)
+        )
         doc_id = doc.metadata.get("id", "doc")
 
         # 1. 헤더 단위 1차 분할
@@ -99,13 +89,16 @@ class MarkdownSplitter(BaseSplitter):
         current_parent_id: Optional[str] = None
         current_parent_text: Optional[str] = None
 
+        body_separators = self.MARKDOWN_SEPARATORS[1:]
+
         for section in raw_sections:
             header_match = re.match(r"^(#{1,6})\s+(.*)", section.strip().split("\n")[0])
-            section_chunks = []
+
             if header_match:
                 header_level = len(header_match.group(1))
                 header_text = header_match.group(2).strip()
                 header_chunk_id = f"{doc_id}_h_{global_idx}"
+
                 header_chunk = SayouChunk(
                     content=f"{header_match.group(1)} {header_text}",
                     metadata={
@@ -114,6 +107,7 @@ class MarkdownSplitter(BaseSplitter):
                         "part_index": global_idx,
                         "semantic_type": f"h{header_level}",
                         "is_header": True,
+                        "level": header_level,
                     },
                 )
                 final_chunks.append(header_chunk)
@@ -132,11 +126,11 @@ class MarkdownSplitter(BaseSplitter):
             # 여기서 Structure-First 전략: 리스트(-) 단위로도 먼저 쪼개고 싶다면 로직 추가 가능
             # 일단은 TextSegmenter로 안전하게 자름
             body_parts = TextSegmenter.split_with_protection(
-                body_content,
-                self.MARKDOWN_SEPARATORS,
-                self.PROTECTED_PATTERNS,
-                chunk_size,
-                0,
+                text=body_content,
+                separators=body_separators,
+                protected_patterns=self.PROTECTED_PATTERNS,
+                chunk_size=chunk_size,
+                chunk_overlap=0,
             )
 
             for part in body_parts:
@@ -144,16 +138,22 @@ class MarkdownSplitter(BaseSplitter):
                 if not part:
                     continue
 
+                semantic_type = self._classify_chunk(part)
+
                 meta = self._clean_meta(doc.metadata)
                 meta.update(
                     {
                         "chunk_id": f"{doc_id}_part_{global_idx}",
                         "part_index": global_idx,
-                        "semantic_type": self._classify_chunk(part),
+                        "semantic_type": semantic_type,
                         "parent_id": current_parent_id,
                         "section_title": current_parent_text,
                     }
                 )
+
+                if semantic_type == "image":
+                    meta["image_length"] = len(part)
+
                 final_chunks.append(SayouChunk(content=part, metadata=meta))
                 global_idx += 1
 
