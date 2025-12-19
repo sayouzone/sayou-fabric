@@ -18,7 +18,7 @@ class VectorBuilder(BaseBuilder):
     component_name = "VectorBuilder"
     SUPPORTED_TYPES = ["vector"]
 
-   @classmethod
+    @classmethod
     def can_handle(cls, input_data: Any, strategy: str = "auto") -> float:
         if strategy in cls.SUPPORTED_TYPES:
             return 1.0
