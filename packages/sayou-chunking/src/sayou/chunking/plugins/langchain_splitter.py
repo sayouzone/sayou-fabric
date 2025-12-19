@@ -12,7 +12,7 @@ except ImportError:
 
 
 @register_component("splitter")
-class LangChainRecursiveSplitter(RecursiveSplitter):
+class LangchainSplitter(RecursiveSplitter):
     """
     Adapter for LangChain's RecursiveCharacterTextSplitter.
     Uses LangChain's logic instead of Sayou's internal TextSegmenter.
