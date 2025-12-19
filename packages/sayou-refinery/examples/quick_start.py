@@ -50,11 +50,24 @@ def run_demo():
             }
         ],
     }
+    # with open(img_path, "r", encoding="utf-8") as f:
+    #     raw_doc = json.load(f)
 
-    blocks = pipeline.run(raw_doc, strategy="standard_doc")
+    blocks = pipeline.run(raw_doc)
+
+    json_ready_blocks = []
 
     for b in blocks:
         print(f"[{b.type}] {b.content}")
+        if hasattr(b, "model_dump"):
+            json_ready_blocks.append(b.model_dump())  # Pydantic v2
+        elif hasattr(b, "dict"):
+            json_ready_blocks.append(b.dict())  # Pydantic v1
+        else:
+            json_ready_blocks.append(b.__dict__)  # 일반 객체
+
+    with open("examples/result_demo.json", "w", encoding="utf-8") as f:
+        json.dump(json_ready_blocks, f, ensure_ascii=False, indent=4)
 
     # ---------------------------------------------------------
     # Scenario 2: Dirty HTML -> Clean Text
