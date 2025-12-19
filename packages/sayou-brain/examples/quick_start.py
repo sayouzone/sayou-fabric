@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+from pathlib import Path
 
 import yaml
 
@@ -27,6 +28,11 @@ from src.sayou.brain.pipelines.standard import StandardPipeline
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
 )
+
+
+def create_input_folder(folder_path="examples/input"):
+    Path(folder_path).mkdir(parents=True, exist_ok=True)
+    print(f"폴더 '{folder_path}'가 생성되었거나 이미 존재합니다.")
 
 
 def load_config(path="config.yaml"):
@@ -73,15 +79,17 @@ Brain orchestrates the whole process.
 def run_demo():
     print(">>> [Sayou Fabric] Initializing Brain...")
 
-    # 1. Config 로드
+    INPUT_DIR = "examples/input"
+    OUTPUT_FILE = "examples/kg_demo.json"
+
+    # 1. 환경 설정
     config = load_config("config.yaml")
+    create_input_folder(INPUT_DIR)
 
     # 2. Brain 초기화
     brain = StandardPipeline(extra_splitters=[MarkdownSplitter])
 
     # 3. 데이터 준비
-    INPUT_DIR = "examples"
-    OUTPUT_FILE = "examples/kg_demo.json"
     prepare_test_data(INPUT_DIR)
 
     # 4. Ingest 실행
