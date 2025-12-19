@@ -61,7 +61,10 @@ class TextSegmenter:
 
     @staticmethod
     def recursive_split(
-        text: str, separators: List[str], chunk_size: int, chunk_overlap: int
+        text: str,
+        separators: List[str],
+        chunk_size: int,
+        chunk_overlap: int,
     ) -> List[str]:
         """
         Recursively split text using a list of separators.
@@ -82,7 +85,7 @@ class TextSegmenter:
             return [text]
 
         # -------------------------------------------------------------------------
-        # [CRITICAL FIX 1] Prevent 'character-based decomposition'
+        # Prevent 'character-based decomposition'
         # -------------------------------------------------------------------------
         def safe_slice(txt, size, overlap):
             step = size - overlap
@@ -99,7 +102,7 @@ class TextSegmenter:
             return safe_slice(text, chunk_size, chunk_overlap)
 
         # -------------------------------------------------------------------------
-        # [DEBUG PROBE] Verify text identity (identify cause of delimiter failure)
+        # Verify text identity (identify cause of delimiter failure)
         # -------------------------------------------------------------------------
         try:
             splits = re.split(f"({separator})", text)
@@ -116,7 +119,7 @@ class TextSegmenter:
             )
 
         # -------------------------------------------------------------------------
-        # [NORMAL LOGIC] Merge split results
+        # Merge split results
         # -------------------------------------------------------------------------
         final_chunks = []
         current_doc = []
