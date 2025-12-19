@@ -23,7 +23,9 @@ class ChunkingPipeline(BaseComponent):
     component_name = "ChunkingPipeline"
 
     def __init__(
-        self, extra_splitters: Optional[List[Type[BaseSplitter]]] = None, **kwargs
+        self,
+        extra_splitters: Optional[List[Type[BaseSplitter]]] = None,
+        **kwargs,
     ):
         """
         Initialize the pipeline and discover available splitters.
@@ -299,7 +301,9 @@ class ChunkingPipeline(BaseComponent):
         return False
 
     def _resolve_splitter(
-        self, raw_data: Any, strategy: str
+        self,
+        raw_data: Any,
+        strategy: str,
     ) -> Optional[Type[BaseSplitter]]:
         """
         Selects the best splitter based on score or explicit type match.
@@ -317,8 +321,6 @@ class ChunkingPipeline(BaseComponent):
         best_score = 0.0
         best_cls = None
 
-        candidates = {}
-
         log_lines = [
             f"Scoring for Item (Type: {raw_data.type}, Len: {len(raw_data.content)}):",
             f"Content: {raw_data.content[:30]}",
@@ -327,21 +329,25 @@ class ChunkingPipeline(BaseComponent):
         for cls in set(self.splitters_cls_map.values()):
             try:
                 score = cls.can_handle(raw_data, strategy)
-                candidates[cls.__name__] = score
 
+                mark = ""
                 if score > best_score:
                     best_score = score
                     best_cls = cls
+                    mark = "👑"
+
+                log_lines.append(f"   - {cls.__name__}: {score} {mark}")
 
             except Exception as e:
                 log_lines.append(f"   - {cls.__name__}: Error ({e})")
 
+        self._log("\n".join(log_lines))
+
         if best_cls and best_score > 0.0:
-            log_lines.append(f"   - {best_cls}: {best_score} 👑")
-            self._log("\n".join(log_lines))
             return best_cls
 
         self._log(
-            "⚠️ No suitable splitter found (Score 0). Fallback to RecursiveSplitter."
+            "⚠️ No suitable splitter found (Score 0). Fallback to RecursiveSplitter.",
+            level="warning",
         )
         return None

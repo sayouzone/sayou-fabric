@@ -23,15 +23,19 @@ class RefineryPipeline(BaseComponent):
 
     component_name = "RefineryPipeline"
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        extra_normalizers: Optional[List[Type[BaseNormalizer]]] = None,
+        **kwargs,
+    ):
         """
         Initializes the pipeline and discovers available plugins.
 
         Args:
+            extra_normalizers: Optional list of custom normalizer classes to register.
             **kwargs: Global configuration passed down to components.
                     e.g., processors=["cleaner", "pii_masker"]
         """
-
         super().__init__()
 
         self.normalizer_cls_map: Dict[str, Type[BaseNormalizer]] = {}
@@ -43,9 +47,26 @@ class RefineryPipeline(BaseComponent):
 
         self._load_from_registry()
 
+        if extra_normalizers:
+            for cls in extra_normalizers:
+                self._register_manual(cls)
+
         self.global_config = kwargs
 
         self.initialize(**kwargs)
+
+    def _register_manual(self, cls):
+        """
+        Safely registers a user-provided class.
+        """
+        if not isinstance(cls, type):
+            raise TypeError(
+                f"Invalid normalizer: {cls}. "
+                f"Please pass the CLASS itself (e.g., MyNormalizer), not an instance (MyNormalizer())."
+            )
+
+        name = getattr(cls, "component_name", cls.__name__)
+        self.normalizer_cls_map[name] = cls
 
     @classmethod
     def process(
@@ -203,31 +224,48 @@ class RefineryPipeline(BaseComponent):
         return blocks
 
     def _resolve_normalizer(
-        self, raw_data: Any, strategy: str
+        self,
+        raw_data: Any,
+        strategy: str,
     ) -> Optional[Type[BaseNormalizer]]:
         """
         Selects the best normalizer based on score or explicit type match.
         """
+        if strategy in self.normalizer_cls_map:
+            return self.normalizer_cls_map[strategy]
+
         best_score = 0.0
         best_cls = None
 
-        # 1. Score-based Check (can_handle)
+        log_lines = [
+            f"Scoring for Item (Type: {raw_data.type}, Len: {len(raw_data.content)}):",
+            f"Content: {raw_data.content[:30]}",
+        ]
+
         for cls in set(self.normalizer_cls_map.values()):
             try:
                 score = cls.can_handle(raw_data, strategy)
+
+                mark = ""
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-            except Exception:
-                continue
+                    mark = "👑"
+
+                log_lines.append(f"   - {cls.__name__}: {score} {mark}")
+
+            except Exception as e:
+                log_lines.append(f"   - {cls.__name__}: Error ({e})")
+
+        self._log("\n".join(log_lines))
 
         if best_cls and best_score > 0.0:
             return best_cls
 
-        # 2. Type-based Fallback (Explicit String Match)
-        if strategy in self.normalizer_cls_map:
-            return self.normalizer_cls_map[strategy]
-
+        self._log(
+            "⚠️ No suitable normalizer found (Score 0).",
+            level="warning",
+        )
         return None
 
     def _resolve_processor_by_name(self, name: str) -> Optional[Type[BaseProcessor]]:

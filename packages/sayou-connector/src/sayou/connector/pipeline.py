@@ -1,6 +1,6 @@
 import importlib
 import pkgutil
-from typing import Dict, Iterator, Type
+from typing import Dict, Iterator, List, Optional, Type
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
@@ -18,7 +18,11 @@ class ConnectorPipeline(BaseComponent):
 
     component_name = "ConnectorPipeline"
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        extra_generators: Optional[List[Type[BaseGenerator]]] = None,
+        **kwargs,
+    ):
         """
         Initializes the pipeline and discovers available components.
 
@@ -27,12 +31,13 @@ class ConnectorPipeline(BaseComponent):
         global registry into the local mapping.
 
         Args:
+            extra_generators: List of custom generator classes to register.
             **kwargs: Configuration arguments passed to the parent component.
         """
         super().__init__()
 
-        self.gen_map: Dict[str, Type[BaseGenerator]] = {}
-        self.fetch_map: Dict[str, Type[BaseFetcher]] = {}
+        self.generator_cls_map: Dict[str, Type[BaseGenerator]] = {}
+        self.fetcher_cls_map: Dict[str, Type[BaseFetcher]] = {}
 
         self._register("sayou.connector.generator")
         self._register("sayou.connector.fetcher")
@@ -40,9 +45,26 @@ class ConnectorPipeline(BaseComponent):
 
         self._load_from_registry()
 
+        if extra_generators:
+            for cls in extra_generators:
+                self._register_manual(cls)
+
         self.global_config = kwargs
 
         self.initialize(**kwargs)
+
+    def _register_manual(self, cls):
+        """
+        Safely registers a user-provided class.
+        """
+        if not isinstance(cls, type):
+            raise TypeError(
+                f"Invalid generator: {cls}. "
+                f"Please pass the CLASS itself (e.g., MyGenerator), not an instance (MyGenerator())."
+            )
+
+        name = getattr(cls, "component_name", cls.__name__)
+        self.generators_cls_map[name] = cls
 
     @classmethod
     def process(
@@ -92,18 +114,18 @@ class ConnectorPipeline(BaseComponent):
 
         Iterates through the global `COMPONENT_REGISTRY` to retrieve registered
         generator and fetcher classes. It stores references to these classes in
-        `self.gen_map` and instantiates fetchers in `self.fetch_map`.
+        `self.generator_cls_map` and instantiates fetchers in `self.fetcher_cls_map`.
         """
         for name, cls in COMPONENT_REGISTRY["generator"].items():
-            self.gen_map[name] = cls
+            self.generator_cls_map[name] = cls
             supported = getattr(cls, "SUPPORTED_TYPES", [])
             for t in supported:
-                self.gen_map[t] = cls
+                self.generator_cls_map[t] = cls
 
         for name, cls in COMPONENT_REGISTRY["fetcher"].items():
             instance = cls()
             for t in getattr(instance, "SUPPORTED_TYPES", []):
-                self.fetch_map[t] = instance
+                self.fetcher_cls_map[t] = instance
 
     @safe_run(default_return=None)
     def initialize(self, **kwargs):
@@ -169,7 +191,7 @@ class ConnectorPipeline(BaseComponent):
                     continue
 
                 # 4. Fetcher 라우팅
-                fetcher = self.fetch_map.get(task.source_type)
+                fetcher = self.fetcher_cls_map.get(task.source_type)
                 if not fetcher:
                     self._log(
                         f"Skipping task {task.uri}: No fetcher for type '{task.source_type}'"
@@ -225,28 +247,41 @@ class ConnectorPipeline(BaseComponent):
             ValueError: If a specific strategy is requested but not found in the registry.
         """
         if strategy and strategy != "auto":
-            gen = self.gen_map.get(strategy)
+            gen = self.generator_cls_map.get(strategy)
             if not gen:
                 raise ValueError(f"Unknown strategy: {strategy}")
             return gen
 
         best_score = 0.0
-        best_gen = None
+        best_cls = None
 
-        for gen in self.gen_map.values():
-            score = gen.can_handle(source)
-            if score > best_score:
-                best_score = score
-                best_gen = gen
+        log_lines = [
+            f"Scoring for Item (Type: {source}):",
+            f"Content: {source[:30]}",
+        ]
 
-        if best_gen and best_score > 0.5:
-            self._log(
-                f"Auto-detected strategy: '{best_gen.component_name}' (Score: {best_score})"
-            )
-            return best_gen
+        for cls in set(self.generator_cls_map.values()):
+            try:
+                score = cls.can_handle(source)
+
+                mark = ""
+                if score > best_score:
+                    best_score = score
+                    best_cls = cls
+                    mark = "👑"
+
+                log_lines.append(f"   - {cls.__name__}: {score} {mark}")
+
+            except Exception as e:
+                log_lines.append(f"   - {cls.__name__}: Error ({e})")
+
+        self._log("\n".join(log_lines))
+
+        if best_cls and best_score > 0.0:
+            return best_cls
 
         self._log(
             "Auto-detection failed. Falling back to default strategy 'file'.",
             level="warning",
         )
-        return self.gen_map["file"]
+        return self.generator_cls_map["file"]

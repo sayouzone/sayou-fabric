@@ -1,6 +1,6 @@
 import importlib
 import pkgutil
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import safe_run
@@ -25,19 +25,27 @@ class DocumentPipeline(BaseComponent):
 
     component_name = "DocumentPipeline"
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        extra_converters: Optional[List[Type[BaseConverter]]] = None,
+        extra_ocrs: Optional[List[Type[BaseOCR]]] = None,
+        extra_parsers: Optional[List[Type[BaseDocumentParser]]] = None,
+        **kwargs,
+    ):
         """
         Initializes the pipeline without hardcoded dependencies.
 
         Args:
+            extra_converters: List of custom converter classes to register.
             **kwargs: Global configuration (e.g., {'ocr': {'lang': 'kor'}}).
         """
         super().__init__()
 
-        self.converter_cls_map: Dict[str, Type[BaseConverter]] = {}
-        self.ocr_cls_map: Dict[str, Type[BaseOCR]] = {}
-        self.parser_cls_map: Dict[str, Type[BaseDocumentParser]] = {}
+        self.converter_cls_map: Dict[str, Type[Any]] = {}
+        self.ocr_cls_map: Dict[str, Type[Any]] = {}
+        self.parser_cls_map: Dict[str, Type[Any]] = {}
 
+        # 1. Load Defaults
         self._register("sayou.document.converter")
         self._register("sayou.document.ocr")
         self._register("sayou.document.parser")
@@ -45,12 +53,43 @@ class DocumentPipeline(BaseComponent):
 
         self._load_from_registry()
 
+        # 2. Register Extras
+        if extra_converters:
+            for cls in extra_converters:
+                self._register_manual(cls)
+
+        if extra_ocrs:
+            for cls in extra_ocrs:
+                self._register_manual(cls)
+
+        if extra_parsers:
+            for cls in extra_parsers:
+                self._register_manual(cls)
+
         self.global_config = kwargs
 
         self.initialize(**kwargs)
 
+    def _register_manual(self, cls):
+        """
+        Safely registers a user-provided class.
+        """
+        if not isinstance(cls, type):
+            raise TypeError(
+                f"Invalid converter: {cls}. "
+                f"Please pass the CLASS itself (e.g., MyConverter), not an instance (MyConverter())."
+            )
+
+        name = getattr(cls, "component_name", cls.__name__)
+        self.converter_cls_map[name] = cls
+
     @classmethod
-    def process(cls, file_bytes: bytes, file_name: str, **kwargs) -> Optional[Document]:
+    def process(
+        cls,
+        file_bytes: bytes,
+        file_name: str,
+        **kwargs,
+    ) -> Optional[Document]:
         """
         [Facade] 1-Line Execution Method.
         Creates an instance, runs it, and returns the result immediately.
@@ -138,13 +177,22 @@ class DocumentPipeline(BaseComponent):
         # Phase 1: Component Resolution (Strategy Pattern)
         # ---------------------------------------------------------------------
         # 1-1. Parser Selection
-        parser_cls = self._resolve_component(self.parser_cls_map, file_bytes, file_name)
+        parser_cls = self._resolve_component(
+            self.parser_cls_map,
+            primary_input=file_bytes,
+            secondary_input=file_name,
+            category="Parser",
+        )
 
         # 1-2. Converter Fallback (If no parser found)
         if not parser_cls:
             converter_cls = self._resolve_component(
-                self.converter_cls_map, file_bytes, file_name
+                self.converter_cls_map,
+                primary_input=file_bytes,
+                secondary_input=file_name,
+                category="Converter",
             )
+
             if converter_cls:
                 self._log(
                     f"No direct parser found. Attempting conversion via {converter_cls.component_name}..."
@@ -158,14 +206,20 @@ class DocumentPipeline(BaseComponent):
                     if converted_bytes:
                         file_bytes = converted_bytes
                         file_name = f"{file_name}.pdf"
+
                         parser_cls = self._resolve_component(
-                            self.parser_cls_map, file_bytes, file_name
+                            self.parser_cls_map,
+                            primary_input=file_bytes,
+                            secondary_input=file_name,
+                            category="Parser (Post-Conversion)",
                         )
                 except Exception as e:
                     self._log(f"Conversion warning: {e}", level="warning")
 
         if not parser_cls:
-            raise ParserError(f"No suitable parser found for {file_name}")
+            error_msg = f"No suitable parser found for {file_name}"
+            self._log(f"⚠️ {error_msg}", level="error")
+            raise ParserError(error_msg)
 
         # ---------------------------------------------------------------------
         # Phase 2: OCR Injection (Dependency Injection)
@@ -173,7 +227,12 @@ class DocumentPipeline(BaseComponent):
         ocr_instance = None
         if ocr:
             target_engine = ocr.get("engine_name", "default")
-            ocr_cls = self._resolve_component(self.ocr_cls_map, b"", target_engine)
+            ocr_cls = self._resolve_component(
+                self.ocr_cls_map,
+                primary_input=b"",
+                secondary_input=target_engine,
+                category="OCR Engine",
+            )
 
             if ocr_cls:
                 ocr_instance = ocr_cls()
@@ -200,24 +259,53 @@ class DocumentPipeline(BaseComponent):
             raise e
 
     def _resolve_component(
-        self, cls_map: Dict[str, Type[Any]], file_bytes: bytes, identifier: str
+        self,
+        cls_map: Dict[str, Type[Any]],
+        primary_input: Any,
+        secondary_input: Any,
+        category: str = "Component",
     ) -> Optional[Type[Any]]:
         """
-        Selects the best parser class based on magic bytes and filename.
+        Standardized Scoreboard Resolution Logic.
+        Selects the best component from the map based on score.
+
+        Args:
+            cls_map: Candidate components map.
+            primary_input: Main data (e.g., file_bytes).
+            secondary_input: Context data (e.g., filename, engine_name).
+            category: Label for logging (e.g., "Parser", "OCR").
         """
         best_score = 0.0
         best_cls = None
 
+        info_str = f"Context: {secondary_input}"
+        if hasattr(primary_input, "__len__"):
+            info_str += f", Len: {len(primary_input)}"
+
+        log_lines = [f"Scoring for {category} ({info_str}):"]
+
         for cls in set(cls_map.values()):
             try:
-                score = cls.can_handle(file_bytes, identifier)
+                score = cls.can_handle(primary_input, secondary_input)
+
+                mark = ""
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-            except Exception:
-                continue
+                    mark = "👑"
+
+                log_lines.append(f"   - {cls.__name__}: {score} {mark}")
+
+            except Exception as e:
+                log_lines.append(f"   - {cls.__name__}: Error ({e})")
+
+        self._log("\n".join(log_lines))
 
         if best_cls and best_score > 0.1:
             return best_cls
 
+        self._log(
+            "⚠️ No suitable component found (Score 0).",
+            level="warning",
+        )
         return None

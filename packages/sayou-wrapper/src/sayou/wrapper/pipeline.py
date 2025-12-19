@@ -23,13 +23,16 @@ class WrapperPipeline(BaseComponent):
     component_name = "WrapperPipeline"
 
     def __init__(
-        self, extra_adapters: Optional[List[Type[BaseAdapter]]] = None, **kwargs
+        self,
+        extra_adapters: Optional[List[Type[BaseAdapter]]] = None,
+        **kwargs,
     ):
         """
         Initialize the pipeline with default and optional custom adapters.
 
         Args:
-            extra_adapters (List[Type[BaseAdapter]], optional): Custom adapters to register.
+            extra_adapters: Custom adapters to register.
+            **kwargs: Global configuration.
         """
         super().__init__()
 
@@ -189,7 +192,9 @@ class WrapperPipeline(BaseComponent):
             raise e
 
     def _resolve_adapter(
-        self, raw_data: Any, strategy: str
+        self,
+        raw_data: Any,
+        strategy: str,
     ) -> Optional[Type[BaseAdapter]]:
         """
         Selects the best adapter based on score or explicit type match.
@@ -201,24 +206,40 @@ class WrapperPipeline(BaseComponent):
         Returns:
             Optional[Type[BaseAdapter]]: The selected adapter class or None.
         """
+        if strategy in self.adapters_cls_map:
+            return self.adapters_cls_map[strategy]
+
         best_score = 0.0
         best_cls = None
 
-        # 1. Score-based Check (can_handle)
+        log_lines = [
+            f"Scoring for Item (Type: {raw_data.type}, Len: {len(raw_data.content)}):",
+            f"Content: {raw_data.content[:30]}",
+        ]
+
         for cls in set(self.adapters_cls_map.values()):
             try:
                 score = cls.can_handle(raw_data, strategy)
+
+                mark = ""
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-            except Exception:
-                continue
+                    mark = "👑"
+
+                log_lines.append(f"   - {cls.__name__}: {score} {mark}")
+
+            except Exception as e:
+                log_lines.append(f"   - {cls.__name__}: Error ({e})")
+
+        self._log("\n".join(log_lines))
 
         if best_cls and best_score > 0.0:
             return best_cls
 
-        # 2. Type-based Fallback (Explicit String Match via Registry Key)
-        if strategy in self.adapters_cls_map:
-            return self.adapters_cls_map[strategy]
+        self._log(
+            "⚠️ No suitable adapter found (Score 0)",
+            level="warning",
+        )
 
         return None

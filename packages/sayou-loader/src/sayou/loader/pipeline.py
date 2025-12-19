@@ -28,6 +28,10 @@ class LoaderPipeline(BaseComponent):
         """
         Initialize all registered writers.
         Passes global configuration (e.g., DB connection pools) to writers.
+
+        Args:
+            extra_writers: List of custom writer classes to register.
+            **kwargs: Global configuration.
         """
         super().__init__()
 
@@ -190,7 +194,10 @@ class LoaderPipeline(BaseComponent):
             raise e
 
     def _resolve_writer(
-        self, raw_data: Any, destination: str, strategy: str
+        self,
+        raw_data: Any,
+        destination: str,
+        strategy: str,
     ) -> Optional[Type[BaseWriter]]:
         """
         Selects the best writer based on score or explicit type match.
@@ -200,26 +207,41 @@ class LoaderPipeline(BaseComponent):
             strategy (str): The requested strategy name.
 
         Returns:
-            Optional[Type[BaseSplitter]]: The selected splitter class or None.
+            Optional[Type[BaseWriter]]: The selected writer class or None.
         """
+        if strategy in self.writers_cls_map:
+            return self.writers_cls_map[strategy]
+
         best_score = 0.0
         best_cls = None
 
-        # 1. Score-based Check (can_handle)
+        log_lines = [
+            f"Scoring for Item (Type: {raw_data.type}, Len: {len(raw_data.content)}):",
+            f"Content: {raw_data.content[:30]}",
+        ]
+
         for cls in set(self.writers_cls_map.values()):
             try:
                 score = cls.can_handle(raw_data, destination, strategy)
+
+                mark = ""
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-            except Exception:
-                continue
+                    mark = "👑"
+
+                log_lines.append(f"   - {cls.__name__}: {score} {mark}")
+
+            except Exception as e:
+                log_lines.append(f"   - {cls.__name__}: Error ({e})")
+
+        self._log("\n".join(log_lines))
 
         if best_cls and best_score > 0.0:
             return best_cls
 
-        # 2. Type-based Fallback (Explicit String Match via Registry Key)
-        if strategy in self.writers_cls_map:
-            return self.writers_cls_map[strategy]
-
+        self._log(
+            "⚠️ No suitable writer found (Score 0).",
+            level="warning",
+        )
         return None

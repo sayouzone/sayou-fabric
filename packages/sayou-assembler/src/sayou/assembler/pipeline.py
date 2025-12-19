@@ -22,7 +22,9 @@ class AssemblerPipeline(BaseComponent):
     component_name = "AssemblerPipeline"
 
     def __init__(
-        self, extra_builders: Optional[List[Type[BaseBuilder]]] = None, **kwargs
+        self,
+        extra_builders: Optional[List[Type[BaseBuilder]]] = None,
+        **kwargs,
     ):
         """
         Initialize the pipeline with default and custom builders.
@@ -170,7 +172,9 @@ class AssemblerPipeline(BaseComponent):
             raise e
 
     def _resolve_builder(
-        self, raw_data: Any, strategy: str
+        self,
+        raw_data: Any,
+        strategy: str,
     ) -> Optional[Type[BaseBuilder]]:
         """
         Selects the best splitter based on score or explicit type match.
@@ -182,24 +186,40 @@ class AssemblerPipeline(BaseComponent):
         Returns:
             Optional[Type[BaseBuilder]]: The selected splitter class or None.
         """
+        if strategy in self.builders_cls_map:
+            return self.builders_cls_map[strategy]
+
         best_score = 0.0
         best_cls = None
 
-        # 1. Score-based Check (can_handle)
+        log_lines = [
+            f"Scoring for Item (Type: {raw_data.type}, Len: {len(raw_data.content)}):",
+            f"Content: {raw_data.content[:30]}",
+        ]
+
         for cls in set(self.builders_cls_map.values()):
             try:
                 score = cls.can_handle(raw_data, strategy)
+
+                mark = ""
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-            except Exception:
-                continue
+                    mark = "👑"
+
+                log_lines.append(f"   - {cls.__name__}: {score} {mark}")
+
+            except Exception as e:
+                log_lines.append(f"   - {cls.__name__}: Error ({e})")
+
+        self._log("\n".join(log_lines))
 
         if best_cls and best_score > 0.0:
             return best_cls
 
-        # 2. Type-based Fallback (Explicit String Match via Registry Key)
-        if strategy in self.builders_cls_map:
-            return self.builders_cls_map[strategy]
+        self._log(
+            "⚠️ No suitable builder found (Score 0).",
+            level="warning",
+        )
 
         return None
