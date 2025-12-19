@@ -25,13 +25,13 @@ classifiers = [
 ]
 dependencies = [
     "sayou-core == 0.2.6",
-    "sayou-connector ~= 0.2.11",
-    "sayou-document ~= 0.2.4",
-    "sayou-refinery ~= 0.2.7",
-    "sayou-chunking ~= 0.2.8",
-    "sayou-wrapper ~= 0.2.5",
-    "sayou-assembler ~= 0.2.2",
-    "sayou-loader ~= 0.2.2",
+    "sayou-connector ~= 0.2.12",
+    "sayou-document ~= 0.2.5",
+    "sayou-refinery ~= 0.2.8",
+    "sayou-chunking ~= 0.2.9",
+    "sayou-wrapper ~= 0.2.6",
+    "sayou-assembler ~= 0.2.3",
+    "sayou-loader ~= 0.2.3",
     # "sayou-extractor ~= 0.0.3",
     # "sayou-llm ~= 0.0.3"
 ]
