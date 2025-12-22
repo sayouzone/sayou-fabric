@@ -1,0 +1,61 @@
+
+from .client import FnGuideClient
+#from .models import DartConfig
+
+from .parsers import (
+    FnGuideCompanyParser,
+    FnGuideComparisonParser,
+    FnGuideConsensusParser,
+    FnGuideDartParser,
+    FnGuideDisclosureParser,
+    FnGuideFinanceRatioParser,
+    FnGuideFinanceParser,
+    FnGuideIndustryAnalysisParser,
+    FnGuideInvestParser,
+    FnGuideMainParser,
+    FnGuideShareAnalysisParser,
+)
+
+class FnGuideCrawler:
+        
+    """DART 공시 문서 크롤러.
+    
+    기업의 공시 문서를 DART에서 크롤링하여 GCS에 업로드합니다.
+    """
+    
+    # 제외할 공시 유형
+    EXCLUDED_REPORT_TYPES = frozenset({"기업설명회(IR)개최(안내공시)"})
+    request_delay_seconds = 3
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                      'AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/120.0.0.0 Safari/537.36'
+    }
+    
+    def __init__(self):
+        """크롤러를 초기화합니다.
+        
+        Args:
+            code: 기업 코드 (기본값: 삼성전자)
+        """
+        self.client = FnGuideClient()
+
+        # 파서 초기화
+        self._company_parser = FnGuideCompanyParser(self.client)
+        self._comparison_viewer = FnGuideComparisonParser(self.client)
+        self._consensus_parser = FnGuideConsensusParser(self.client)
+        self._dart_parser = FnGuideDartParser(self.client)
+        self._disclosure_parser = FnGuideDisclosureParser(self.client)
+        self._finance_ratio_parser = FnGuideFinanceRatioParser(self.client)
+        self._finance_parser = FnGuideFinanceParser(self.client)
+        self._industry_parser = FnGuideIndustryAnalysisParser(self.client)
+        self._main_parser = FnGuideMainParser(self.client)
+        self._share_analysis_parser = FnGuideShareAnalysisParser(self.client)
+        self._corp_data : Optional[list] = None
+
+    def main(self, stock: str):
+        return self._main_parser.parse(stock)
+
+    def finance(self, stock: str):
+        return self._finance_parser.parse(stock)
