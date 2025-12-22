@@ -1,4 +1,4 @@
-from .pipelines import DocumentPipeline
+from .pipeline import DocumentPipeline
 from .parser.docx_parser import DocxParser
 from .parser.excel_parser import ExcelParser
 from .parser.pdf_parser import PdfParser

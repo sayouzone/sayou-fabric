@@ -1,4 +1,4 @@
-from .pipelines import ChunkingPipeline
+from .pipeline import ChunkingPipeline
 from .splitter.agentic_splitter import AgenticSplitter
 from .splitter.fixed_length_splitter import FixedLengthSplitter
 from .splitter.parent_document_splitter import ParentDocumentSplitter

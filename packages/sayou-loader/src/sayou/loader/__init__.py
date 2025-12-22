@@ -1,4 +1,4 @@
-from .pipelines import LoaderPipeline
+from .pipeline import LoaderPipeline
 from .writer.console_writer import ConsoleWriter
 from .writer.file_writer import FileWriter
 from .writer.jsonl_writer import JsonLineWriter

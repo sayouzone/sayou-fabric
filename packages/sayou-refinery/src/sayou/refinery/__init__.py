@@ -1,4 +1,4 @@
-from .pipelines import RefineryPipeline
+from .pipeline import RefineryPipeline
 from .normalizer.doc_markdown_normalizer import DocMarkdownNormalizer
 from .normalizer.html_text_normalizer import HtmlTextNormalizer
 from .normalizer.record_normalizer import RecordNormalizer
