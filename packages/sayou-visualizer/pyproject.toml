@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-visualizer"
-version = "0.0.5"
+version = "0.0.6"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
@@ -25,7 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "sayou-core ~= 0.3.0",
-    "networkx == 3.4.1",
+    "networkx == 3.2.1",
     "pyvis == 0.3.2",
     "rich == 14.2.0",
     "websocket-client == 1.9.0"
