@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-document"
-version = "0.3.1"
+version = "0.3.2"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]

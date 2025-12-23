@@ -244,6 +244,10 @@ class DocumentPipeline(BaseComponent):
         # ---------------------------------------------------------------------
         parser = parser_cls()
 
+        if hasattr(self, "_callbacks"):
+            for cb in self._callbacks:
+                parser.add_callback(cb)
+
         if ocr_instance and hasattr(parser, "set_ocr_engine"):
             parser.set_ocr_engine(ocr_instance)
 
@@ -278,11 +282,34 @@ class DocumentPipeline(BaseComponent):
         best_score = 0.0
         best_cls = None
 
-        info_str = f"Context: {secondary_input}"
-        if hasattr(primary_input, "__len__"):
-            info_str += f", Len: {len(primary_input)}"
+        obj_type = getattr(primary_input, "type", type(primary_input).__name__)
+        content_len = 0
 
-        log_lines = [f"Scoring for {category} ({info_str}):"]
+        try:
+            if hasattr(primary_input, "content"):
+                c = primary_input.content
+                if hasattr(c, "__len__"):
+                    content_len = len(c)
+            elif hasattr(primary_input, "__len__"):
+                content_len = len(primary_input)
+        except:
+            pass
+
+        log_lines = [
+            f"Scoring for {category} (Type: {obj_type}, Len: {content_len}, Ctx: {secondary_input}):"
+        ]
+
+        try:
+            if hasattr(primary_input, "content") and isinstance(
+                primary_input.content, str
+            ):
+                log_lines.append(f"Content Preview: {primary_input.content[:50]}...")
+            elif isinstance(primary_input, str):
+                log_lines.append(f"Content Preview: {primary_input[:50]}...")
+            elif isinstance(primary_input, bytes):
+                log_lines.append(f"Content Preview: <Binary Bytes>")
+        except:
+            pass
 
         for cls in set(cls_map.values()):
             try:
