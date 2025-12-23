@@ -182,6 +182,11 @@ class RefineryPipeline(BaseComponent):
 
         # Instantiate Normalizer
         normalizer = normalizer_cls()
+
+        if hasattr(self, "_callbacks"):
+            for cb in self._callbacks:
+                normalizer.add_callback(cb)
+
         normalizer.initialize(**run_config)
 
         try:
@@ -237,10 +242,20 @@ class RefineryPipeline(BaseComponent):
         best_score = 0.0
         best_cls = None
 
-        log_lines = [
-            f"Scoring for Item (Type: {raw_data.type}, Len: {len(raw_data.content)}):",
-            f"Content: {raw_data.content[:30]}",
-        ]
+        obj_type = getattr(raw_data, "type", type(raw_data).__name__)
+        content_len = 0
+        if hasattr(raw_data, "content"):
+            c = raw_data.content
+            if hasattr(c, "__len__"):
+                content_len = len(c)
+        elif isinstance(raw_data, (str, bytes, list, dict)):
+            content_len = len(raw_data)
+
+        log_lines = [f"Scoring for Item (Type: {obj_type}, Len: {content_len}):"]
+        if hasattr(raw_data, "content") and isinstance(raw_data.content, str):
+            log_lines.append(f"Content Preview: {raw_data.content[:50]}...")
+        elif isinstance(raw_data, str):
+            log_lines.append(f"Content Preview: {raw_data[:50]}...")
 
         for cls in set(self.normalizer_cls_map.values()):
             try:
