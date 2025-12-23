@@ -11,7 +11,7 @@
 
 
 ```
-opendart/
+naver/
 ├── __init__.py          # 공개 API 정의
 ├── client.py            # OpenDART HTTP 클라이언트
 ├── models.py            # 데이터 클래스 (DTO)
