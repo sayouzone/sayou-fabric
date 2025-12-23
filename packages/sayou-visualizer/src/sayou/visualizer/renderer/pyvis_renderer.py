@@ -35,7 +35,7 @@ class PyVisRenderer(BaseComponent):
                     "strokeWidth": 0,
                     "strokeColor": "#ffffff"
                 }
-            },F
+            },
             "edges": {
                 "color": {
                     "color": "#505050",
