@@ -53,6 +53,8 @@ Sayou Fabric consists of independent, loosely coupled libraries that work togeth
 | `sayou-wrapper` | [![PyPI](https://img.shields.io/pypi/v/sayou-wrapper.svg?color=blue)](https://pypi.org/project/sayou-wrapper/) | **[Schema Enforcer]** Wraps data into `SayouNode` objects. |
 | `sayou-assembler` | [![PyPI](https://img.shields.io/pypi/v/sayou-assembler.svg?color=blue)](https://pypi.org/project/sayou-assembler/) | **[Graph Builder]** Links nodes to create Parent-Child relationships. |
 | `sayou-loader` | [![PyPI](https://img.shields.io/pypi/v/sayou-loader.svg?color=blue)](https://pypi.org/project/sayou-loader/) | **[Writer]** Saves graph to Files, BigQuery, or VectorDBs. |
+| `sayou-extractor` | [![PyPI version](https://img.shields.io/pypi/v/sayou-extractor.svg?color=blue)](https://pypi.org/project/sayou-extractor/) | **[Query, Retrieve, Search]** Intelligent retrieval using Hybrid Search (Vector + Graph). |
+| `sayou-llm` | [![PyPI version](https://img.shields.io/pypi/v/sayou-llm.svg?color=blue)](https://pypi.org/project/sayou-llm/) | **[OpenAI, Anthropic, Local]** An adapter layer for various LLMs. |
 | `sayou-visualizer` | [![PyPI](https://img.shields.io/pypi/v/sayou-visualizer.svg?color=blue)](https://pypi.org/project/sayou-visualizer/) | **[Observability]** Live dashboard & 3D Knowledge Graph renderer. |
 
 ---
@@ -129,7 +131,7 @@ Sayou Fabric creates beautiful, interactive visualizations of your data structur
 ### 📊 Live DAG Tracing
 Monitor the execution flow of your pipeline in real-time. See exactly which plugins are activated and how data flows between them.
 
-<img src="https://github.com/sayouzone/sayou-fabric/blob/main/docs/assets/graph_tracer.png?raw=true" width="400">
+<img src="https://github.com/sayouzone/sayou-fabric/blob/main/docs/assets/graph_tracer.png?raw=true" width="800">
 
 ### 🌌 3D Knowledge Graph (Holographic View)
 Visualize your document structure as a 3D city. 
@@ -137,7 +139,7 @@ Visualize your document structure as a 3D city.
 * **Blue Orbs:** Chunks (Data Blocks)
 * **Orange Octahedrons:** Headers (Structural Anchors)
 
-<img src="https://github.com/sayouzone/sayou-fabric/blob/main/docs/assets/kg_renderer.png?raw=true" width="400">
+<img src="https://github.com/sayouzone/sayou-fabric/blob/main/docs/assets/kg_renderer.png?raw=true" width="800">
 
 ---
 
