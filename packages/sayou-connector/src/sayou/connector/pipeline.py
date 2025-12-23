@@ -170,8 +170,9 @@ class ConnectorPipeline(BaseComponent):
         generator_cls = self._resolve_generator(source, strategy)
         generator = generator_cls()
 
-        for cb in self._callbacks:
-            generator.add_callback(cb)
+        if hasattr(self, "_callbacks"):
+            for cb in self._callbacks:
+                generator.add_callback(cb)
 
         # 2. Generator 초기화
         generator.initialize(source=source, **kwargs)
@@ -255,10 +256,20 @@ class ConnectorPipeline(BaseComponent):
         best_score = 0.0
         best_cls = None
 
-        log_lines = [
-            f"Scoring for Item (Type: {source}):",
-            f"Content: {source[:30]}",
-        ]
+        obj_type = getattr(source, "type", type(source).__name__)
+        content_len = 0
+        if hasattr(source, "content"):
+            c = source.content
+            if hasattr(c, "__len__"):
+                content_len = len(c)
+        elif isinstance(source, (str, bytes, list, dict)):
+            content_len = len(source)
+
+        log_lines = [f"Scoring for Item (Type: {obj_type}, Len: {content_len}):"]
+        if hasattr(source, "content") and isinstance(source.content, str):
+            log_lines.append(f"Content Preview: {source.content[:50]}...")
+        elif isinstance(source, str):
+            log_lines.append(f"Content Preview: {source[:50]}...")
 
         for cls in set(self.generator_cls_map.values()):
             try:
