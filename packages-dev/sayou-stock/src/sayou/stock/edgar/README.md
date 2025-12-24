@@ -1,4 +1,4 @@
-##
+## SEC EDGAR Crawler
 
 패키지 구조
 
@@ -18,8 +18,8 @@ edgar/
     └── def14a.py        # DEF 14A 파서
 ```
 
+### 주요 개선 사항
 
-주요 개선 사항
 | 개선 항목 | 설명 |
 |---------|------|
 | 모듈 분리 | 파일링 타입별로 파서를 별도 모듈로 분리 |
@@ -29,6 +29,7 @@ edgar/
 | HTTP 클라이언트 | API 호출 로직을 `EDGARClient`로 분리 |
 | 레거시 호환 | 기존 메서드명 유지 (하위 호환성) |
 
+## 사용 예시
 
 ```python
 crawler = EDGARCrawler(user_agent="Sayouzone sjkim@sayouzone.com")

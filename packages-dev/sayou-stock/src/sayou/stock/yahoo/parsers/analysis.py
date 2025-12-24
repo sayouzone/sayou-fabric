@@ -1,3 +1,17 @@
+# Copyright (c) 2025, Sayouzone
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+ 
 import logging
 import pandas as pd
 
@@ -117,6 +131,10 @@ class YahooAnalysisParser:
         """매출 추정치 (Revenue Estimate)"""
         return self._fetch_earning_trend(ticker, "revenueEstimate")
 
+    def fetch_earnings_history(self, ticker: str):
+        """이익 추이 (Earnings History)"""
+        return self._fetch_earning_history(ticker, "earningsHistory")
+
     def fetch_eps_trend(self, ticker: str):
         """EPS 추세 (EPS Trend)"""
         return self._fetch_earning_trend(ticker, "epsTrend")
@@ -124,6 +142,56 @@ class YahooAnalysisParser:
     def fetch_eps_revisions(self, ticker: str):
         """EPS 수정치 (EPS Revisions)"""
         return self._fetch_earning_trend(ticker, "epsRevisions")
+
+    def fetch_growth_estimate(self, ticker: str):
+        """성장 추정치 (Growth Estimate)"""
+
+        # Ticker 성장 추정치
+        result = self.quote_parser.fetch_quote(ticker, modules=['earningsTrend'])
+        earnings_trend = self._extract_module(result, "earningsTrend").get('trend', {})
+
+        data = []
+        for item in earnings_trend:
+            period = item.get("period", {})
+            row = {
+                "period": period,
+                ticker: item.get("growth", {}).get("raw", None),
+            }
+            data.append(row)
+
+        # Industry 성장 추정치
+        modules = ['industryTrend', 'sectorTrend', 'indexTrend']
+        result = self.quote_parser.fetch_quote(ticker, modules=modules)
+        trends = result.get('quoteSummary', {}).get('result', [{}])[0]
+        #print(trends)
+
+        if not trends:
+            df = pd.DataFrame(data).set_index("period").dropna(how='all')
+            return df
+
+        for trend_name, trend_info in trends.items():
+            if trend_info.get("estimates"):
+                symbol = trend_info.get("symbol")
+                for estimate in trend_info.get("estimates"):
+                    period = estimate.get("period", {})
+                    existing_row = next((row for row in data if row.get("period") == period), None)
+                    if existing_row:
+                        #existing_row[trend_name] = estimate.get("growth", {})
+                        existing_row[symbol] = estimate.get("growth", {})
+                    else:
+                        row = {
+                            "period": period,
+                            #trend_name: estimate.get("growth", {}),
+                            symbol: estimate.get("growth", {}),
+                        }
+                        data.append(row)
+
+        if len(data) == 0:
+            return pd.DataFrame()
+        
+        df = pd.DataFrame(data).set_index("period").dropna(how='all')
+        #df = df.rename(columns={'A': 'Alpha', 'B': 'Beta'})
+        return df
 
     def fetch_all_trends(self, ticker: str) -> dict[str, pd.DataFrame]:
         """모든 추세 데이터 조회"""
@@ -136,7 +204,48 @@ class YahooAnalysisParser:
 
     # ==================== Private Methods ====================
 
-    def _fetch_earning_trend(self, ticker: str, key: str):
+    def _fetch_earning_history(self, ticker: str, key: str):
+        """
+        Earnings Trend 데이터 조회
+        
+        Args:
+            ticker: 종목 심볼
+            key: 'earningsHistory'
+        """
+
+        result = self.quote_parser.fetch_quote(ticker, modules=[key])
+        earnings_history = self._extract_module(result, key)
+
+        if not earnings_history:
+            return pd.DataFrame()
+
+        history = earnings_history.get("history", [])
+
+        rows = []
+        for item in history:
+            row = {
+                "quarter": item.get("quarter", {}).get("fmt", None),
+            }
+            for k, v in item.items():
+                if k == "quarter":
+                    continue
+                
+                if isinstance(v, dict) and "raw" in v:
+                    row[k] = v.get('raw', None)
+            
+            rows.append(row)
+
+        if len(history) == 0:
+            return pd.DataFrame()
+        
+        df = pd.DataFrame(rows)
+        if "quarter" in df.columns:
+            df["quarter"] = pd.to_datetime(df["quarter"], format="%Y-%m-%d")
+            df.set_index("quarter", inplace=True)
+
+        return df
+
+    def _fetch_earning_trend(self, ticker: str, key: str, modules: list[str] = ["earningsTrend"]):
         """
         Earnings Trend 데이터 조회
         
@@ -144,7 +253,7 @@ class YahooAnalysisParser:
             ticker: 종목 심볼
             key: 'earningsEstimate', 'revenueEstimate', 'epsTrend', 'epsRevisions'
         """
-        result = self.quote_parser.fetch_quote(ticker, modules=["earningsTrend"])
+        result = self.quote_parser.fetch_quote(ticker, modules=modules)
         earnings_trend = self._extract_module(result, "earningsTrend")
 
         if not earnings_trend:

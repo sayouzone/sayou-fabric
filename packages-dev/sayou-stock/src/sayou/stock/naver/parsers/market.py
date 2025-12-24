@@ -1,4 +1,19 @@
+# Copyright (c) 2025, Sayouzone
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+ 
 import ast
+import logging
 import pandas as pd
 import random
 import re
@@ -10,11 +25,16 @@ from typing import Dict, Any, List, Tuple, Optional
 
 from ..client import NaverClient
 from ..utils import (
-    news_urls,
-    finance_url,
-    finance_api_url,
+    NEWS_URLS,
+    FINANCE_URL,
+    FINANCE_API_URL,
+    MOBILE_URL,
     decode_euc_kr
 )
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class NaverMarketParser:
 
@@ -124,7 +144,7 @@ class NaverMarketParser:
             "output": "json"
         }
         
-        url = f"{finance_api_url}/siseJson.naver"
+        url = f"{FINANCE_API_URL}/siseJson.naver"
 
         #print(url, params)
         response = self.client._get(url, params=params)
@@ -190,7 +210,7 @@ class NaverMarketParser:
                     "page": page
                 }
 
-                url = f"{finance_url}/item/sise_day.nhn"
+                url = f"{FINANCE_URL}/item/sise_day.nhn"
                 #print(f"Parsing URL: {url}, params: {params}")
 
                 response = self.client._get(url, params=params)
@@ -281,7 +301,7 @@ class NaverMarketParser:
         params = {
             "code": code
         }
-        url = f'{finance_url}/item/sise.naver'
+        url = f'{FINANCE_URL}/item/sise.naver'
         response = self.client._get(url, params=params)
         content = decode_euc_kr(response)
 
@@ -321,7 +341,7 @@ class NaverMarketParser:
         metadata: Dict[str, Any] = {}
         latest_price: float | None = None
 
-        url = f"https://m.stock.naver.com/api/stock/{code}/basic"
+        url = f"{MOBILE_URL}/{code}/basic"
         print(f"Parsing URL: {url}")
         response = self.client._get(url)
 
@@ -349,11 +369,14 @@ class NaverMarketParser:
             except ValueError:
                 latest_price = None
 
-        url = f"{finance_api_url}/service/itemSummary.naver?itemcode={code}"
-        referer = f'{finance_url}/item/main.nhn?code={code}'
+        url = f"{FINANCE_API_URL}/service/itemSummary.naver"
+        referer = f'{FINANCE_URL}/item/main.nhn?code={code}'
         print(f"Parsing URL: {url}")
+        params = {
+            "itemcode": code
+        }
         
-        response = self.client._get(url, referer=referer)
+        response = self.client._get(url, params=params, referer=referer)
         
         summary_json = response.json()
         print(summary_json)

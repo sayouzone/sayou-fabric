@@ -1,30 +1,21 @@
 
 
-#Snapshot
-main_url = "https://comp.fnguide.com/SVO2/ASP/SVD_main.asp"
-#기업개요
-company_url = "https://comp.fnguide.com/SVO2/ASP/SVD_Corp.asp"
-#재무제표
-#dynamic_url = "https://comp.fnguide.com/SVO2/ASP/SVD_Finance.asp&cID=&MenuYn=Y&ReportGB=&NewMenuID=103&stkGb=701"
-finance_url = "https://comp.fnguide.com/SVO2/ASP/SVD_Finance.asp"
-#재무비율
-finance_ratio_url = "https://comp.fnguide.com/SVO2/ASP/SVD_FinanceRatio.asp"
-#투자지표
-invest_url = "https://comp.fnguide.com/SVO2/ASP/SVD_Invest.asp"
-#컨센서스
-consensus_url = "https://comp.fnguide.com/SVO2/ASP/SVD_Consensus.asp"
-#지분분석
-share_analysis_url = "https://comp.fnguide.com/SVO2/ASP/SVD_shareanalysis.asp"
-#업종분석
-industry_analysis_url = "https://comp.fnguide.com/SVO2/ASP/SVD_ujanal.asp"
-#경쟁사비교
-comparison_url = "https://comp.fnguide.com/SVO2/ASP/SVD_Comparison.asp"
-#거래소공시
-disclosure_url = "https://comp.fnguide.com/SVO2/ASP/SVD_Disclosure.asp"
-#금감원공시
-dart_url = "https://comp.fnguide.com/SVO2/ASP/SVD_Dart.asp"
+# Copyright (c) 2025, Sayouzone
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-urls = {
+
+FNGUIDE_URLS = {
     "메인": "https://comp.fnguide.com/SVO2/ASP/SVD_main.asp",
     "기업개요": "https://comp.fnguide.com/SVO2/ASP/SVD_Corp.asp",
     "재무제표": "https://comp.fnguide.com/SVO2/ASP/SVD_Finance.asp",

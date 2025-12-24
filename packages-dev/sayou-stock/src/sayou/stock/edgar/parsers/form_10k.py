@@ -1,7 +1,22 @@
+# Copyright (c) 2025, Sayouzone
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+ 
 """
 SEC EDGAR 10-K / 10-Q 파서
 """
 
+import logging
 import pandas as pd
 import re
 import json
@@ -10,7 +25,10 @@ from bs4 import BeautifulSoup
 from io import StringIO
 
 from ..client import EDGARClient
-from ..models import FinancialData, FilingMetadata
+from ..models import (
+    FinancialData, 
+    FilingMetadata
+)
 from ..utils import (
     SECTION_PATTERNS_10K, 
     SECTION_PATTERNS_10Q,
@@ -18,6 +36,9 @@ from ..utils import (
     find_main_document,
 )
 
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Form10KParser:
     """10-K 파일링 파서"""
