@@ -24,7 +24,8 @@ from ..client import OpenDartClient
 from ..utils import (
     decode_euc_kr,
     finance_urls,
-    quarters
+    quarters,
+    FINANCE_COLUMNS
 )
 
 class DartFinanceParser:
@@ -33,6 +34,37 @@ class DartFinanceParser:
     
     정기보고서 재무정보: Financial Information in Periodic Reports, https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS003
     """
+
+    # 재무제표구분
+    # https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS003&apiId=2020001
+    FINANCIAL_STATEMENTS_TYPES = {
+        "BS1": ("재무상태표", "연결", "유동/비유동법", None),
+        "BS2": ("재무상태표", "개별", "유동/비유동법", None),
+        "BS3": ("재무상태표", "연결", "유동성배열법", None),
+        "BS4": ("재무상태표", "개별", "유동성배열법", None),
+        "IS1": ("별개의 손익계산서", "연결", "기능별분류", None),
+        "IS2": ("별개의 손익계산서", "개별", "기능별분류", None),
+        "IS3": ("별개의 손익계산서", "연결", "성격별분류", None),
+        "IS4": ("별개의 손익계산서", "개별", "성격별분류", None),
+        "CIS1": ("포괄손익계산서", "연결", "세후", None),
+        "CIS2": ("포괄손익계산서", "개별", "세후", None),
+        "CIS3": ("포괄손익계산서", "연결", "세전", None),
+        "CIS4": ("포괄손익계산서", "개별", "세전", None),
+        "DCIS1": ("단일 포괄손익계산서", "연결", "기능별분류", "세후포괄손익"),
+        "DCIS2": ("단일 포괄손익계산서", "개별", "기능별분류", "세후포괄손익"),
+        "DCIS3": ("단일 포괄손익계산서", "연결", "기능별분류", "세전"),
+        "DCIS4": ("단일 포괄손익계산서", "개별", "기능별분류", "세전"),
+        "DCIS5": ("단일 포괄손익계산서", "연결", "성격별분류", "세후포괄손익"),
+        "DCIS6": ("단일 포괄손익계산서", "개별", "성격별분류", "세후포괄손익"),
+        "DCIS7": ("단일 포괄손익계산서", "연결", "성격별분류", "세전"),
+        "DCIS8": ("단일 포괄손익계산서", "개별", "성격별분류", "세전"),
+        "CF1": ("현금흐름표", "연결", "직접법", None),
+        "CF2": ("현금흐름표", "개별", "직접법", None),
+        "CF3": ("현금흐름표", "연결", "간접법", None),
+        "CF4": ("현금흐름표", "개별", "간접법", None),
+        "SCE1": ("자본변동표", "연결", None, None),
+        "SCE2": ("자본변동표", "개별", None, None),
+    }
 
     def __init__(self, client: OpenDartClient):
         self.client = client

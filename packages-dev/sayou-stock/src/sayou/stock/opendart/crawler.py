@@ -23,7 +23,15 @@ from typing import Dict, List, Optional, Tuple
 
 from .client import OpenDartClient
 from .models import DartConfig
-#from .utils import companydict
+from .utils import (
+    duplicate_keys,
+    DISCLOSURE_COLUMNS,
+    REPORTS_COLUMNS,
+    FINANCE_COLUMNS,
+    OWNERSHIP_COLUMNS,
+    MATERIAL_FACTS_COLUMNS,
+    REGISTRATION_COLUMNS,
+)
 
 from .parsers import (
     DartDocumentParser,
@@ -76,6 +84,15 @@ class OpenDartCrawler:
         with open("corpcode.json", "r", encoding="utf-8") as json_file:
             self._corp_data = json.load(json_file)
 
+    def duplicate_keys(self):
+        #seen,duplicates = duplicate_keys(DISCLOSURE_COLUMNS)
+        #seen,duplicates = duplicate_keys(REPORTS_COLUMNS)
+        #seen,duplicates = duplicate_keys(FINANCE_COLUMNS)
+        #seen,duplicates = duplicate_keys(OWNERSHIP_COLUMNS)
+        #seen,duplicates = duplicate_keys(MATERIAL_FACTS_COLUMNS)
+        #seen, duplicates = duplicate_keys(REGISTRATION_COLUMNS)
+        #print(seen)
+
     def fetch_corp_code(self, company: str, limit: int = 10, flags: int = re.IGNORECASE) -> str:
         """
         """
@@ -104,6 +121,18 @@ class OpenDartCrawler:
 
     def registration(self, corp_code: str, start_date: str, end_date: str, api_no: int = -1, api_type: str = None):
         return self._registration_parser.fetch(corp_code, start_date, end_date, api_no, api_type)
+
+    def merge(self, corp_code: str, start_date: str, end_date: str):
+        """OpenDart 합병 현황"""
+        api_no = 3
+        api_type = "합병"
+        return self._registration_parser.fetch(corp_code, start_date, end_date, api_type=api_type)
+
+    def split(self, corp_code: str, start_date: str, end_date: str):
+        """OpenDart 분할 현황"""
+        api_no = 5
+        api_type = "분할"
+        return self._registration_parser.fetch(corp_code, start_date, end_date, api_type=api_type)
 
     def _fetch_corp_code_by_name(self, company: str, limit: int = 10, flags: int = re.IGNORECASE) -> str:
         try:

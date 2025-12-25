@@ -24,12 +24,13 @@ from ..client import OpenDartClient
 from ..utils import (
     decode_euc_kr,
     disclosure_urls,
-    quarters
+    quarters,
+    DISCLOSURE_COLUMNS
 )
 
 class DartDisclosureParser:
     """
-    OpenDART API 파싱 클래스
+    OpenDART 공시정보 API 파싱 클래스
     
     공시정보: Public Disclosure, https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS001
     """

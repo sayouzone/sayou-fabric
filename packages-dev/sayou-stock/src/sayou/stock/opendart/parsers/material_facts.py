@@ -24,7 +24,8 @@ from ..client import OpenDartClient
 from ..utils import (
     decode_euc_kr,
     material_facts_urls,
-    quarters
+    quarters,
+    MATERIAL_FACTS_COLUMNS
 )
 
 class DartMaterialFactsParser:

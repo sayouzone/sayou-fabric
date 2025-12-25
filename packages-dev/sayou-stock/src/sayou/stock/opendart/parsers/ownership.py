@@ -24,7 +24,8 @@ from ..client import OpenDartClient
 from ..utils import (
     decode_euc_kr,
     ownership_urls,
-    quarters
+    quarters,
+    OWNERSHIP_COLUMNS
 )
 
 class DartOwnershipParser:

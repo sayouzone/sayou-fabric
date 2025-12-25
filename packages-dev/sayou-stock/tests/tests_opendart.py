@@ -414,6 +414,7 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
 
 def demo_registration(crawler: OpenDartCrawler, corp_code: str):
     """증권신고서 주요정보 데모"""
+
     print(f"\n{'='*60}")
     print(f"회사명 또는 종목코드로 DART의 증권신고서 주요정보를 조회 - {code}")
     print('='*60)
@@ -493,19 +494,21 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
             print(df)
 
             # 재무제표 접수번호
-            print(f"\n접수번호: {rcept_no.iloc[0]}")
+            #print(f"\n접수번호: {rcept_no.iloc[0]}")
 
-    # 분할 현황
-    corp_code = "00105271"
+    # 합병 현황    
+    corp_code = "00109718"
     #corp_code = crawler.fetch_corp_code(corp_code)
     corp_name = crawler.fetch_corp_name(corp_code)
     print(corp_code, corp_name)
     start_date = "20190101"
     end_date = "20251231"
 
-    api_no = 5
+    api_no = 3
+    print(f"\nOpenDart 합병 현황 ({corp_name}, {corp_code})")
 
-    api_key, data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
+    #api_key, data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
+    api_key, data = crawler.merge(corp_code, start_date=start_date, end_date=end_date)
     #print(data)
     status = data.get("status", "")
     groups = data.get("group", [])
@@ -519,7 +522,35 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
             print(df)
 
             # 재무제표 접수번호
-            print(f"\n접수번호: {rcept_no.iloc[0]}")
+            #print(f"\n접수번호: {rcept_no.iloc[0]}")
+
+    # 분할 현황    
+    corp_code = "00105271"
+    #corp_code = crawler.fetch_corp_code(corp_code)
+    corp_name = crawler.fetch_corp_name(corp_code)
+    print(corp_code, corp_name)
+    start_date = "20190101"
+    end_date = "20251231"
+
+    api_no = 5
+    print(f"\nOpenDart 분할 현황 ({corp_name}, {corp_code})")
+
+    #api_key, data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
+    api_key, data = crawler.split(corp_code, start_date=start_date, end_date=end_date)
+    #print(data)
+    status = data.get("status", "")
+    groups = data.get("group", [])
+    if status == "000" and len(groups) > 0:
+        for item in groups:
+            title = item.get("title")
+            list = item.get("list")
+            print(f"\n{api_key} {title} ({corp_name}, {corp_code})")
+            df = pd.DataFrame(list)
+            rcept_no = df.get("rcept_no")
+            print(df)
+
+            # 재무제표 접수번호
+            #print(f"\n접수번호: {rcept_no.iloc[0]}")
 
 def main(code: str):
     """메인 데모 실행"""
@@ -541,17 +572,17 @@ def main(code: str):
     print(f"\n{code} corp_code: {corp_code}")
 
     # 각 파일링 타입 데모
-    demo_corp_code(crawler, code)
-    demo_base_documents(crawler, code)
-    rcept_no = demo_finance(crawler, corp_code)
+    #demo_corp_code(crawler, code)
+    #demo_base_documents(crawler, code)
+    #rcept_no = demo_finance(crawler, corp_code)
     # 00126380      삼성전자     005930        Y                  반기보고서 (2025.06)  20250814003156              삼성전자  20250814  
     #rcept_no="20251114002447"
-    demo_download_xbrl(crawler, rcept_no=rcept_no)
-    demo_reports(crawler, corp_code)
-    demo_ownership(crawler, corp_code)
-    demo_material_facts(crawler, corp_code)
-    demo_registration(crawler, corp_code)
-    
+    #demo_download_xbrl(crawler, rcept_no=rcept_no)
+    #demo_reports(crawler, corp_code)
+    #demo_ownership(crawler, corp_code)
+    #demo_material_facts(crawler, corp_code)
+    #demo_registration(crawler, corp_code)
+    crawler.duplicate_keys()
     
     print("\n" + "="*60)
     print("Demo completed!")
