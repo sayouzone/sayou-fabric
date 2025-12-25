@@ -1,3 +1,18 @@
+# Copyright (c) 2025, Sayouzone
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+ 
+import logging
 import random
 import time
 
@@ -7,10 +22,14 @@ from urllib import parse
 
 from ..client import NaverClient
 from ..utils import (
-    news_urls,
-    finance_url,
-    finance_api_url,
+    NEWS_URLS,
+    FINANCE_URL,
+    FINANCE_API_URL,
 )
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class NaverNewsParser:
     """
@@ -51,7 +70,7 @@ class NaverNewsParser:
         if category != "조회":
             return self._fetch_category_news()
         
-        url = news_urls.get("openapi") if not url else url
+        url = NEWS_URLS.get("openapi") if not url else url
         enc_text = parse.quote(query)
         #api_url = url.format(query=enc_text, display=max_articles)
 
@@ -120,7 +139,7 @@ class NaverNewsParser:
         """
         
         articles = []
-        for category_name, category_url in news_urls.items():
+        for category_name, category_url in NEWS_URLS.items():
             if category_name == "openapi":
                 continue
             print(f"News 목록 URL: {category_url}")

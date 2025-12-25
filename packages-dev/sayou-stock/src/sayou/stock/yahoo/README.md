@@ -12,10 +12,17 @@ yahoo/
 ├── examples.py          # 사용 예시
 └── parsers/
     ├── __init__.py
+    ├── analysis.py      # 분석 API 파서
     ├── chart.py         # 시세정보 API 파서
     ├── fundamentals.py  # 재무정보 API 파서
+    ├── holders.py       # 소유주 API 파서
+    ├── market.py        # 시장정보 API 파서
+    ├── news.py          # 뉴스 API 파서
+    ├── options.py       # 옵션 API 파서
+    ├── profile.py       # 프로필 API 파서
     ├── quote.py         # 기업정보 API 파서
-    └── news.py          # 뉴스 API 파서
+    ├── statistics.py    # 통계 API 파서
+    └── summary.py       # 요약 API 파서
 ```
 
 https://developer.yahoo.com/api/

@@ -13,12 +13,13 @@ authors = [
 ]
 description = ""
 readme = "README.md"
-license = { file = "../../LICENSE" }
+license = { file = "./LICENSE" }
 requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
@@ -30,10 +31,10 @@ dependencies = []
 # -----------------
 [project.urls]
 "Homepage" = "https://www.sayouzone.com/"
-"Repository" = "https://github.com/sayouzone/sayou-fabric"
+"Repository" = "https://github.com/sayouzone/sayou-fabric/tree/main/packages-dev/sayou-stock"
 
 # -----------------
 # 3. 소스 코드 위치
 # -----------------
 [tool.hatch.build.targets.wheel]
-packages = ["src/sayou"]
+packages = ["src/sayou/stock"]

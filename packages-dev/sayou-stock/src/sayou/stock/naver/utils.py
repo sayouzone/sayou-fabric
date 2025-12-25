@@ -1,6 +1,20 @@
 
+# Copyright (c) 2025, Sayouzone
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+ 
 
-news_urls = {
+NEWS_URLS = {
     '정치': 'https://news.naver.com/section/100',
     '경제': 'https://news.naver.com/section/101',
     '사회': 'https://news.naver.com/section/102',
@@ -10,8 +24,9 @@ news_urls = {
     'openapi': 'https://openapi.naver.com/v1/search/news.json'
 }
 
-finance_url = 'https://finance.naver.com'
-finance_api_url = 'https://api.finance.naver.com'
+FINANCE_URL = 'https://finance.naver.com'
+FINANCE_API_URL = 'https://api.finance.naver.com'
+MOBILE_URL = 'https://m.stock.naver.com/api/stock'
 
 def decode_euc_kr(response):
     """깨진 한글 인코딩 복원"""

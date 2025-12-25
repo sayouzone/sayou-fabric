@@ -1,15 +1,39 @@
+# Copyright (c) 2025, Sayouzone
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+ 
 """
 SEC EDGAR 8-K 파서
 """
 
+import logging
 import re
 from typing import Optional
 from bs4 import BeautifulSoup
 
 from ..client import EDGARClient
-from ..models import Filing8KData, FilingMetadata
-from ..utils import ITEM_8K_MAPPING, find_main_document
+from ..models import (
+    Filing8KData, 
+    FilingMetadata
+)
+from ..utils import (
+    ITEM_8K_MAPPING, 
+    find_main_document
+)
 
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Form8KParser:
     """8-K 파일링 파서"""

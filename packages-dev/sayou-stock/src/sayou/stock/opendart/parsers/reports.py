@@ -10,7 +10,8 @@ from ..client import OpenDartClient
 from ..utils import (
     decode_euc_kr,
     reports_urls,
-    quarters
+    quarters,
+    REPORTS_COLUMNS
 )
 
 class DartReportsParser:

@@ -1,3 +1,17 @@
+# Copyright (c) 2025, Sayouzone
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+ 
 import logging
 import pandas as pd
 import random
@@ -47,7 +61,7 @@ class YahooQuoteParser:
         Yahoo Finance에서 뉴스를 수집하고, 기사 본문을 크롤링합니다.
         """
 
-        info_url = f"{_QUOTE_SUMMARY_URL_}/{ticker}"
+        summary_url = f"{_QUOTE_SUMMARY_URL_}/{ticker}"
         params = {
             "modules": ",".join(self.MODULES), 
             "corsDomain": "finance.yahoo.com", 
@@ -55,32 +69,29 @@ class YahooQuoteParser:
             "symbol": ticker
         }
 
-        if _QUERY2_URL_ in info_url:
+        if _QUERY2_URL_ in summary_url:
             params["crumb"] = self.fetch_crumb()
 
-        response = self.client._get(info_url, params=params)
-        info = response.json()
-
-        #print(info)
+        response = self.client._get(summary_url, params=params)
+        summary_info = response.json()
 
         params = {"symbols": ticker, "formatted": "false"}
         params["crumb"] = self.fetch_crumb()
 
         response = self.client._get(_QUOTE_URL_, params=params)
-        additional_info = response.json()
-        #print(additional_info)
+        quote_info = response.json()
 
-        if additional_info is not None and info is not None:
-            info.update(additional_info)
+        if quote_info is not None and summary_info is not None:
+            summary_info.update(quote_info)
         else:
-            info = additional_info
+            summary_info = quote_info
 
         query_info = {}
         for quote in ['quoteSummary', 'quoteResponse']:
-            if quote in info and len(info[quote]['result']) > 0:
-                info[quote]['result'][0]["symbol"] = ticker
+            if quote in summary_info and len(summary_info[quote]['result']) > 0:
+                summary_info[quote]['result'][0]["symbol"] = ticker
                 query = next(
-                    (item for item in info.get(quote, {}).get('result', []) 
+                    (item for item in summary_info.get(quote, {}).get('result', []) 
                     if item.get('symbol') == ticker), 
                     None
                 )
@@ -166,6 +177,33 @@ class YahooQuoteParser:
         except Exception as e:
             logger.error(f"Failed to fetch recommendation for {ticker}: {e}")
             return pd.DataFrame()
+    
+    def fetch_sec_filings(self, ticker: str):
+        """
+        SEC Filings API 호출
+        
+        Args:
+            ticker: 종목 심볼
+        """
+        try:
+            response = self.fetch_quote(ticker, modules=["secFilings"])
+
+            if response is None:
+                return {}
+
+            filings = response.get("quoteSummary", {}).get("result", [{}])[0].get("secFilings", {}).get("filings", [])
+            #print(filings)
+
+            for filing in filings:
+                if 'exhibits' in filing:
+                    filing['exhibits'] = {ex.get("type", ""):ex.get("url", "") for ex in filing.get('exhibits', [{}])}
+                filing['date'] = datetime.strptime(filing.get('date', ''), '%Y-%m-%d').date()
+            
+            return filings
+
+        except Exception as e:
+            logger.error(f"Failed to fetch sec filings for {ticker}: {e}")
+            return {}
 
     def fetch_quote(self, ticker: str, modules: list[str]):
         """
@@ -193,8 +231,10 @@ class YahooQuoteParser:
         }
 
         # 크럼 인증 추가
-        if _QUERY2_URL_ in url:
-            params["crumb"] = self.fetch_crumb()
+        if not self._crumb and _QUERY2_URL_ in url:
+            self._crumb = self.fetch_crumb()
+        
+        params["crumb"] = self._crumb
 
         # API 호출
         try:
