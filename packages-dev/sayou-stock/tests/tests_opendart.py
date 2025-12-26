@@ -668,8 +668,12 @@ def main(code: str):
     load_dotenv()
     dart_api_key = os.getenv("DART_API_KEY", "")
 
+    corpcode_filename = "corpcode.json"
+
     # OpenDart에서 요구하는 User-Agent 설정
-    crawler = OpenDartCrawler(api_key=dart_api_key)
+    crawler = OpenDartCrawler(api_key=dart_api_key, )
+    corp_data = crawler.corp_data
+    #crawler.save_corp_data(corpcode_filename)
 
     # 회사이름으로 corp_code 검색
     #company_name = "삼성전자"
