@@ -24,7 +24,7 @@ from ..client import OpenDartClient
 
 from ..utils import (
     decode_euc_kr,
-    registration_urls,
+    REGISTRATION_URLS,
     quarters,
     duplicate_keys,
     REGISTRATION_COLUMNS
@@ -55,8 +55,8 @@ class DartRegistrationParser:
     def fetch(self, corp_code: str, start_date: str, end_date: str, api_no: int = -1, api_type: str = None):
         url = None
 
-        api_key = list(registration_urls.keys())[api_no] if api_no > -1 else api_type        
-        url = registration_urls.get(api_key)
+        api_key = list(REGISTRATION_URLS.keys())[api_no] if api_no > -1 else api_type        
+        url = REGISTRATION_URLS.get(api_key)
 
         if not url:
             return

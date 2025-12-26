@@ -15,6 +15,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from opendart import OpenDartCrawler
+from opendart.utils import (
+    DISCLOSURE_ITEMS,
+    REPORT_ITEMS,
+    FINANCE_ITEMS,
+    OWNERSHIP_ITEMS,
+    MATERIAL_FACTS_ITEMS,
+    REGISTRATION_ITEMS
+)
 
 def demo_corp_code(crawler: OpenDartCrawler, code: str):
     """DART의 기업코드을 조회 데모"""
@@ -59,7 +67,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
 
     corp_name = crawler.fetch_corp_name(corp_code)
 
+    # 단일회사 주요계정
     api_type = "단일회사 주요계정"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     data = crawler.finance(corp_code, last_year, api_type=api_type)
     #print(data)
     status = data.get("status", "")
@@ -70,7 +83,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         rcept_no = df.get("rcept_no")
         print(df)
 
+    # 다중회사 주요계정
     api_type = "다중회사 주요계정"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     data = crawler.finance(corp_code, last_year, api_type=api_type)
     #print(data)
     status = data.get("status", "")
@@ -81,7 +99,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         rcept_no = df.get("rcept_no")
         print(df)
 
+    # 단일회사 전체 재무제표
     api_type = "단일회사 전체 재무제표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+    
     data = crawler.finance(corp_code, last_year, api_type=api_type)
     #print(data)
     status = data.get("status", "")
@@ -92,8 +115,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         rcept_no = df.get("rcept_no")
         print(df)
 
-    #api_type = "XBRL택사노미재무제표양식"
+    # 단일회사 주요 재무지표
     api_type = "단일회사 주요 재무지표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+    
     data = crawler.finance(corp_code, last_year, api_type=api_type)
     #print(data)
     status = data.get("status", "")
@@ -103,7 +130,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         df = pd.DataFrame(list)
         print(df)
 
+    # 다중회사 주요 재무지표
     api_type = "다중회사 주요 재무지표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     data = crawler.finance(corp_code, last_year, api_type=api_type)
     #print(data)
     status = data.get("status", "")
@@ -117,7 +149,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     current_year = str(now.year)
     quarter = (now.month - 1) // 3
 
+    # 단일회사 주요계정
     api_type = "단일회사 주요계정"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     data = crawler.finance(corp_code, current_year, quarter=quarter, api_type=api_type)
     #print(data)
     status = data.get("status", "")
@@ -128,7 +165,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         rcept_no = df.get("rcept_no")
         print(df)
 
+    # 다중회사 주요계정
     api_type = "다중회사 주요계정"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+    
     data = crawler.finance(corp_code, current_year, quarter=quarter, api_type=api_type)
     #print(data)
     status = data.get("status", "")
@@ -139,7 +181,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         rcept_no = df.get("rcept_no")
         print(df)
 
+    # 단일회사 전체 재무제표
     api_type = "단일회사 전체 재무제표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     data = crawler.finance(corp_code, current_year, quarter=quarter, api_type=api_type)
     #print(data)
     status = data.get("status", "")
@@ -153,8 +200,11 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     # 수익성지표 : M210000 안정성지표 : M220000 성장성지표 : M230000 활동성지표 : M240000
     indicator_code = "M210000"
 
-    #api_type = "XBRL택사노미재무제표양식"
+    # 단일회사 주요 재무지표
     api_type = "단일회사 주요 재무지표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
     data = crawler.finance(corp_code, current_year, quarter=quarter, api_type=api_type)
     #print(data)
     status = data.get("status", "")
@@ -166,6 +216,10 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         print(df)
 
     api_type = "다중회사 주요 재무지표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     data = crawler.finance(corp_code, current_year, quarter=quarter, api_type=api_type)
     #print(data)
     status = data.get("status", "")
@@ -178,8 +232,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
 
     indicator_code = "M220000"
 
-    #api_type = "XBRL택사노미재무제표양식"
+    # 단일회사 주요 재무지표
     api_type = "단일회사 주요 재무지표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     data = crawler.finance(corp_code, current_year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
     #print(data)
     status = data.get("status", "")
@@ -190,7 +248,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         df = pd.DataFrame(list)
         print(df)
 
+    # 다중회사 주요 재무지표
     api_type = "다중회사 주요 재무지표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+    
     data = crawler.finance(corp_code, current_year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
     #print(data)
     status = data.get("status", "")
@@ -203,8 +266,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
 
     indicator_code = "M230000"
 
-    #api_type = "XBRL택사노미재무제표양식"
+    # 단일회사 주요 재무지표
     api_type = "단일회사 주요 재무지표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     data = crawler.finance(corp_code, current_year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
     #print(data)
     status = data.get("status", "")
@@ -215,7 +282,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         df = pd.DataFrame(list)
         print(df)
 
+    # 다중회사 주요 재무지표
     api_type = "다중회사 주요 재무지표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     data = crawler.finance(corp_code, current_year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
     #print(data)
     status = data.get("status", "")
@@ -228,8 +300,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
 
     indicator_code = "M240000"
 
-    #api_type = "XBRL택사노미재무제표양식"
+    # 단일회사 주요 재무지표
     api_type = "단일회사 주요 재무지표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+    
     data = crawler.finance(corp_code, current_year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
     #print(data)
     status = data.get("status", "")
@@ -240,7 +316,12 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         df = pd.DataFrame(list)
         print(df)
 
+    # 다중회사 주요 재무지표
     api_type = "다중회사 주요 재무지표"
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     data = crawler.finance(corp_code, current_year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
     #print(data)
     status = data.get("status", "")
@@ -274,49 +355,37 @@ def demo_download_xbrl(crawler: OpenDartCrawler, rcept_no: str = None):
 def demo_reports(crawler: OpenDartCrawler, corp_code: str):
     """정기보고서 주요정보 데모"""
     print(f"\n{'='*60}")
-    print(f"회사명 또는 종목코드로 DART의 기업코드을 조회 - {code}")
+    print(f"정기보고서 주요정보 조회 - {code}")
     print('='*60)
+
+    print(f"회사명 또는 종목코드로 DART의 기업코드을 조회 - {code}")
     corp_name = crawler.fetch_corp_name(corp_code)
 
-    rcept_no = None
+    # 정기보고서 주요정보 조회
+    for item, value in REPORT_ITEMS.items():
+        #print(item, value)
+        api_type, api_desc = value
+        
+        year = "2024"
+        quarter = 4
+        api_no = int(item) - 1
+        api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+        print(api_info)
+        print('-'*(int(len(api_info)*1.5)))
 
-    # 증자(감자) 현황
-    year = "2024"
-    quarter = 4
-    api_no = 0
+        api_key, data = crawler.reports(corp_code, year=year, quarter=quarter, api_no=api_no)
+        #print(data)
+        status = data.get("status", "")
+        list = data.get("list", [])
+        if status == "000" and len(list) > 0:
+            #idx_cl_nm = list[0].get("idx_cl_nm")
+            print(f"\n{api_key} {year}년 {quarter}분기 ({corp_name}, {corp_code})")
+            df = pd.DataFrame(list)
+            rcept_no = df.get("rcept_no")
+            print(df)
 
-    api_key, data = crawler.reports(corp_code, year=year, quarter=quarter, api_no=api_no)
-    #print(data)
-    status = data.get("status", "")
-    list = data.get("list", [])
-    if status == "000" and len(list) > 0:
-        #idx_cl_nm = list[0].get("idx_cl_nm")
-        print(f"\n{api_key} {year}년 {quarter}분기 ({corp_name}, {corp_code})")
-        df = pd.DataFrame(list)
-        rcept_no = df.get("rcept_no")
-        print(df)
-
-        # 재무제표 접수번호
-        print(f"\n{year}년 {quarter}분기 접수번호: {rcept_no.iloc[0]}")
-
-    # 배당에 관한 사항
-    year = "2025"
-    quarter = 3
-    api_no = 1
-
-    api_key, data = crawler.reports(corp_code, year=year, quarter=quarter, api_no=api_no)
-    #print(data)
-    status = data.get("status", "")
-    list = data.get("list", [])
-    if status == "000" and len(list) > 0:
-        #idx_cl_nm = list[0].get("idx_cl_nm")
-        print(f"\n{api_key} {year}년 {quarter}분기 ({corp_name}, {corp_code})")
-        df = pd.DataFrame(list)
-        rcept_no = df.get("rcept_no")
-        print(df)
-
-        # 재무제표 접수번호
-        print(f"\n{year}년 {quarter}분기 접수번호: {rcept_no.iloc[0]}")
+            # 재무제표 접수번호
+            #print(f"\n{year}년 {quarter}분기 접수번호: {rcept_no.iloc[0]}")
 
 def demo_ownership(crawler: OpenDartCrawler, corp_code: str):
     """지분공시 종합정보 데모"""
@@ -329,6 +398,10 @@ def demo_ownership(crawler: OpenDartCrawler, corp_code: str):
 
     # 대량보유 상황보고 현황
     api_no = 0
+    api_type, api_desc = OWNERSHIP_ITEMS.get(str(api_no + 1))
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
 
     api_key, data = crawler.ownership(corp_code, api_no=api_no)
     #print(data)
@@ -342,10 +415,14 @@ def demo_ownership(crawler: OpenDartCrawler, corp_code: str):
         print(df)
 
         # 재무제표 접수번호
-        print(f"\n접수번호: {rcept_no.iloc[0]}")
+        #print(f"\n접수번호: {rcept_no.iloc[0]}")
 
     # 임원ㆍ주요주주 소유보고 현황
     api_no = 1
+    api_type, api_desc = OWNERSHIP_ITEMS.get(str(api_no + 1))
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
 
     api_key, data = crawler.ownership(corp_code, api_no=api_no)
     #print(data)
@@ -359,7 +436,7 @@ def demo_ownership(crawler: OpenDartCrawler, corp_code: str):
         print(df)
 
         # 재무제표 접수번호
-        print(f"\n접수번호: {rcept_no.iloc[0]}")
+        #print(f"\n접수번호: {rcept_no.iloc[0]}")
 
 def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     """주요사항보고서 주요정보 데모"""
@@ -377,6 +454,11 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     end_date = "20251231"
     api_no = 0
 
+    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     api_key, data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
     #print(data)
     status = data.get("status", "")
@@ -389,7 +471,7 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
         print(df)
 
         # 재무제표 접수번호
-        print(f"\n접수번호: {rcept_no.iloc[0]}")
+        #print(f"\n접수번호: {rcept_no.iloc[0]}")
 
     # 유무상증자 결정 현황
     corp_code = "00359395"
@@ -398,6 +480,11 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     end_date = "20251231"
     api_no = 7
 
+    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     api_key, data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
     #print(data)
     status = data.get("status", "")
@@ -410,7 +497,7 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
         print(df)
 
         # 재무제표 접수번호
-        print(f"\n접수번호: {rcept_no.iloc[0]}")
+        #print(f"\n접수번호: {rcept_no.iloc[0]}")
 
 def demo_registration(crawler: OpenDartCrawler, corp_code: str):
     """증권신고서 주요정보 데모"""
@@ -432,6 +519,11 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
 
     api_no = 0
 
+    api_type, api_desc = REGISTRATION_ITEMS.get(str(api_no + 1))
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     api_key, data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
     #print(data)
     status = data.get("status", "")
@@ -446,7 +538,7 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
             print(df)
 
             # 재무제표 접수번호
-            print(f"\n접수번호: {rcept_no.iloc[0]}")
+            #print(f"\n접수번호: {rcept_no.iloc[0]}")
 
     # 채무증권 현황
     corp_code = "00858364"
@@ -456,6 +548,11 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
 
     api_no = 1
 
+    api_type, api_desc = REGISTRATION_ITEMS.get(str(api_no + 1))
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
     api_key, data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
     #print(data)
     status = data.get("status", "")
@@ -470,7 +567,7 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
             print(df)
 
             # 재무제표 접수번호
-            print(f"\n접수번호: {rcept_no.iloc[0]}")
+            #print(f"\n접수번호: {rcept_no.iloc[0]}")
 
     # 증권예탁증권 현황
     corp_code = "01338724"
@@ -479,6 +576,11 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
     end_date = "20251231"
 
     api_no = 2
+
+    api_type, api_desc = REGISTRATION_ITEMS.get(str(api_no + 1))
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
 
     api_key, data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
     #print(data)
@@ -505,7 +607,11 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
     end_date = "20251231"
 
     api_no = 3
-    print(f"\nOpenDart 합병 현황 ({corp_name}, {corp_code})")
+
+    api_type, api_desc = REGISTRATION_ITEMS.get(str(api_no + 1))
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
 
     #api_key, data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
     api_key, data = crawler.merge(corp_code, start_date=start_date, end_date=end_date)
@@ -533,7 +639,11 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
     end_date = "20251231"
 
     api_no = 5
-    print(f"\nOpenDart 분할 현황 ({corp_name}, {corp_code})")
+
+    api_type, api_desc = REGISTRATION_ITEMS.get(str(api_no + 1))
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
 
     #api_key, data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
     api_key, data = crawler.split(corp_code, start_date=start_date, end_date=end_date)
@@ -572,16 +682,16 @@ def main(code: str):
     print(f"\n{code} corp_code: {corp_code}")
 
     # 각 파일링 타입 데모
-    #demo_corp_code(crawler, code)
-    #demo_base_documents(crawler, code)
-    #rcept_no = demo_finance(crawler, corp_code)
+    demo_corp_code(crawler, code)
+    demo_base_documents(crawler, code)
+    rcept_no = demo_finance(crawler, corp_code)
     # 00126380      삼성전자     005930        Y                  반기보고서 (2025.06)  20250814003156              삼성전자  20250814  
     #rcept_no="20251114002447"
-    #demo_download_xbrl(crawler, rcept_no=rcept_no)
-    #demo_reports(crawler, corp_code)
-    #demo_ownership(crawler, corp_code)
-    #demo_material_facts(crawler, corp_code)
-    #demo_registration(crawler, corp_code)
+    demo_download_xbrl(crawler, rcept_no=rcept_no)
+    demo_reports(crawler, corp_code)
+    demo_ownership(crawler, corp_code)
+    demo_material_facts(crawler, corp_code)
+    demo_registration(crawler, corp_code)
     crawler.duplicate_keys()
     
     print("\n" + "="*60)

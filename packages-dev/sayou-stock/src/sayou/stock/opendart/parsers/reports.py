@@ -9,7 +9,7 @@ from ..client import OpenDartClient
 
 from ..utils import (
     decode_euc_kr,
-    reports_urls,
+    REPORTS_URLS,
     quarters,
     REPORTS_COLUMNS
 )
@@ -18,7 +18,8 @@ class DartReportsParser:
     """
     OpenDART 정기보고서 주요정보 API 파싱 클래스
     
-    정기보고서 주요정보: Key Information in Periodic Reports, https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS002
+    정기보고서 주요정보 (Key Information in Periodic Reports):
+    - https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS002
     """
 
     def __init__(self, client: OpenDartClient):
@@ -34,8 +35,8 @@ class DartReportsParser:
     def fetch(self, corp_code: str, year: str, quarter: int, api_no: int = -1, api_type: str = None):
         url = None
 
-        api_key = list(reports_urls.keys())[api_no] if api_no > -1 else api_type        
-        url = reports_urls.get(api_key)
+        api_key = list(REPORTS_URLS.keys())[api_no] if api_no > -1 else api_type        
+        url = REPORTS_URLS.get(api_key)
 
         if not url:
             return

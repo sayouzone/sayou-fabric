@@ -81,23 +81,35 @@ class OpenDartCrawler:
         self._reports_parser = DartReportsParser(self.client)
         self._corp_data : Optional[list] = None
 
-        with open("corpcode.json", "r", encoding="utf-8") as json_file:
-            self._corp_data = json.load(json_file)
+        if os.path.exists("corpcode.json"):
+            with open("corpcode.json", "r", encoding="utf-8") as json_file:
+                self._corp_data = json.load(json_file)
+        else:
+            result = self._disclosure_parser.fetch_corp_code()
+            content = result.get("xml_data")[0].get("content")
+            with open("corpcode.json", "w", encoding="utf-8") as file:
+                json.dump(content.get("result", {}).get("list", []), file, ensure_ascii=False, indent=4)
+            self._corp_data = content.get("result", {}).get("list", [])
 
     def duplicate_keys(self):
-        #seen,duplicates = duplicate_keys(DISCLOSURE_COLUMNS)
-        #seen,duplicates = duplicate_keys(REPORTS_COLUMNS)
-        #seen,duplicates = duplicate_keys(FINANCE_COLUMNS)
-        #seen,duplicates = duplicate_keys(OWNERSHIP_COLUMNS)
-        #seen,duplicates = duplicate_keys(MATERIAL_FACTS_COLUMNS)
-        #seen, duplicates = duplicate_keys(REGISTRATION_COLUMNS)
-        #print(seen)
+        seen,duplicates = duplicate_keys(DISCLOSURE_COLUMNS)
+        print(f"Disclosure Columns: {seen}")
+        seen,duplicates = duplicate_keys(REPORTS_COLUMNS)
+        print(f"Reports Columns: {seen}")
+        seen,duplicates = duplicate_keys(FINANCE_COLUMNS)
+        print(f"Finance Columns: {seen}")
+        seen,duplicates = duplicate_keys(OWNERSHIP_COLUMNS)
+        print(f"Ownership Columns: {seen}")
+        seen,duplicates = duplicate_keys(MATERIAL_FACTS_COLUMNS)
+        print(f"Material Facts Columns: {seen}")
+        seen, duplicates = duplicate_keys(REGISTRATION_COLUMNS)
+        print(f"Registration Columns: {seen}")
 
     def fetch_corp_code(self, company: str, limit: int = 10, flags: int = re.IGNORECASE) -> str:
         """
         """
         if self._corp_data is None:
-            result = self._disclosure_parser.corp_code()
+            result = self._disclosure_parser.fetch_corp_code()
             with open("corpcode.json", "w", encoding="utf-8") as file:
                 json.dump(result.get("xml_data")[0].get("list"), file, ensure_ascii=False, indent=4)
             self._corp_data = result.get("xml_data")[0].get("list")
@@ -143,6 +155,7 @@ class OpenDartCrawler:
         
         results = []
         for item in self._corp_data:
+            print(item)
             corp_name = item.get("corp_name", "")
             if regex.search(corp_name) and item.get("stock_code") != "":
                 results.append({
