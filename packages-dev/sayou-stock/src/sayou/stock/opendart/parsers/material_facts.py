@@ -23,7 +23,7 @@ from ..client import OpenDartClient
 
 from ..utils import (
     decode_euc_kr,
-    material_facts_urls,
+    MATERIAL_FACTS_URLS,
     quarters,
     MATERIAL_FACTS_COLUMNS
 )
@@ -48,8 +48,8 @@ class DartMaterialFactsParser:
     def fetch(self, corp_code: str, start_date: str, end_date: str, api_no: int = -1, api_type: str = None):
         url = None
 
-        api_key = list(material_facts_urls.keys())[api_no] if api_no > -1 else api_type        
-        url = material_facts_urls.get(api_key)
+        api_key = list(MATERIAL_FACTS_URLS.keys())[api_no] if api_no > -1 else api_type        
+        url = MATERIAL_FACTS_URLS.get(api_key)
 
         if not url:
             return

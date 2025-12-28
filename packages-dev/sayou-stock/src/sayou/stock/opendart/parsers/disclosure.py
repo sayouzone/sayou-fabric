@@ -23,9 +23,12 @@ from ..client import OpenDartClient
 
 from ..utils import (
     decode_euc_kr,
-    disclosure_urls,
+    DISCLOSURE_URLS,
     quarters,
-    DISCLOSURE_COLUMNS
+    DISCLOSURE_COLUMNS,
+    save_zip_path,
+    parse_xml,
+    parse_unzip_xml,
 )
 
 class DartDisclosureParser:
@@ -72,7 +75,7 @@ class DartDisclosureParser:
         while True:
             params['page_no'] = page
 
-            url = disclosure_urls.get("공시검색")
+            url = DISCLOSURE_URLS.get("공시검색")
             
             response = self.client._get(url, params=params)
             json_data = response.json()
@@ -119,7 +122,7 @@ class DartDisclosureParser:
         params = self.params
         params["corp_code"] = code
 
-        url = disclosure_urls.get("기업개황")
+        url = DISCLOSURE_URLS.get("기업개황")
         print(url, params)
 
         response = self.client._get(url, params=params)
@@ -154,7 +157,7 @@ class DartDisclosureParser:
         params = self.params
         params["rcept_no"] = rcept_no
 
-        url = disclosure_urls.get("공시서류원본파일")
+        url = DISCLOSURE_URLS.get("공시서류원본파일")
 
         response = self.client._get(url, params=params)
 
@@ -175,7 +178,7 @@ class DartDisclosureParser:
 
         if save_path is None:
             save_path = f"dart_{rcept_no}"
-            save_path = self.__save_zip_path(response_headers, save_path)
+            save_path = save_zip_path(response_headers, save_path)
         
         # ZIP 파일 저장
         #self.__save_zip(binary_data, save_path)
@@ -187,7 +190,7 @@ class DartDisclosureParser:
             'rcept_no': rcept_no,
         }
 
-        _result = self.__parse_unzip_xml(binary_data, save_path)
+        _result = parse_unzip_xml(response_headers, binary_data, save_path)
         result = result | _result
         
         """
@@ -213,7 +216,7 @@ class DartDisclosureParser:
         print(f"\n총 {len(result['xml_data'])}개 XML 파일 파싱 완료")
         return result
 
-    def corp_code(self, save_path: str | None = None):
+    def fetch_corp_code(self, save_path: str | None = None):
         """
         OpenDart 공시정보 - 고유번호
         https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS001&apiId=2019018
@@ -226,8 +229,8 @@ class DartDisclosureParser:
         
         params = self.params
 
-        url = disclosure_urls.get("고유번호")
-        print(url, params)
+        url = DISCLOSURE_URLS.get("고유번호")
+        #print(url, params)
 
         response = self.client._get(url, params=params)
 
@@ -240,15 +243,15 @@ class DartDisclosureParser:
         content_type = response_headers.get("Content-Type")
         if "application/xml" in content_type:
             text_data = response.text
-            print(text_data)
-            return None
+            #print(text_data)
+            return parse_xml(text_data, "corpcode.xml")
 
         # 바이너리 데이터 
         binary_data = response.content
 
         if save_path is None:
             save_path = f"dart_corp_code"
-            save_path = self.__save_zip_path(response_headers, save_path)
+            save_path = save_zip_path(response_headers, save_path)
 
         # ZIP 파일 저장
         #self.__save_zip(binary_data, save_path)
@@ -257,7 +260,7 @@ class DartDisclosureParser:
         #return save_path
 
         # ZIP 파일 압축해제 및 XML 파싱 
-        result = self.__parse_unzip_xml(binary_data, save_path)
+        result = parse_unzip_xml(response_headers, binary_data, save_path)
         
         print(f"\n총 {len(result['xml_data'])}개 XML 파일 파싱 완료")
         return result

@@ -23,7 +23,7 @@ from ..client import OpenDartClient
 
 from ..utils import (
     decode_euc_kr,
-    ownership_urls,
+    OWNERSHIP_URLS,
     quarters,
     OWNERSHIP_COLUMNS
 )
@@ -46,8 +46,8 @@ class DartOwnershipParser:
     def fetch(self, corp_code: str, api_no: int = -1, api_type: str = None):
         url = None
 
-        api_key = list(ownership_urls.keys())[api_no] if api_no > -1 else api_type        
-        url = ownership_urls.get(api_key)
+        api_key = list(OWNERSHIP_URLS.keys())[api_no] if api_no > -1 else api_type        
+        url = OWNERSHIP_URLS.get(api_key)
 
         if not url:
             return

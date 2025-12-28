@@ -61,7 +61,7 @@ class OpenDartCrawler:
                       'Chrome/120.0.0.0 Safari/537.36'
     }
     
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, corpcode_filename: str = "corpcode.json"):
         """크롤러를 초기화합니다.
         
         Args:
@@ -81,26 +81,63 @@ class OpenDartCrawler:
         self._reports_parser = DartReportsParser(self.client)
         self._corp_data : Optional[list] = None
 
-        with open("corpcode.json", "r", encoding="utf-8") as json_file:
+        if os.path.exists(corpcode_filename):
+            self.load_corp_data(corpcode_filename)
+        else:
+            result = self._disclosure_parser.fetch_corp_code()
+            for data in result.get("xml_data"):
+                filename = data.get("filename", "")
+                print(f"Filename: {filename}")
+                if filename != "CORPCODE.xml":
+                    continue
+                
+                content = data.get("content", "")
+                self._corp_data = content.get("result", {}).get("list", [])                
+
+    @property
+    def corp_data(self) -> list[dict]:
+        """Lazy initialization of corpcode data"""
+        if self._corp_data is None:
+            result = self._disclosure_parser.fetch_corp_code()
+            for data in result.get("xml_data"):
+                filename = data.get("filename", "")
+                print(f"Filename: {filename}")
+                if filename != "CORPCODE.xml":
+                    continue
+                
+                content = data.get("content", "")
+                self._corp_data = content.get("result", {}).get("list", [])
+        return self._corp_data
+
+    def load_corp_data(self, filename: str):
+        with open(filename, "r", encoding="utf-8") as json_file:
             self._corp_data = json.load(json_file)
 
+    def save_corp_data(self, filename: str):
+        with open(filename, "w", encoding="utf-8") as json_file:
+            json.dump(self._corp_data, json_file, ensure_ascii=False, indent=4)
+
     def duplicate_keys(self):
-        #seen,duplicates = duplicate_keys(DISCLOSURE_COLUMNS)
-        #seen,duplicates = duplicate_keys(REPORTS_COLUMNS)
-        #seen,duplicates = duplicate_keys(FINANCE_COLUMNS)
-        #seen,duplicates = duplicate_keys(OWNERSHIP_COLUMNS)
-        #seen,duplicates = duplicate_keys(MATERIAL_FACTS_COLUMNS)
-        #seen, duplicates = duplicate_keys(REGISTRATION_COLUMNS)
-        #print(seen)
+        seen,duplicates = duplicate_keys(DISCLOSURE_COLUMNS)
+        print(f"Disclosure Columns: {seen}")
+        seen,duplicates = duplicate_keys(REPORTS_COLUMNS)
+        print(f"Reports Columns: {seen}")
+        seen,duplicates = duplicate_keys(FINANCE_COLUMNS)
+        print(f"Finance Columns: {seen}")
+        seen,duplicates = duplicate_keys(OWNERSHIP_COLUMNS)
+        print(f"Ownership Columns: {seen}")
+        seen,duplicates = duplicate_keys(MATERIAL_FACTS_COLUMNS)
+        print(f"Material Facts Columns: {seen}")
+        seen, duplicates = duplicate_keys(REGISTRATION_COLUMNS)
+        print(f"Registration Columns: {seen}")
 
     def fetch_corp_code(self, company: str, limit: int = 10, flags: int = re.IGNORECASE) -> str:
         """
+        corpcode.json 파일이 없으면 fetch_corp_code를 호출하여 데이터를 가져옵니다.
+        corpcode.json 파일이 있으면 corp_data를 가져옵니다.
+        corp_data를 통해 회사이름 또는 코드를 통해 corp_code를 찾습니다.
         """
-        if self._corp_data is None:
-            result = self._disclosure_parser.corp_code()
-            with open("corpcode.json", "w", encoding="utf-8") as file:
-                json.dump(result.get("xml_data")[0].get("list"), file, ensure_ascii=False, indent=4)
-            self._corp_data = result.get("xml_data")[0].get("list")
+        self.corp_data
         
         corp_code = self._fetch_corp_code_by_name(company, limit, flags)
         if corp_code:

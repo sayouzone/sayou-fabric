@@ -23,14 +23,19 @@ from ..client import OpenDartClient
 
 from ..utils import (
     decode_euc_kr,
-    finance_urls,
+    FINANCE_URLS,
     quarters,
-    FINANCE_COLUMNS
+    FINANCE_COLUMNS,
+    save_zip_path,
+    parse_xml,
+    parse_unzip_xml,
+    save_zip,
+    save_unzip,
 )
 
 class DartFinanceParser:
     """
-    OpenDART API 파싱 클래스
+    OpenDART 정기보고서 재무정보 API 파싱 클래스
     
     정기보고서 재무정보: Financial Information in Periodic Reports, https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS003
     """
@@ -147,7 +152,7 @@ class DartFinanceParser:
             params["idx_cl_code"] = indicator_code # 수익성지표 : M210000 안정성지표 : M220000 성장성지표 : M230000 활동성지표 : M240000
 
         # 기능 선택 방식에 대해서 고민 중
-        url = finance_urls.get(api_type, "")
+        url = FINANCE_URLS.get(api_type, "")
 
         print(f"URL: {url}, params: {params}")
         response = self.client._get(url, params=params)
@@ -183,7 +188,7 @@ class DartFinanceParser:
             pd.DataFrame: 기업개황
         """
 
-        url = finance_urls.get("재무제표 원본파일(XBRL)", "")
+        url = FINANCE_URLS.get("재무제표 원본파일(XBRL)", "")
         report_code = quarters.get(str(quarter), "4")
         
         params = {
@@ -212,12 +217,12 @@ class DartFinanceParser:
         
         if save_path is None:
             save_path = f"dart_{rcept_no}"
-            save_path = self.__save_zip_path(response_headers, save_path)
+            save_path = save_zip_path(response_headers, save_path)
 
         # ZIP 파일 저장
-        #self.__save_zip(binary_data, save_path)
+        #save_zip(binary_data, save_path)
         # ZIP 파일 압축해제 및 폴더에 저장
-        self.__save_unzip(binary_data, save_path)
+        save_unzip(binary_data, save_path)
         return save_path
 
     def _parse_xml(self, xml_content, filename=None):
@@ -337,70 +342,3 @@ class DartFinanceParser:
                 unique_header.append(col)
         
         return pd.DataFrame(data, columns=unique_header)
-
-    def __save_zip_path(self, headers, save_path):
-        save_path = None
-        
-        content_disposition = headers.get("Content-Disposition", "")
-        # filename="..." 또는 filename*=UTF-8''... 패턴 찾기
-        match = re.search(r"filename\*?=['\"]?(?:UTF-8'')?([^'\";\n]+)", content_disposition)
-        if match:
-            filename = match.group(1)
-
-            # URL 인코딩된 경우
-            if '%' in filename:
-                filename = unquote(filename)
-            
-            # 깨진 인코딩 복원
-            save_path = decode_euc_kr(filename)
-                
-            # .zip 확장자 제거하여 폴더명으로 사용
-            save_path = filename.replace('.zip', '')
-
-        return save_path
-
-    def __save_zip(self, binary_data, save_path):
-        # 파일 저장
-        with open(save_path, 'wb') as f:
-            f.write(binary_data)
-            print(f"저장 완료: {save_path}")
-
-    def __save_unzip(self, binary_data, save_path):
-        # ZIP 압축 해제
-        with zipfile.ZipFile(io.BytesIO(binary_data)) as zf:
-            # 파일 목록 출력
-            file_list = zf.namelist()
-            print(f"압축 파일 내 {len(file_list)}개 파일:")
-            for fname in file_list:
-                print(f"  - {fname}")
-            
-            # 전체 압축 해제
-            zf.extractall(save_path)
-        
-        print(f"압축 해제 완료: {save_path}")
-
-    def __parse_unzip_xml(self, binary_data, save_path):
-        result = {
-            'files': [],
-            'xml_data': []
-        }
-        
-        # ZIP 압축 해제 (메모리에서)
-        with zipfile.ZipFile(io.BytesIO(binary_data)) as zf:
-            file_list = zf.namelist()
-            print(f"압축 파일 내 {len(file_list)}개 파일:")
-            
-            for fname in file_list:
-                # 파일명 인코딩 수정
-                enc_name = decode_euc_kr(fname)
-                
-                print(f"  - {enc_name}")
-                result['files'].append(enc_name)
-                
-                # XML 파일만 파싱
-                if fname.endswith('.xml'):
-                    content = zf.read(fname)
-                    parsed = self._parse_xml(content, enc_name)
-                    result['xml_data'].append(parsed)
-        
-        return result
