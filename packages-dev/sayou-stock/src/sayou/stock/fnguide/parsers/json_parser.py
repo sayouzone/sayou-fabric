@@ -38,9 +38,12 @@ class FnGuideJsonParser:
         Returns:
             변환된 DataFrame
         """
-        if data:
+        print(data)
+        if data and isinstance(data, dict):
             self.raw_data = data
             self.records = data.get("comp", [])
+        elif data and isinstance(data, list):
+            self.records = data
 
         if not self.records:
             return pd.DataFrame()

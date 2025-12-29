@@ -104,3 +104,18 @@ class FnGuideCrawler:
 
     def consensus(self, stock: str):
         return self._consensus_parser.parse(stock)
+
+    def share_analysis(self, stock: str):
+        return self._share_analysis_parser.parse(stock)
+
+    def industry(self, stock: str):
+        return self._industry_parser.parse(stock)
+
+    def comparison(self, stock: str):
+        return self._comparison_viewer.parse(stock)
+
+    def disclosure(self, stock: str):
+        return self._disclosure_parser.parse(stock)
+
+    def dart(self, stock: str):
+        return self._dart_parser.parse(stock)

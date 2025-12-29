@@ -164,12 +164,6 @@ def demo_invest(crawler: FnGuideCrawler, code: str):
             print(f"항목 수: {len(data.data)}")
             for key, value in list(data.data.items())[:5]:
                 print(f"  {key}: {value}")
-        
-        elif isinstance(data, HistoryData):
-            print(f"헤더: {data.headers}")
-            print(f"레코드 수: {len(data.records)}")
-            for record in data.records[:2]:
-                print(f"  {record}")
     
     # JSON 출력
     print("\n" + "=" * 70)
@@ -211,12 +205,170 @@ def demo_consensus(crawler: FnGuideCrawler, code: str):
             print(f"항목 수: {len(data.data)}")
             for key, value in list(data.data.items())[:5]:
                 print(f"  {key}: {value}")
+    
+    # JSON 출력
+    print("\n" + "=" * 70)
+    print("JSON 출력")
+    print("=" * 70)
+    
+    json_output = {
+        caption: data.to_dict()
+        for caption, data in results.items()
+    }
+    print(json.dumps(json_output, ensure_ascii=False, indent=2)[:2000] + "...")
+
+def demo_industry(crawler: FnGuideCrawler, code: str):
+    """FnGuide 기업 정보 | 업종분석 조회 데모"""
+    print(f"\n{'='*60}")
+    print(f"FnGuide 기업 정보 | 업종분석을 조회 - {code}")
+    print('='*60)
+
+    results = crawler.industry(code)
+    print(results)
+
+    for caption, data in results.items():
+        print(f"\n### {caption} ###")
+        print(f"타입: {type(data).__name__}")
         
-        elif isinstance(data, HistoryData):
+        if isinstance(data, TableData):
             print(f"헤더: {data.headers}")
-            print(f"레코드 수: {len(data.records)}")
-            for record in data.records[:2]:
-                print(f"  {record}")
+            print(f"항목 수: {len(data.data) + len(data.data_with_category)}")
+            
+            # 샘플 출력
+            if data.data_with_category:
+                for (cat, item), values in list(data.data_with_category.items())[:3]:
+                    print(f"  [{cat}] {item}: {values}")
+            elif data.data:
+                for key, values in list(data.data.items())[:3]:
+                    print(f"  {key}: {values}")
+        
+        elif isinstance(data, KeyValueData):
+            print(f"항목 수: {len(data.data)}")
+            for key, value in list(data.data.items())[:5]:
+                print(f"  {key}: {value}")
+    
+    # JSON 출력
+    print("\n" + "=" * 70)
+    print("JSON 출력")
+    print("=" * 70)
+    
+    json_output = {
+        caption: data.to_dict()
+        for caption, data in results.items()
+    }
+    print(json.dumps(json_output, ensure_ascii=False, indent=2)[:2000] + "...")
+
+def demo_comparison(crawler: FnGuideCrawler, code: str):
+    """FnGuide 기업 정보 | 경쟁사비교 조회 데모"""
+    print(f"\n{'='*60}")
+    print(f"FnGuide 기업 정보 | 경쟁사비교를 조회 - {code}")
+    print('='*60)
+
+    results = crawler.comparison(code)
+    print(results)
+
+    for caption, data in results.items():
+        print(f"\n### {caption} ###")
+        print(f"타입: {type(data).__name__}")
+        
+        if isinstance(data, TableData):
+            print(f"헤더: {data.headers}")
+            print(f"항목 수: {len(data.data) + len(data.data_with_category)}")
+            
+            # 샘플 출력
+            if data.data_with_category:
+                for (cat, item), values in list(data.data_with_category.items())[:3]:
+                    print(f"  [{cat}] {item}: {values}")
+            elif data.data:
+                for key, values in list(data.data.items())[:3]:
+                    print(f"  {key}: {values}")
+        
+        elif isinstance(data, KeyValueData):
+            print(f"항목 수: {len(data.data)}")
+            for key, value in list(data.data.items())[:5]:
+                print(f"  {key}: {value}")
+    
+    # JSON 출력
+    print("\n" + "=" * 70)
+    print("JSON 출력")
+    print("=" * 70)
+    
+    json_output = {
+        caption: data.to_dict()
+        for caption, data in results.items()
+    }
+    print(json.dumps(json_output, ensure_ascii=False, indent=2)[:2000] + "...")
+
+def demo_disclosure(crawler: FnGuideCrawler, code: str):
+    """FnGuide 기업 정보 | 거래소공시 조회 데모"""
+    print(f"\n{'='*60}")
+    print(f"FnGuide 기업 정보 | 거래소공시를 조회 - {code}")
+    print('='*60)
+
+    results = crawler.disclosure(code)
+    print(results)
+
+    for caption, data in results.items():
+        print(f"\n### {caption} ###")
+        print(f"타입: {type(data).__name__}")
+        
+        if isinstance(data, TableData):
+            print(f"헤더: {data.headers}")
+            print(f"항목 수: {len(data.data) + len(data.data_with_category)}")
+            
+            # 샘플 출력
+            if data.data_with_category:
+                for (cat, item), values in list(data.data_with_category.items())[:3]:
+                    print(f"  [{cat}] {item}: {values}")
+            elif data.data:
+                for key, values in list(data.data.items())[:3]:
+                    print(f"  {key}: {values}")
+        
+        elif isinstance(data, KeyValueData):
+            print(f"항목 수: {len(data.data)}")
+            for key, value in list(data.data.items())[:5]:
+                print(f"  {key}: {value}")
+    
+    # JSON 출력
+    print("\n" + "=" * 70)
+    print("JSON 출력")
+    print("=" * 70)
+    
+    json_output = {
+        caption: data.to_dict()
+        for caption, data in results.items()
+    }
+    print(json.dumps(json_output, ensure_ascii=False, indent=2)[:2000] + "...")
+
+def demo_dart(crawler: FnGuideCrawler, code: str):
+    """FnGuide 기업 정보 | Dart 조회 데모"""
+    print(f"\n{'='*60}")
+    print(f"FnGuide 기업 정보 | Dart를 조회 - {code}")
+    print('='*60)
+
+    results = crawler.dart(code)
+    print(results)
+
+    for caption, data in results.items():
+        print(f"\n### {caption} ###")
+        print(f"타입: {type(data).__name__}")
+        
+        if isinstance(data, TableData):
+            print(f"헤더: {data.headers}")
+            print(f"항목 수: {len(data.data) + len(data.data_with_category)}")
+            
+            # 샘플 출력
+            if data.data_with_category:
+                for (cat, item), values in list(data.data_with_category.items())[:3]:
+                    print(f"  [{cat}] {item}: {values}")
+            elif data.data:
+                for key, values in list(data.data.items())[:3]:
+                    print(f"  {key}: {values}")
+        
+        elif isinstance(data, KeyValueData):
+            print(f"항목 수: {len(data.data)}")
+            for key, value in list(data.data.items())[:5]:
+                print(f"  {key}: {value}")
     
     # JSON 출력
     print("\n" + "=" * 70)
@@ -244,11 +396,14 @@ def main(stock: str):
     demo_finance_ratio(crawler, stock)
     demo_invest(crawler, stock)
     demo_consensus(crawler, stock)
+    demo_industry(crawler, stock)
+    demo_comparison(crawler, stock)
+    demo_disclosure(crawler, stock)
+    demo_dart(crawler, stock)
     
     print("\n" + "="*60)
     print("Demo completed!")
     print("="*60)
-
 
 if __name__ == "__main__":
     # 삼성전자, 하이닉스, 네이버 예시

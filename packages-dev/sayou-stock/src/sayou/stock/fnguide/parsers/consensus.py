@@ -100,11 +100,9 @@ class FnGuideConsensusParser:
             return None
 
         results = self._parse_by_caption(response.text)
-        print("Result:", results)
 
         referer_url = response.url
         for key, url in self.JSON_URLS.items():
-            print("Key:", key)
             url = url.format(stock=stock, report_type=report_type)
             print("URL:", url)
             value = results.get(key)
@@ -117,7 +115,6 @@ class FnGuideConsensusParser:
                 logger.error(f"페이지 요청 실패: {e}")
                 continue
             value = response.json()
-            print(value)
             
             df = self.parser.to_dataframe(value)
             results[key] = df
@@ -157,7 +154,6 @@ class FnGuideConsensusParser:
         
         for idx, table in enumerate(tables):
             logger.info(f"테이블 {idx + 1}/{len(tables)} 파싱 중...")
-            print(table)
             
             result = self._parse_table(table)
             if result:
@@ -216,15 +212,12 @@ class FnGuideConsensusParser:
     def _parse_data_table(self, table: Tag, caption: str) -> Optional[TableData]:
         """일반 데이터 테이블 파싱"""
         result = TableData(caption=caption)
-        print(caption, table)
         
         # 헤더 추출
         thead = table.find("thead")
         if thead:
             result.headers = HeaderExtractor.extract_headers(thead)
 
-        print(result.headers)
-        
         if not result.headers:
             return None
         

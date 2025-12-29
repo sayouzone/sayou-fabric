@@ -7,9 +7,9 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-stock"
-version = "0.0.6"
+version = "0.0.7"
 authors = [
-    { name = "Sayouzone", email = "contact@sayouzone.com" },
+    { name = "Sayouzone", email = "support@sayouzone.com" },
 ]
 description = "Sayou Stock Package for Financial Data from SEC, FnGuide, Naver, OpenDART, Yahoo"
 readme = "README.md"
