@@ -14,7 +14,7 @@ from edgar import EDGARCrawler
 def demo_10k(crawler: EDGARCrawler, cik: str, ticker: str):
     """10-K 파일링 데모"""
     print(f"\n{'='*60}")
-    print(f"10-K Annual Report - {ticker}")
+    print(f"EDGAR 10-K Annual Report - {ticker}")
     print('='*60)
     
     #filings = crawler.fetch_10k_filings(cik, count=1)
@@ -54,7 +54,7 @@ def demo_10k(crawler: EDGARCrawler, cik: str, ticker: str):
 def demo_10q(crawler: EDGARCrawler, cik: str, ticker: str):
     """10-Q 파일링 데모"""
     print(f"\n{'='*60}")
-    print(f"10-Q Quarterly Report - {ticker}")
+    print(f"EDGAR 10-Q Quarterly Report - {ticker}")
     print('='*60)
     
     #filings = crawler.fetch_10q_filings(cik, count=1)
@@ -94,7 +94,7 @@ def demo_10q(crawler: EDGARCrawler, cik: str, ticker: str):
 def demo_8k(crawler: EDGARCrawler, cik: str, ticker: str):
     """8-K 파일링 데모"""
     print(f"\n{'='*60}")
-    print(f"8-K Current Reports - {ticker}")
+    print(f"EDGAR 8-K Current Reports - {ticker}")
     print('='*60)
     
     #filings = crawler.fetch_8k_filings(cik, count=3)
@@ -113,7 +113,7 @@ def demo_13f(crawler: EDGARCrawler, cik: str, ticker: str):
     """13F 파일링 데모"""
     print(f"\n{'='*60}")
     #print("13F Institutional Holdings - Berkshire Hathaway")
-    print(f"13F Institutional Holdings - {ticker}")
+    print(f"EDGAR 13F Institutional Holdings - {ticker}")
     print('='*60)
     
     #cik = "0001067983"
@@ -160,7 +160,7 @@ def demo_13f(crawler: EDGARCrawler, cik: str, ticker: str):
 def demo_def14a(crawler: EDGARCrawler, cik: str, ticker: str):
     """DEF 14A 파일링 데모"""
     print(f"\n{'='*60}")
-    print(f"DEF 14A Proxy Statement - {ticker}")
+    print(f"EDGAR DEF 14A Proxy Statement - {ticker}")
     print('='*60)
     
     #filings = crawler.fetch_def14a_filings(cik, count=1)

@@ -244,11 +244,11 @@ def main(stock: str):
     crawler = FnGuideCrawler()
 
     # 각 파일링 타입 데모
-    #demo_main(crawler, stock)
-    #demo_company(crawler, stock)
-    #demo_finance(crawler, stock)
-    #demo_finance_ratio(crawler, stock)
-    #demo_invest(crawler, stock)
+    demo_main(crawler, stock)
+    demo_company(crawler, stock)
+    demo_finance(crawler, stock)
+    demo_finance_ratio(crawler, stock)
+    demo_invest(crawler, stock)
     demo_consensus(crawler, stock)
     
     print("\n" + "="*60)

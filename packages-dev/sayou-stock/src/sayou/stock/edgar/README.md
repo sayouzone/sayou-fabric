@@ -32,10 +32,33 @@ edgar/
 ## 사용 예시
 
 ```python
+from sayou.stock.edgar import EDGARCrawler
+
 crawler = EDGARCrawler(user_agent="Sayouzone sjkim@sayouzone.com")
-cik = crawler.fetch_cik_by_ticker("AAPL")
+ticker = "AAPL"
+
+# Ticker으로 CIK 조회
+cik = crawler.fetch_cik_by_ticker(ticker)
+
+# EDGAR 10-K Annual Report
 filings = crawler.fetch_filings(cik, doc_type="10-K", count=1)
 data = crawler.extract_10k(cik, filings[0].document_url, filings[0].accession_number)
+
+# EDGAR 10-Q Quarterly Report
+filings = crawler.fetch_filings(cik, doc_type="10-Q", count=1)
+data = crawler.extract_10q(cik, filings[0].document_url, filings[0].accession_number)
+
+# EDGAR 8-K Current Report
+filings = crawler.fetch_filings(cik, doc_type="8-K", count=1)
+data = crawler.extract_8k(cik, filings[0].document_url, filings[0].accession_number)
+
+# EDGAR 13F Institutional Holdings
+filings = crawler.fetch_filings(cik, doc_type="13F", count=1)
+data = crawler.extract_13f(cik, filings[0].document_url, filings[0].accession_number)
+
+# EDGAR DEF 14A Proxy Statement 
+filings = crawler.fetch_filings(cik, doc_type="DEF 14A", count=1)
+data = crawler.extract_def14a(cik, filings[0].document_url, filings[0].accession_number)
 ```
 
 ## 참조

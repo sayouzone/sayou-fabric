@@ -7,11 +7,11 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-stock"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
-description = ""
+description = "Sayou Stock Package"
 readme = "README.md"
 license = { file = "./LICENSE" }
 requires-python = ">=3.9"

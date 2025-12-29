@@ -28,7 +28,9 @@ class TableFinder:
         """제목으로 테이블 찾기"""
         tables = {id: None for id in ids}
         for table in soup.find_all("div", id=lambda x: x in ids):
-            tables[table.get("id")] = table
+            table_id = table.get("id")
+            
+            tables[table_id] = table
         
         return tables
     
@@ -37,7 +39,6 @@ class TableFinder:
         """제목으로 테이블 찾기"""
         tables = []
         for table in soup.find_all("table"):
-            #print(table)
             tables.append(table)
         
         return tables
@@ -88,7 +89,7 @@ class HeaderExtractor:
                         headers.extend([text] * colspan)
                 if headers:
                     header_rows.append(headers)
-        
+
         # 가장 긴 행을 선택 (가장 상세한 헤더)
         headers = max(header_rows, key=len) if header_rows else []
         
@@ -138,9 +139,9 @@ class HeaderExtractor:
             if col_idx == 0 and len(ths) > 1:
                 continue
 
-            # 기간 패턴인지 확인
-            if not HeaderExtractor.PERIOD_PATTERN.match(text):
-                continue
+            # 기간 패턴인지 확인 (기간이 없으면 스킵)
+            #if not HeaderExtractor.PERIOD_PATTERN.match(text):
+            #    continue
             
             # colspan 처리
             colspan = HeaderExtractor._get_colspan(th)

@@ -15,21 +15,60 @@
 
 ## 🤝 Usage Example
 
+#### SEC EDGAR 10-K 조회
+
 ```python
 from sayou.stock.edgar import EDGARCrawler
 
-crawler = EDGARCrawler(user_agent="MyCompany admin@email.com")
-cik = crawler.fetch_cik_by_ticker("AAPL")
+crawler = EDGARCrawler(user_agent="Sayouzone sjkim@sayouzone.com")
+ticker = "AAPL"
 
-# 10-K 재무 데이터 추출
+# Ticker으로 CIK 조회
+cik = crawler.fetch_cik_by_ticker(ticker)
+
+# EDGAR 10-K Annual Report
 filings = crawler.fetch_filings(cik, doc_type="10-K", count=1)
-filings = crawler.fetch_10k_filings(cik, count=1)
 data = crawler.extract_10k(cik, filings[0].document_url, filings[0].accession_number)
-print(f"Revenue: ${data['financial_data'].revenue:,.0f}")
+
+# EDGAR 10-Q Quarterly Report
+filings = crawler.fetch_filings(cik, doc_type="10-Q", count=1)
+data = crawler.extract_10q(cik, filings[0].document_url, filings[0].accession_number)
+
+# EDGAR 8-K Current Report
+filings = crawler.fetch_filings(cik, doc_type="8-K", count=1)
+data = crawler.extract_8k(cik, filings[0].document_url, filings[0].accession_number)
+
+# EDGAR 13F Institutional Holdings
+filings = crawler.fetch_filings(cik, doc_type="13F", count=1)
+data = crawler.extract_13f(cik, filings[0].document_url, filings[0].accession_number)
+
+# EDGAR DEF 14A Proxy Statement 
+filings = crawler.fetch_filings(cik, doc_type="DEF 14A", count=1)
+data = crawler.extract_def14a(cik, filings[0].document_url, filings[0].accession_number)
 ```
 
-```python
+#### FnGuide 기업 정보 조회
 
+```python
+from sayou.stock.fnguide import FnGuideCrawler
+
+stock = "005930"
+crawler = FnGuideCrawler()
+
+data = crawler.finance(stock)
+print(data)
+
+data = crawler.company(stock)
+print(data)
+
+data = crawler.finance_ratio(stock)
+print(data)
+
+data = crawler.invest(stock)
+print(data)
+
+data = crawler.consensus(stock)
+print(data)
 ```
 
 ## 📚 Package Hierarchy
@@ -65,8 +104,10 @@ sayou/stock
 │   │       ├── finance.py            # FnGuide Financial Statement Parser
 │   │       ├── industry_analysis.py  # FnGuide Industry Analysis Parser
 │   │       ├── invest.py             # FnGuide Investment Parser
+│   │       ├── json_parser.py        # FnGuide JSON Parser
 │   │       ├── main.py               # FnGuide Main Parser
-│   │       └── share_analysis.py     # FnGuide Share Analysis Parser
+│   │       ├── share_analysis.py     # FnGuide Share Analysis Parser
+│   │       └── tables.py             # FnGuide Tables Parser
 │   ├── naver/
 │   │   ├── __init__.py          # Public API Definition
 │   │   ├── client.py            # OpenDART HTTP Client

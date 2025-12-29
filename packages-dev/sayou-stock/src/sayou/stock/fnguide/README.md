@@ -21,8 +21,10 @@ fnguide/
     ├── finance.py            # FnGuide 재무제표 파서
     ├── industry_analysis.py  # FnGuide 업종분석 파서
     ├── invest.py             # FnGuide 투자지표 파서
+    ├── json_parser.py        # FnGuide JSON 파서
     ├── main.py               # FnGuide 메인(Snapshot) 파서
-    └── share_analysis.py     # FnGuide 지분분석 파서
+    ├── share_analysis.py     # FnGuide 지분분석 파서
+    └── tables.py             # FnGuide 테이블 파서
 ```
 
 ## FnGuide Url 목록
@@ -51,23 +53,57 @@ fnguide/
 from fnguide import FnGuideCrawler
 
 crawler = FnGuideCrawler()
-
 data = crawler.main("005930")
 print(data)
-    >>> 
-    >>> # FnGuide 기업 정보 | 재무제표 조회
-    >>> data = crawler.finance("005930")
-    >>> print(data)
 ```
 
-#### # FnGuide 기업 정보 | 재무제표 조회
+#### FnGuide 기업 정보 | 기업개요 조회
 
 ```python
 from fnguide import FnGuideCrawler
 
 crawler = FnGuideCrawler()
+data = crawler.company("005930")
+print(data)
+```
 
-data = crawler.finance("005930")
+#### FnGuide 기업 정보 | 재무제표 조회
+
+```python
+from fnguide import FnGuideCrawler
+
+code = "005930"
+crawler = FnGuideCrawler()
+data = crawler.finance(code)
+print(data)
+
+data = crawler.income_statement(code)
+print(data)
+
+data = crawler.quarterly_income_statement(code)
+print(data)
+
+data = crawler.balance_sheet(code)
+print(data)
+
+data = crawler.quarterly_balance_sheet(code)
+print(data)
+
+data = crawler.cash_flow(code)
+print(data)
+
+data = crawler.quarterly_cash_flow(code)
+print(data)
+```
+
+#### FnGuide 기업 정보 | 재무비율 조회
+
+```python
+from fnguide import FnGuideCrawler
+
+code = "005930"
+crawler = FnGuideCrawler()
+data = crawler.finance_ratio(code)
 print(data)
 ```
 

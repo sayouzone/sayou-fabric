@@ -91,16 +91,14 @@ class FnGuideFinanceParser:
             logger.error(f"페이지 요청 실패: {e}")
             return None
 
-        soup = BeautifulSoup(response.text, "html.parser")
-
         # 테이블 파싱
         result_dict = []
         
-        tables = self._parse_tables(soup, self.FINANCE_TABLE_IDS)
+        tables = self._parse_tables(response.text, self.FINANCE_TABLE_IDS)
         for key, table in tables.items():
             records = self._dataframe_to_records(table)
-            ["포괄손익계산서", "재무상태표", "현금흐름표"]
 
+            # "포괄손익계산서", "재무상태표", "현금흐름표"]
             if key == "divSonikY":
                 key_name = "포괄손익계산서"
                 key_type = "연간"
@@ -180,7 +178,7 @@ class FnGuideFinanceParser:
     
     def _parse_tables(
         self,
-        soup: BeautifulSoup,
+        html_text: str,
         ids: list
     ) -> Optional[pd.DataFrame]:
         """
@@ -194,6 +192,8 @@ class FnGuideFinanceParser:
             DataFrame 또는 None
         """
         logger.info(f"\n테이블 데이터 수집 중...")
+
+        soup = BeautifulSoup(html_text, "html.parser")
         
         # 1. 테이블 찾기
         tables = self.table_finder.find_by_ids(soup, ids)
@@ -201,9 +201,7 @@ class FnGuideFinanceParser:
             return None
         
         for key, table in tables.items():
-            #print(key, table, type(table))
             df = self._parse_table(table)
-            print(key, df)
             tables[key] = df
         
         return tables
@@ -230,7 +228,6 @@ class FnGuideFinanceParser:
         if not table:
             return None
         
-        print(table, type(table))
         return self._parse_table(table)
         
     def _parse_table(
@@ -248,6 +245,7 @@ class FnGuideFinanceParser:
             DataFrame 또는 None
         """
         logger.info(f"\n테이블 데이터 수집 중...")
+        table_id = table.get("id")
         
         if not table:
             return None
@@ -259,8 +257,8 @@ class FnGuideFinanceParser:
             return None
         
         # 2. 헤더 인덱스 추출
-        index_list = self.header_extractor.extract_headers(thead)
-        if not index_list:
+        headers = self.header_extractor.extract_headers(thead)
+        if not headers:
             logger.warning("인덱스 리스트가 비어있음")
             return None
         
@@ -269,18 +267,17 @@ class FnGuideFinanceParser:
         if not tbody:
             logger.warning("tbody를 찾을 수 없음")
             return None
-        
+       
         # 4. 데이터 딕셔너리 추출
         body_extractor = BodyExtractor(debug=self.debug)
-        data_dict = body_extractor.extract(tbody, index_list)
+        data_dict = body_extractor.extract(tbody, headers)
         
         if not data_dict:
             logger.warning("데이터가 비어있음")
             return None
         
-        print(data_dict, index_list)
         # 5. DataFrame 생성
-        df = self._create_dataframe(data_dict, index_list)
+        df = self._create_dataframe(data_dict, headers)
         
         logger.info(f"완료! DataFrame shape: {df.shape}")
         
@@ -331,7 +328,6 @@ class FnGuideFinanceParser:
             멀티인덱스 컬럼을 가진 DataFrame
         """
         df = pd.DataFrame(data_dict, index=index_list)
-        print(df, df.columns)
         
         # 멀티인덱스로 컬럼 변환
         #df.columns = pd.MultiIndex.from_tuples(df.columns)
