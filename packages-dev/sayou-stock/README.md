@@ -13,9 +13,15 @@
 
 ## 🔑 Key Components
 
+1. `EDGARCrawler`: SEC EDGAR 10-K, 10-Q, 8-K, 13F, DEF 14A
+2. `FnGuideCrawler`: FnGuide Company Information
+3. `NaverCrawler`: Naver Market API/Crawling
+4. `OpenDartCrawler`: OpenDART API
+5. `YahooCrawler`: Yahoo Finance API
+
 ## 🤝 Usage Example
 
-#### SEC EDGAR 10-K 조회
+#### Retrieve SEC EDGAR 10-K
 
 ```python
 from sayou.stock.edgar import EDGARCrawler
@@ -23,7 +29,7 @@ from sayou.stock.edgar import EDGARCrawler
 crawler = EDGARCrawler(user_agent="Sayouzone sjkim@sayouzone.com")
 ticker = "AAPL"
 
-# Ticker으로 CIK 조회
+# Retrieve CIK by Ticker
 cik = crawler.fetch_cik_by_ticker(ticker)
 
 # EDGAR 10-K Annual Report
@@ -47,7 +53,7 @@ filings = crawler.fetch_filings(cik, doc_type="DEF 14A", count=1)
 data = crawler.extract_def14a(cik, filings[0].document_url, filings[0].accession_number)
 ```
 
-#### FnGuide 기업 정보 조회
+#### Retrieve FnGuide's Company Information
 
 ```python
 from sayou.stock.fnguide import FnGuideCrawler
@@ -157,17 +163,14 @@ sayou/stock
 │           └── summary.py       # Summary API Parser
 ├── docs/
 ├── tests/
-│   ├── test_edgar.py           # Edgar Test
-│   ├── test_fnguide.py         # FnGuide Test
-│   ├── test_naver.py           # Naver Test
-│   ├── test_opendart.py        # OpenDART Test
-│   └── test_yahoo.py           # Yahoo Test
-├── .gitignore
+│   ├── test_edgar_.py          # Edgar Test
+│   ├── test_fnguide_.py        # FnGuide Test
+│   ├── test_naver_.py          # Naver Test
+│   ├── test_opendart_.py       # OpenDART Test
+│   └── test_yahoo_.py          # Yahoo Test
 ├── LICENSE
-├── README.md
-├── requirements.txt
-├── setup.cfg
-└── setup.py
+├── pyproject.toml
+└── README.md
 ```
 
 ## 📜 License

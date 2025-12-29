@@ -5,15 +5,8 @@ Yahoo Crawler 사용 예시
 
 import os
 import pandas as pd
-import sys
 
-from datetime import datetime
-from pathlib import Path
-
-# 상위 디렉토리를 path에 추가
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from yahoo import YahooCrawler
+from sayou.stock.yahoo import YahooCrawler
 
 def demo_analysis(crawler: YahooCrawler, ticker: str):
     """Yahoo 주요 분석 조회 데모"""

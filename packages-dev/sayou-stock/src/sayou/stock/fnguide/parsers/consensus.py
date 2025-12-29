@@ -64,7 +64,11 @@ class FnGuideConsensusParser:
 
     def __init__(self, client: FnGuideClient):
         self.client = client
-        
+
+        self.include_hidden = False
+        self.use_category = True
+        self.debug = False
+
         self.parser = FnGuideJsonParser()
     
     def parse(self, stock: str, report_type: str = "D"):
@@ -115,7 +119,7 @@ class FnGuideConsensusParser:
             value = response.json()
             print(value)
             
-            df = parser.to_dataframe(value)
+            df = self.parser.to_dataframe(value)
             results[key] = df
         
         return results
@@ -228,8 +232,8 @@ class FnGuideConsensusParser:
         tbody = table.find("tbody")
         if tbody:
             extractor = BodyExtractor(
-                include_hidden=False,
-                use_category=True,
+                include_hidden=self.include_hidden,
+                use_category=self.use_category,
                 debug=self.debug
             )
             
