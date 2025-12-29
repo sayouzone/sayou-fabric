@@ -29,7 +29,7 @@ class FnGuideIndustryAnalysisParser:
     """
     FnGuide 업종분석 파싱 클래스
     
-    Snapshot, https://comp.fnguide.com/SVO2/ASP/SVD_ujanal.asp?gicode=A{stock}
+    업종분석, https://comp.fnguide.com/SVO2/ASP/SVD_ujanal.asp?gicode=A{stock}
     """
 
     def __init__(self, client: FnGuideClient):

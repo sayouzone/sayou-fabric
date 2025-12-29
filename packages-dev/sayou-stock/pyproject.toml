@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-stock"
-version = "0.0.2"
+version = "0.0.1"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
@@ -37,4 +37,4 @@ dependencies = []
 # 3. 소스 코드 위치
 # -----------------
 [tool.hatch.build.targets.wheel]
-packages = ["src/sayou/stock"]
+packages = ["src/sayou"]

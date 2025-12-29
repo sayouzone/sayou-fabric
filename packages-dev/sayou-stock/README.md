@@ -1,11 +1,41 @@
 # Sayou Stock
 
+[![PyPI version](https://img.shields.io/pypi/v/sayou-stock.svg?color=blue)](https://pypi.org/project/sayou-stock/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/library-guides/stock/)
 
-Package Hierarchy
+
+## 📦 Installation
+
+`sayou-stock` is automatically installed when you install any Sayou library.
+
+    pip install sayou-stock
+
+## 🔑 Key Components
+
+## 🤝 Usage Example
+
+```python
+from sayou.stock.edgar import EDGARCrawler
+
+crawler = EDGARCrawler(user_agent="MyCompany admin@email.com")
+cik = crawler.fetch_cik_by_ticker("AAPL")
+
+# 10-K 재무 데이터 추출
+filings = crawler.fetch_filings(cik, doc_type="10-K", count=1)
+filings = crawler.fetch_10k_filings(cik, count=1)
+data = crawler.extract_10k(cik, filings[0].document_url, filings[0].accession_number)
+print(f"Revenue: ${data['financial_data'].revenue:,.0f}")
+```
+
+```python
 
 ```
-src
-├──sayou/stock
+
+## 📚 Package Hierarchy
+
+```
+sayou/stock
 │   ├── edgar/
 │   │   ├── __init__.py          # Public API Definition
 │   │   ├── client.py            # SEC EDGAR HTTP Client
@@ -99,10 +129,6 @@ src
 └── setup.py
 ```
 
-## Installation
+## 📜 License
 
-```bash
-pip install sayou-stock
-```
-
-##
+Apache 2.0 License © 2025 Sayouzone

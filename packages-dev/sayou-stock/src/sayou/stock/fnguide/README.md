@@ -25,30 +25,15 @@ fnguide/
     └── share_analysis.py     # FnGuide 지분분석 파서
 ```
 
-```
-FnGuideCrawler
-├── FnGuideMain (Snapshot 클래스)
-│   ├── fetch (메인 URL으로 HTML 정보 가져오기)
-│   └── parse (메인 HTML 정보 파싱)
-├── FnGuideFinance (재무제표 클래스)
-│   ├── fetch (재무제표 URL으로 HTML 정보 가져오기)
-│   ├── parse (재무제표 HTML 정보 파싱)
-│   ├── TableFinder
-│   ├── HeaderExtractor
-│   └── BodyExtractor
-├── FnGuideCompany (기업개요 클래스)
-├── FnGuideFinanceRatio (재무비율 클래스)
-├── ...
-├── check_gcp (GCP에서 Caching 정보 확인)
-└── save_gcp (GCP에서 Caching 정보 저장)
-```
-
 ## FnGuide Url 목록
 
 - [메인](https://comp.fnguide.com/SVO2/ASP/SVD_main.asp?gicode=A{stock})
 - [기업개요](https://comp.fnguide.com/SVO2/ASP/SVD_Corp.asp?gicode=A{stock})
 - [재무제표](https://comp.fnguide.com/SVO2/ASP/SVD_Finance.asp?gicode=A{stock})
 - [재무비율](https://comp.fnguide.com/SVO2/ASP/SVD_FinanceRatio.asp?gicode=A{stock})
+- [재무비율 (연간)](https://comp.fnguide.com/SVO2/ASP/SVD_FinanceRatio.asp?gicode=A{stock}&ReportGB=D)
+- [재무비율 (분기)](https://comp.fnguide.com/SVO2/ASP/SVD_FinanceRatio.asp?gicode=A{stock}&ReportGB=B)
+- [재무비율 (메뉴 포함)](https://comp.fnguide.com/SVO2/ASP/SVD_Finance.asp?pGB=1&gicode=A{stock}&cID=&MenuYn=Y&ReportGB=&NewMenuID=103&stkGb=701)
 - [투자지표](https://comp.fnguide.com/SVO2/ASP/SVD_Invest.asp?gicode=A{stock})
 - [컨센서스](https://comp.fnguide.com/SVO2/ASP/SVD_Consensus.asp?gicode=A{stock})
 - [지분분석](https://comp.fnguide.com/SVO2/ASP/SVD_shareanalysis.asp?gicode=A{stock})
@@ -58,7 +43,35 @@ FnGuideCrawler
 - [금감원공시](https://comp.fnguide.com/SVO2/ASP/SVD_Dart.asp?gicode=A{stock})
 
 
-## 예제
+## 사용 예시
+
+#### FnGuide 기업 정보 | Snapshot 조회
+
+```python
+from fnguide import FnGuideCrawler
+
+crawler = FnGuideCrawler()
+
+data = crawler.main("005930")
+print(data)
+    >>> 
+    >>> # FnGuide 기업 정보 | 재무제표 조회
+    >>> data = crawler.finance("005930")
+    >>> print(data)
+```
+
+#### # FnGuide 기업 정보 | 재무제표 조회
+
+```python
+from fnguide import FnGuideCrawler
+
+crawler = FnGuideCrawler()
+
+data = crawler.finance("005930")
+print(data)
+```
+
+## 참조
 
 - [삼성전자(A005930) | Snapshot | 기업정보 | Company Guide](https://comp.fnguide.com/SVO2/ASP/SVD_main.asp?gicode=A005930)
 - [삼성전자(A005930) | 재무제표 | 기업정보 | Company Guide, 메뉴 포함](https://comp.fnguide.com/SVO2/ASP/SVD_Finance.asp?gicode=A005930&cID=&MenuYn=Y&ReportGB=&NewMenuID=103&stkGb=701)

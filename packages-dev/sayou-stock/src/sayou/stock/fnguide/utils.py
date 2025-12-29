@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 FNGUIDE_URLS = {
     "메인": "https://comp.fnguide.com/SVO2/ASP/SVD_main.asp",
     "기업개요": "https://comp.fnguide.com/SVO2/ASP/SVD_Corp.asp",

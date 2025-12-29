@@ -25,22 +25,14 @@ Quick Start:
     >>> from fnguide import FnGuideCrawler
     >>> 
     >>> crawler = FnGuideCrawler()
-    >>> cik = crawler.fetch_cik_by_ticker("AAPL")
     >>> 
     >>> # FnGuide 기업 정보 | Snapshot 조회
-    >>> data = crawler.main(code)
-    >>> list = data.get("list", [])
-    >>> print(pd.DataFrame(list))
+    >>> data = crawler.main("005930")
+    >>> print(data)
     >>> 
     >>> # FnGuide 기업 정보 | 재무제표 조회
-    >>> data = crawler.finance(code)
-    >>> list = data.get("list", [])
-    >>> print(pd.DataFrame(list))
-    >>> 
-    >>> # FnGuide 기업 정보 | 기업개요 조회
-    >>> data = crawler.finance(code)
-    >>> list = data.get("list", [])
-    >>> print(pd.DataFrame(list))
+    >>> data = crawler.finance("005930")
+    >>> print(data)
 
 Supported Informations:
     - FnGuide 기업 정보 | Snapshot

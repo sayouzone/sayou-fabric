@@ -106,7 +106,10 @@ class OpenDartCrawler:
                     continue
                 
                 content = data.get("content", "")
-                self._corp_data = content.get("result", {}).get("list", [])
+                corp_list = content.get("result", {}).get("list", [])
+                # "stock_code" 값이 있는 항목만 필터링
+                listed = list(filter(lambda x: x["stock_code"], corp_list))
+                self._corp_data = listed
         return self._corp_data
 
     def load_corp_data(self, filename: str):
@@ -147,6 +150,18 @@ class OpenDartCrawler:
 
         return corp_code
 
+    def fetch_stock_code(self, company: str, limit: int = 10, flags: int = re.IGNORECASE) -> str:
+        """
+        corpcode.json 파일이 없으면 fetch_corp_code를 호출하여 데이터를 가져옵니다.
+        corpcode.json 파일이 있으면 corp_data를 가져옵니다.
+        corp_data를 통해 회사이름 또는 코드를 통해 corp_code를 찾습니다.
+        """
+        self.corp_data
+        
+        stock_code = self._fetch_stock_code_by_name(company, limit, flags)
+
+        return stock_code
+
     def reports(self, corp_code: str, year: str, quarter: int, api_no: int = -1, api_type: str = None):
         return self._reports_parser.fetch(corp_code, year, quarter, api_no, api_type)
 
@@ -171,7 +186,8 @@ class OpenDartCrawler:
         api_type = "분할"
         return self._registration_parser.fetch(corp_code, start_date, end_date, api_type=api_type)
 
-    def _fetch_corp_code_by_name(self, company: str, limit: int = 10, flags: int = re.IGNORECASE) -> str:
+    def _fetch_stock_code_by_name(self, company: str, limit: int = 10, flags: int = re.IGNORECASE) -> str:
+        print(f"Searching for corp_code by name: {company}")
         try:
             regex = re.compile(company, flags)
         except re.error as e:
@@ -191,8 +207,37 @@ class OpenDartCrawler:
                     break
 
         if len(results) > 0:
+            print(f"Found stock_code by name: {results[0].get('stock_code')}")
+            return results[0].get("stock_code")
+
+        print(f"No stock_code found for name: {company}")
+        return None
+
+    def _fetch_corp_code_by_name(self, company: str, limit: int = 10, flags: int = re.IGNORECASE) -> str:
+        print(f"Searching for corp_code by name: {company}")
+        try:
+            regex = re.compile(company, flags)
+        except re.error as e:
+            print(f"Invalid regex pattern: {e}")
+            return []
+        
+        results = []
+        for item in self._corp_data:
+            corp_name = item.get("corp_name", "")
+            if regex.search(corp_name) and item.get("stock_code") != "":
+                results.append({
+                    "stock_code": item.get("stock_code", ""),
+                    "corp_code": item.get("corp_code", ""),
+                    "corp_name": corp_name
+                })
+                if len(results) >= limit:
+                    break
+
+        if len(results) > 0:
+            print(f"Found corp_code by name: {results[0].get('corp_code')}")
             return results[0].get("corp_code")
 
+        print(f"No corp_code found for name: {company}")
         return None
 
     def _fetch_corp_code_by_stock(self, stock: str, limit: int = 10) -> str:        

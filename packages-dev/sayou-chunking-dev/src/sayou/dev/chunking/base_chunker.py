@@ -13,7 +13,10 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 class BaseChunker(ABC):
-    """Abstract base chunker"""
+    """Abstract base chunker.
+    
+    
+    """
     
     @property
     @abstractmethod
