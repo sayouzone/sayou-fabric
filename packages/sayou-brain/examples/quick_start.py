@@ -17,13 +17,14 @@ while not os.path.exists(os.path.join(ROOT_DIR, "packages")):
 PACKAGES_ROOT = os.path.join(ROOT_DIR, "packages")
 sys.path.insert(0, os.path.join(PACKAGES_ROOT, "sayou-brain", "."))
 sys.path.insert(0, os.path.join(PACKAGES_ROOT, "sayou-chunking", "."))
+sys.path.insert(0, os.path.join(PACKAGES_ROOT, "sayou-visualizer", "."))
 
 print(f"[DEBUG] ROOT_DIR: {ROOT_DIR}")
 print(f"[DEBUG] Added paths to sys.path for: sayou-core, sayou-document")
 
-from sayou.chunking.plugins.markdown_splitter import MarkdownSplitter
+from sayou.chunking import MarkdownSplitter
 
-from src.sayou.brain.pipelines.standard import StandardPipeline
+from sayou.brain import StandardPipeline
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
@@ -84,18 +85,18 @@ def run_demo():
 
     # 1. 환경 설정
     config = load_config("config.yaml")
-    create_input_folder(INPUT_DIR)
+    # create_input_folder(INPUT_DIR)
 
     # 2. Brain 초기화
-    brain = StandardPipeline(extra_splitters=[MarkdownSplitter])
+    # brain = StandardPipeline(extra_splitters=[MarkdownSplitter])
 
     # 3. 데이터 준비
-    prepare_test_data(INPUT_DIR)
+    # prepare_test_data(INPUT_DIR)
 
     # 4. Ingest 실행
     print(f">>> Starting Ingestion from '{INPUT_DIR}'...")
 
-    result = brain.process(
+    result = StandardPipeline(extra_splitters=[MarkdownSplitter]).process(
         source=INPUT_DIR,
         destination=OUTPUT_FILE,
     )
