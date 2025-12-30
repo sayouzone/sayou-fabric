@@ -38,7 +38,186 @@ If you need general news or are unable to use yfinance, consider these alternati
 - **Third-Party News APIs:** Use a dedicated, reliable news API (e.g., Apify's Yahoo Finance scraper or general news APIs like Alpha Vantage or Finnhub) that may offer a Yahoo News data scraper or a broad range of news sources. These services often involve a subscription or usage limits.
 
 
-yfinance
+## Tests
+
+#### YahooCrawler
+
+```python
+from sayou.stock.yahoo import YahooCrawler
+
+crawler = YahooCrawler()
+ticker = "AAPL"
+
+# Yahoo 기업 캘린더 조회
+data = crawler.calendar(ticker)
+print(data)
+
+# 기업 수익 추정치 (Earning Estimate) 조회
+data = crawler.earnings_estimate(ticker)
+print(data)
+
+# 기업 매출 추정치 (Revenue Estimate) 조회
+data = crawler.revenue_estimate(ticker)
+print(data)
+
+# 기업 수익 내역 (Earnings History) 조회
+data = crawler.earnings_history(ticker)
+print(data)
+
+# 기업 EPS 추세 (EPS Trend) 조회
+data = crawler.eps_trend(ticker)
+print(data)
+
+# 기업 EPS 수정치 (EPS Revisions) 조회
+data = crawler.eps_revisions(ticker)
+print(data)
+
+# 기업 성장 추정치 (Growth Estimate) 조회
+data = crawler.growth_estimate(ticker)
+print(data)
+
+# 기업 이익공시일 (Earning Calendar) 조회
+data = crawler.earning_calendar(ticker)
+print(data)
+
+# 기업 SEC 공시 정보 (SEC Filings) 조회
+data = crawler.sec_filings(ticker)
+print(data)
+
+# 기업 추천도움 (Recommendation) 조회
+data = crawler.recommendation(ticker)
+print(data)
+
+# 일별 시세 조회
+start_date='2025-12-01'
+end_date='2025-12-31'
+data = crawler.chart(ticker, start_date=start_date, end_date=end_date)
+print(data) 
+
+# 배당 조회
+data = crawler.dividends(ticker=ticker)
+print(data)
+
+# 양도소득 조회
+data = crawler.capital_gains(ticker=ticker)
+print(data)
+
+# 주식 분할 조회
+data = crawler.splits(ticker=ticker)
+print(data)
+
+# Yahoo 재무제표 손익계산서 (Income Statement)
+data = crawler.income_statement(ticker)
+print(data)
+
+# Yahoo 재무제표 손익계산서 (Income Statement) (분기)
+data = crawler.quarterly_income_statement(ticker)
+print(data)
+
+# 재무상태표 (Balance Sheet) (연간)
+data = crawler.balance_sheet(ticker)
+print(data)
+
+# 재무상태표 (Balance Sheet) (분기)
+data = crawler.quarterly_balance_sheet(ticker)
+print(data)
+
+# 현금흐름표 (Cash Flow) (연간)
+data = crawler.cash_flow(ticker)
+print(data)
+
+# 현금흐름표 (Cash Flow) (분기)
+data = crawler.quarterly_cash_flow(ticker)
+print(data)
+```
+
+#### yfinance
+
+```python
+import yfinance as yf
+
+# 기업 정보 조회
+info = yf.Ticker('AAPL').info
+print(info)
+
+# 일별 시세 조회
+history = yf.Ticker('AAPL').history(start='2025-01-01', end='2025-12-31')
+print(history)
+
+# 재무제표 (Financials) (연간)
+financials = yf.Ticker('TSLA').financials
+print(financials)
+
+# 재무제표 손익계산서 (Income Statement) (연간)
+income_stmt = yf.Ticker('TSLA').income_stmt
+print(income_stmt)
+
+# 재무제표 손익계산서 (Income Statement) (분기)
+quarterly_income_stmt = yf.Ticker('TSLA').quarterly_income_stmt
+print(quarterly_income_stmt)
+
+# 재무상태표 (Balance Sheet) (연간)
+balance_sheet = yf.Ticker('TSLA').balance_sheet
+print(balance_sheet)
+
+# 재무상태표 (Balance Sheet) (분기)
+quarterly_balance_sheet = yf.Ticker('TSLA').quarterly_balance_sheet
+print(quarterly_balance_sheet)
+
+# 배당금 (Dividends)
+dividends = yf.Ticker('AAPL').dividends
+print(dividends)
+
+# 주식 분할 (Splits)
+splits = yf.Ticker('AAPL').splits
+print(splits)
+
+# 양도소득 (Capital Gains)
+capital_gains = yf.Ticker('AAPL').capital_gains
+print(capital_gains)
+
+# 매출 추정치 (Revenue Estimate)
+revenue_estimate = yf.Ticker('AAPL').revenue_estimate
+print(revenue_estimate)
+
+# 수익 추정치 (Earning Estimate)
+earnings_trend = yf.Ticker('AAPL').earnings_estimate
+print(earnings_estimate)
+
+# EPS 추세 (EPS Trend)
+eps_trend = yf.Ticker('AAPL').eps_trend
+print(eps_trend)
+
+# EPS 수정치 (EPS Revisions)
+eps_revisions = yf.Ticker('AAPL').eps_revisions
+print(eps_revisions)
+
+earnings = yf.Ticker('AAPL').earnings
+print(earnings)
+
+quarterly_earnings = yf.Ticker('AAPL').quarterly_earnings
+print(quarterly_earnings)
+
+earnings_dates = yf.Ticker('AAPL').earnings_dates
+print(earnings_dates)
+
+recommendations = yf.Ticker('AAPL').recommendations
+print(recommendations)
+
+recommendations_summary = yf.Ticker('AAPL').recommendations_summary
+print(recommendations_summary)
+
+options = yf.Ticker('AAPL').options
+print(options)
+
+sec_filings = yf.Ticker('AAPL').sec_filings
+print(sec_filings)
+
+fast_info = yf.Ticker('AAPL').fast_info
+print(fast_info)
+```
+
+https://github.com/ranaroussi/yfinance
 
 ```python
 _QUERY1_URL_ = 'https://query1.finance.yahoo.com'

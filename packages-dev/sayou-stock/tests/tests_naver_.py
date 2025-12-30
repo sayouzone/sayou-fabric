@@ -16,7 +16,7 @@ def demo_market(crawler: NaverCrawler, code: str):
     print(f"Naver 주요 시세 조회 - {code}")
     print('='*60)
 
-    # 일별 시세 데모
+    # Naver 일별 시세 조회
     start_date='2025-01-01'
     end_date='2025-12-31'
     print(f"\nNaver 일별 시세 조회 ({code}) {start_date} ~ {end_date}")
@@ -24,7 +24,7 @@ def demo_market(crawler: NaverCrawler, code: str):
     data = crawler.market(code, start_date=start_date, end_date=end_date)
     print(data)
 
-    # 주요 시세 데모
+    # Naver 주요 시세 조회
     print("\nNaver 주요 시세 조회")
 
     df_main_prices = crawler.main_prices(code)

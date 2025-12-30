@@ -29,6 +29,7 @@ from ..utils import (
     FINANCE_URL,
     FINANCE_API_URL,
     MOBILE_URL,
+    SISE_COLUMNS,
     decode_euc_kr
 )
 
@@ -53,15 +54,6 @@ class NaverMarketParser:
     "https://finance.naver.com/item/main.naver?code=005930"
     "https://finance.naver.com/item/sise.naver?code=005930"
     "https://finance.naver.com/item/item_right_ajax.naver?type=recent&code=005930&page=1"
-
-    sise_columns = {
-        '날짜': 'date',
-        '시가': 'open',
-        '고가': 'high',
-        '저가': 'low',
-        '종가': 'close',
-        '거래량': 'volume'
-    }
 
     def __init__(self, client: NaverClient):
         self.client = client
@@ -175,7 +167,7 @@ class NaverMarketParser:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
 
-        columns = self.sise_columns
+        columns = SISE_COLUMNS
         columns['외국인소진율'] = 'foreign_investment_rate'
         df.rename(columns=columns, inplace=True)
         
@@ -263,7 +255,7 @@ class NaverMarketParser:
                 continue
                 
         crawled_df = pd.concat(full_df, ignore_index=True)
-        columns = self.sise_columns
+        columns = SISE_COLUMNS
         crawled_df.rename(columns=columns, inplace=True)
         
         if '전일비' in crawled_df.columns:

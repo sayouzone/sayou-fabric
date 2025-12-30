@@ -57,10 +57,15 @@ __author__ = "SeongJung Kim"
 
 from .crawler import FnGuideCrawler
 from .client import FnGuideClient
-#from .models import (
-#    # 공통
-#    DartConfig,
-#)
+from .models import (
+    # 공통
+    TableData,
+    KeyValueData,
+    # 
+    HistoryData,
+    #
+    FinancialRatioData,
+)
 from .parsers import (
     FnGuideCompanyParser,
     FnGuideComparisonParser,
@@ -81,7 +86,10 @@ __all__ = [
     "FnGuideClient",
     
     # 데이터 모델
-    #"DartConfig",
+    "TableData",
+    "KeyValueData",
+    "HistoryData",
+    "FinancialRatioData",
     
     # 파서
     "FnGuideCompanyParser",

@@ -3,9 +3,6 @@
 Yahoo Crawler 사용 예시
 """
 
-import os
-import pandas as pd
-
 from sayou.stock.yahoo import YahooCrawler
 
 def demo_analysis(crawler: YahooCrawler, ticker: str):
@@ -125,36 +122,36 @@ def demo_financials(crawler: YahooCrawler, ticker: str):
     print(f"Yahoo 재무제표 조회 - {ticker}")
     print('='*60)
 
-    # Yahoo 재무제표
+    # Yahoo 재무제표 손익계산서 (Income Statement)
     print(f"\nYahoo 재무제표 손익계산서 (Income Statement) 검색: {ticker}")
     data = crawler.income_statement(ticker)
     print(data)
 
-    # Yahoo 재무제표 (분기)
+    # Yahoo 재무제표 손익계산서 (Income Statement) (분기)
     print(f"\nYahoo 재무제표 손익계산서 (Income Statement) (분기) 검색: {ticker}")
 
     data = crawler.quarterly_income_statement(ticker)
     print(data)
 
-    # 재무상태표 (연간)
+    # 재무상태표 (Balance Sheet) (연간)
     print(f"\nYahoo 재무제표 재무상태표 (Balance Sheet) 검색: {ticker}")
 
     data = crawler.balance_sheet(ticker)
     print(data)
 
-    # 재무상태표 (분기)
+    # 재무상태표 (Balance Sheet) (분기)
     print(f"\nYahoo 재무제표 재무상태표 (Balance Sheet) (분기) 검색: {ticker}")
 
     data = crawler.quarterly_balance_sheet(ticker)
     print(data)
 
-    # 현금흐름표 (연간)
+    # 현금흐름표 (Cash Flow) (연간)
     print(f"\nYahoo 재무제표 현금흐름표 (Cash Flow) 검색: {ticker}")
 
     data = crawler.cash_flow(ticker)
     print(data)
 
-    # 현금흐름표 (분기)
+    # 현금흐름표 (Cash Flow) (분기)
     print(f"\nYahoo 재무제표 현금흐름표 (Cash Flow) (분기) 검색: {ticker}")
 
     data = crawler.quarterly_cash_flow(ticker)

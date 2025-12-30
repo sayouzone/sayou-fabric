@@ -21,10 +21,15 @@ from typing import Dict, Any, List, Tuple, Optional
 from urllib import parse
 
 from ..client import NaverClient
+from ..models import NewsArticle, NewsSearchResult
 from ..utils import (
+    NEWS_BASE_URL,
     NEWS_URLS,
     FINANCE_URL,
     FINANCE_API_URL,
+    NEWS_SELECTORS,
+    NEWS_TITLE_SELECTORS,
+    NEWS_CONTENT_SELECTORS
 )
 
 # 로깅 설정
@@ -33,24 +38,37 @@ logger = logging.getLogger(__name__)
 
 class NaverNewsParser:
     """
-    뉴스 검색 클래스
+    뉴스 파서 클래스
     
-    Independent Naver news pipeline (no NaverCrawler dependency).
+    Attributes:
+        client: NaverClient 인스턴스
+        client_id: Naver API Client ID
+        client_secret: Naver API Client Secret
+        max_per_category: 카테고리별 최대 기사 수
     """
 
-    max_per_category = 10
+    DEFAULT_MAX_PER_CATEGORY = 10
+    DEFAULT_DELAY_RANGE = (0.1, 0.3)
     
-    def __init__(self, client: NaverClient, client_id, client_secret):
+    def __init__(
+        self, 
+        client: NaverClient, 
+        client_id: str, 
+        client_secret: str,
+        max_per_category: int = DEFAULT_MAX_PER_CATEGORY
+    ):
         self.client = client
-
         self.client_id = client_id
         self.client_secret = client_secret
+        self.max_per_category = max_per_category
+
+        self._detail_parser = NaverNewsDetailParser(client)
 
     def fetch(
         self,
         category: str = "조회",
-        query: str | None = None,
-        url: str | None = None,
+        query: Optional[str] = None,
+        url: Optional[str] = None,
         max_articles: int = 100
     ) -> List[Dict]:
         """
@@ -58,13 +76,13 @@ class NaverNewsParser:
         카테고리에 대한 뉴스 목록을 조회한다.
         
         Args:
-            category (str): 조회, 카테고리 (정치, 경제, 사회, 생활/문화, IT/과학, 세계). 기본값: 조회
-            query (str): 기사 검색 문구
-            url (str): 뉴스 검색 URL
-            max_articles (int): 최대 뉴스 갯수
+            ategory: 조회 모드 또는 카테고리명 (정치, 경제, 사회, 생활/문화, IT/과학, 세계)
+            query: 검색어 (category가 "조회"일 때 사용)
+            url: 커스텀 API URL
+            max_articles: 최대 기사 수
 
         Returns:
-            뉴스 Dictionary 목록
+            NewsArticle 목록
         """
 
         if category != "조회":
@@ -86,140 +104,136 @@ class NaverNewsParser:
 
         articles = []
         try:
-            print(f"News 목록 URL: {url}, headers: {api_headers}, params: {params}")
+            logger.info(f"News 목록 URL: {url}, params: {params}")
             response = self.client._get(url, params=params, headers=api_headers)
             search_result = response.json()
 
             # JSON에서 link 정보 추출
             news_list = search_result.get('items', [])
             #print(f"Items: {news_list}")
-            for news_item in news_list:
-                article = {
-                    'query': query,
-                    'url': news_item.get("link")
-                }
+            for item in news_list:
+                article = NewsArticle(
+                    url=item.get("link"),
+                    query=query,
+                    title=item.get("title")
+                )
                 articles.append(article)
             
             return articles
         except Exception as e:
-            print(f"Exception: {e}")
+            print(f"Exception: 뉴스 검색 실패 {e}")
         
         return articles
 
     def parse(
         self,
-        articles: List[Dict]
-    ) -> List[Dict]:
+        articles: List[Dict],
+        delay_range: tuple = DEFAULT_DELAY_RANGE
+    ) -> List[NewsArticle]:
         """
-        뉴스 목록으로 뉴스 상세 정보를 가져온다.
+        뉴스 목록의 상세 정보를 파싱한다.
         제목, 내용, 언론사, 입력일, 기자 목록
         카테고리 X
 
         Args:
-            news_list (List): 신문 기사 URL 목록
+            articles: NewsArticle 목록
+            delay_range: 요청 간 지연 시간 범위 (초)
 
         Returns:
-            뉴스 상세 Dictionary 목록
+            상세 정보가 채워진 NewsArticle 목록
         """
 
-        for idx, article in enumerate(articles):
-            news_url = article.get('url')
-            
-            if news_url and 'news.naver.com' in news_url:
-                detail = NaverNewsDetail(self.client)
-                article = detail.fetch(article)
-            
-            time.sleep(random.uniform(0.1, 0.3))
+        for article in articles:
+            if article.is_naver_news:
+                self._detail_parser.fetch(article)
+                #detail = NaverNewsDetail(self.client)
+                #article = detail.fetch(article)
+                time.sleep(random.uniform(*delay_range))
 
         return articles
 
-    def _fetch_category_news(self):
+    def _fetch_category_news(self) -> List[NewsArticle]:
         """
         카테고리별 뉴스 목록을 가져온다.
         """
-        
         articles = []
+
         for category_name, category_url in NEWS_URLS.items():
             if category_name == "openapi":
                 continue
-            print(f"News 목록 URL: {category_url}")
-            article_links = self._select_articles(category_url, self.max_per_category)
-
-            for article in article_links:
-                category = {
-                    'query': category_name
-                }
-                category.update(article)
-                articles.append(category)
+            logger.info(f"News 목록 URL: {category_url}")
+            category_articles = self._fetch_articles_from_category(
+                category_name, category_url
+            )
+            articles.extend(category_articles)
 
         return articles
 
-    def _select_articles(self, category_url, num_articles):
-
-        article_links = []
-
-        referer = "https://news.naver.com/"
-        print(category_url, referer)
-        response = self.client._get(category_url, referer=referer, timeout=30)
-        #print(response.text)
-
-        soup = BeautifulSoup(response.text, 'html.parser')
+    def _fetch_articles_from_category(
+        self,
+        category_name: str,
+        category_url: str,
+    ) -> List[NewsArticle]:
+        """특정 카테고리에서 기사 목록 추출"""
+        articles = []
 
         try:
-            selectors = [
-                'a.sa_text_lede',
-                'a.sa_text_strong',
-                '.sa_text a',
-                '.cluster_text_headline a',
-                '.cluster_text_lede a'
-            ]
+            response = self.client._get(
+                category_url,
+                referer=NEWS_BASE_URL,
+                timeout=30,
+            )
+            soup = BeautifulSoup(response.text, "html.parser")
 
-            for selector in selectors:
+            for selector in NEWS_SELECTORS:
                 elements = soup.select(selector)
+
                 for element in elements:
-                    #print(element)
-                    url = element.get('href')
-                    if (url and 'news.naver.com' in url and '/article/'in url
-                        and '/comment/' not in url  # 댓글 페이지만 제외
-                        and url not in article_links):
-                        article_links.append({
-                            "title": element.get_text().strip(),
-                            "url": url,
-                        })
-                        if len(article_links) >= num_articles:
+                    url = element.get("href")
+
+                    if self._is_valid_article_url(url):
+                        article = NewsArticle(
+                            url=url,
+                            query=category_name,
+                            title=element.get_text(strip=True),
+                        )
+                        articles.append(article)
+
+                        if len(articles) >= self.max_per_category:
                             break
-                if len(article_links) >= num_articles:
+
+                if len(articles) >= self.max_per_category:
                     break
 
-            print(f"✅ {len(article_links)}개의 기사 링크 수집 완료")
+            logger.info(f"✅ {len(articles)}개의 기사 링크 수집 완료")
 
         except Exception as e:
-            print(f" 기사 링크 수집 실패: {e}")
+            logger.error(f"기사 링크 수집 실패: {e}")
 
-        return article_links[:num_articles]
+        return articles[: self.max_per_category]
 
-class NaverNewsDetail:
+    @staticmethod
+    def _is_valid_article_url(url: Optional[str]) -> bool:
+        """유효한 기사 URL인지 확인"""
+        if not url:
+            return False
+        return (
+            "news.naver.com" in url
+            and "/article/" in url
+            and "/comment/" not in url
+        )
+
+class NaverNewsDetailParser:
+    """
+    뉴스 상세 정보 파서
     
-    # 제목
-    title_selectors = [
-        '#title_area span',
-        '#ct .media_end_head_headline',
-        '.media_end_head_headline',
-        'h2#title_area',
-        '.news_end_title'
-    ]
+    Attributes:
+        client: NaverClient 인스턴스
+    """
 
-    # 본문
-    content_selectors = [
-        '#dic_area',
-        'article#dic_area',
-        '.go_trans._article_content',
-        '._article_body_contents'
-    ]
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'
-    }
+    DEFAULT_TITLE = "제목 없음"
+    DEFAULT_CONTENT = "본문 없음"
+    DEFAULT_PRESS = "언론사 불명"
     
     def __init__(
         self,
@@ -229,32 +243,35 @@ class NaverNewsDetail:
 
     def fetch(
         self,
-        url: str | None = None,
-        article: Dict | None = None
+        article: NewsArticle
     ):
-        news_url = url if url else article.get('url')
+        """
+        뉴스 상세 정보를 가져와서 article 객체를 업데이트한다.
         
+        Args:
+            article: NewsArticle 인스턴스
+
+        Returns:
+            업데이트된 NewsArticle
+        """        
         try:
-            print(f"News Detail URL: {news_url}")
-            response = self.client._get(news_url)
-            response.raise_for_status()
+            logger.info(f"News Detail URL: {article.url}")
+            response = self.client._get(article.url)
 
             # 뉴스 상세 정보 파싱
-            _article = self._parse_news(response.text)
-            
-            article.update(_article)
-
+            self._parse_and_update(article, response.text)
 
         except Exception as e:
-            print(f"Error scraping {news_url}: {e}")
+            logger.error(f"Error scraping {article.url}: {e}")
 
         finally:
             return article
 
-    def _parse_news(
+    def _parse_and_update(
         self,
+        article: NewsArticle,
         html_text: str
-    ) -> Dict:
+    ) -> None:
         """
         HTML에서 뉴스 상세 정보를 파싱한다.
         제목, 본문 내용, 언론사, 입력일, 기자 목록
@@ -267,35 +284,18 @@ class NaverNewsDetail:
         """
         soup = BeautifulSoup(html_text, 'html.parser')
 
-        # 제목
-        title = self._parse_title(soup)
-        # 본문 내용
-        content = self._parse_content(soup)
-        # 언론사
-        press = self._parse_press(soup)
-        # 입력일
-        published_date = self._parse_published_date(soup)
-        # 기자 목록
-        authors = self._parse_authors(soup)
-        # 카테고리
-        category = self._parse_category(soup)
-
-        article = {
-            'title': title,
-            'content': content,
-            'press': press,
-            'authors': (", ").join(authors),
-            'category': category,
-            'published_date': published_date,
-            'crawled_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-
-        #print(f"Article: {article}")
-        return article
+        article.update_detail(
+            title=self._parse_title(soup),
+            content=self._parse_content(soup),
+            press=self._parse_press(soup),
+            authors=self._parse_authors(soup),
+            category=self._parse_category(soup),
+            published_date=self._parse_published_date(soup),
+        )
 
     def _parse_title(
         self,
-        soup
+        soup: BeautifulSoup
     ) -> str:
         """
         HTML에서 제목을 파싱한다.
@@ -305,22 +305,20 @@ class NaverNewsDetail:
 
         Returns:
             제목 문자열
-        """
-        title = "제목 없음"
-        
-        for selector in self.title_selectors:
+        """        
+        for selector in NEWS_TITLE_SELECTORS:
             try:
-                title_element = soup.select_one(selector)
-                title = title_element.get_text(strip=True)
-                break
+                element = soup.select_one(selector)
+                if element:
+                    return element.get_text(strip=True)
             except:
                 continue
 
-        return title
+        return self.DEFAULT_TITLE
 
     def _parse_content(
         self,
-        soup
+        soup: BeautifulSoup
     ) -> str:
         """
         HTML에서 본문 내용을 파싱한다.
@@ -330,22 +328,20 @@ class NaverNewsDetail:
 
         Returns:
             본문 내용 문자열
-        """
-        content = "본문 없음"
-        
-        for selector in self.content_selectors:
+        """        
+        for selector in NEWS_CONTENT_SELECTORS:
             try:
-                content_element = soup.select_one(selector)
-                content = content_element.get_text(strip=True)
-                break
+                element = soup.select_one(selector)
+                if element:
+                    return element.get_text(strip=True)
             except:
                 continue
 
-        return content
+        return self.DEFAULT_CONTENT
 
     def _parse_press(
         self,
-        soup
+        soup: BeautifulSoup
     ) -> str:
         """
         HTML에서 언론사를 파싱한다.
@@ -356,19 +352,20 @@ class NaverNewsDetail:
         Returns:
             언론사 문자열
         """
-        press = "언론사 불명"
-        
-        try:
-            press_element = soup.select_one('a.media_end_head_top_logo img')
-            press = press_element.get('alt')
-        except:
-            try:
-                press_element = soup.select_one('.media_end_head_top_logo_text')
-                press = press_element['alt']
-            except:
-                pass
+        selectors = [
+            ('a.media_end_head_top_logo img', 'alt'),
+            ('.media_end_head_top_logo_text', 'alt')
+        ]
 
-        return press
+        for selector, attr in selectors:
+            try:
+                element = soup.select_one(selector)
+                if element:
+                    return element.get(attr, self.DEFAULT_PRESS)
+            except:
+                continue
+
+        return self.DEFAULT_PRESS
 
     def _parse_published_date(
         self,
@@ -386,16 +383,17 @@ class NaverNewsDetail:
         published_date = "뉴스 입력일 불명"
         
         try:
-            date_element = soup.select_one('span.media_end_head_info_datestamp_time')
-            published_date = date_element.get('data-date-time')
-        except:
-            published_date = datetime.now().strftime('%Y-%m-%d %H:%M')
+            element = soup.select_one('span.media_end_head_info_datestamp_time')
+            if element:
+                return element.get('data-date-time', '')
+        except Exception as e:
+            pass
 
-        return published_date
+        return datetime.now().strftime('%Y-%m-%d %H:%M')
 
     def _parse_authors(
         self,
-        soup
+        soup: BeautifulSoup
     ) -> List:
         """
         HTML에서 기자 목록을 파싱한다.
@@ -409,22 +407,20 @@ class NaverNewsDetail:
         authors = []
         
         try:
-            #author_elements = soup.select('em.media_end_head_journalist_name')
-            #author = author_element.get_text(strip=True)
-            
             author_elements = soup.select('span.byline_s')
             for author_element in author_elements:
                 author = author_element.get_text(strip=True)
-                authors.append(author)
+                if author:
+                    authors.append(author)
         except Exception as e:
-            print(f"Exception: {e}")
+            logger.warning(f"Error parsing authors: {e}")
 
         return authors
     
     def _parse_category(
         self,
-        soup
-    ) -> str:
+        soup: BeautifulSoup
+    ) -> Optional[str]:
         """
         HTML에서 카테고리를 파싱한다.
 
@@ -434,12 +430,12 @@ class NaverNewsDetail:
         Returns:
             카테고리
         """
-        authors = []
         
         try:
-            category_element = soup.select_one('em.media_end_categorize_item')
-            category = category_element.get_text(strip=True)
+            element = soup.select_one('em.media_end_categorize_item')
+            if element:
+                return element.get_text(strip=True)
         except Exception as e:
-            print(f"Exception: {e}")
+            logger.warning(f"Error parsing category: {e}")
 
-        return category
+        return None
