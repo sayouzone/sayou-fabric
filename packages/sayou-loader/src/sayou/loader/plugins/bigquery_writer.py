@@ -3,6 +3,7 @@ import os
 from typing import Any, Tuple
 
 from sayou.core.registry import register_component
+
 from ..interfaces.base_writer import BaseWriter
 
 try:
