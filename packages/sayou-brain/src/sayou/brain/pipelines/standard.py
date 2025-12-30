@@ -1,16 +1,17 @@
 import os
+import traceback
 from typing import Any, Dict
 
-from sayou.assembler.pipeline import AssemblerPipeline
-from sayou.chunking.pipeline import ChunkingPipeline
-from sayou.connector.pipeline import ConnectorPipeline
+from sayou.assembler import AssemblerPipeline
+from sayou.chunking import ChunkingPipeline
+from sayou.connector import ConnectorPipeline
 from sayou.core.base_component import BaseComponent
 from sayou.core.decorators import measure_time, safe_run
 from sayou.core.schemas import SayouOutput
-from sayou.document.pipeline import DocumentPipeline
-from sayou.loader.pipeline import LoaderPipeline
-from sayou.refinery.pipeline import RefineryPipeline
-from sayou.wrapper.pipeline import WrapperPipeline
+from sayou.document import DocumentPipeline
+from sayou.loader import LoaderPipeline
+from sayou.refinery import RefineryPipeline
+from sayou.wrapper import WrapperPipeline
 
 from ..core.config import SayouConfig
 
@@ -136,86 +137,185 @@ class StandardPipeline(BaseComponent):
         **kwargs,
     ) -> Dict[str, Any]:
         """
-        Execute the full ETL pipeline.
+        Execute the full ETL pipeline with comprehensive error handling.
         """
+        self._emit(
+            "on_start", input_data={"source": source, "type": "pipeline_execution"}
+        )
         strategies = strategies or {}
-
-        # Destination Defaulting
-        if not destination:
-            base_name = os.path.basename(source) if source else "output"
-            if not base_name or "://" in source:
-                base_name = "sayou_output"
-            destination = f"./{os.path.splitext(base_name)[0]}.json"
-            self._log(f"No destination provided. Defaulting to: {destination}")
-
-        accumulated_nodes = []
         stats = {"processed": 0, "failed": 0, "files_count": 0}
 
-        # Runtime Config Merge (Highest Priority)
-        run_config = {**self.config._config, **kwargs}
+        # -----------------------------------------------------------
+        # [Prep] Configuration & Defaults
+        # -----------------------------------------------------------
+        try:
+            # Destination Defaulting
+            if not destination:
+                base_name = os.path.basename(source) if source else "output"
+                if not base_name or "://" in source:
+                    base_name = "sayou_output"
+                destination = f"./{os.path.splitext(base_name)[0]}.json"
+                self._log(f"No destination provided. Defaulting to: {destination}")
 
-        self._log(f"--- Starting Ingestion: {source} -> {destination} ---")
+            # Runtime Config Merge (Highest Priority)
+            run_config = {**self.config._config, **kwargs}
+            self._log(f"--- Starting Ingestion: {source} -> {destination} ---")
 
-        # 1. Connector
-        packets = self.connector.run(
-            source, strategy=strategies.get("connector", "auto"), **run_config
+        except Exception as e:
+            self._log(f"💥 [Prep] Configuration Error: {e}", level="error")
+            self._log(traceback.format_exc(), level="error")
+            self._emit("on_error", error=e)
+            return stats
+
+        self._log(
+            f"DEBUG: Injecting callbacks to children... (Total: {len(self._callbacks)})"
         )
+        if hasattr(self, "_callbacks"):
+            for cb in self._callbacks:
+                if hasattr(self, "connector"):
+                    self.connector.add_callback(cb)
+                if hasattr(self, "document"):
+                    self.document.add_callback(cb)
+                if hasattr(self, "refinery"):
+                    self.refinery.add_callback(cb)
+                if hasattr(self, "chunking"):
+                    self.chunking.add_callback(cb)
+                if hasattr(self, "wrapper"):
+                    self.wrapper.add_callback(cb)
+                if hasattr(self, "assembler"):
+                    self.assembler.add_callback(cb)
+                if hasattr(self, "loader"):
+                    self.loader.add_callback(cb)
 
         # -----------------------------------------------------------
-        # Loop: Process each file individually
+        # [Phase 1] Connector (Fetch Data)
         # -----------------------------------------------------------
+        packets = []
+        try:
+            self._log(f"🚀 [Phase 1] Connector: Fetching from '{source}'...")
+
+            conn_strat = strategies.get("connector", "auto")
+            packets = self.connector.run(source, strategy=conn_strat, **run_config)
+
+            if packets is None:
+                self._log("⚠️ [Phase 1] Connector returned None.", level="warning")
+                return stats
+
+            if hasattr(packets, "__len__"):
+                if not packets:
+                    self._log(
+                        "⚠️ [Phase 1] Connector returned empty list.", level="warning"
+                    )
+                    return stats
+                self._log(f"   -> Fetched {len(packets)} packets successfully.")
+
+            else:
+                self._log(f"   -> Connector generator initialized (Streaming Mode).")
+
+        except Exception as e:
+            self._log(f"💥 [Phase 1] Connector Critical Failure", level="error")
+            self._log(traceback.format_exc(), level="error")
+            self._emit("on_error", error=e)
+            return stats
+
+        # -----------------------------------------------------------
+        # [Phase 2] Processing Loop (Files -> Nodes)
+        # -----------------------------------------------------------
+        accumulated_nodes = []
+
         for packet in packets:
             stats["files_count"] += 1
+
+            # Packet 자체 실패 체크
             if not packet.success:
-                self._log(f"Fetch failed: {packet.error}", level="warning")
+                self._log(f"⚠️ Fetch failed for packet: {packet.error}", level="warning")
                 stats["failed"] += 1
                 continue
 
+            # -------------------------------------------------------
+            # [Step 0] Meta Extraction
+            # -------------------------------------------------------
+            file_name = "unknown"
             try:
-                # Meta
                 file_name = packet.task.meta.get("filename", "unknown_source")
                 raw_data = packet.data
+                self._log(f"🚀 [Step 0] Processing: {file_name}")
+            except Exception as e:
+                self._log(f"💥 Error in Step 0 (Meta): {e}", level="error")
+                self._emit("on_error", error=e)
+                continue
 
-                # 2. Document
-                doc_obj = None
+            # -------------------------------------------------------
+            # [Step 1] Document Parsing
+            # -------------------------------------------------------
+            doc_obj = None
+            try:
                 if isinstance(raw_data, bytes):
-                    try:
-                        doc_obj = self.document.run(
-                            raw_data,
-                            file_name,
-                            strategy=strategies.get("document", "auto"),
-                            **run_config,
-                        )
-                    except Exception as e:
-                        self._log(
-                            f"No binary parser for {file_name}. Fallback to text decoding.",
-                            level="debug",
-                        )
-                        try:
-                            raw_data = raw_data.decode("utf-8")
-                        except UnicodeDecodeError:
+                    doc_obj = self.document.run(
+                        raw_data,
+                        file_name,
+                        strategy=strategies.get("document", "auto"),
+                        **run_config,
+                    )
+                    if doc_obj:
+                        self._log(f"   -> Document parsed. Type: {type(doc_obj)}")
+                        has_type = hasattr(doc_obj, "type")
+                        self._log(f"   -> Document has 'type' attr? {has_type}")
+                        if has_type:
                             self._log(
-                                f"Failed to decode {file_name}. It might be an unsupported binary.",
-                                level="error",
+                                f"   -> Document.type: {getattr(doc_obj, 'type')}"
                             )
-                            stats["failed"] += 1
-                            continue
 
+            except Exception as e:
+                self._log(
+                    f"⚠️ [Step 1] Binary parsing failed for {file_name}. Reason: {e}",
+                    level="debug",
+                )
+                try:
+                    raw_data = raw_data.decode("utf-8")
+                    self._log("   -> Fallback to text decoding successful.")
+                except UnicodeDecodeError:
+                    self._log(
+                        f"❌ [Step 1] Failed to decode {file_name}. Skipping.",
+                        level="error",
+                    )
+                    stats["failed"] += 1
+                    self._emit("on_error", error=e)
+                    continue
+
+            # -------------------------------------------------------
+            # [Step 2] Refinery
+            # -------------------------------------------------------
+            try:
                 refine_input = doc_obj if doc_obj else raw_data
-
-                # 3. Refinery
                 ref_strat = strategies.get("refinery")
                 if not ref_strat:
                     ref_strat = "standard_doc" if doc_obj else "auto"
 
+                self._log(f"   -> Entering Refinery with strategy: '{ref_strat}'")
+
+                self._log(f"   -> Refinery Input Type: {type(refine_input)}")
+
                 blocks = self.refinery.run(
                     refine_input, strategy=ref_strat, **run_config
                 )
+
                 if not blocks:
+                    self._log("⚠️ [Step 2] Refinery returned empty blocks.")
                     continue
 
-                # 4. Chunking
-                all_chunks = []
+            except Exception as e:
+                self._log(f"💥 [Step 2] Refinery Error on {file_name}", level="error")
+                self._log(traceback.format_exc(), level="error")
+                stats["failed"] += 1
+                self._emit("on_error", error=e)
+                continue
+
+            # -------------------------------------------------------
+            # [Step 3] Chunking
+            # -------------------------------------------------------
+            all_chunks = []
+            try:
                 chunk_strat = strategies.get("chunking", "auto")
                 all_chunks = self.chunking.run(
                     blocks, strategy=chunk_strat, **run_config
@@ -237,11 +337,21 @@ class StandardPipeline(BaseComponent):
                             f" - Chunk[{i}] Parent: {c_data.get('metadata', {}).get('parent_id')}"
                         )
                     self._log("--------------------------------------------------\n")
-
-                if not all_chunks:
+                else:
+                    self._log("⚠️ [Step 3] No chunks generated.")
                     continue
 
-                # 5. Wrapper
+            except Exception as e:
+                self._log(f"💥 [Step 3] Chunking Error on {file_name}", level="error")
+                self._log(traceback.format_exc(), level="error")
+                stats["failed"] += 1
+                self._emit("on_error", error=e)
+                continue
+
+            # -------------------------------------------------------
+            # [Step 4] Wrapper & Assembly
+            # -------------------------------------------------------
+            try:
                 wrap_strat = strategies.get("wrapper", "auto")
                 wrapper_out = self.wrapper.run(
                     all_chunks, strategy=wrap_strat, **run_config
@@ -250,44 +360,83 @@ class StandardPipeline(BaseComponent):
                 if wrapper_out and wrapper_out.nodes:
                     accumulated_nodes.extend(wrapper_out.nodes)
                     stats["processed"] += 1
+                    self._log(f"✅ [Finished] Processed {file_name}")
 
             except Exception as e:
-                self._log(f"Pipeline Error on {packet.task.uri}: {e}", level="error")
+                self._log(f"💥 [Step 4] Wrapper Error on {file_name}", level="error")
+                self._log(traceback.format_exc(), level="error")
                 stats["failed"] += 1
+                continue
 
         # -----------------------------------------------------------
-        # Finalize: Assemble & Load ONCE
+        # [Phase 3] Finalize: Assemble & Load
         # -----------------------------------------------------------
         if not accumulated_nodes:
-            self._log("No nodes generated from any source.", level="warning")
+            self._log(
+                "⚠️ [Phase 3] No nodes generated from any source. Aborting write.",
+                level="warning",
+            )
+            self._emit("on_error", error="No nodes generated from any source.")
             return stats
 
         self._log(
-            f"Accumulated {len(accumulated_nodes)} nodes from {stats['processed']} files. assembling..."
+            f"🚀 [Phase 3] Finalizing... Accumulated {len(accumulated_nodes)} nodes from {stats['processed']} files."
         )
 
+        # -------------------------------------------------------
+        # [Step 5] Assembler
+        # -------------------------------------------------------
+        payload = None
         try:
             final_output = SayouOutput(
                 nodes=accumulated_nodes,
                 metadata={"source_count": stats["processed"], "origin": source},
             )
 
-            # 6. Assembler
             asm_strat = strategies.get("assembler", "auto")
+            self._log(f"   -> Assembling payload with strategy: '{asm_strat}'")
+
             payload = self.assembler.run(final_output, strategy=asm_strat, **run_config)
 
-            # 7. Loader
-            load_strat = strategies.get("loader", "auto")
-            success = self.loader.run(
-                payload, destination, strategy=load_strat, **run_config
-            )
-
-            if not success:
-                self._log("Final Write failed.", level="error")
+            if not payload:
+                self._log(
+                    "⚠️ [Step 5] Assembler returned empty payload.", level="warning"
+                )
 
         except Exception as e:
-            self._log(f"Final Assembly/Load Error: {e}", level="error")
+            self._log(f"💥 [Step 5] Assembler Error", level="error")
+            self._log(traceback.format_exc(), level="error")
             stats["failed"] += 1
+            self._emit("on_error", error=e)
+            return stats
 
+        # -------------------------------------------------------
+        # [Step 6] Loader
+        # -------------------------------------------------------
+        if payload:
+            try:
+                load_strat = strategies.get("loader", "auto")
+                self._log(f"   -> Loading to destination: {destination}")
+
+                success = self.loader.run(
+                    payload, destination, strategy=load_strat, **run_config
+                )
+
+                if success:
+                    self._log(f"✅ [Success] Pipeline Completed. Output: {destination}")
+                else:
+                    self._log(
+                        "❌ [Step 6] Loader reported failure (return False).",
+                        level="error",
+                    )
+                    stats["failed"] += 1
+
+            except Exception as e:
+                self._log(f"💥 [Step 6] Loader Critical Error", level="error")
+                self._log(traceback.format_exc(), level="error")
+                stats["failed"] += 1
+                self._emit("on_error", error=e)
+
+        self._emit("on_finish", result_data=stats, success=True)
         self._log(f"--- Ingestion Complete. Stats: {stats} ---")
         return stats
