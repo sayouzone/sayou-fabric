@@ -67,7 +67,13 @@ __author__ = "SeongJung Kim"
 from .crawler import NaverCrawler
 from .client import NaverClient
 from .models import (
-    # 공통
+    # Finance
+    Currency,
+    StockPrice,
+    MainPrices,
+    CompanyMetadata,
+    PriceHistory,
+    # 뉴스
     NewsArticle,
     NewsSearchResult,
     CategoryNews,
@@ -83,6 +89,13 @@ __all__ = [
     "NaverClient",
     
     # 데이터 모델
+    # Finance
+    "Currency",
+    "StockPrice",
+    "MainPrices",
+    "CompanyMetadata",
+    "PriceHistory",
+    # 뉴스
     "NewsArticle",
     "NewsSearchResult",
     "CategoryNews",

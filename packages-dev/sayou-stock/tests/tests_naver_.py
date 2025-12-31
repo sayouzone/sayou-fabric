@@ -62,8 +62,6 @@ def main(stock: str):
     
     load_dotenv()
 
-    #client_id = 'EOof636e7yvLvMe3t1jg'
-    #client_secret = 'lb4v_qXkRI'
     client_id = os.getenv('NAVER_CLIENT_ID')
     client_secret = os.getenv('NAVER_CLIENT_SECRET')
 
