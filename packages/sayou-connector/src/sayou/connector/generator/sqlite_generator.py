@@ -94,7 +94,7 @@ class SqliteGenerator(BaseGenerator):
             return s[9:]
         return s
 
-    def _do_generate(self) -> Iterator[SayouTask]:
+    def _do_generate(self, source: str, **kwargs) -> Iterator[SayouTask]:
         """
         Yield pagination tasks until the stop flag is set.
 

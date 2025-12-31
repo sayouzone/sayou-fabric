@@ -38,7 +38,7 @@ class BaseGenerator(BaseComponent):
         return 0.0
 
     @measure_time
-    def generate(self) -> Iterator[SayouTask]:
+    def generate(self, source: str, **kwargs) -> Iterator[SayouTask]:
         """
         Execute the generation strategy and yield tasks one by one.
 
@@ -52,7 +52,7 @@ class BaseGenerator(BaseComponent):
         self._log(f"Starting generation strategy: {self.component_name}")
         count = 0
         try:
-            for task in self._do_generate():
+            for task in self._do_generate(source, **kwargs):
                 count += 1
                 yield task
             self._emit("on_finish", result_data={"total_tasks": count}, success=True)
@@ -67,9 +67,13 @@ class BaseGenerator(BaseComponent):
             self._log(f"Generator finished. Total tasks yielded: {count}")
 
     @abstractmethod
-    def _do_generate(self) -> Iterator[SayouTask]:
+    def _do_generate(self, source: str, **kwargs) -> Iterator[SayouTask]:
         """
         [Abstract Hook] Implement the logic to discover resources.
+
+        Args:
+            source (str): The source string to generate tasks from.
+            **kwargs: Additional keyword arguments.
 
         Yields:
             SayouTask: A task object representing a unit of work.

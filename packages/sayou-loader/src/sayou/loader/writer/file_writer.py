@@ -62,26 +62,59 @@ class FileWriter(BaseWriter):
         mode = kwargs.get("mode", "w")
         encoding = kwargs.get("encoding", "utf-8")
 
-        # 3. Determine Content & Mode
-        if isinstance(input_data, (dict, list)):
-            content = json.dumps(input_data, indent=2, ensure_ascii=False)
-        elif isinstance(input_data, str):
-            content = input_data
-        elif isinstance(input_data, bytes):
-            content = input_data
-            mode = "wb"
-            encoding = None
-        else:
-            # Fallback: Pickle
-            if not destination.endswith(".pkl"):
-                destination += ".pkl"
+        ext = os.path.splitext(destination)[1].lower()
 
-            with open(destination, "wb") as f:
-                pickle.dump(input_data, f)
+        try:
+            # 3. Determine Content & Mode
+
+            # Case A: Binary Data
+            if isinstance(input_data, bytes):
+                content = input_data
+                mode = "wb"
+                encoding = None
+
+            # Case B: JSON (Explicit .json extension OR Dict/List structure)
+            elif ext == ".json" or isinstance(input_data, (dict, list, tuple)):
+                content = json.dumps(
+                    input_data, indent=2, ensure_ascii=False, default=self._serializer
+                )
+
+            # Case C: Simple String (Not targeting JSON)
+            elif isinstance(input_data, str):
+                content = input_data
+
+            # Case D: Fallback (Pickle)
+            else:
+                if not destination.endswith(".pkl"):
+                    destination += ".pkl"
+
+                self._log(
+                    f"Unknown type {type(input_data)}. Falling back to pickle: {destination}"
+                )
+                with open(destination, "wb") as f:
+                    pickle.dump(input_data, f)
+                return True
+
+            # 4. Write File (Text/JSON/Bytes)
+            with open(destination, mode, encoding=encoding) as f:
+                f.write(content)
+
+            self._log(f"💾 Saved to {destination}")
             return True
 
-        # 4. Write File
-        with open(destination, mode, encoding=encoding) as f:
-            f.write(content)
+        except Exception as e:
+            self._log(f"Write failed: {e}", level="error")
+            raise e
 
-        return True
+    def _serializer(self, obj):
+        """
+        Helper: Custom object serializer for JSON.
+        Handles SayouBlock, SayouNode, etc.
+        """
+        if hasattr(obj, "to_dict"):
+            return obj.to_dict()
+
+        if hasattr(obj, "__dict__"):
+            return obj.__dict__
+
+        return str(obj)

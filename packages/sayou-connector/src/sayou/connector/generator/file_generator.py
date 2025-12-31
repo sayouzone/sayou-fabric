@@ -66,7 +66,7 @@ class FileGenerator(BaseGenerator):
         self.extensions = [e.lower() for e in extensions] if extensions else None
         self.name_pattern = name_pattern
 
-    def _do_generate(self) -> Iterator[SayouTask]:
+    def _do_generate(self, source: str, **kwargs) -> Iterator[SayouTask]:
         """
         Walk through the file system and yield tasks for valid files.
 
