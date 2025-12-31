@@ -24,57 +24,41 @@ Installation:
 Quick Start:
     >>> from naver import NaverCrawler
     >>> 
-    >>> crawler = NaverCrawler(api_key=dart_api_key)
+    >>> client_id = "your_client_id"
+    >>> client_secret = "your_client_secret"
+    >>> crawler = NaverCrawler(client_id, client_secret)
     >>> 
-    >>> # DART의 기업코드을 조회
-    >>> filings = crawler.fetch_corp_code(code)
-    >>> print(f"기업코드: {corp_code}")
+    >>> # Naver 일별 시세 조회
+    >>> start_date='2025-01-01'
+    >>> end_date='2025-12-31'
+    >>> data = crawler.market(code, start_date=start_date, end_date=end_date)
+    >>> print(data)
     >>> 
-    >>> # 정기보고서 재무정보 | 단일회사 주요계정 조회
-    >>> api_type = "단일회사 주요계정"
-    >>> corp_name = crawler.fetch_corp_name(corp_code)
-    >>> data = crawler.finance(corp_code, last_year, api_type=api_type)
-    >>> list = data.get("list", [])
-    >>> print(pd.DataFrame(list))
+    >>> # Naver 주요 시세 조회
+    >>> df_main_prices = crawler.main_prices(code)
+    >>> print(df_main_prices)
     >>> 
-    >>> # 정기보고서 주요정보 | 증자(감자) 현황
-    >>> year = "2024"
-    >>> quarter = 4
-    >>> api_no = 0 # 증자(감자) 현황
-    >>> api_key, data = crawler.reports(corp_code, year=year, quarter=quarter, api_no=api_no)
-    >>> list = data.get("list", [])
-    >>> print(pd.DataFrame(list))
+    >>> # Naver 기업 정보 조회
+    >>> metadata = crawler.company_metadata(code)
+    >>> print(metadata)
     >>> 
-    >>> # 지분공시 종합정보 | 대량보유 상황보고 현황
-    >>> api_no = 0 # 대량보유 상황보고 현황
-    >>> api_key, data = crawler.ownership(corp_code, api_no=api_no)
-    >>> list = data.get("list", [])
-    >>> print(pd.DataFrame(list))
+    >>> # Naver 뉴스 카테고리별 검색
+    >>> articles = crawler.category_news()
+    >>> print(articles)
     >>> 
-    >>> # 주요사항보고서 주요정보 | 자산양수도(기타), 풋백옵션 현황
-    >>> corp_code = "00409681"
-    >>> api_no = 0 # 자산양수도(기타), 풋백옵션 현황
-    >>> api_key, data = crawler.material_facts(corp_code, start_date="20190101", end_date="20251231", api_no=api_no)
-    >>> list = data.get("list", [])
-    >>> print(pd.DataFrame(list))
-    >>> 
-    >>> # 증권신고서 주요정보 | 증자(감자) 현황
-    >>> corp_code = "00106395"
-    >>> api_no = 0 # 증자(감자) 현황
-    >>> api_key, data = crawler.registration(corp_code, start_date="20190101", end_date="20251231", api_no=api_no)
-    >>> list = data.get("list", [])
-    >>> print(pd.DataFrame(list))
+    >>> # Naver 뉴스 검색
+    >>> articles = crawler.news(query="삼성전자", display=10)
+    >>> print(articles)
 
 Supported Filings:
-    - DART의 기업코드을 조회
-    - 정기보고서 재무정보
-    - 정기보고서 주요정보
-    - 지분공시 종합정보
-    - 주요사항보고서 주요정보
-    - 증권신고서 주요정보
+    - Naver 일별 시세 조회
+    - Naver 주요 시세 조회
+    - Naver 기업 정보 조회
+    - Naver 뉴스 카테고리별 검색
+    - Naver 뉴스 검색
 
 Note:
-    OpenDart에서 API Key를 사용하세요.
+    Naver에서 NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET 환경 변수를 설정하세요.
 """
 
 __version__ = "0.1.0"
@@ -82,10 +66,18 @@ __author__ = "SeongJung Kim"
 
 from .crawler import NaverCrawler
 from .client import NaverClient
-#from .models import (
-#    # 공통
-#    DartConfig,
-#)
+from .models import (
+    # Finance
+    Currency,
+    StockPrice,
+    MainPrices,
+    CompanyMetadata,
+    PriceHistory,
+    # 뉴스
+    NewsArticle,
+    NewsSearchResult,
+    CategoryNews,
+)
 from .parsers import (
     NaverNewsParser,
     NaverMarketParser,
@@ -93,11 +85,20 @@ from .parsers import (
 
 __all__ = [
     # 메인 클래스
-    "OpenDartCrawler",
-    "OpenDartClient",
+    "NaverCrawler",
+    "NaverClient",
     
     # 데이터 모델
-    #"DartConfig",
+    # Finance
+    "Currency",
+    "StockPrice",
+    "MainPrices",
+    "CompanyMetadata",
+    "PriceHistory",
+    # 뉴스
+    "NewsArticle",
+    "NewsSearchResult",
+    "CategoryNews",
     
     # 파서
     "NaverNewsParser",

@@ -8,7 +8,7 @@ import pandas as pd
 
 from dotenv import load_dotenv
 
-from sayou.stock.naver import NaverCrawler
+from sayou.stock.naver import NaverCrawler, NewsArticle
 
 def demo_market(crawler: NaverCrawler, code: str):
     """Naver 주요 시세 조회 데모"""
@@ -16,7 +16,7 @@ def demo_market(crawler: NaverCrawler, code: str):
     print(f"Naver 주요 시세 조회 - {code}")
     print('='*60)
 
-    # 일별 시세 데모
+    # Naver 일별 시세 조회
     start_date='2025-01-01'
     end_date='2025-12-31'
     print(f"\nNaver 일별 시세 조회 ({code}) {start_date} ~ {end_date}")
@@ -24,13 +24,13 @@ def demo_market(crawler: NaverCrawler, code: str):
     data = crawler.market(code, start_date=start_date, end_date=end_date)
     print(data)
 
-    # 주요 시세 데모
+    # Naver 주요 시세 조회
     print("\nNaver 주요 시세 조회")
 
     df_main_prices = crawler.main_prices(code)
     print(df_main_prices)
 
-    # 주요 시세 데모
+    # Naver 기업 정보 조회
     metadata = crawler.company_metadata(code)
     print(metadata)
 
@@ -41,26 +41,27 @@ def demo_news(crawler: NaverCrawler, code: str):
     print('='*60)
 
     # Naver 뉴스 카테고리별 검색
-    category_news = crawler.category_news()
-    print(category_news)
+    articles = crawler.category_news()
+    #print(articles)
 
+    for article in articles:
+        print(article)
+    
     # Naver 뉴스 검색
     query="삼성전자"
     print(f"\nNaver 뉴스 검색: {query}")
 
-    data = crawler.news(query=query, max_articles=10)
-    #print(data)
+    articles = crawler.news(query=query, max_articles=10)
+    #print(articles)
 
-    for item in data:
-        print(item)
+    for article in articles:
+        print(article)
 
 def main(stock: str):
     """메인 데모 실행"""
     
     load_dotenv()
 
-    #client_id = 'EOof636e7yvLvMe3t1jg'
-    #client_secret = 'lb4v_qXkRI'
     client_id = os.getenv('NAVER_CLIENT_ID')
     client_secret = os.getenv('NAVER_CLIENT_SECRET')
 

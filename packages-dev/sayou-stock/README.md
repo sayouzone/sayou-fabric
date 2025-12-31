@@ -13,11 +13,11 @@
 
 ## 🔑 Key Components
 
-1. `EDGARCrawler`: SEC EDGAR 10-K, 10-Q, 8-K, 13F, DEF 14A
-2. `FnGuideCrawler`: FnGuide Company Information
-3. `NaverCrawler`: Naver Market API/Crawling
-4. `OpenDartCrawler`: OpenDART API
-5. `YahooCrawler`: Yahoo Finance API
+1. `EDGARCrawler`: Retrieves `10-K, 10-Q, 8-K, 13F, DEF 14A` documents using `SEC EDGAR` API.
+2. `FnGuideCrawler`: Crawls Company Information & Fundamentals from `FnGuide`.
+3. `NaverCrawler`: Retrieves `Naver` Market News using `Naver` API and Crawls Market Data from `Naver`.
+4. `OpenDartCrawler`: Retrieves `OpenDart` API using `OpenDart` API.
+5. `YahooCrawler`: Retrieves `Yahoo Finance` API using `Yahoo Finance` API.
 
 ## 🤝 Usage Example
 
@@ -61,116 +61,114 @@ from sayou.stock.fnguide import FnGuideCrawler
 stock = "005930"
 crawler = FnGuideCrawler()
 
+# Company Finance
 data = crawler.finance(stock)
 print(data)
 
+# Company Information
 data = crawler.company(stock)
 print(data)
 
+# Company Finance Ratio
 data = crawler.finance_ratio(stock)
 print(data)
 
+# Company Investment
 data = crawler.invest(stock)
 print(data)
 
+# Company Consensus
 data = crawler.consensus(stock)
 print(data)
 ```
 
-## 📚 Package Hierarchy
+#### Retrieve Naver's Company News
 
+```python
+from sayou.stock.naver import NaverCrawler
+
+client_id = "YOUR_CLIENT_ID"
+client_secret = "YOUR_CLIENT_SECRET"
+crawler = NaverCrawler(client_id, client_secret)
+
+# Naver Category News
+articles = crawler.category_news()
+print(articles)
+
+# Naver company's News
+articles = crawler.news(query="삼성전자", max_articles=10)
+print(articles)
 ```
-sayou/stock
-│   ├── edgar/
-│   │   ├── __init__.py          # Public API Definition
-│   │   ├── client.py            # SEC EDGAR HTTP Client
-│   │   ├── models.py            # Data Class (DTO)
-│   │   ├── utils.py             # Utility Functions & Constants
-│   │   ├── crawler.py           # Unified Interface Crawler
-│   │   └── parsers/
-│   │       ├── __init__.py
-│   │       ├── form_10k.py      # 10-K/10-Q Parser
-│   │       ├── form_8k.py       # 8-K Parser
-│   │       ├── form_13f.py      # 13F Parser
-│   │       └── def14a.py        # DEF 14A Parser
-│   ├── fnguide/
-│   │   ├── __init__.py          # Public API Definition
-│   │   ├── client.py            # OpenDART HTTP Client
-│   │   ├── models.py            # Data Class (DTO)
-│   │   ├── utils.py             # Utility Functions & Constants
-│   │   ├── crawler.py           # Unified Interface Crawler
-│   │   └── parsers/
-│   │       ├── __init__.py
-│   │       ├── company.py            # FnGuide Company Overview Parser
-│   │       ├── comparison.py         # FnGuide Comparison Parser
-│   │       ├── consensus.py          # FnGuide Consensus Parser
-│   │       ├── dart.py               # FnGuide Dart Parser
-│   │       ├── disclosure.py         # FnGuide Disclosure Parser
-│   │       ├── finance_ratio.py      # FnGuide Finance Ratio Parser
-│   │       ├── finance.py            # FnGuide Financial Statement Parser
-│   │       ├── industry_analysis.py  # FnGuide Industry Analysis Parser
-│   │       ├── invest.py             # FnGuide Investment Parser
-│   │       ├── json_parser.py        # FnGuide JSON Parser
-│   │       ├── main.py               # FnGuide Main Parser
-│   │       ├── share_analysis.py     # FnGuide Share Analysis Parser
-│   │       └── tables.py             # FnGuide Tables Parser
-│   ├── naver/
-│   │   ├── __init__.py          # Public API Definition
-│   │   ├── client.py            # OpenDART HTTP Client
-│   │   ├── models.py            # Data Class (DTO)
-│   │   ├── utils.py             # Utility Functions & Constants
-│   │   ├── crawler.py           # Unified Interface Crawler
-│   │   └── parsers/
-│   │       ├── __init__.py
-│   │       ├── news.py          # Naver News Crawling Parser
-│   │       └── market.py        # Naver Market API/Crawling Parser
-│   ├── opendart/
-│   │   ├── __init__.py          # Public API Definition
-│   │   ├── client.py            # OpenDART HTTP Client
-│   │   ├── models.py            # Data Class (DTO)
-│   │   ├── utils.py             # Utility Functions & Constants
-│   │   ├── crawler.py           # Unified Interface Crawler
-│   │   └── parsers/
-│   │       ├── __init__.py
-│   │       ├── document.py        # Document API Parser
-│   │       ├── document_viewer.py # Document Viewer API Parser
-│   │       ├── disclosure.py      # Disclosure API Parser
-│   │       ├── finance.py         # Finance API Parser
-│   │       ├── material_facts.py  # Material Facts API Parser
-│   │       ├── ownership.py       # Ownership API Parser
-│   │       ├── registration.py    # Registration API Parser
-│   │       └── reports.py         # Reports API Parser
-│   └── yahoo/
-│       ├── __init__.py          # Public API Definition
-│       ├── client.py            # OpenDART HTTP Client
-│       ├── models.py            # Data Class (DTO)
-│       ├── utils.py             # Utility Functions & Constants
-│       ├── crawler.py           # Unified Interface Crawler
-│       └── parsers/
-│           ├── __init__.py
-│           ├── analysis.py      # Analysis API Parser
-│           ├── chart.py         # Chart API Parser
-│           ├── conversations.py # Conversations API Parser
-│           ├── financials.py    # Financials API Parser
-│           ├── fundamentals.py  # Fundamentals API Parser
-│           ├── holders.py       # Holders API Parser
-│           ├── market.py        # Market API Parser
-│           ├── news.py          # News API Parser
-│           ├── options.py       # Options API Parser
-│           ├── profile.py       # Profile API Parser
-│           ├── quotes.py        # Quotes API Parser
-│           ├── statistics.py    # Statistics API Parser
-│           └── summary.py       # Summary API Parser
-├── docs/
-├── tests/
-│   ├── test_edgar_.py          # Edgar Test
-│   ├── test_fnguide_.py        # FnGuide Test
-│   ├── test_naver_.py          # Naver Test
-│   ├── test_opendart_.py       # OpenDART Test
-│   └── test_yahoo_.py          # Yahoo Test
-├── LICENSE
-├── pyproject.toml
-└── README.md
+
+#### Retrieve OpenDart's Company Information
+
+```python
+from sayou.stock.opendart import OpenDartCrawler
+
+DART_API_KEY = "YOUR_DART_API_KEY"
+
+stock = "005930"
+crawler = OpenDartCrawler(api_key=DART_API_KEY)
+
+# Search corp_code from Company Name or Stock Code
+corp_code = crawler.fetch_corp_code(stock)
+print(corp_code)
+
+# Single Company's Main Accounts
+api_type = "단일회사 주요계정"
+last_year = 2024
+data = crawler.finance(corp_code, last_year, api_type=api_type)
+status = data.get("status", "")
+list = data.get("list", [])
+if status == "000" and len(list) > 0:
+    print(f"\n{api_type} {last_year}년 ({corp_name}, {corp_code})")
+    df = pd.DataFrame(list)
+    print(df)
+
+# Multiple Companies' Main Accounts
+api_type = "다중회사 주요계정"
+data = crawler.finance(corp_code, last_year, api_type=api_type)
+status = data.get("status", "")
+list = data.get("list", [])
+if status == "000" and len(list) > 0:
+    print(f"\n{api_type} {last_year}년 ({corp_name}, {corp_code})")
+    df = pd.DataFrame(list)
+    print(df)
+
+# Single Company's Total Financial Statements (Linked)
+api_type = "단일회사 전체 재무제표"
+data = crawler.finance(corp_code, last_year, api_type=api_type)
+status = data.get("status", "")
+list = data.get("list", [])
+if status == "000" and len(list) > 0:
+    print(f"\n{api_type} {last_year}년 ({corp_name}, {corp_code})")
+    df = pd.DataFrame(list)
+    print(df)
+```
+
+#### Retrieve Yahoo's Company Information
+
+```python
+from sayou.stock.yahoo import YahooCrawler
+
+ticker = "AAPL"
+crawler = YahooCrawler()
+
+# Company Calendar
+data = crawler.calendar(ticker)
+print(data)
+
+# Earning Estimate
+data = crawler.earnings_estimate(ticker)
+print(data)
+
+# Revenue Estimate
+data = crawler.revenue_estimate(ticker)
+print(data)
+
+# Earnings History
+data = crawler.earnings_history(ticker)
+print(data)
 ```
 
 ## 📜 License
