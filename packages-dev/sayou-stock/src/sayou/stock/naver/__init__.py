@@ -43,12 +43,12 @@ Quick Start:
     >>> print(metadata)
     >>> 
     >>> # Naver 뉴스 카테고리별 검색
-    >>> category_news = crawler.category_news()
-    >>> print(category_news)
+    >>> articles = crawler.category_news()
+    >>> print(articles)
     >>> 
     >>> # Naver 뉴스 검색
-    >>> news = crawler.news(query="삼성전자", display=10)
-    >>> print(news)
+    >>> articles = crawler.news(query="삼성전자", display=10)
+    >>> print(articles)
 
 Supported Filings:
     - Naver 일별 시세 조회

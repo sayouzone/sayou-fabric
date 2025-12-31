@@ -29,7 +29,11 @@ from ..utils import (
     FINANCE_API_URL,
     NEWS_SELECTORS,
     NEWS_TITLE_SELECTORS,
-    NEWS_CONTENT_SELECTORS
+    NEWS_CONTENT_SELECTORS,
+    NEWS_AUTHORS_SELECTORS,
+    NEWS_PUBLISHED_DATE_SELECTORS,
+    NEWS_PRESS_SELECTORS,
+    NEWS_CATEGORY_SELECTORS,
 )
 
 # 로깅 설정
@@ -146,8 +150,6 @@ class NaverNewsParser:
         for article in articles:
             if article.is_naver_news:
                 self._detail_parser.fetch(article)
-                #detail = NaverNewsDetail(self.client)
-                #article = detail.fetch(article)
                 time.sleep(random.uniform(*delay_range))
 
         return articles
@@ -352,12 +354,8 @@ class NaverNewsDetailParser:
         Returns:
             언론사 문자열
         """
-        selectors = [
-            ('a.media_end_head_top_logo img', 'alt'),
-            ('.media_end_head_top_logo_text', 'alt')
-        ]
 
-        for selector, attr in selectors:
+        for selector, attr in NEWS_PRESS_SELECTORS:
             try:
                 element = soup.select_one(selector)
                 if element:
@@ -380,15 +378,15 @@ class NaverNewsDetailParser:
         Returns:
             뉴스 입력일 문자열
         """
-        published_date = "뉴스 입력일 불명"
-        
-        try:
-            element = soup.select_one('span.media_end_head_info_datestamp_time')
-            if element:
-                return element.get('data-date-time', '')
-        except Exception as e:
-            pass
 
+        for selector, attr in NEWS_PUBLISHED_DATE_SELECTORS:
+            try:
+                element = soup.select_one(selector)
+                if element:
+                    return element.get(attr, '')
+            except:
+                continue
+        
         return datetime.now().strftime('%Y-%m-%d %H:%M')
 
     def _parse_authors(
@@ -406,15 +404,17 @@ class NaverNewsDetailParser:
         """
         authors = []
         
-        try:
-            author_elements = soup.select('span.byline_s')
-            for author_element in author_elements:
-                author = author_element.get_text(strip=True)
-                if author:
-                    authors.append(author)
-        except Exception as e:
-            logger.warning(f"Error parsing authors: {e}")
-
+        for selector in NEWS_AUTHORS_SELECTORS:
+            try:
+                elements = soup.select(selector)
+                for element in elements:
+                    author = element.get_text(strip=True)
+                    if author:
+                        authors.append(author)
+            except Exception as e:
+                logger.warning(f"Error parsing authors: {e}")
+                continue
+        
         return authors
     
     def _parse_category(
@@ -431,11 +431,13 @@ class NaverNewsDetailParser:
             카테고리
         """
         
-        try:
-            element = soup.select_one('em.media_end_categorize_item')
-            if element:
-                return element.get_text(strip=True)
-        except Exception as e:
-            logger.warning(f"Error parsing category: {e}")
-
+        for selector in NEWS_CATEGORY_SELECTORS:
+            try:
+                element = soup.select_one(selector)
+                if element:
+                    return element.get_text(strip=True)
+            except Exception as e:
+                logger.warning(f"Error parsing category: {e}")
+                continue
+        
         return None

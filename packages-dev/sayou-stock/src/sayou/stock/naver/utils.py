@@ -63,6 +63,23 @@ NEWS_CONTENT_SELECTORS = [
     '._article_body_contents'
 ]
 
+NEWS_AUTHORS_SELECTORS = [
+    'span.byline_s'
+]
+
+NEWS_PRESS_SELECTORS = [
+    ('a.media_end_head_top_logo img', 'alt'),
+    ('.media_end_head_top_logo_text', 'alt')
+]
+
+NEWS_PUBLISHED_DATE_SELECTORS = [
+    ('span.media_end_head_info_datestamp_time', 'data-date-time')
+]
+
+NEWS_CATEGORY_SELECTORS = [
+    'em.media_end_categorize_item'
+]
+
 def decode_euc_kr(response):
     """깨진 한글 인코딩 복원"""
     
