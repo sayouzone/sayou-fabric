@@ -20,7 +20,10 @@ from datetime import datetime
 from urllib.parse import unquote
 
 from ..client import OpenDartClient
-
+from ..models import (
+    MajorShoreholdingsData,
+    InsiderOwnershipData,
+)
 from ..utils import (
     decode_euc_kr,
     OWNERSHIP_URLS,
@@ -64,10 +67,19 @@ class DartOwnershipParser:
         # 에러 체크
         if status != "000":
             print(f"Error: {json_data.get('message')}")
-            return api_key, json_data
+            return []
 
         self.corp_code = json_data.get("corp_code")
         self.corp_name = json_data.get("corp_name")
         self.stock_code = json_data.get("stock_code")
 
-        return api_key, json_data
+        del json_data["status"]
+        del json_data["message"]
+
+        data_list = json_data.get("list", [])
+        if api_key == "대량보유 상황보고":
+            return [MajorShoreholdingsData(**data) for data in data_list]
+        elif api_key == "임원ㆍ주요주주 소유보고":
+            return [InsiderOwnershipData(**data) for data in data_list]
+
+        return []

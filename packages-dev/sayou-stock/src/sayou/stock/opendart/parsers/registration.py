@@ -21,7 +21,14 @@ from datetime import datetime
 from urllib.parse import unquote
 
 from ..client import OpenDartClient
-
+from ..models import (
+    RegistrationEquitySecuritiesData,
+    RegistrationStatementData,
+    RegistrationDepositoryReceiptData,
+    RegistrationMergedData,
+    RegistrationShareExchangeData,
+    RegistrationSplitData,
+)
 from ..utils import (
     decode_euc_kr,
     REGISTRATION_URLS,
@@ -76,13 +83,30 @@ class DartRegistrationParser:
         if status != "000":
             logger.error(f"Error: {json_data.get('message')}")
             #print(f"Error: {json_data.get('message')}")
-            return api_key, json_data
+            return None
 
         self.corp_code = json_data.get("corp_code")
         self.corp_name = json_data.get("corp_name")
         self.stock_code = json_data.get("stock_code")
 
-        return api_key, json_data
+        del json_data["status"]
+        del json_data["message"]
+        
+        print(f"api_key: {api_key}")
+        if api_key == "지분증권":
+            return RegistrationEquitySecuritiesData.from_raw_data(json_data)
+        elif api_key == "채무증권":
+            return RegistrationStatementData.from_raw_data(json_data)
+        elif api_key == "증권예탁증권":
+            return RegistrationDepositoryReceiptData.from_raw_data(json_data)
+        elif api_key == "합병":
+            return RegistrationMergedData.from_raw_data(json_data)
+        elif api_key == "주식의포괄적교환·이전":
+            return RegistrationShareExchangeData.from_raw_data(json_data)
+        elif api_key == "분할":
+            return RegistrationSplitData.from_raw_data(json_data)
+        
+        return None
 
 if __name__ == "__main__":
     registration = DartRegistrationParser(None)

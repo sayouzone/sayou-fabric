@@ -16,7 +16,7 @@ import os
 from dataclasses import dataclass, field, asdict, fields
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Any, Optional, ClassVar
+from typing import Any, ClassVar, Dict, List, Optional
 
 @dataclass(frozen=True)
 class DartConfig:
@@ -39,45 +39,6 @@ class DartConfig:
             raise ValueError("DART_API_KEY 환경 변수가 설정되지 않았습니다.")
         
         return cls(bucket_name=bucket_name, api_key=api_key)
-
-
-DISCLOSURE_COLUMNS = {
-    "crtfc_key": "API 인증키",
-    "bgn_de": "시작일",
-    "end_de": "종료일",
-    "last_reprt_at": "최종보고서 검색여부",
-    "pblntf_ty": "공시유형",
-    "pblntf_detail_ty": "공시상세유형",
-    "sort": "정렬",
-    "sort_mth": "정렬방법",
-    "page_no": "페이지 번호",
-    "page_count": "페이지 별 건수",
-
-    "corp_cls": "법인구분",
-    "corp_code": "고유번호",
-    "corp_name": "종목명(법인명)",
-    "corp_name_eng": "영문명칭",
-    "corp_eng_name": "영문 정식명칭",
-    "stock_name": "종목명(상장사) 또는 약식명칭(기타법인)",
-    "stock_code": "상장회사인 경우 주식의 종목코드",
-    "report_nm": "보고서명",
-    "rcept_no": "접수번호",
-    "flr_nm": "공시 제출인명",
-    "rm": "비고",
-    "ceo_nm": "대표자명",
-    "jurir_no": "법인등록번호",
-    "bizr_no": "사업자등록번호",
-    "adres": "주소",
-    "hm_url": "홈페이지",
-    "ir_url": "IR홈페이지",
-    "phn_no": "전화번호",
-    "fax_no": "팩스번호",
-    "induty_code": "업종코드",
-    "est_dt": "설립일(YYYYMMDD)",
-    "acc_mt": "결산월(MM)",
-    "rcept_dt": "접수일자",
-    "modify_date": "최종변경일자",
-}
 
 class CorpClass(Enum):
     """법인 구분"""
@@ -111,32 +72,6 @@ class CorpClass(Enum):
 class DisclosureData:
     """
     공시정보 데이터 모델
-
-    Attributes:
-        corp_cls: 법인구분
-        corp_code: 고유번호
-        corp_name: 종목명(법인명)
-        corp_name_eng: 영문명칭
-        corp_eng_name: 영문 정식명칭
-        stock_name: 종목명(상장사) 또는 약식명칭(기타법인)
-        stock_code: 상장회사인 경우 주식의 종목코드
-        report_nm: 보고서명
-        rcept_no: 접수번호
-        flr_nm: 공시 제출인명
-        rm: 비고
-        ceo_nm: 대표자명
-        jurir_no: 법인등록번호
-        bizr_no: 사업자등록번호
-        adres: 주소
-        hm_url: 홈페이지
-        ir_url: IR홈페이지
-        phn_no: 전화번호
-        fax_no: 팩스번호
-        induty_code: 업종코드
-        est_dt: 설립일(YYYYMMDD)
-        acc_mt: 결산월(MM)
-        rcept_dt: 접수일자
-        modify_date: 최종변경일자
     """
     
     corp_cls: Optional[CorpClass] = None # 법인구분 : Y(유가), K(코스닥), N(코넥스), E(기타)
@@ -183,174 +118,6 @@ class DisclosureData:
         """법인구분 Enum"""
         return CorpClass.from_value(self.corp_cls)
 
-REPORTS_COLUMNS = {
-    "crtfc_key": "API 인증키",
-    "corp_code": "고유번호",
-    "bsns_year": "사업연도",
-    "reprt_code": "보고서 코드",
-    "rcept_no": "접수번호",
-    "corp_cls": "법인구분",
-    "corp_name": "법인명",
-    "isu_dcrs_de": "주식발행 감소일자",
-    "isu_dcrs_stle": "발행 감소 형태",
-    "isu_dcrs_stock_knd": "발행 감소 주식 종류",
-    "isu_dcrs_qy": "발행 감소 수량",
-    "isu_dcrs_mstvdv_fval_amount": "발행 감소 주당 액면 가액",
-    "isu_dcrs_mstvdv_amount": "발행 감소 주당 가액",
-    "se": "구분",
-    "se_nm": "구분",
-    "stock_knd": "주식 종류",
-    "thstrm": "당기",
-    "frmtrm": "전기",
-    "lwfr": "전전기",
-    "acqs_mth1": "취득방법 대분류",
-    "acqs_mth2": "취득방법 중분류",
-    "acqs_mth3": "취득방법 소분류",
-    "bsis_qy": "기초 수량",
-    "change_qy_acqs": "변동 수량 취득",
-    "change_qy_dsps": "변동 수량 처분",
-    "change_qy_incnr": "변동 수량 소각",
-    "trmend_qy": "기말 수량",
-    "nm": "성명",
-    "relate": "관계",
-    "bsis_posesn_stock_co": "기초 소유 주식 수",
-    "bsis_posesn_stock_qota_rt": "기초 소유 주식 지분율",
-    "trmend_posesn_stock_co": "기말 소유 주식 수",
-    "trmend_posesn_stock_qota_rt": "기말 소유 주식 지분율",
-    "change_on": "변동일",
-    "mxmm_shrholdr_nm": "최대 주주명",
-    "posesn_stock_co": "소유 주식수",
-    "qota_rt": "지분율",
-    "change_cause": "변동원인",
-    "shrholdr_co": "주주수",
-    "shrholdr_tot_co": "전체 주주수",
-    "shrholdr_rate": "주주 비율",
-    "hold_stock_co": "보유 주식수",
-    "stock_tot_co": "총발행 주식수",
-    "hold_stock_rate": "보유 주식 비율",
-    "sexdstn": "성별",
-    "birth_ym": "출생 년월",
-    "ofcps": "직위",
-    "rgist_exctv_at": "등기 임원 여부",
-    "fte_at": "상근 여부",
-    "chrg_job": "담당 업무",
-    "main_career": "주요 경력",
-    "mxmm_shrholdr_relate": "최대 주주 관계",
-    "hffc_pd": "재직 기간",
-    "tenure_end_on": "임기 만료일",
-    "fo_bbm": "사업부문",
-    "reform_bfe_emp_co_rgllbr": "개정 전 직원 수 정규직",
-    "reform_bfe_emp_co_cnttk": "개정 전 직원 수 계약직",
-    "reform_bfe_emp_co_etc": "개정 전 직원 수 기타",
-    "rgllbr_co": "정규직 수",
-    "rgllbr_abacpt_labrr_co": "정규직 단시간 근로자 수",
-    "cnttk_co": "계약직 수",
-    "cnttk_abacpt_labrr_co": "계약직 단시간 근로자 수",
-    "sm": "합계",
-    "avrg_cnwk_sdytrn": "평균 근속 연수",
-    "fyer_salary_totamt": "연간 급여 총액",
-    "jan_salary_am": "1인평균 급여 액",
-    "mendng_totamt": "보수 총액",
-    "mendng_totamt_ct_incls_mendng": "보수 총액 비 포함 보수",
-    "nmpr": "인원수",
-    "jan_avrg_mendng_am": "1인 평균 보수 액",
-    "inv_prm": "법인명",
-    "frst_acqs_de": "최초 취득 일자",
-    "invstmnt_purps": "출자 목적",
-    "frst_acqs_amount": "최초 취득 금액",
-    "bsis_blce_qy": "기초 잔액 수량",
-    "bsis_blce_qota_rt": "기초 잔액 지분율",
-    "bsis_blce_acntbk_amount": "기초 잔액 장부 가액",
-    "incrs_dcrs_acqs_dsps_qy": "증가 감소 취득 처분 수량",
-    "incrs_dcrs_acqs_dsps_amount": "증가 감소 취득 처분 금액",
-    "incrs_dcrs_evl_lstmn": "증가 감소 평가 손액",
-    "trmend_blce_qy": "기말 잔액 수량",
-    "trmend_blce_qota_rt": "기말 잔액 지분율",
-    "trmend_blce_acntbk_amount": "기말 잔액 장부 가액",
-    "recent_bsns_year_fnnr_sttus_tot_assets": "최근 사업 연도 재무 현황 총 자산",
-    "recent_bsns_year_fnnr_sttus_thstrm_ntpf": "최근 사업 연도 재무 현황 당기 순이익",
-    "isu_stock_totqy": "발행할 주식의 총수",
-    "now_to_isu_stock_totqy": "현재까지 발행한 주식의 총수",
-    "now_to_dcrs_stock_totqy": "현재까지 감소한 주식의 총수",
-    "redc": "감자",
-    "profit_incnr": "이익소각",
-    "rdmstk_repy": "상환주식의 상환",
-    "etc": "기타",
-    "istc_totqy": "발행주식의 총수",
-    "tesstk_co": "자기주식수",
-    "distb_stock_co": "유통주식수",
-    "scrits_knd_nm": "증권종류",
-    "isu_mth_nm": "발행방법",
-    "isu_de": "발행일자",
-    "facvalu_totamt": "권면(전자등록)총액",
-    "intrt": "이자율",
-    "evl_grad_instt": "평가등급(평가기관)",
-    "mtd": "만기일",
-    "repy_at": "상환여부",
-    "mngt_cmpny": "주관회사",
-    "remndr_exprtn1": "잔여만기",
-    "remndr_exprtn2": "잔여만기",
-    "de10_below": "10일 이하",
-    "de10_excess_de30_below": "10일초과 30일이하",
-    "de30_excess_de90_below": "30일초과 90일이하",
-    "de90_excess_de180_below": "90일초과 180일이하",
-    "de180_excess_yy1_below": "180일초과 1년이하",
-    "yy1_below": "1년 이하",
-    "yy1_excess_yy2_below": "1년초과 2년이하",
-    "yy2_excess_yy3_below": "2년초과 3년이하",
-    "yy3_excess_yy4_below": "3년초과 4년이하",
-    "yy4_excess_yy5_below": "4년초과 5년이하",
-    "yy5_excess_yy10_below": "5년초과 10년이하",
-    "yy10_excess_yy20_below": "10년초과 20년이하",
-    "yy10_excess": "10년초과",
-    "yy1_excess_yy5_below": "1년초과 5년이하",
-    "yy10_excess_yy15_below": "10년초과 15년이하",
-    "yy15_excess_yy20_below": "15년초과 20년이하",
-    "yy20_excess_yy30_below": "20년초과 30년이하",
-    "yy30_excess": "30년초과",
-    "isu_lmt": "발행 한도",
-    "remndr_lmt": "잔여 한도",
-    "adtor": "감사인",
-    "adt_opinion": "감사의견",
-    "adt_reprt_spcmnt_matter": "감사보고서 특기사항",
-    "emphs_matter": "강조사항 등",
-    "core_adt_matter": "핵심감사사항",
-    "cn": "내용",
-    "mendng": "보수",
-    "tot_reqre_time": "총소요시간",
-    "adt_cntrct_dtls_mendng": "감사계약내역(보수)",
-    "adt_cntrct_dtls_time": "감사계약내역(시간)",
-    "real_exc_dtls_mendng": "실제수행내역(보수)",
-    "real_exc_dtls_time": "실제수행내역(시간)",
-    "cntrct_cncls_de": "계약체결일",
-    "servc_cn": "용역내용",
-    "servc_exc_pd": "용역수행기간",
-    "servc_mendng": "용역보수",
-    "drctr_co": "이사의 수",
-    "otcmp_drctr_co": "사외이사 수",
-    "apnt": "사외이사 변동현황(선임)",
-    "rlsofc": "사외이사 변동현황(해임)",
-    "mdstrm_resig": "사외이사 변동현황(중도퇴임)",
-    "gmtsck_confm_amount": "주주총회 승인금액",
-    "pymnt_totamt": "보수총액",
-    "psn1_avrg_pymntamt": "1인당 평균보수액",
-    "tm": "회차",
-    "pay_de": "납입일",
-    "pay_amount": "납입금액",
-    "on_dclrt_cptal_use_plan": "신고서상 자금사용 계획",
-    "real_cptal_use_sttus": "실제 자금사용 현황",
-    "rs_cptal_use_plan_useprps": "증권신고서 등의 자금사용 계획(사용용도)",
-    "rs_cptal_use_plan_prcure_amount": "증권신고서 등의 자금사용 계획(조달금액)",
-    "real_cptal_use_dtls_cn": "실제 자금사용 내역(내용)",
-    "real_cptal_use_dtls_amount": "실제 자금사용 내역(금액)",
-    "dffrnc_occrrnc_resn": "차이발생 사유 등",
-    "cptal_use_plan": "자금사용 계획",
-    "mtrpt_cptal_use_plan_useprps": "주요사항보고서의 자금사용 계획(사용용도)",
-    "mtrpt_cptal_use_plan_prcure_amount": "주요사항보고서의 자금사용 계획(조달금액)",
-    "rm": "비고",
-    "stlm_dt": "결산기준일",
-}
-
 @dataclass
 class BaseReportData:
     """보고서 데이터 베이스 클래스"""
@@ -383,7 +150,7 @@ class BaseReportData:
 @dataclass
 class BaseReportData:
     """보고서 데이터 베이스 클래스"""
-    rcept_no: Optional[str] = None # 법접수번호
+    rcept_no: Optional[str] = None # 접수번호
     corp_code: Optional[str] = None # 고유번호
     corp_cls: Optional[CorpClass] = None # 법인구분
     corp_name: Optional[str] = None # 법인명
@@ -391,6 +158,11 @@ class BaseReportData:
     def to_dict(self) -> Dict[str, Any]:
         """딕셔너리로 변환"""
         return asdict(self)
+
+    @property
+    def corp_class_enum(self) -> Optional[CorpClass]:
+        """법인구분 Enum"""
+        return CorpClass.from_value(self.corp_cls)
 
 @dataclass
 class StockIssuanceData(BaseReportData):
@@ -917,3 +689,572 @@ class PrivateEquityFundsUseData(BaseReportData):
     def from_raw_data(cls, raw_data: Dict[str, str]) -> "PrivateEquityFundsUseData":
         """딕셔너리에서 데이터 클래스 생성"""
         return cls(**raw_data)
+
+@dataclass
+class BaseFinanceData:
+    """재무제표 데이터 베이스 클래스"""
+    rcept_no: Optional[str] = None # 접수번호
+    reprt_code: Optional[str] = None # 보고서 코드
+    bsns_year: Optional[str] = None # 사업 연도
+    stock_code: Optional[str] = None # 종목 코드
+    corp_code: Optional[str] = None # 고유번호
+    sj_div: Optional[str] = None # 재무제표구분	BS:재무상태표, IS:손익계산서
+    sj_nm: Optional[str] = None # 재무제표명	ex) 재무상태표 또는 손익계산서 출력
+    fs_div: Optional[str] = None # 개별/연결구분	OFS:재무제표, CFS:연결재무제표
+    fs_nm: Optional[str] = None # 개별/연결명	ex) 연결재무제표 또는 재무제표 출력
+    account_id: Optional[str] = None # 계정ID	계정 고유명칭
+    account_nm: Optional[str] = None # 계정명	ex) 자본총계
+
+    def to_dict(self) -> Dict[str, Any]:
+        """딕셔너리로 변환"""
+        return asdict(self)
+
+@dataclass
+class SingleCompanyMainAccountsData(BaseFinanceData):
+    """단일회사 주요계정 데이터 모델"""
+
+    thstrm_nm: Optional[str] = None # 당기명	예) 제 13 기 3분기말
+    thstrm_dt: Optional[str] = None # 당기일자	예) 2018.09.30 현재
+    thstrm_amount: Optional[int] = None # 당기금액	예) 9,999,999,999
+    thstrm_add_amount: Optional[int] = None # 당기누적금액	예) 9,999,999,999
+    frmtrm_nm: Optional[str] = None # 전기명	예) 제 12 기말
+    frmtrm_dt: Optional[str] = None # 전기일자	예) 2017.01.01 ~ 2017.12.31
+    frmtrm_amount: Optional[int] = None # 전기금액	예) 9,999,999,999
+    frmtrm_add_amount: Optional[int] = None # 전기누적금액	예) 9,999,999,999
+    bfefrmtrm_nm: Optional[str] = None # 전전기명	예) 제 11 기말(※ 사업보고서의 경우에만 출력)
+    bfefrmtrm_dt: Optional[str] = None # 전전기일자	예) 2016.12.31 현재(※ 사업보고서의 경우에만 출력)
+    bfefrmtrm_amount: Optional[int] = None # 전전기금액	예) 9,999,999,999(※ 사업보고서의 경우에만 출력)
+    ord: Optional[int] = None # 계정과목 정렬순서
+    currency: Optional[str] = None # 통화 단위
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "SingleCompanyMainAccountsData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class MultiCompanyMainAccountsData(BaseFinanceData):
+    """다중회사 주요계정 데이터 모델"""
+
+    thstrm_nm: Optional[str] = None # 당기명	ex) 제 13 기 3분기말
+    thstrm_dt: Optional[str] = None # 당기일자	ex) 2018.09.30 현재
+    thstrm_amount: Optional[int] = None # 당기금액	9,999,999,999
+    thstrm_add_amount: Optional[int] = None # 당기누적금액	9,999,999,999
+    frmtrm_nm: Optional[str] = None # 전기명	ex) 제 12 기말
+    frmtrm_dt: Optional[str] = None # 전기일자	예) 2017.01.01 ~ 2017.12.31
+    frmtrm_amount: Optional[int] = None # 전기금액	9,999,999,999
+    frmtrm_add_amount: Optional[int] = None # 전기누적금액	9,999,999,999
+    bfefrmtrm_nm: Optional[str] = None # 전전기명	ex) 제 11 기말(※ 사업보고서의 경우에만 출력)
+    bfefrmtrm_dt: Optional[str] = None # 전전기일자	ex) 2016.12.31 현재(※ 사업보고서의 경우에만 출력)
+    bfefrmtrm_amount: Optional[int] = None # 전전기금액	9,999,999,999(※ 사업보고서의 경우에만 출력)
+    ord: Optional[int] = None # 계정과목 정렬순서	계정과목 정렬순서
+    currency: Optional[str] = None # 통화 단위
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "MultiCompanyMainAccountsData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class ConsolidatedFinancialStatementsData(BaseFinanceData):
+    """단일회사 전체 재무제표 데이터 모델"""
+
+    account_detail: Optional[str] = None # 계정상세
+    thstrm_nm: Optional[str] = None # 당기명	예) 제 13 기
+    thstrm_amount: Optional[int] = None # 당기금액	예) 9,999,999,999 ※ 분/반기 보고서이면서 (포괄)손익계산서 일 경우 [3개월] 금액
+    thstrm_add_amount: Optional[int] = None # 당기누적금액	예) 9,999,999,999
+    frmtrm_nm: Optional[str] = None # 전기명	예) 제 12 기말
+    frmtrm_amount: Optional[int] = None # 전기금액	예) 9,999,999,999
+    frmtrm_q_nm: Optional[str] = None # 전기명(분/반기)	ex) 제 18 기 반기
+    frmtrm_q_amount: Optional[int] = None # 전기금액(분/반기)	예) 9,999,999,999 ※ 분/반기 보고서이면서 (포괄)손익계산서 일 경우 [3개월] 금액
+    frmtrm_add_amount: Optional[int] = None # 전기누적금액	예) 9,999,999,999
+    bfefrmtrm_nm: Optional[str] = None # 전전기명	예) 제 11 기말(※ 사업보고서의 경우에만 출력)
+    bfefrmtrm_amount: Optional[int] = None # 전전기금액	예) 9,999,999,999(※ 사업보고서의 경우에만 출력)
+    ord: Optional[int] = None # 계정과목 정렬순서
+    currency: Optional[str] = None # 통화 단위
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ConsolidatedFinancialStatementsData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class XBRLTaxonomyFinancialStatementsData(BaseFinanceData):
+    """XBRL택사노미재무제표양식 데이터 모델"""
+
+    bsns_de: Optional[str] = None # 기준일	예) 적용 기준일
+    label_kor: Optional[str] = None # 한글 출력명
+    label_eng: Optional[str] = None # 영문 출력명
+    data_tp: Optional[str] = None # 데이터 유형
+    ifrs_ref: Optional[str] = None # IFRS Reference
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "XBRLTaxonomyFinancialStatementsData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class SingleCompanyKeyFinancialMetricsData(BaseFinanceData):
+    """단일회사 주요 재무지표 데이터 모델"""
+
+    stlm_dt: Optional[str] = None # 결산기준일	예) YYYY-MM-DD
+    idx_cl_code: Optional[str] = None # 지표분류코드	예) 수익성지표 : M210000, 안정성지표 : M220000, 성장성지표 : M230000, 활동성지표 : M240000
+    idx_cl_nm: Optional[str] = None # 지표분류명	예) 수익성지표,안정성지표,성장성지표,활동성지표
+    idx_code: Optional[str] = None # 지표코드	예) M211000
+    idx_nm: Optional[str] = None # 지표명	예) 영업이익률
+    idx_val: Optional[float] = None # 지표값	예) 0.256
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "SingleCompanyKeyFinancialMetricsData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class MultiCompanyKeyFinancialMetricsData(BaseFinanceData):
+    """다중회사 주요 재무지표 데이터 모델"""
+
+    stlm_dt: Optional[str] = None # 결산기준일	예) YYYY-MM-DD
+    idx_cl_code: Optional[str] = None # 지표분류코드	예) 수익성지표 : M210000, 안정성지표 : M220000, 성장성지표 : M230000, 활동성지표 : M240000
+    idx_cl_nm: Optional[str] = None # 지표분류명	예) 수익성지표,안정성지표,성장성지표,활동성지표
+    idx_code: Optional[str] = None # 지표코드	예) M211000
+    idx_nm: Optional[str] = None # 지표명	예) 영업이익률
+    idx_val: Optional[float] = None # 지표값	예) 0.256
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "MultiCompanyKeyFinancialMetricsData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class BaseOwnershipData:
+    """지분공시 데이터 베이스 클래스"""
+    
+    rcept_no: Optional[str] = None # 접수번호	예) 접수번호(14자리)
+    rcept_dt: Optional[str] = None # 접수일자	예) 공시 접수일자(YYYYMMDD)
+    corp_code: Optional[str] = None # 고유번호	예) 공시대상회사의 고유번호(8자리)
+    corp_name: Optional[str] = None # 회사명	예) 공시대상회사의 종목명(상장사) 또는 법인명(기타법인)
+    repror: Optional[str] = None # 대표보고자
+
+    def to_dict(self) -> Dict[str, Any]:
+        """딕셔너리로 변환"""
+        return asdict(self)
+
+@dataclass
+class MajorShoreholdingsData(BaseOwnershipData):
+    """대량보유 상황보고 데이터 모델"""
+
+    report_tp: Optional[str] = None # 보고구분	예) 주식등의 대량보유상황 보고구분
+    stkqy: Optional[str] = None # 보유주식등의 수
+    stkqy_irds: Optional[str] = None # 보유주식등의 증감
+    stkrt: Optional[str] = None # 보유비율
+    stkrt_irds: Optional[str] = None # 보유비율 증감
+    ctr_stkqy: Optional[str] = None # 주요체결 주식등의 수
+    ctr_stkrt: Optional[str] = None # 주요체결 보유비율
+    report_resn: Optional[str] = None # 보고사유
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "MajorShoreholdingsData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class InsiderOwnershipData(BaseOwnershipData):
+    """임원ㆍ주요주주 소유보고 데이터 모델"""
+
+    isu_exctv_rgist_at: Optional[str] = None # 발행 회사 관계 임원(등기여부)	예) 등기임원, 비등기임원 등
+    isu_exctv_ofcps: Optional[str] = None # 발행 회사 관계 임원 직위	예) 대표이사, 이사, 전무 등
+    isu_main_shrholdr: Optional[str] = None # 발행 회사 관계 주요 주주	예) 10%이상주주 등
+    sp_stock_lmp_cnt: Optional[str] = None # 특정 증권 등 소유 수	예) 9,999,999,999
+    sp_stock_lmp_irds_cnt: Optional[str] = None # 특정 증권 등 소유 증감 수	예) 9,999,999,999
+    sp_stock_lmp_rate: Optional[str] = None # 특정 증권 등 소유 비율	예) 0.00
+    sp_stock_lmp_irds_rate: Optional[str] = None # 특정 증권 등 소유 증감 비율	예) 0.00
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "InsiderOwnershipData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class BaseRegistrationData:
+    """지분공시 데이터 베이스 클래스"""
+    
+    rcept_no: Optional[str] = None # 접수번호	예) 접수번호(14자리)
+    corp_cls: Optional[CorpClass] = None # 법인구분	예) 법인구분 : Y(유가), K(코스닥), N(코넥스), E(기타)
+    corp_code: Optional[str] = None # 고유번호	예) 공시대상회사의 고유번호(8자리)
+    corp_name: Optional[str] = None # 회사명	예) 공시대상회사명
+    tm: Optional[str] = None # 회차
+
+    def to_dict(self) -> Dict[str, Any]:
+        """딕셔너리로 변환"""
+        return asdict(self)
+
+@dataclass
+class RegistrationGeneralData(BaseRegistrationData):
+    """일반사항"""
+
+    title: Optional[str] = "일반사항"
+    bdnmn: Optional[str] = None # 채무증권 명칭
+    slmth: Optional[str] = None # 모집(매출)방법
+    fta: Optional[int] = None # 권면(전자등록)총액	예) 9,999,999,999
+    slta: Optional[int] = None # 모집(매출)총액	예) 9,999,999,999
+    isprc: Optional[int] = None # 발행가액	예) 9,999,999,999
+    intr: Optional[int] = None # 이자율
+    isrr: Optional[int] = None # 발행수익률
+    rpd: Optional[str] = None # 상환기일
+    print_pymint: Optional[str] = None # 원리금지급대행기관
+    mngt_cmp: Optional[str] = None # (사채)관리회사
+    cdrt_int: Optional[str] = None # 신용등급(신용평가기관)
+
+    sbd: Optional[str] = None # 청약기일
+    pymd: Optional[str] = None # 납입기일
+    sband: Optional[str] = None # 청약공고일
+    asand: Optional[str] = None # 배정공고일
+    asstd: Optional[str] = None # 배정기준일
+    exstk: Optional[str] = None # 신주인수권에 관한 사항(행사대상증권)
+    exprc: Optional[int] = None # 신주인수권에 관한 사항(행사가격)	예) 9,999,999,999
+    expd: Optional[str] = None # 신주인수권에 관한 사항(행사기간)
+    rpt_rcpn: Optional[str] = None # 주요사항보고서(접수번호)
+
+    dpcrn: Optional[str] = None # 표시통화
+    dpcr_amt: Optional[int] = None # 표시통화기준발행규모
+    usarn: Optional[str] = None # 사용지역
+    usntn: Optional[str] = None # 사용국가
+    wnexpl_at: Optional[str] = None # 원화 교환 예정 여부
+    udtintnm: Optional[str] = None # 인수기관명
+    grt_int: Optional[str] = None # 보증을 받은 경우(보증기관)
+    grt_amt: Optional[int] = None # 보증을 받은 경우(보증금액)	예) 9,999,999,999
+    icmg_mgknd: Optional[str] = None # 담보 제공의 경우(담보의 종류)
+    icmg_mgamt: Optional[int] = None # 담보 제공의 경우(담보금액)	예) 9,999,999,999
+    estk_exstk: Optional[str] = None # 지분증권과 연계된 경우(행사대상증권)
+    estk_exrt: Optional[str] = None # 지분증권과 연계된 경우(권리행사비율)
+    estk_exprc: Optional[int] = None # 지분증권과 연계된 경우(권리행사가격)	예) 9,999,999,999
+    estk_expd: Optional[str] = None # 지분증권과 연계된 경우(권리행사기간)
+    rpt_rcpn: Optional[str] = None # 주요사항보고서(접수번호)
+    drcb_at: Optional[str] = None # 파생결합사채해당여부
+    drcb_uast: Optional[str] = None # 파생결합사채(기초자산)
+    drcb_optknd: Optional[str] = None # 파생결합사채(옵션종류)
+    drcb_mtd: Optional[str] = None # 파생결합사채(만기일)
+
+    stn: Optional[str] = None # 형태
+    bddd: Optional[str] = None # 이사회 결의일
+    ctrd: Optional[str] = None # 계약일
+    gmtsck_shddstd: Optional[str] = None # 주주총회를 위한 주주확정일
+    ap_gmtsck: Optional[str] = None # 승인을 위한 주주총회일
+    aprskh_pd_bgd: Optional[str] = None # 주식매수청구권 행사 기간 및 가격(시작일)
+    aprskh_pd_edd: Optional[str] = None # 주식매수청구권 행사 기간 및 가격(종료일)
+    aprskh_prc: Optional[str] = None # 주식매수청구권 행사 기간 및 가격((주식매수청구가격-회사제시))
+    mgdt_etc: Optional[str] = None # 합병기일등
+    rt_vl: Optional[str] = None # 비율 또는 가액
+    exevl_int: Optional[str] = None # 외부평가기관
+    grtmn_etc: Optional[str] = None # 지급 교부금 등
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "RegistrationGeneralData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class RegistrationStockData(BaseRegistrationData):
+    """증권의 종류"""
+
+    title: Optional[str] = "증권의종류"
+    stksen: Optional[str] = None # 증권의종류
+    stkcnt: Optional[int] = None # 증권수량	예) 9,999,999,999
+    fv: Optional[int] = None # 액면가액	예) 9,999,999,999
+    slprc: Optional[int] = None # 모집(매출)가액	예) 9,999,999,999
+    slta: Optional[int] = None # 모집(매출)총액	예) 9,999,999,999
+    slmthn: Optional[str] = None # 모집(매출)방법	예) 모집(매출)방법
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "RegistrationStockData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class RegistrationAcquirerCData(BaseRegistrationData):
+    """인수인 정보"""
+
+    title: Optional[str] = "인수인정보"
+    actsen: Optional[str] = None # 인수인구분
+    actnmn: Optional[str] = None # 인수인명
+    stksen: Optional[str] = None # 증권의종류
+    udtcnt: Optional[int] = None # 인수수량	예) 9,999,999,999
+    udtamt: Optional[int] = None # 인수금액	예) 9,999,999,999
+    udtprc: Optional[int] = None # 인수대가
+    udtmth: Optional[str] = None # 인수방법
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "RegistrationAcquirerCData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class RegistrationPurposeData(BaseRegistrationData):
+    """자금의 사용목적"""
+
+    title: Optional[str] = "자금의사용목적"
+    se: Optional[str] = None # 구분
+    amt: Optional[int] = None # 금액	예) 9,999,999,999
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "RegistrationPurposeData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class RegistrationShareholderData(BaseRegistrationData):
+    """매출인에 관한사항"""
+
+    title: Optional[str] = "매출인에관한사항"
+    hdr: Optional[str] = None # 보유자
+    rl_cmp: Optional[str] = None # 회사와의관계
+    bfsl_hdstk: Optional[int] = None # 매출전보유증권수	예) 9,999,999,999
+    slstk: Optional[int] = None # 매출증권수	예) 9,999,999,999
+    atsl_hdstk: Optional[int] = None # 매출후보유증권수	예) 9,999,999,999
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "RegistrationShareholderData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class RegistrationPutBackOptionData(BaseRegistrationData):
+    """일반 청약자 환매청구권"""
+
+    title: Optional[str] = "일반청약자환매청구권"
+    grtrs: Optional[str] = None # 부여사유
+    exavivr: Optional[str] = None # 행사가능 투자자
+    grtcnt: Optional[int] = None # 부여수량	예) 9,999,999,999
+    expd: Optional[str] = None # 행사기간
+    exprc: Optional[int] = None # 행사가격	예) 9,999,999,999
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "RegistrationPutBackOptionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class RegistrationIssuedSecuritiesData(BaseRegistrationData):
+    """발행증권"""
+
+    title: Optional[str] = "발행증권"
+    kndn: Optional[str] = None # 종류
+    cnt: Optional[int] = None # 수량	예) 9,999,999,999
+    fv: Optional[int] = None # 액면가액	예) 9,999,999,999
+    slprc: Optional[int] = None # 모집(매출)가액	예) 9,999,999,999
+    slta: Optional[int] = None # 모집(매출)총액	예) 9,999,999,999
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "RegistrationIssuedSecuritiesData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class RegistrationCompanyData(BaseRegistrationData):
+    """당사 회사에 관한 사항"""
+
+    title: Optional[str] = "당사회사에관한사항" # 제목
+    cmpnm: Optional[str] = None # 회사명
+    sen: Optional[str] = None # 구분
+    tast: Optional[int] = None # 총자산	예) 9,999,999,999
+    cpt: Optional[int] = None # 자본금	예) 9,999,999,999
+    isstk_knd: Optional[str] = None # 발행주식수(주식의종류)
+    isstk_cnt: Optional[int] = None # 발행주식수(주식수)	예) 9,999,999,999
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "RegistrationCompanyData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class RegistrationEquitySecuritiesData(BaseRegistrationData):
+    """지분증권"""
+
+    title: Optional[str] = "지분증권" # 제목
+    generals: List[RegistrationGeneralData] = field(default_factory=list) # 일반사항
+    stocks: List[RegistrationStockData] = field(default_factory=list) # 증권의종류
+    acquirers: List[RegistrationAcquirerCData] = field(default_factory=list) # 인수인 정보
+    purposes: List[RegistrationPurposeData] = field(default_factory=list) # 자금의 사용목적
+    shareholders: List[RegistrationShareholderData] = field(default_factory=list) # 매출인에 관한사항
+    put_back_options: List[RegistrationPutBackOptionData] = field(default_factory=list) # 일반 청약자 환매청구권
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict) -> "RegistrationEquitySecuritiesData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        for item in raw_data.get("group", {}):
+            title = item.get("title", "")
+            list = item.get("list", [])
+
+            if title == "일반사항":
+                generals = [RegistrationGeneralData.from_raw_data(item) for item in list]
+                cls.generals = generals
+            elif title == "증권의종류":
+                stocks = [RegistrationStockData.from_raw_data(item) for item in list]
+                cls.stocks = stocks
+            elif title == "인수인정보":
+                acquirers = [RegistrationAcquirerCData.from_raw_data(item) for item in list]
+                cls.acquirers = acquirers
+            elif title == "자금의사용목적":
+                purposes = [RegistrationPurposeData.from_raw_data(item) for item in list]
+                cls.purposes = purposes
+            elif title == "매출인에관한사항":
+                shareholders = [RegistrationShareholderData.from_raw_data(item) for item in list]
+                cls.shareholders = shareholders
+            elif title == "일반청약자환매청구권":
+                put_back_options = [RegistrationPutBackOptionData.from_raw_data(item) for item in list]
+                cls.put_back_options = put_back_options
+        
+        return cls
+
+@dataclass
+class RegistrationStatementData(BaseRegistrationData):
+    """증권신고서"""
+
+    title: Optional[str] = "증권신고서"
+    generals: List[RegistrationGeneralData] = field(default_factory=list) # 일반사항
+    acquirers: List[RegistrationAcquirerCData] = field(default_factory=list) # 인수인 정보
+    purposes: List[RegistrationPurposeData] = field(default_factory=list) # 자금의 사용목적
+    shareholders: List[RegistrationShareholderData] = field(default_factory=list) # 매출인에 관한사항
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict) -> "RegistrationStatementData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        for item in raw_data.get("group", {}):
+            title = item.get("title", "")
+            list = item.get("list", [])
+
+            if title == "일반사항":
+                generals = [RegistrationGeneralData.from_raw_data(item) for item in list]
+                cls.generals = generals
+            elif title == "인수인정보":
+                acquirers = [RegistrationAcquirerCData.from_raw_data(item) for item in list]
+                cls.acquirers = acquirers
+            elif title == "자금의사용목적":
+                purposes = [RegistrationPurposeData.from_raw_data(item) for item in list]
+                cls.purposes = purposes
+            elif title == "매출인에관한사항":
+                shareholders = [RegistrationShareholderData.from_raw_data(item) for item in list]
+                cls.shareholders = shareholders
+        
+        return cls
+
+@dataclass
+class RegistrationDepositoryReceiptData(BaseRegistrationData):
+    """증권예탁증권"""
+
+    title: Optional[str] = "증권예탁증권"
+    generals: List[RegistrationGeneralData] = field(default_factory=list) # 일반사항
+    stocks: List[RegistrationStockData] = field(default_factory=list) # 증권의종류
+    acquirers: List[RegistrationAcquirerCData] = field(default_factory=list) # 인수인 정보
+    purposes: List[RegistrationPurposeData] = field(default_factory=list) # 자금의 사용목적
+    shareholders: List[RegistrationShareholderData] = field(default_factory=list) # 매출인에 관한사항
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict) -> "RegistrationDepositoryReceiptData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        for item in raw_data.get("group", {}):
+            title = item.get("title", "")
+            list = item.get("list", [])
+
+            if title == "일반사항":
+                generals = [RegistrationGeneralData.from_raw_data(item) for item in list]
+                cls.generals = generals
+            elif title == "증권의종류":
+                stocks = [RegistrationStockData.from_raw_data(item) for item in list]
+                cls.stocks = stocks
+            elif title == "인수인정보":
+                acquirers = [RegistrationAcquirerCData.from_raw_data(item) for item in list]
+                cls.acquirers = acquirers
+            elif title == "자금의사용목적":
+                purposes = [RegistrationPurposeData.from_raw_data(item) for item in list]
+                cls.purposes = purposes
+            elif title == "매출인에관한사항":
+                shareholders = [RegistrationShareholderData.from_raw_data(item) for item in list]
+                cls.shareholders = shareholders
+        
+        return cls
+
+@dataclass
+class RegistrationMergedData(BaseRegistrationData):
+    """합병"""
+
+    title: Optional[str] = "합병"
+    generals: List[RegistrationGeneralData] = field(default_factory=list) # 일반사항
+    issued_securities: List[RegistrationIssuedSecuritiesData] = field(default_factory=list) # 발행증권
+    companies: List[RegistrationCompanyData] = field(default_factory=list) # 당사 회사에 관한 사항
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict) -> "RegistrationMergedData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        for item in raw_data.get("group", {}):
+            title = item.get("title", "")
+            list = item.get("list", [])
+
+            if title == "일반사항":
+                generals = [RegistrationGeneralData.from_raw_data(item) for item in list]
+                cls.generals = generals
+            elif title == "발행증권":
+                issued_securities = [RegistrationIssuedSecuritiesData.from_raw_data(item) for item in list]
+                cls.issued_securities = issued_securities
+            elif title == "당사회사에관한사항":
+                companies = [RegistrationCompanyData.from_raw_data(item) for item in list]
+                cls.companies = companies
+        
+        return cls(generals=generals, issued_securities=issued_securities, companies=companies)
+
+@dataclass
+class RegistrationShareExchangeData(BaseRegistrationData):
+    """주식의 포괄적 교환·이전"""
+
+    title: Optional[str] = "주식의포괄적교환·이전"
+    generals: List[RegistrationGeneralData] = field(default_factory=list) # 일반사항
+    issued_securities: List[RegistrationIssuedSecuritiesData] = field(default_factory=list) # 발행증권
+    companies: List[RegistrationCompanyData] = field(default_factory=list) # 당사 회사에 관한 사항
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict) -> "RegistrationShareExchangeData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        for item in raw_data.get("group", {}):
+            title = item.get("title", "")
+            list = item.get("list", [])
+
+            if title == "일반사항":
+                generals = [RegistrationGeneralData.from_raw_data(item) for item in list]
+                cls.generals = generals
+            elif title == "발행증권":
+                issued_securities = [RegistrationIssuedSecuritiesData.from_raw_data(item) for item in list]
+                cls.issued_securities = issued_securities
+            elif title == "당사회사에관한사항":
+                companies = [RegistrationCompanyData.from_raw_data(item) for item in list]
+                cls.companies = companies
+        
+        return cls
+
+@dataclass
+class RegistrationSplitData(BaseRegistrationData):
+    """분할"""
+
+    title: Optional[str] = "분할"
+    generals: List[RegistrationGeneralData] = field(default_factory=list) # 일반사항
+    issued_securities: List[RegistrationIssuedSecuritiesData] = field(default_factory=list) # 발행증권
+    companies: List[RegistrationCompanyData] = field(default_factory=list) # 당사 회사에 관한 사항
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict) -> "RegistrationSplitData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        for item in raw_data.get("group", []):
+            title = item.get("title", "")
+            list = item.get("list", [])
+
+
+            if title == "일반사항":
+                generals = [RegistrationGeneralData.from_raw_data(item) for item in list]
+                cls.generals = generals
+            elif title == "발행증권":
+                issued_securities = [RegistrationIssuedSecuritiesData.from_raw_data(item) for item in list]
+                cls.issued_securities = issued_securities
+            elif title == "당사회사에관한사항":
+                companies = [RegistrationCompanyData.from_raw_data(item) for item in list]
+                cls.companies = companies
+        
+        return cls
