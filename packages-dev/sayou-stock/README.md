@@ -14,10 +14,10 @@
 ## 🔑 Key Components
 
 1. `EDGARCrawler`: Retrieves `10-K, 10-Q, 8-K, 13F, DEF 14A` documents using `SEC EDGAR` API.
-2. `FnGuideCrawler`: Crawls Company Information & Fundamentals from `FnGuide`.
-3. `NaverCrawler`: Retrieves `Naver` Market News using `Naver` API and Crawls Market Data from `Naver`.
-4. `OpenDartCrawler`: Retrieves `OpenDart` API using `OpenDart` API.
-5. `YahooCrawler`: Retrieves `Yahoo Finance` API using `Yahoo Finance` API.
+2. `FnGuideCrawler`: Crawls Company Information & Financial Statements from `FnGuide`.
+3. `NaverCrawler`: Retrieves Market News using `Naver` API and Crawls Market Data from `Naver`.
+4. `OpenDartCrawler`: Retrieves Company Information & Financial Statements using `OpenDart` API.
+5. `YahooCrawler`: Retrieves Company Information & Market Data using `Yahoo Finance` API.
 
 ## 🤝 Usage Example
 

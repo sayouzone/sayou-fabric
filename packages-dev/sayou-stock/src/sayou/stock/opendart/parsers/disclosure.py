@@ -20,7 +20,7 @@ from datetime import datetime
 from urllib.parse import unquote
 
 from ..client import OpenDartClient
-
+from ..models import DisclosureData
 from ..utils import (
     decode_euc_kr,
     DISCLOSURE_URLS,
@@ -70,8 +70,11 @@ class DartDisclosureParser:
         }
 
         all_data = []  # 전체 데이터 저장
+        all_disclosures = []
+
         page = 1
-        
+        total_page = 0
+        total_count = 0
         while True:
             params['page_no'] = page
 
@@ -90,11 +93,14 @@ class DartDisclosureParser:
             # 데이터 추가
             data_list = json_data.get("list", [])
             all_data.extend(data_list)
-            
+
+            disclosures = [DisclosureData(**data) for data in data_list]
+            all_disclosures.extend(disclosures)
+                        
             # 페이지 정보
-            page_no = json_data.get("page_no", 1)
-            total_page = json_data.get("total_page", 1)
-            total_count = json_data.get("total_count", 0)
+            if page == 1:
+                total_page = json_data.get("total_page", 1)
+                total_count = json_data.get("total_count", 0)
 
             print(f"페이지 {page}/{total_page} 완료 (총 {total_count}건)")
 
@@ -103,6 +109,8 @@ class DartDisclosureParser:
                 break
 
             page += 1
+
+        print(all_disclosures)
 
         # DataFrame 변환
         df = pd.DataFrame(all_data)
@@ -130,15 +138,22 @@ class DartDisclosureParser:
         json_data = response.json()
             
         status = json_data.get("status")
+        message = json_data.get("message")
 
         # 에러 체크
         if status != "000":
-            print(f"Error: {json_data.get('message')}")
+            print(f"Error: {message}")
             return {}
 
         self.corp_code = json_data.get("corp_code")
         self.corp_name = json_data.get("corp_name")
         self.stock_code = json_data.get("stock_code")
+
+        del json_data["status"]
+        del json_data["message"]
+        
+        disclosure = DisclosureData(**json_data)
+        print(disclosure)
 
         return json_data
 
