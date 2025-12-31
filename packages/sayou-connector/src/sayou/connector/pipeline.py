@@ -21,6 +21,7 @@ class ConnectorPipeline(BaseComponent):
     def __init__(
         self,
         extra_generators: Optional[List[Type[BaseGenerator]]] = None,
+        extra_fetchers: Optional[List[Type[BaseFetcher]]] = None,
         **kwargs,
     ):
         """
@@ -32,6 +33,7 @@ class ConnectorPipeline(BaseComponent):
 
         Args:
             extra_generators: List of custom generator classes to register.
+            extra_fetchers: List of custom fetcher classes to register.
             **kwargs: Configuration arguments passed to the parent component.
         """
         super().__init__()
@@ -47,6 +49,10 @@ class ConnectorPipeline(BaseComponent):
 
         if extra_generators:
             for cls in extra_generators:
+                self._register_manual(cls)
+
+        if extra_fetchers:
+            for cls in extra_fetchers:
                 self._register_manual(cls)
 
         self.global_config = kwargs
