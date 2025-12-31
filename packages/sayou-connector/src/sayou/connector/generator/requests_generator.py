@@ -71,7 +71,7 @@ class RequestsGenerator(BaseGenerator):
         self.selectors = selectors or {}
         self.max_depth = max_depth
 
-    def _do_generate(self) -> Iterator[SayouTask]:
+    def _do_generate(self, source: str, **kwargs) -> Iterator[SayouTask]:
         """
         Yield tasks from the crawling queue.
 

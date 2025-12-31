@@ -189,7 +189,7 @@ class ConnectorPipeline(BaseComponent):
         success_count = 0
 
         try:
-            for task in generator.generate():
+            for task in generator.generate(source, **kwargs):
                 if not isinstance(task, SayouTask):
                     self._log(
                         f"Invalid task type from generator: {type(task)}",

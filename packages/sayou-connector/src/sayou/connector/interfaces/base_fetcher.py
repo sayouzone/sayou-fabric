@@ -20,6 +20,13 @@ class BaseFetcher(BaseComponent):
     component_name = "BaseFetcher"
     SUPPORTED_TYPES = []
 
+    @classmethod
+    def can_handle(cls, uri: str) -> float:
+        """
+        Evaluates whether this fetcher can handle the specific Task URI.
+        """
+        return 0.0
+
     @measure_time
     @retry(max_retries=3, delay=1.0)
     def fetch(self, task: SayouTask) -> SayouPacket:
