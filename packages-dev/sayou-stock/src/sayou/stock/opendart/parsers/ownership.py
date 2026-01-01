@@ -21,6 +21,7 @@ from urllib.parse import unquote
 
 from ..client import OpenDartClient
 from ..models import (
+    OpenDartRequest,
     MajorShoreholdingsData,
     InsiderOwnershipData,
 )
@@ -54,10 +55,13 @@ class DartOwnershipParser:
 
         if not url:
             return
-        
-        self.params["corp_code"] = corp_code
 
-        response = self.client._get(url, params=self.params)
+        request = OpenDartRequest(
+            crtfc_key=self.client.api_key,
+            corp_code=corp_code,
+        )
+
+        response = self.client._get(url, params=request.to_params())
 
         json_data = response.json()
         #print(json_data)

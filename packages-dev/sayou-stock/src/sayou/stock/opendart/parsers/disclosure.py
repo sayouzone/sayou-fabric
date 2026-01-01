@@ -20,7 +20,7 @@ from datetime import datetime
 from urllib.parse import unquote
 
 from ..client import OpenDartClient
-from ..models import DisclosureData
+from ..models import OpenDartRequest, DisclosureData
 from ..utils import (
     decode_euc_kr,
     DISCLOSURE_URLS,
@@ -59,6 +59,7 @@ class DartDisclosureParser:
         start = datetime.now().strftime("%Y%m%d") if not start else self._dateformat(start)
         end = datetime.now().strftime("%Y%m%d") if not end else self._dateformat(end)
         
+        """
         params = {
             "crtfc_key": self.client.api_key,
             "corp_code": code,
@@ -68,6 +69,17 @@ class DartDisclosureParser:
             "page_no": 1,
             "page_count": 100
         }
+        """
+
+        request = OpenDartRequest(
+            crtfc_key=self.client.api_key,
+            corp_code=code,
+            bgn_de=start,
+            end_de=end,
+            corp_cls="Y",
+            page_no=1,
+            page_count=100
+        )
 
         all_data = []  # 전체 데이터 저장
         all_disclosures = []
@@ -76,11 +88,12 @@ class DartDisclosureParser:
         total_page = 0
         total_count = 0
         while True:
-            params['page_no'] = page
+            #params['page_no'] = page
+            request.page_no = page
 
             url = DISCLOSURE_URLS.get("공시검색")
             
-            response = self.client._get(url, params=params)
+            response = self.client._get(url, params=request.to_params())
             json_data = response.json()
             
             status = json_data.get("status")

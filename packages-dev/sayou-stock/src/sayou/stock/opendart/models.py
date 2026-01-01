@@ -68,6 +68,138 @@ class CorpClass(Enum):
         }
         return names.get(self.value, "알 수 없음")
 
+class ReportCode(Enum):
+    """보고서 코드"""
+    BUSINESS_REPORT = "11011"      # 사업보고서
+    FIRST_QUARTER_REPORT = "11012"     # 1분기보고서
+    SECOND_QUARTER_REPORT = "11013"      # 2분기보고서
+    THIRD_QUARTER_REPORT = "11014"        # 3분기보고서
+    YEAR_REPORT = "11015"        # 사업보고서
+
+    @classmethod
+    def from_value(cls, value: Optional[str]) -> Optional["ReportCode"]:
+        """값으로부터 Enum 생성"""
+        if not value:
+            return None
+        for member in cls:
+            if member.value == value:
+                return member
+        return None
+
+    @property
+    def display_name(self) -> str:
+        """표시명"""
+        names = {
+            "11011": "사업보고서",
+            "11012": "1분기보고서",
+            "11013": "2분기보고서",
+            "11014": "3분기보고서",
+            "11015": "사업보고서",
+        }
+        return names.get(self.value, "알 수 없음")
+
+class FinancialStatementCategory(Enum):
+    """재무제표 구분"""
+
+    BS1 = "재무상태표", "연결", "유동/비유동법"
+    BS2 = "재무상태표", "개별", "유동/비유동법"
+    BS3 = "재무상태표", "연결", "유동성배열법"
+    BS4 = "재무상태표", "개별", "유동성배열법"
+    IS1 = "별개의 손익계산서", "연결", "기능별분류"
+    IS2 = "별개의 손익계산서", "개별", "기능별분류"
+    IS3 = "별개의 손익계산서", "연결", "성격별분류"
+    IS4 = "별개의 손익계산서", "개별", "성격별분류"
+    CIS1 = "포괄손익계산서", "연결", "세후"
+    CIS2 = "포괄손익계산서", "개별", "세후"
+    CIS3 = "포괄손익계산서", "연결", "세전"
+    CIS4 = "포괄손익계산서", "개별", "세전"
+    
+    DCIS1 = "단일 포괄손익계산서", "연결", "기능별분류", "세후포괄손익"
+    DCIS2 = "단일 포괄손익계산서", "개별", "기능별분류", "세후포괄손익"
+    DCIS3 = "단일 포괄손익계산서", "연결", "기능별분류", "세전"
+    DCIS4 = "단일 포괄손익계산서", "개별", "기능별분류", "세전"
+    DCIS5 = "단일 포괄손익계산서", "연결", "성격별분류", "세후포괄손익"
+    DCIS6 = "단일 포괄손익계산서", "개별", "성격별분류", "세후포괄손익"
+    DCIS7 = "단일 포괄손익계산서", "연결", "성격별분류", "세전"
+    DCIS8 = "단일 포괄손익계산서", "개별", "성격별분류", "세전"
+    
+    CF1 = "현금흐름표", "연결", "직접법"
+    CF2 = "현금흐름표", "개별", "직접법"
+    CF3 = "현금흐름표", "연결", "간접법"
+    CF4 = "현금흐름표", "개별", "간접법"
+    SCE1 = "자본변동표", "연결"
+    SCE2 = "자본변동표", "개별"
+
+    @classmethod
+    def from_value(cls, value: Optional[str]) -> Optional["FinancialStatementCategory"]:
+        """값으로부터 Enum 생성"""
+        if not value:
+            return None
+        for member in cls:
+            if member.value == value:
+                return member
+        return None
+
+    @property
+    def display_name(self) -> str:
+        """표시명"""
+        names = {
+            "BS1": "재무상태표",
+            "BS2": "재무상태표",
+            "BS3": "재무상태표",
+            "BS4": "재무상태표",
+            "IS1": "별개의 손익계산서",
+            "IS2": "별개의 손익계산서",
+            "IS3": "별개의 손익계산서",
+            "IS4": "별개의 손익계산서",
+            "CIS1": "포괄손익계산서",
+            "CIS2": "포괄손익계산서",
+            "CIS3": "포괄손익계산서",
+            "CIS4": "포괄손익계산서",
+            "DCIS1": "단일 포괄손익계산서",
+            "DCIS2": "단일 포괄손익계산서",
+            "DCIS3": "단일 포괄손익계산서",
+            "DCIS4": "단일 포괄손익계산서",
+        }
+        return names.get(self.value, "알 수 없음")
+
+@dataclass
+class OpenDartRequest:
+    """증권신고서 주요정보 요청 클래스"""
+
+    crtfc_key: str # API 인증키	예) 발급받은 인증키(40자리)
+    corp_code: str # 고유번호	예) 공시대상회사의 고유번호(8자리)
+    bsns_year: Optional[str] = None # 사업연도	예) 사업연도(4자리) ※ 2015년 이후 부터 정보제공
+    bgn_de: Optional[str] = None # 시작일(최초접수일)	예) 검색시작 접수일자(YYYYMMDD) ※ 2015년 이후 부터 정보제공
+    end_de: Optional[str] = None # 종료일(최초접수일)	예) 검색종료 접수일자(YYYYMMDD) ※ 2015년 이후 부터 정보제공
+    reprt_code: Optional[ReportCode] = None # 보고서 코드	예) 사업보고서 : 1분기보고서 : 11013, 반기보고서 : 11012, 3분기보고서 : 11014, 사업보고서 : 11011
+    fs_div: Optional[str] = None # 재무제표구분	예) 재무제표구분 : OFS(재무제표), CFS(연결재무제표)
+    sj_div: Optional[str] = None # 재무제표구분	예) BS1
+    idx_cl_code: Optional[str] = None # 지표분류코드	예) 수익성지표 : M210000, 안정성지표 : M220000, 성장성지표 : M230000, 활동성지표 : M240000
+    corp_cls: Optional[str] = None
+    page_no: Optional[int] = None
+    page_count: Optional[int] = None
+    
+    def to_params(self) -> Dict[str, Any]:
+        """API 호출용 파라미터로 변환"""
+        params = {
+            "crtfc_key": self.crtfc_key,
+            "corp_code": self.corp_code,
+        }
+
+        if self.bsns_year: params["bsns_year"] = self.bsns_year
+        if self.bgn_de: params["bgn_de"] = self.bgn_de
+        if self.end_de: params["end_de"] = self.end_de
+        if self.reprt_code: params["reprt_code"] = self.reprt_code
+        if self.fs_div: params["fs_div"] = self.fs_div
+        if self.sj_div: params["sj_div"] = self.sj_div
+        if self.idx_cl_code: params["idx_cl_code"] = self.idx_cl_code
+        if self.corp_cls: params["corp_cls"] = self.corp_cls
+        if self.page_no: params["page_no"] = self.page_no
+        if self.page_count: params["page_count"] = self.page_count
+
+        return params
+
 @dataclass
 class DisclosureData:
     """
@@ -1258,3 +1390,1227 @@ class RegistrationSplitData(BaseRegistrationData):
                 cls.companies = companies
         
         return cls
+
+@dataclass
+class BaseMaterialFactsData:
+    """주요사항보고서 주요정보 데이터 베이스 클래스"""
+    
+    rcept_no: Optional[str] = None # 접수번호	예) 접수번호(14자리)
+    corp_cls: Optional[CorpClass] = None # 법인구분	예) 법인구분 : Y(유가), K(코스닥), N(코넥스), E(기타)
+    corp_code: Optional[str] = None # 고유번호	예) 공시대상회사의 고유번호(8자리)
+    corp_name: Optional[str] = None # 회사명	예) 공시대상회사명
+
+    def to_dict(self) -> Dict[str, Any]:
+        """딕셔너리로 변환"""
+        return asdict(self)
+
+@dataclass
+class PutOptionData(BaseMaterialFactsData):
+    """자산양수도(기타), 풋백옵션"""
+
+    rp_rsn: Optional[str] = None # 보고 사유
+    ast_inhtrf_prc: Optional[int] = None # 자산양수ㆍ도 가액	예) 9,999,999,999
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "PutOptionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class BankruptcyData(BaseMaterialFactsData):
+    """부도발생"""
+
+    df_cn: Optional[str] = None # 부도내용
+    df_amt: Optional[int] = None # 부도금액	예) 9,999,999,999
+    df_bnk: Optional[str] = None # 부도발생은행
+    dfd: Optional[str] = None # 최종부도(당좌거래정지)일자
+    df_rs: Optional[str] = None # 부도사유 및 경위
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BankruptcyData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class SuspensionData(BaseMaterialFactsData):
+    """영업정지"""
+
+    bsnsp_rm: Optional[str] = None # 영업정지 분야
+    bsnsp_amt: Optional[int] = None # 영업정지 내역(영업정지금액)	예) 9,999,999,999
+    rsl: Optional[int] = None # 영업정지 내역(최근매출총액)	예) 9,999,999,999
+    sl_vs: Optional[str] = None # 영업정지 내역(매출액 대비)
+    ls_atn: Optional[str] = None # 영업정지 내역(대규모법인여부)
+    krx_stt_atn: Optional[str] = None # 영업정지 내역(거래소 의무공시 해당 여부)
+    bsnsp_cn: Optional[str] = None # 영업정지 내용
+    bsnsp_rs: Optional[str] = None # 영업정지사유
+    ft_ctp: Optional[str] = None # 향후대책
+    bsnsp_af: Optional[str] = None # 영업정지영향
+    bsnspd: Optional[str] = None # 영업정지일자
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석)	예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참)	예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(감사위원) 참석여부
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "SuspensionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class RehabilitationData(BaseMaterialFactsData):
+    """회생절차 개시신청"""
+    
+    apcnt: Optional[str] = None # 신청인 (회사와의 관계)
+    cpct: Optional[str] = None # 관할법원
+    rq_rs: Optional[str] = None # 신청사유
+    rqd: Optional[str] = None # 신청일자
+    ft_ctp_sc: Optional[str] = None # 향후대책 및 일정
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "RehabilitationData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class DissolutionData(BaseMaterialFactsData):
+    """해산사유 발생"""
+    
+    ds_rs: Optional[str] = None # 해산사유
+    ds_rsd: Optional[str] = None # 해산사유발생일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석)	예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참)	예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(감사위원) 참석 여부
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "DissolutionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class RightsIssueData(BaseMaterialFactsData):
+    """유상증자 결정"""
+    
+    nstk_ostk_cnt: Optional[int] = None # 신주의 종류와 수(보통주식 (주))	예) 9,999,999,999
+    nstk_estk_cnt: Optional[int] = None # 신주의 종류와 수(기타주식 (주))	예) 9,999,999,999
+    fv_ps: Optional[int] = None # 1주당 액면가액 (원)	예) 9,999,999,999
+    bfic_tisstk_ostk: Optional[int] = None # 증자전 발행주식총수 (주)(보통주식 (주))	예) 9,999,999,999
+    bfic_tisstk_estk: Optional[int] = None # 증자전 발행주식총수 (주)(기타주식 (주))	예) 9,999,999,999
+    fdpp_fclt: Optional[int] = None # 자금조달의 목적(시설자금 (원))	예) 9,999,999,999
+    fdpp_bsninh: Optional[int] = None # 자금조달의 목적(영업양수자금 (원))	예) 9,999,999,999
+    fdpp_op: Optional[int] = None # 자금조달의 목적(운영자금 (원))	예) 9,999,999,999
+    fdpp_dtrp: Optional[int] = None # 자금조달의 목적(채무상환자금 (원))	예) 9,999,999,999
+    fdpp_ocsa: Optional[int] = None # 자금조달의 목적(타법인 증권 취득자금 (원))	예) 9,999,999,999
+    fdpp_etc: Optional[int] = None # 자금조달의 목적(기타자금 (원))	예) 9,999,999,999
+    ic_mthn: Optional[str] = None # 증자방식
+    ssl_at: Optional[str] = None # 공매도 해당여부
+    ssl_bgd: Optional[str] = None # 공매도 시작일
+    ssl_edd: Optional[str] = None # 공매도 종료일
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BonusIssueData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class BonusIssueData(BaseMaterialFactsData):
+    """무상증자 결정"""
+    
+    nstk_ostk_cnt: Optional[int] = None # 신주의 종류와 수(보통주식 (주))	예) 9,999,999,999
+    nstk_estk_cnt: Optional[int] = None # 신주의 종류와 수(기타주식 (주))	예) 9,999,999,999
+    fv_ps: Optional[int] = None # 1주당 액면가액 (원)	예) 9,999,999,999
+    bfic_tisstk_ostk: Optional[int] = None # 증자전 발행주식총수 (주)(보통주식 (주))	예) 9,999,999,999
+    bfic_tisstk_estk: Optional[int] = None # 증자전 발행주식총수 (주)(기타주식 (주))	예) 9,999,999,999
+    nstk_asstd: Optional[str] = None # 신주배정기준일
+    nstk_ascnt_ps_ostk: Optional[int] = None # 1주당 신주배정 주식수(보통주식 (주))	예) 9,999,999,999.9x (소수점 최대 20자리)
+    nstk_ascnt_ps_estk: Optional[int] = None # 1주당 신주배정 주식수(기타주식 (주))	예) 9,999,999,999.9x (소수점 최대 20자리)
+    nstk_dividrk: Optional[str] = None # 신주의 배당기산일
+    nstk_dlprd: Optional[str] = None # 신주권교부예정일
+    nstk_lstprd: Optional[str] = None # 신주의 상장 예정일
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석(명))	예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참(명))	예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(감사위원)참석 여부
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BonusIssueData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class IssueIncreaseData(BaseMaterialFactsData):
+    """유무상증자 결정"""
+    
+    piic_nstk_ostk_cnt: Optional[int] = None # 유상증자(신주의 종류와 수(보통주식 (주)))	예) 9,999,999,999
+    piic_nstk_estk_cnt: Optional[int] = None # 유상증자(신주의 종류와 수(기타주식 (주)))	예) 9,999,999,999
+    piic_fv_ps: Optional[int] = None # 유상증자(1주당 액면가액 (원))	예) 9,999,999,999
+    piic_bfic_tisstk_ostk: Optional[int] = None # 유상증자(증자전 발행주식총수 (주)(보통주식 (주)))	예) 9,999,999,999
+    piic_bfic_tisstk_estk: Optional[int] = None # 유상증자(증자전 발행주식총수 (주)(기타주식 (주)))	예) 9,999,999,999
+    piic_fdpp_fclt: Optional[int] = None # 유상증자(자금조달의 목적(시설자금 (원)))	예) 9,999,999,999
+    piic_fdpp_bsninh: Optional[int] = None # 유상증자(자금조달의 목적(영업양수자금 (원)))	예) 9,999,999,999
+    piic_fdpp_op: Optional[int] = None # 유상증자(자금조달의 목적(운영자금 (원)))	예) 9,999,999,999
+    piic_fdpp_dtrp: Optional[int] = None # 유상증자(자금조달의 목적(채무상환자금 (원)))	예) 9,999,999,999
+    piic_fdpp_ocsa: Optional[int] = None # 유상증자(자금조달의 목적(타법인 증권 취득자금 (원)))	예) 9,999,999,999
+    piic_fdpp_etc: Optional[int] = None # 유상증자(자금조달의 목적(기타자금 (원)))	예) 9,999,999,999
+    piic_ic_mthn: Optional[str] = None # 유상증자(증자방식)	유상증자(증자방식)
+    fric_nstk_ostk_cnt: Optional[int] = None # 무상증자(신주의 종류와 수(보통주식 (주)))	예) 9,999,999,999
+    fric_nstk_estk_cnt: Optional[int] = None # 무상증자(신주의 종류와 수(기타주식 (주)))	예) 9,999,999,999
+    fric_fv_ps: Optional[int] = None # 무상증자(1주당 액면가액 (원))	예) 9,999,999,999
+    fric_bfic_tisstk_ostk: Optional[int] = None # 무상증자(증자전 발행주식총수(보통주식 (주)))	예) 9,999,999,999
+    fric_bfic_tisstk_estk: Optional[int] = None # 무상증자(증자전 발행주식총수(기타주식 (주)))	예) 9,999,999,999
+    fric_nstk_asstd: Optional[str] = None # 무상증자(신주배정기준일)
+    fric_nstk_ascnt_ps_ostk: Optional[int] = None # 무상증자(1주당 신주배정 주식수(보통주식 (주)))	예) 9,999,999,999.9x (소수점 최대 20자리)
+    fric_nstk_ascnt_ps_estk: Optional[int] = None # 무상증자(1주당 신주배정 주식수(기타주식 (주)))	예) 9,999,999,999.9x (소수점 최대 20자리)
+    fric_nstk_dividrk: Optional[str] = None # 무상증자(신주의 배당기산일)
+    fric_nstk_dlprd: Optional[str] = None # 무상증자(신주권교부예정일)
+    fric_nstk_lstprd: Optional[str] = None # 무상증자(신주의 상장 예정일)
+    fric_bddd: Optional[str] = None # 무상증자(이사회결의일(결정일))
+    fric_od_a_at_t: Optional[int] = None # 무상증자(사외이사 참석여부(참석(명)))	예) 9,999,999,999
+    fric_od_a_at_b: Optional[int] = None # 무상증자(사외이사 참석여부(불참(명)))	예) 9,999,999,999
+    fric_adt_a_atn: Optional[str] = None # 무상증자(감사(감사위원)참석 여부)
+    ssl_at: Optional[str] = None # 공매도 해당여부
+    ssl_bgd: Optional[str] = None # 공매도 시작일
+    ssl_edd: Optional[str] = None # 공매도 종료일
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BonusIssueData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class CapitalReductionData(BaseMaterialFactsData):
+    """감자 결정"""
+    crstk_ostk_cnt: Optional[int] = None # 감자주식의 종류와 수(보통주식 (주))	예) 9,999,999,999
+    crstk_estk_cnt: Optional[int] = None # 감자주식의 종류와 수(기타주식 (주))	예) 9,999,999,999
+    fv_ps: Optional[int] = None # 1주당 액면가액 (원)	예) 9,999,999,999
+    bfcr_cpt: Optional[int] = None # 감자전후 자본금(감자전 (원))	예) 9,999,999,999
+    atcr_cpt: Optional[int] = None # 감자전후 자본금(감자후 (원))	예) 9,999,999,999
+    bfcr_tisstk_ostk: Optional[int] = None # 감자전후 발행주식수(보통주식 (주)(감자전 (원)))	예) 9,999,999,999
+    atcr_tisstk_ostk: Optional[int] = None # 감자전후 발행주식수(보통주식 (주)(감자후 (원)))	예) 9,999,999,999
+    bfcr_tisstk_estk: Optional[int] = None # 감자전후 발행주식수(기타주식 (주)(감자전 (원)))	예) 9,999,999,999
+    atcr_tisstk_estk: Optional[int] = None # 감자전후 발행주식수(기타주식 (주)(감자후 (원)))	예) 9,999,999,999
+    cr_rt_ostk: Optional[int] = None # 감자비율(보통주식 (%))
+    cr_rt_estk: Optional[int] = None # 감자비율(기타주식 (%))
+    cr_std: Optional[str] = None # 감자기준일
+    cr_mth: Optional[str] = None # 감자방법
+    cr_rs: Optional[str] = None # 감자사유
+    crsc_gmtsck_prd: Optional[str] = None # 감자일정(주주총회 예정일)
+    crsc_trnmsppd: Optional[str] = None # 감자일정(명의개서정지기간)
+    crsc_osprpd: Optional[str] = None # 감자일정(구주권 제출기간)
+    crsc_trspprpd: Optional[str] = None # 감자일정(매매거래 정지예정기간)
+    crsc_osprpd_bgd: Optional[str] = None # 감자일정(구주권 제출기간(시작일))
+    crsc_osprpd_edd: Optional[str] = None # 감자일정(구주권 제출기간(종료일))
+    crsc_trspprpd_bgd: Optional[str] = None # 감자일정(매매거래 정지예정기간(시작일))
+    crsc_trspprpd_edd: Optional[str] = None # 감자일정(매매거래 정지예정기간(종료일))
+    crsc_nstkdlprd: Optional[str] = None # 감자일정(신주권교부예정일)
+    crsc_nstklstprd: Optional[str] = None # 감자일정(신주상장예정일)
+    cdobprpd_bgd: Optional[str] = None # 채권자 이의제출기간(시작일)
+    cdobprpd_edd: Optional[str] = None # 채권자 이의제출기간(종료일)
+    ospr_nstkdl_pl: Optional[str] = None # 구주권제출 및 신주권교부장소
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석(명))	예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참(명))	예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(감사위원) 참석여부
+    ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "IssueIncreaseData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class ManagementProcedureData(BaseMaterialFactsData):
+    """채권은행 등의 관리절차 개시"""
+    mngt_pcbg_dd: Optional[str] = None # 관리절차개시 결정일자
+    mngt_int: Optional[str] = None # 관리기관
+    mngt_pd: Optional[str] = None # 관리기간
+    mngt_rs: Optional[str] = None # 관리사유
+    cfd: Optional[str] = None # 확인일자
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ManagementProcedureData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class LegalProceedingsData(BaseMaterialFactsData):
+    """소송 등의 제기"""
+    icnm: Optional[str] = None # 사건의 명칭
+    ac_ap: Optional[str] = None # 원고ㆍ신청인
+    rq_cn: Optional[str] = None # 청구내용
+    cpct: Optional[str] = None # 관할법원
+    ft_ctp: Optional[str] = None # 향후대책
+    lgd: Optional[str] = None # 제기일자
+    cfd: Optional[str] = None # 확인일자
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "LegalProceedingsData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class ListingDecisionData(BaseMaterialFactsData):
+    """해외 증권시장 주권등 상장 결정"""
+    lstprstk_ostk_cnt: Optional[int] = None # 상장예정주식 종류ㆍ수(주)(보통주식)	예) 9,999,999,999
+    lstprstk_estk_cnt: Optional[int] = None # 상장예정주식 종류ㆍ수(주)(기타주식)	예) 9,999,999,999
+    tisstk_ostk: Optional[int] = None # 발행주식 총수(주)(보통주식)	예) 9,999,999,999
+    tisstk_estk: Optional[int] = None # 발행주식 총수(주)(기타주식)	예) 9,999,999,999
+    psmth_nstk_sl: Optional[int] = None # 공모방법(신주발행 (주))	예) 9,999,999,999
+    psmth_ostk_sl: Optional[int] = None # 공모방법(구주매출 (주))	예) 9,999,999,999
+    fdpp: Optional[str] = None # 자금조달(신주발행)
+    lststk_orls: Optional[int] = None # 상장증권(원주상장 (주))	예) 9,999,999,999
+    lststk_drlst: Optional[int] = None # 상장증권(DR상장 (주))	예) 9,999,999,999
+    lstex_nt: Optional[str] = None # 상장거래소(소재국가)
+    lstpp: Optional[str] = None # 해외상장목적
+    lstprd: Optional[str] = None # 상장예정일자
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석(명))	예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참(명))	예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(감사위원)참석여부
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ListingDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class DelistingDecisionData(BaseMaterialFactsData):
+    """해외 증권시장 주권등 상장폐지 결정"""
+    dlststk_ostk_cnt: Optional[int] = None # 상장폐지주식 종류ㆍ수(주)(보통주식)	예) 9,999,999,999
+    dlststk_estk_cnt: Optional[int] = None # 상장폐지주식 종류ㆍ수(주)(기타주식)	예) 9,999,999,999
+    lstex_nt: Optional[str] = None # 상장거래소(소재국가)	상장거래소(소재국가)
+    dlstrq_prd: Optional[str] = None # 폐지신청예정일자	폐지신청예정일자
+    dlst_prd: Optional[str] = None # 폐지(예정)일자	폐지(예정)일자
+    dlst_rs: Optional[str] = None # 폐지사유	폐지사유
+    bddd: Optional[str] = None # 이사회결의일(확인일)	이사회결의일(확인일)
+    od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석(명))	예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참(명))	예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(감사위원)참석여부
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "DelistingDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class ListingData(BaseMaterialFactsData):
+    """해외 증권시장 주권등 상장"""
+    lststk_ostk_cnt: Optional[int] = None # 상장주식 종류 및 수(보통주식(주))	예) 9,999,999,999
+    lststk_estk_cnt: Optional[int] = None # 상장주식 종류 및 수(기타주식(주))	예) 9,999,999,999
+    lstex_nt: Optional[str] = None # 상장거래소(소재국가)	상장거래소(소재국가)
+    stk_cd: Optional[str] = None # 종목 명 (code)	종목 명 (code)
+    lstd: Optional[str] = None # 상장일자	상장일자
+    cfd: Optional[str] = None # 확인일자	확인일자
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ListingData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class DelistingData(BaseMaterialFactsData):
+    """해외 증권시장 주권등 상장폐지"""
+    lstex_nt: Optional[str] = None # 상장거래소 및 소재국가
+    dlststk_ostk_cnt: Optional[int] = None # 상장폐지주식의 종류(보통주식(주))	예) 9,999,999,999
+    dlststk_estk_cnt: Optional[int] = None # 상장폐지주식의 종류(기타주식(주))	예) 9,999,999,999
+    tredd: Optional[str] = None # 매매거래종료일
+    dlst_rs: Optional[str] = None # 폐지사유
+    cfd: Optional[str] = None # 확인일자
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "DelistingData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class CBIssuanceDecisionData(BaseMaterialFactsData):
+    """전환사채권 발행결정"""
+    bd_tm: Optional[str] = None # 사채의 종류(회차)
+    bd_knd: Optional[str] = None # 사채의 종류(종류)
+    bd_fta: Optional[int] = None # 사채의 권면(전자등록)총액 (원)	예) 9,999,999,999
+    atcsc_rmislmt: Optional[int] = None # 정관상 잔여 발행한도 (원)	예) 9,999,999,999
+    ovis_fta: Optional[int] = None # 해외발행(권면(전자등록)총액)	예) 9,999,999,999
+    ovis_fta_crn: Optional[str] = None # 해외발행(권면(전자등록)총액(통화단위))
+    ovis_ster: Optional[str] = None # 해외발행(기준환율등)
+    ovis_isar: Optional[str] = None # 해외발행(발행지역)
+    ovis_mktnm: Optional[str] = None # 해외발행(해외상장시 시장의 명칭)
+    fdpp_fclt: Optional[int] = None # 자금조달의 목적(시설자금 (원))	예) 9,999,999,999
+    fdpp_bsninh: Optional[int] = None # 자금조달의 목적(영업양수자금 (원))	예) 9,999,999,999
+    fdpp_op: Optional[int] = None # 자금조달의 목적(운영자금 (원))	예) 9,999,999,999
+    fdpp_dtrp: Optional[int] = None # 자금조달의 목적(채무상환자금 (원))	예) 9,999,999,999
+    fdpp_ocsa: Optional[int] = None # 자금조달의 목적(타법인 증권 취득자금 (원))	예) 9,999,999,999
+    fdpp_etc: Optional[int] = None # 자금조달의 목적(기타자금 (원))	예) 9,999,999,999
+    bd_intr_ex: Optional[float] = None # 사채의 이율(표면이자율 (%))
+    bd_intr_sf: Optional[float] = None # 사채의 이율(만기이자율 (%))
+    bd_mtd: Optional[str] = None # 사채만기일
+    bdis_mthn: Optional[str] = None # 사채발행방법
+    cv_rt: Optional[float] = None # 전환에 관한 사항(전환비율 (%))
+    cv_prc: Optional[int] = None # 전환에 관한 사항(전환가액 (원/주))	예) 9,999,999,999
+    cvisstk_knd: Optional[str] = None # 전환에 관한 사항(전환에 따라 발행할 주식(종류))
+    cvisstk_cnt: Optional[int] = None # 전환에 관한 사항(전환에 따라 발행할 주식(주식수))	예) 9,999,999,999
+    cvisstk_tisstk_vs: Optional[float] = None # 전환에 관한 사항(전환에 따라 발행할 주식(주식총수 대비 비율(%)))
+    cvrqpd_bgd: Optional[str] = None # 전환에 관한 사항(전환청구기간(시작일))
+    cvrqpd_edd: Optional[str] = None # 전환에 관한 사항(전환청구기간(종료일))
+    act_mktprcfl_cvprc_lwtrsprc: Optional[int] = None # 전환에 관한 사항(시가하락에 따른 전환가액 조정(최저 조정가액 (원)))	예) 9,999,999,999
+    act_mktprcfl_cvprc_lwtrsprc_bs: Optional[str] = None # 전환에 관한 사항(시가하락에 따른 전환가액 조정(최저 조정가액 근거))
+    rmislmt_lt70p: Optional[int] = None # 전환에 관한 사항(시가하락에 따른 전환가액 조정(발행당시 전환가액의 70% 미만으로 조정가능한 잔여 발행한도 (원)))	예) 9,999,999,999
+    abmg: Optional[str] = None # 합병 관련 사항
+    sbd: Optional[str] = None # 청약일	청약일
+    pymd: Optional[str] = None # 납입일	납입일
+    rpmcmp: Optional[str] = None # 대표주관회사	대표주관회사
+    grint: Optional[str] = None # 보증기관	보증기관
+    bddd: Optional[str] = None # 이사회결의일(결정일)	이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석 (명))	예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참 (명))	예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(감사위원) 참석여부	감사(감사위원) 참석여부
+    rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부	증권신고서 제출대상 여부
+    ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유	제출을 면제받은 경우 그 사유
+    ovis_ltdtl: Optional[str] = None # 당해 사채의 해외발행과 연계된 대차거래 내역	당해 사채의 해외발행과 연계된 대차거래 내역
+    ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CBIssuanceDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class BWIssuanceDecisionData(BaseMaterialFactsData):
+    """신주인수권부사채권 발행결정"""
+    bd_tm: Optional[str] = None # 사채의 종류(회차)
+    bd_knd: Optional[str] = None # 사채의 종류(종류)
+    bd_fta: Optional[int] = None # 사채의 권면(전자등록)총액 (원)	예) 9,999,999,999
+    atcsc_rmislmt: Optional[int] = None # 정관상 잔여 발행한도 (원)	예) 9,999,999,999
+    ovis_fta: Optional[int] = None # 해외발행(권면(전자등록)총액)	예) 9,999,999,999
+    ovis_fta_crn: Optional[str] = None # 해외발행(권면(전자등록)총액(통화단위))
+    ovis_ster: Optional[str] = None # 해외발행(기준환율등)
+    ovis_isar: Optional[str] = None # 해외발행(발행지역)
+    ovis_mktnm: Optional[str] = None # 해외발행(해외상장시 시장의 명칭)
+    fdpp_fclt: Optional[int] = None # 자금조달의 목적(시설자금 (원))	예) 9,999,999,999
+    fdpp_bsninh: Optional[int] = None # 자금조달의 목적(영업양수자금 (원))	예) 9,999,999,999
+    fdpp_op: Optional[int] = None # 자금조달의 목적(운영자금 (원))	예) 9,999,999,999
+    fdpp_dtrp: Optional[int] = None # 자금조달의 목적(채무상환자금 (원))	예) 9,999,999,999
+    fdpp_ocsa: Optional[int] = None # 자금조달의 목적(타법인 증권 취득자금 (원))	예) 9,999,999,999
+    fdpp_etc: Optional[int] = None # 자금조달의 목적(기타자금 (원))	예) 9,999,999,999
+    bd_intr_ex: Optional[float] = None # 사채의 이율(표면이자율 (%))
+    bd_intr_sf: Optional[float] = None # 사채의 이율(만기이자율 (%))
+    bd_mtd: Optional[str] = None # 사채만기일
+    bdis_mthn: Optional[str] = None # 사채발행방법
+    ex_rt: Optional[float] = None # 신주인수권에 관한 사항(행사비율 (%))
+    ex_prc: Optional[int] = None # 신주인수권에 관한 사항(행사가액 (원/주))	예) 9,999,999,999
+    ex_prc_dmth: Optional[str] = None # 신주인수권에 관한 사항(행사가액 결정방법)
+    bdwt_div_atn: Optional[str] = None # 신주인수권에 관한 사항(사채와 인수권의 분리여부)
+    nstk_pym_mth: Optional[str] = None # 신주인수권에 관한 사항(신주대금 납입방법)
+    nstk_isstk_knd: Optional[str] = None # 신주인수권에 관한 사항(신주인수권 행사에 따라 발행할 주식(종류))
+    nstk_isstk_cnt: Optional[int] = None # 신주인수권에 관한 사항(신주인수권 행사에 따라 발행할 주식(주식수))	예) 9,999,999,999
+    nstk_isstk_tisstk_vs: Optional[float] = None # 신주인수권에 관한 사항(신주인수권 행사에 따라 발행할 주식(주식총수 대비 비율(%)))
+    expd_bgd: Optional[str] = None # 신주인수권에 관한 사항(권리행사기간(시작일))
+    expd_edd: Optional[str] = None # 신주인수권에 관한 사항(권리행사기간(종료일))
+    act_mktprcfl_cvprc_lwtrsprc: Optional[int] = None # 신주인수권에 관한 사항(시가하락에 따른 행사가액 조정(최저 조정가액 (원)))	예) 9,999,999,999
+    act_mktprcfl_cvprc_lwtrsprc_bs: Optional[str] = None # 신주인수권에 관한 사항(시가하락에 따른 행사가액 조정(최저 조정가액 근거))
+    rmislmt_lt70p: Optional[int] = None # 신주인수권에 관한 사항(시가하락에 따른 행사가액 조정(발행당시 행사가액의 70% 미만으로 조정가능한 잔여 발행한도 (원)))	예) 9,999,999,999
+    abmg: Optional[str] = None # 합병 관련 사항
+    sbd: Optional[str] = None # 청약일
+    pymd: Optional[str] = None # 납입일
+    rpmcmp: Optional[str] = None # 대표주관회사
+    grint: Optional[str] = None # 보증기관
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석 (명))	예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참 (명))	예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(감사위원) 참석여부
+    rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부
+    ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유
+    ovis_ltdtl: Optional[str] = None # 당해 사채의 해외발행과 연계된 대차거래 내역
+    ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BWIssuanceDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class EBIssuanceDecisionData(BaseMaterialFactsData):
+    """교환사채권 발행결정"""
+    bd_tm: Optional[str] = None # 사채의 종류(회차)
+    bd_knd: Optional[str] = None # 사채의 종류(종류)
+    bd_fta: Optional[int] = None # 사채의 권면(전자등록)총액 (원)	예) 9,999,999,999
+    ovis_fta: Optional[int] = None # 해외발행(권면(전자등록)총액)	예) 9,999,999,999
+    ovis_fta_crn: Optional[str] = None # 해외발행(권면(전자등록)총액(통화단위))
+    ovis_ster: Optional[str] = None # 해외발행(기준환율등)
+    ovis_isar: Optional[str] = None # 해외발행(발행지역)
+    ovis_mktnm: Optional[str] = None # 해외발행(해외상장시 시장의 명칭)
+    fdpp_fclt: Optional[int] = None # 자금조달의 목적(시설자금 (원))	예) 9,999,999,999
+    fdpp_bsninh: Optional[int] = None # 자금조달의 목적(영업양수자금 (원))	예) 9,999,999,999
+    fdpp_op: Optional[int] = None # 자금조달의 목적(운영자금 (원))	예) 9,999,999,999
+    fdpp_dtrp: Optional[int] = None # 자금조달의 목적(채무상환자금 (원))	예) 9,999,999,999
+    fdpp_ocsa: Optional[int] = None # 자금조달의 목적(타법인 증권 취득자금 (원))	예) 9,999,999,999
+    fdpp_etc: Optional[int] = None # 자금조달의 목적(기타자금 (원))	예) 9,999,999,999
+    bd_intr_ex: Optional[float] = None # 사채의 이율(표면이자율 (%))
+    bd_intr_sf: Optional[float] = None # 사채의 이율(만기이자율 (%))
+    bd_mtd: Optional[str] = None # 사채만기일
+    bdis_mthn: Optional[str] = None # 사채발행방법
+    ex_rt: Optional[float] = None # 교환에 관한 사항(교환비율 (%))
+    ex_prc: Optional[int] = None # 교환에 관한 사항(교환가액 (원/주))	예) 9,999,999,999
+    ex_prc_dmth: Optional[str] = None # 교환에 관한 사항(교환가액 결정방법)
+    extg: Optional[str] = None # 교환에 관한 사항(교환대상(종류))
+    extg_stkcnt: Optional[int] = None # 교환에 관한 사항(교환대상(주식수))	예) 9,999,999,999
+    extg_tisstk_vs: Optional[float] = None # 교환에 관한 사항(교환대상(주식총수 대비 비율(%)))
+    exrqpd_bgd: Optional[str] = None # 교환에 관한 사항(교환청구기간(시작일))
+    exrqpd_edd: Optional[str] = None # 교환에 관한 사항(교환청구기간(종료일))
+    sbd: Optional[str] = None # 청약일
+    pymd: Optional[str] = None # 납입일
+    rpmcmp: Optional[str] = None # 대표주관회사
+    grint: Optional[str] = None # 보증기관
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석 (명))	예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참 (명))	예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(감사위원) 참석여부
+    rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부
+    ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유
+    ovis_ltdtl: Optional[str] = None # 당해 사채의 해외발행과 연계된 대차거래 내역
+    ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ExchangeBondIssuanceDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class CreditorBankManagementProcessSuspensionData(BaseMaterialFactsData):
+    """채권은행 등의 관리절차 중단"""
+    mngt_pcsp_dd: Optional[str] = None # 관리절차중단 결정일자
+    mngt_int: Optional[str] = None # 관리기관
+    sp_rs: Optional[str] = None # 중단사유
+    ft_ctp: Optional[str] = None # 향후대책
+    cfd: Optional[str] = None # 확인일자
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CreditorBankManagementProcessSuspensionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class CoCoBondIssuanceDecisionData(BaseMaterialFactsData):
+    """상각형 조건부자본증권 발행결정"""
+    bd_tm: Optional[str] = None # 사채의 종류(회차)
+    bd_knd: Optional[str] = None # 사채의 종류(종류)
+    bd_fta: Optional[int] = None # 사채의 권면(전자등록)총액 (원)	예) 9,999,999,999
+    ovis_fta: Optional[int] = None # 해외발행(권면(전자등록)총액)	예) 9,999,999,999
+    ovis_fta_crn: Optional[str] = None # 해외발행(권면(전자등록)총액(통화단위))
+    ovis_ster: Optional[str] = None # 해외발행(기준환율등)
+    ovis_isar: Optional[str] = None # 해외발행(발행지역)
+    ovis_mktnm: Optional[str] = None # 해외발행(해외상장시 시장의 명칭)
+    fdpp_fclt: Optional[int] = None # 자금조달의 목적(시설자금 (원))	예) 9,999,999,999
+    fdpp_bsninh: Optional[int] = None # 자금조달의 목적(영업양수자금 (원))	예) 9,999,999,999
+    fdpp_op: Optional[int] = None # 자금조달의 목적(운영자금 (원))	예) 9,999,999,999
+    fdpp_dtrp: Optional[int] = None # 자금조달의 목적(채무상환자금 (원))	예) 9,999,999,999
+    fdpp_ocsa: Optional[int] = None # 자금조달의 목적(타법인 증권 취득자금 (원))	예) 9,999,999,999
+    fdpp_etc: Optional[int] = None # 자금조달의 목적(기타자금 (원))	예) 9,999,999,999
+    bd_intr_sf: Optional[float] = None # 사채의 이율(표면이자율 (%))
+    bd_intr_ex: Optional[float] = None # 사채의 이율(만기이자율 (%))
+    bd_mtd: Optional[str] = None # 사채만기일
+    dbtrs_sc: Optional[str] = None # 채무재조정에 관한 사항(채무재조정의 범위)
+    sbd: Optional[str] = None # 청약일
+    pymd: Optional[str] = None # 납입일
+    rpmcmp: Optional[str] = None # 대표주관회사
+    grint: Optional[str] = None # 보증기관
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석 (명))	예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참 (명))	예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(감사위원) 참석여부
+    rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부
+    ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유
+    ovis_ltdtl: Optional[str] = None # 당해 사채의 해외발행과 연계된 대차거래 내역
+    ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CoCoBondIssuanceDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class ShareBuybackDecisionData(BaseMaterialFactsData):
+    """자기주식 취득 결정"""
+    aqpln_stk_ostk: Optional[int] = None # 취득예정주식(주)(보통주식)	9,999,999,999
+    aqpln_stk_estk: Optional[int] = None # 취득예정주식(주)(기타주식)	9,999,999,999
+    aqpln_prc_ostk: Optional[int] = None # 취득예정금액(원)(보통주식)	9,999,999,999
+    aqpln_prc_estk: Optional[int] = None # 취득예정금액(원)(기타주식)	9,999,999,999
+    aqexpd_bgd: Optional[str] = None # 취득예상기간(시작일)
+    aqexpd_edd: Optional[str] = None # 취득예상기간(종료일)
+    hdexpd_bgd: Optional[str] = None # 보유예상기간(시작일)
+    hdexpd_edd: Optional[str] = None # 보유예상기간(종료일)
+    aq_pp: Optional[str] = None # 취득목적
+    aq_mth: Optional[str] = None # 취득방법
+    cs_iv_bk: Optional[str] = None # 위탁투자중개업자
+    aq_wtn_div_ostk: Optional[int] = None # 취득 전 자기주식 보유현황(배당가능이익 범위 내 취득(주)(보통주식))	9,999,999,999
+    aq_wtn_div_ostk_rt: Optional[float] = None # 취득 전 자기주식 보유현황(배당가능이익 범위 내 취득(주)(비율(%)))
+    aq_wtn_div_estk: Optional[int] = None # 취득 전 자기주식 보유현황(배당가능이익 범위 내 취득(주)(기타주식))	9,999,999,999
+    aq_wtn_div_estk_rt: Optional[float] = None # 취득 전 자기주식 보유현황(배당가능이익 범위 내 취득(주)(비율(%)))
+    eaq_ostk: Optional[int] = None # 취득 전 자기주식 보유현황(기타취득(주)(보통주식))	9,999,999,999
+    eaq_ostk_rt: Optional[float] = None # 취득 전 자기주식 보유현황(기타취득(주)(비율(%)))
+    eaq_estk: Optional[int] = None # 취득 전 자기주식 보유현황(기타취득(주)(기타주식))	9,999,999,999
+    eaq_estk_rt: Optional[float] = None # 취득 전 자기주식 보유현황(기타취득(주)(비율(%)))
+    aq_dd: Optional[str] = None # 취득결정일
+    od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명))	9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명))	9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원)참석여부
+    d1_prodlm_ostk: Optional[int] = None # 1일 매수 주문수량 한도(보통주식)	9,999,999,999
+    d1_prodlm_estk: Optional[int] = None # 1일 매수 주문수량 한도(기타주식)	9,999,999,999
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ShareBuybackDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class TreasuryStockDisposalDecisionData(BaseMaterialFactsData):
+    """자기주식 처분 결정"""
+    dppln_stk_ostk: Optional[int] = None # 처분예정주식(주)(보통주식)	9,999,999,999
+    dppln_stk_estk: Optional[int] = None # 처분예정주식(주)(기타주식)	9,999,999,999
+    dpstk_prc_ostk: Optional[int] = None # 처분 대상 주식가격(원)(보통주식)	9,999,999,999
+    dpstk_prc_estk: Optional[int] = None # 처분 대상 주식가격(원)(기타주식)	9,999,999,999
+    dppln_prc_ostk: Optional[int] = None # 처분예정금액(원)(보통주식)	9,999,999,999
+    dppln_prc_estk: Optional[int] = None # 처분예정금액(원)(기타주식)	9,999,999,999
+    dpprpd_bgd: Optional[str] = None #처분예정기간(시작일)
+    dpprpd_edd: Optional[str] = None #처분예정기간(종료일)
+    dp_pp: Optional[str] = None #처분목적
+    dp_m_mkt: Optional[int] = None # 처분방법(시장을 통한 매도(주))	9,999,999,999
+    dp_m_ovtm: Optional[int] = None # 처분방법(시간외대량매매(주))	9,999,999,999
+    dp_m_otc: Optional[int] = None # 처분방법(장외처분(주))	9,999,999,999
+    dp_m_etc: Optional[int] = None # 처분방법(기타(주))	9,999,999,999
+    cs_iv_bk: Optional[str] = None #위탁투자중개업자
+    aq_wtn_div_ostk: Optional[int] = None # 처분 전 자기주식 보유현황(배당가능이익 범위 내 취득(주)(보통주식))	9,999,999,999
+    aq_wtn_div_ostk_rt: Optional[float] = None # 처분 전 자기주식 보유현황(배당가능이익 범위 내 취득(주)(비율(%)))
+    aq_wtn_div_estk: Optional[int] = None # 처분 전 자기주식 보유현황(배당가능이익 범위 내 취득(주)(기타주식))	9,999,999,999
+    aq_wtn_div_estk_rt: Optional[float] = None # 처분 전 자기주식 보유현황(배당가능이익 범위 내 취득(주)(비율(%)))
+    eaq_ostk: Optional[int] = None # 처분 전 자기주식 보유현황(기타취득(주)(보통주식))	9,999,999,999
+    eaq_ostk_rt: Optional[float] = None # 처분 전 자기주식 보유현황(기타취득(주)(비율(%)))
+    eaq_estk: Optional[int] = None # 처분 전 자기주식 보유현황(기타취득(주)(기타주식))	9,999,999,999
+    eaq_estk_rt: Optional[float] = None # 처분 전 자기주식 보유현황(기타취득(주)(비율(%)))
+    dp_dd: Optional[str] = None #처분결정일
+    od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명))	9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명))	9,999,999,999
+    adt_a_atn: Optional[str] = None #감사(사외이사가 아닌 감사위원)참석여부
+    d1_slodlm_ostk: Optional[int] = None # 1일 매도 주문수량 한도(보통주식)	9,999,999,999
+    d1_slodlm_estk: Optional[int] = None # 1일 매도 주문수량 한도(기타주식)	9,999,999,999
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "TreasuryStockDisposalDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class TrustAgreementAcquisitionDecisionData(BaseMaterialFactsData):
+    """자기주식취득 신탁계약 체결 결정"""
+    ctr_prc: Optional[int] = None # 계약금액(원)	9,999,999,999
+    ctr_pd_bgd: Optional[str] = None # 계약기간(시작일)
+    ctr_pd_edd: Optional[str] = None # 계약기간(종료일)
+    ctr_pp: Optional[str] = None # 계약목적
+    ctr_cns_int: Optional[str] = None # 계약체결기관
+    ctr_cns_prd: Optional[str] = None # 계약체결 예정일자
+    aq_wtn_div_ostk: Optional[int] = None # 계약 전 자기주식 보유현황(배당가능범위 내 취득(주)(보통주식))	9,999,999,999
+    aq_wtn_div_ostk_rt: Optional[float] = None # 계약 전 자기주식 보유현황(배당가능범위 내 취득(주)(비율(%)))
+    aq_wtn_div_estk: Optional[int] = None # 계약 전 자기주식 보유현황(배당가능범위 내 취득(주)(기타주식))	9,999,999,999
+    aq_wtn_div_estk_rt: Optional[float] = None # 계약 전 자기주식 보유현황(배당가능범위 내 취득(주)(비율(%)))
+    eaq_ostk: Optional[int] = None # 계약 전 자기주식 보유현황(기타취득(주)(보통주식))	9,999,999,999
+    eaq_ostk_rt: Optional[float] = None # 계약 전 자기주식 보유현황(기타취득(주)(비율(%)))
+    eaq_estk: Optional[int] = None # 계약 전 자기주식 보유현황(기타취득(주)(기타주식))	9,999,999,999
+    eaq_estk_rt: Optional[float] = None # 계약 전 자기주식 보유현황(기타취득(주)(비율(%)))
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명))	9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명))	9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원)참석여부
+    cs_iv_bk: Optional[str] = None # 위탁투자중개업자
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "TrustAgreementAcquisitionDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class TrustAgreementResolutionDecisionData(BaseMaterialFactsData):
+    """자기주식취득 신탁계약 해지 결정"""
+    ctr_prc_bfcc: Optional[int] = None # 계약금액(원)(해지 전)	9,999,999,999
+    ctr_prc_atcc: Optional[int] = None # 계약금액(원)(해지 후)	9,999,999,999
+    ctr_pd_bfcc_bgd: Optional[str] = None # 해지 전 계약기간(시작일)
+    ctr_pd_bfcc_edd: Optional[str] = None # 해지 전 계약기간(종료일)
+    cc_pp: Optional[str] = None # 해지목적
+    cc_int: Optional[str] = None # 해지기관
+    cc_prd: Optional[str] = None # 해지예정일자
+    tp_rm_atcc: Optional[str] = None # 해지후 신탁재산의 반환방법
+    aq_wtn_div_ostk: Optional[int] = None # 해지 전 자기주식 보유현황(배당가능범위 내 취득(주)(보통주식))	9,999,999,999
+    aq_wtn_div_ostk_rt: Optional[float] = None # 해지 전 자기주식 보유현황(배당가능범위 내 취득(주)(비율(%)))
+    aq_wtn_div_estk: Optional[int] = None # 해지 전 자기주식 보유현황(배당가능범위 내 취득(주)(기타주식))	9,999,999,999
+    aq_wtn_div_estk_rt: Optional[float] = None # 해지 전 자기주식 보유현황(배당가능범위 내 취득(주)(비율(%)))
+    eaq_ostk: Optional[int] = None # 해지 전 자기주식 보유현황(기타취득(주)(보통주식))	9,999,999,999
+    eaq_ostk_rt: Optional[float] = None # 해지 전 자기주식 보유현황(기타취득(주)(비율(%)))
+    eaq_estk: Optional[int] = None # 해지 전 자기주식 보유현황(기타취득(주)(기타주식))	9,999,999,999
+    eaq_estk_rt: Optional[float] = None # 해지 전 자기주식 보유현황(기타취득(주)(비율(%)))
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명))	9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명))	9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원)참석여부
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "TrustAgreementResolutionDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class BusinessAcquisitionDecisionData(BaseMaterialFactsData):
+    """영업양수 결정"""
+    inh_bsn: Optional[str] = None # 양수영업
+    inh_bsn_mc: Optional[str] = None # 양수영업 주요내용
+    inh_prc: Optional[int] = None # 양수가액(원)	9,999,999,999
+    absn_inh_atn: Optional[str] = None # 영업전부의 양수 여부
+    ast_inh_bsn: Optional[int] = None # 재무내용(원)(자산액(양수대상 영업부문(A)))	9,999,999,999
+    ast_cmp_all: Optional[int] = None # 재무내용(원)(자산액(당사전체(B)))	9,999,999,999
+    ast_rt: Optional[float] = None # 재무내용(원)(자산액(비중(%)(A/B))
+    sl_inh_bsn: Optional[int] = None # 재무내용(원)(매출액(양수대상 영업부문(A)))	9,999,999,999
+    sl_cmp_all: Optional[int] = None # 재무내용(원)(매출액(당사전체(B)))	9,999,999,999
+    sl_rt: Optional[float] = None # 재무내용(원)(매출액(비중(%)(A/B)))
+    dbt_inh_bsn: Optional[int] = None # 재무내용(원)(부채액(양수대상 영업부문(A)))	9,999,999,999
+    dbt_cmp_all: Optional[int] = None # 재무내용(원)(부채액(당사전체(B)))	9,999,999,999
+    dbt_rt: Optional[float] = None # 재무내용(원)(부채액(비중(%)(A/B)))
+    inh_pp: Optional[str] = None # 양수목적
+    inh_af: Optional[str] = None # 양수영향
+    inh_prd_ctr_cnsd: Optional[str] = None # 양수예정일자(계약체결일)
+    inh_prd_inh_std: Optional[str] = None # 양수예정일자(양수기준일)
+    dlptn_cmpnm: Optional[str] = None # 거래상대방(회사명(성명))
+    dlptn_cpt: Optional[int] = None # 거래상대방(자본금(원))	9,999,999,999
+    dlptn_mbsn: Optional[str] = None # 거래상대방(주요사업)
+    dlptn_hoadd: Optional[str] = None # 거래상대방(본점소재지(주소))
+    dlptn_rl_cmpn: Optional[str] = None # 거래상대방(회사와의 관계)
+    inh_pym: Optional[str] = None # 양수대금지급
+    exevl_atn: Optional[str] = None # 외부평가에 관한 사항(외부평가 여부)
+    exevl_bs_rs: Optional[str] = None # 외부평가에 관한 사항(근거 및 사유)
+    exevl_intn: Optional[str] = None # 외부평가에 관한 사항(외부평가기관의 명칭)
+    exevl_pd: Optional[str] = None # 외부평가에 관한 사항(외부평가 기간)
+    exevl_op: Optional[str] = None # 외부평가에 관한 사항(외부평가 의견)
+    gmtsck_spd_atn: Optional[str] = None # 주주총회 특별결의 여부
+    gmtsck_prd: Optional[str] = None # 주주총회 예정일자
+    aprskh_plnprc: Optional[int] = None # 주식매수청구권에 관한 사항(매수예정가격)	9,999,999,999
+    aprskh_pym_plpd_mth: Optional[str] = None # 주식매수청구권에 관한 사항(지급예정시기, 지급방법)
+    aprskh_lmt: Optional[str] = None # 주식매수청구권에 관한 사항(주식매수청구권 제한 관련 내용)
+    aprskh_ctref: Optional[str] = None # 주식매수청구권에 관한 사항(계약에 미치는 효력)
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명))	9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명))	9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원) 참석여부
+    bdlst_atn: Optional[str] = None # 우회상장 해당 여부
+    n6m_tpai_plann: Optional[str] = None # 향후 6월이내 제3자배정 증자 등 계획
+    otcpr_bdlst_sf_atn: Optional[str] = None # 타법인의 우회상장 요건 충족여부
+    ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
+    popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
+    popt_ctr_cn: Optional[str] = None # 계약내용
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BusinessAcquisitionDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class BusinessTransferDecisionData(BaseMaterialFactsData):
+    """영업양도 결정"""
+    trf_bsn: Optional[str] = None # 양도영업
+    trf_bsn_mc: Optional[str] = None # 양도영업 주요내용
+    trf_prc: Optional[int] = None # 양도가액(원)) 예) 9,999,999,999
+    ast_trf_bsn: Optional[int] = None # 재무내용(원)(자산액(양도대상 영업부문(A))) 예) 9,999,999,999
+    ast_cmp_all: Optional[int] = None # 재무내용(원)(자산액(당사전체(B)))) 예) 9,999,999,999
+    ast_rt: Optional[float] = None # 재무내용(원)(자산액(비중(%)(A/B)))
+    sl_trf_bsn: Optional[int] = None # 재무내용(원)(매출액(양도대상 영업부문(A)))) 예) 9,999,999,999
+    sl_cmp_all: Optional[int] = None # 재무내용(원)(매출액(당사전체(B)))) 예) 9,999,999,999
+    sl_rt: Optional[float] = None # 재무내용(원)(매출액(비중(%)(A/B)))
+    trf_pp: Optional[str] = None # 양도목적
+    trf_af: Optional[str] = None # 양도영향
+    trf_prd_ctr_cnsd: Optional[str] = None # 양도예정일자(계약체결일)
+    trf_prd_trf_std: Optional[str] = None # 양도예정일자(양도기준일)
+    dlptn_cmpnm: Optional[str] = None # 거래상대방(회사명(성명))
+    dlptn_cpt: Optional[int] = None # 거래상대방(자본금(원)) 예) 9,999,999,999
+    dlptn_mbsn: Optional[str] = None # 거래상대방(주요사업)
+    dlptn_hoadd: Optional[str] = None # 거래상대방(본점소재지(주소))
+    dlptn_rl_cmpn: Optional[str] = None # 거래상대방(회사와의 관계)
+    trf_pym: Optional[int] = None # 양도대금지급
+    exevl_atn: Optional[str] = None # 외부평가에 관한 사항(외부평가 여부)
+    exevl_bs_rs: Optional[str] = None # 외부평가에 관한 사항(근거 및 사유)
+    exevl_intn: Optional[str] = None # 외부평가에 관한 사항(외부평가기관의 명칭)
+    exevl_pd: Optional[str] = None # 외부평가에 관한 사항(외부평가 기간)
+    exevl_op: Optional[str] = None # 외부평가에 관한 사항(외부평가 의견)
+    gmtsck_spd_atn: Optional[str] = None # 주주총회 특별결의 여부
+    gmtsck_prd: Optional[str] = None # 주주총회 예정일자
+    aprskh_plnprc: Optional[int] = None # 주식매수청구권에 관한 사항(매수예정가격) 예) 9,999,999,999
+    aprskh_pym_plpd_mth: Optional[str] = None # 주식매수청구권에 관한 사항(지급예정시기, 지급방법)
+    aprskh_lmt: Optional[str] = None # 주식매수청구권에 관한 사항(주식매수청구권 제한 관련 내용)
+    aprskh_ctref: Optional[str] = None # 주식매수청구권에 관한 사항(계약에 미치는 효력)
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명)) 예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명)) 예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원) 참석여부
+    ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
+    popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
+    popt_ctr_cn: Optional[str] = None # 계약내용
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BusinessTransferDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class AssetTransferDecisionData(BaseMaterialFactsData):
+    """유형자산 양수/양도 결정"""
+    ast_sen: Optional[str] = None # 자산구분
+    ast_nm: Optional[str] = None # 자산명
+
+    # 양수
+    inhdtl_inhprc: Optional[int] = None # 양수내역(양수금액(원)) 예) 9,999,999,999
+    inhdtl_tast: Optional[int] = None # 양수내역(자산총액(원)) 예) 9,999,999,999
+    inhdtl_tast_vs: Optional[float] = None # 양수내역(자산총액대비(%))
+    inh_pp: Optional[str] = None # 양수목적
+    inh_af: Optional[str] = None # 양수영향
+    inh_prd_ctr_cnsd: Optional[str] = None # 양수예정일자(계약체결일)
+    inh_prd_inh_std: Optional[str] = None # 양수예정일자(양수기준일)
+    inh_prd_rgs_prd: Optional[str] = None # 양수예정일자(등기예정일)
+
+    # 양도
+    trfdtl_trfprc: Optional[int] = None # 양도내역(양도금액(원)) 예) 9,999,999,999
+    trfdtl_tast: Optional[int] = None # 양도내역(자산총액(원)) 예) 9,999,999,999
+    trfdtl_tast_vs: Optional[float] = None # 양도내역(자산총액대비(%))
+    trf_pp: Optional[str] = None # 양도목적
+    trf_af: Optional[str] = None # 양도영향
+    trf_prd_ctr_cnsd: Optional[str] = None # 양도예정일자(계약체결일)
+    trf_prd_trf_std: Optional[str] = None # 양도예정일자(양도기준일)
+    trf_prd_rgs_prd: Optional[str] = None # 양도예정일자(등기예정일)
+
+    dlptn_cmpnm: Optional[str] = None # 거래상대방(회사명(성명))
+    dlptn_cpt: Optional[int] = None # 거래상대방(자본금(원)) 예) 9,999,999,999
+    dlptn_mbsn: Optional[str] = None # 거래상대방(주요사업)
+    dlptn_hoadd: Optional[str] = None # 거래상대방(본점소재지(주소))
+    dlptn_rl_cmpn: Optional[str] = None # 거래상대방(회사와의 관계)
+    dl_pym: Optional[int] = None # 거래대금지급
+    exevl_atn: Optional[str] = None # 외부평가에 관한 사항(외부평가 여부)
+    exevl_bs_rs: Optional[str] = None # 외부평가에 관한 사항(근거 및 사유)
+    exevl_intn: Optional[str] = None # 외부평가에 관한 사항(외부평가기관의 명칭)
+    exevl_pd: Optional[str] = None # 외부평가에 관한 사항(외부평가 기간)
+    exevl_op: Optional[str] = None # 외부평가에 관한 사항(외부평가 의견)
+    gmtsck_spd_atn: Optional[str] = None # 주주총회 특별결의 여부
+    gmtsck_prd: Optional[str] = None # 주주총회 예정일자
+    aprskh_exrq: Optional[str] = None # 주식매수청구권에 관한 사항(행사요건)
+    aprskh_plnprc: Optional[int] = None # 주식매수청구권에 관한 사항(매수예정가격) 예) 9,999,999,999
+    aprskh_ex_pc_mth_pd_pl: Optional[str] = None # 주식매수청구권에 관한 사항(행사절차, 방법, 기간, 장소)
+    aprskh_pym_plpd_mth: Optional[str] = None # 주식매수청구권에 관한 사항(지급예정시기, 지급방법)
+    aprskh_lmt: Optional[str] = None # 주식매수청구권에 관한 사항(주식매수청구권 제한 관련 내용)
+    aprskh_ctref: Optional[str] = None # 주식매수청구권에 관한 사항(계약에 미치는 효력)
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명)) 예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명)) 예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원) 참석여부
+    ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
+    popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
+    popt_ctr_cn: Optional[str] = None # 계약내용
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "AssetTransferDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class OtherShareTransferDecisionData(BaseMaterialFactsData):
+    """타법인 주식 및 출자증권 양수/얃도 결정"""
+    iscmp_cmpnm: Optional[str] = None # 발행회사(회사명)
+    iscmp_nt: Optional[str] = None # 발행회사(국적)
+    iscmp_rp: Optional[str] = None # 발행회사(대표자)
+    iscmp_cpt: Optional[int] = None # 발행회사(자본금(원)) 예) 9,999,999,999
+    iscmp_rl_cmpn: Optional[str] = None # 발행회사(회사와 관계)
+    iscmp_tisstk: Optional[int] = None # 발행회사(발행주식 총수(주)) 예) 9,999,999,999
+    iscmp_mbsn: Optional[str] = None # 발행회사(주요사업)
+    l6m_tpa_nstkaq_atn: Optional[str] = None # 최근 6월 이내 제3자 배정에 의한 신주취득 여부
+
+    inhdtl_stkcnt: Optional[int] = None # 양수내역(양수주식수(주)) 예) 9,999,999,999
+    inhdtl_inhprc: Optional[int] = None # 양수내역(양수금액(원)(A)) 예) 9,999,999,999
+    inhdtl_tast: Optional[int] = None # 양수내역(총자산(원)(B)) 예) 9,999,999,999
+    inhdtl_tast_vs: Optional[float] = None # 양수내역(총자산대비(%)(A/B))
+    inhdtl_ecpt: Optional[int] = None # 양수내역(자기자본(원)(C)) 예) 9,999,999,999
+    inhdtl_ecpt_vs: Optional[float] = None # 양수내역(자기자본대비(%)(A/C))
+    atinh_owstkcnt: Optional[int] = None # 양수후 소유주식수 및 지분비율(소유주식수(주)) 예) 9,999,999,999
+    atinh_eqrt: Optional[float] = None # 양수후 소유주식수 및 지분비율(지분비율(%))
+    inh_pp: Optional[str] = None # 양수목적
+    inh_prd: Optional[str] = None # 양수예정일자
+
+    trfdtl_stkcnt: Optional[int] = None # 양도내역(양도주식수(주)) 예) 9,999,999,999
+    trfdtl_trfprc: Optional[int] = None # 양도내역(양도금액(원)(A)) 예) 9,999,999,999
+    trfdtl_tast: Optional[int] = None # 양도내역(총자산(원)(B)) 예) 9,999,999,999
+    trfdtl_tast_vs: Optional[float] = None # 양도내역(총자산대비(%)(A/B))
+    trfdtl_ecpt: Optional[int] = None # 양도내역(자기자본(원)(C)) 예) 9,999,999,999
+    trfdtl_ecpt_vs: Optional[float] = None # 양도내역(자기자본대비(%)(A/C))
+    attrf_owstkcnt: Optional[int] = None # 양도후 소유주식수 및 지분비율(소유주식수(주)) 예) 9,999,999,999
+    attrf_eqrt: Optional[float] = None # 양도후 소유주식수 및 지분비율(지분비율(%))
+    trf_pp: Optional[str] = None # 양도목적
+    trf_prd: Optional[str] = None # 양도예정일자
+
+    dlptn_cmpnm: Optional[str] = None # 거래상대방(회사명(성명))
+    dlptn_cpt: Optional[int] = None # 거래상대방(자본금(원)) 예) 9,999,999,999
+    dlptn_mbsn: Optional[str] = None # 거래상대방(주요사업)
+    dlptn_hoadd: Optional[str] = None # 거래상대방(본점소재지(주소))
+    dlptn_rl_cmpn: Optional[str] = None # 거래상대방(회사와의 관계)
+    dl_pym: Optional[str] = None # 거래대금지급
+    exevl_atn: Optional[str] = None # 외부평가에 관한 사항(외부평가 여부)
+    exevl_bs_rs: Optional[str] = None # 외부평가에 관한 사항(근거 및 사유)
+    exevl_intn: Optional[str] = None # 외부평가에 관한 사항(외부평가기관의 명칭)
+    exevl_pd: Optional[str] = None # 외부평가에 관한 사항(외부평가 기간)
+    exevl_op: Optional[str] = None # 외부평가에 관한 사항(외부평가 의견)
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명)) 예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명)) 예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원) 참석여부
+    bdlst_atn: Optional[str] = None # 우회상장 해당 여부
+    n6m_tpai_plann: Optional[str] = None # 향후 6월이내 제3자배정 증자 등 계획
+    iscmp_bdlst_sf_atn: Optional[str] = None # 발행회사(타법인)의 우회상장 요건 충족여부
+    ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
+    popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
+    popt_ctr_cn: Optional[str] = None # 계약내용
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "OtherShareTransferDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class EquityLinkedBondsTransferDecisionData(BaseMaterialFactsData):
+    """주권 관련 사채권 양수/양도 결정"""
+    # 공통
+    stkrtbd_kndn: Optional[str] = None # 주권 관련 사채권의 종류
+    tm: Optional[str] = None # 주권 관련 사채권의 종류(회차)
+    knd: Optional[str] = None # 주권 관련 사채권의 종류(종류)
+    bdiscmp_cmpnm: Optional[str] = None # 사채권 발행회사(회사명)
+    bdiscmp_nt: Optional[str] = None # 사채권 발행회사(국적)
+    bdiscmp_rp: Optional[str] = None # 사채권 발행회사(대표자)
+    bdiscmp_cpt: Optional[int] = None # 사채권 발행회사(자본금(원)) 예) 9,999,999,999
+    bdiscmp_rl_cmpn: Optional[str] = None # 사채권 발행회사(회사와 관계)
+    bdiscmp_tisstk: Optional[int] = None # 사채권 발행회사(발행주식 총수(주)) 예) 9,999,999,999
+    bdiscmp_mbsn: Optional[str] = None # 사채권 발행회사(주요사업)
+    # 양수
+    l6m_tpa_nstkaq_atn: Optional[str] = None # 최근 6월 이내 제3자 배정에 의한 신주취득 여부
+    inhdtl_bd_fta: Optional[int] = None # 양수내역(사채의 권면(전자등록)총액(원)) 예) 9,999,999,999
+    inhdtl_inhprc: Optional[int] = None # 양수내역(양수금액(원)(A)) 예) 9,999,999,999
+    inhdtl_tast: Optional[int] = None # 양수내역(총자산(원)(B)) 예) 9,999,999,999
+    inhdtl_tast_vs: Optional[float] = None # 양수내역(총자산대비(%)(A/B))
+    inhdtl_ecpt: Optional[int] = None # 양수내역(자기자본(원)(C)) 예) 9,999,999,999
+    inhdtl_ecpt_vs: Optional[float] = None # 양수내역(자기자본대비(%)(A/C))
+    inh_pp: Optional[str] = None # 양수목적
+    inh_prd: Optional[str] = None # 양수예정일자
+    # 양도
+    aqd: Optional[str] = None # 취득일자
+    trfdtl_bd_fta: Optional[int] = None # 양도내역(사채의 권면(전자등록)총액(원)) 예) 9,999,999,999
+    trfdtl_trfprc: Optional[int] = None # 양도내역(양도금액(원)(A)) 예) 9,999,999,999
+    trfdtl_tast: Optional[int] = None # 양도내역(총자산(원)(B)) 예) 9,999,999,999
+    trfdtl_tast_vs: Optional[float] = None # 양도내역(총자산대비(%)(A/B))
+    trfdtl_ecpt: Optional[int] = None # 양도내역(자기자본(원)(C)) 예) 9,999,999,999
+    trfdtl_ecpt_vs: Optional[float] = None # 양도내역(자기자본대비(%)(A/C))
+    trf_pp: Optional[str] = None # 양도목적
+    trf_prd: Optional[str] = None # 양도예정일자
+    # 공통
+    dlptn_cmpnm: Optional[str] = None # 거래상대방(회사명(성명))
+    dlptn_cpt: Optional[int] = None # 거래상대방(자본금(원)) 예) 9,999,999,999
+    dlptn_mbsn: Optional[str] = None # 거래상대방(주요사업)
+    dlptn_hoadd: Optional[str] = None # 거래상대방(본점소재지(주소))
+    dlptn_rl_cmpn: Optional[str] = None # 거래상대방(회사와의 관계)
+    dl_pym: Optional[str] = None # 거래대금지급
+    exevl_atn: Optional[str] = None # 외부평가에 관한 사항(외부평가 여부)
+    exevl_bs_rs: Optional[str] = None # 외부평가에 관한 사항(근거 및 사유)
+    exevl_intn: Optional[str] = None # 외부평가에 관한 사항(외부평가기관의 명칭)
+    exevl_pd: Optional[str] = None # 외부평가에 관한 사항(외부평가 기간)
+    exevl_op: Optional[str] = None # 외부평가에 관한 사항(외부평가 의견)
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석(명)) 예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참(명)) 예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원) 참석여부
+    ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
+    popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
+    popt_ctr_cn: Optional[str] = None # 계약내용
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "EquityLinkedBondsTransferDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class CompanyMergerDecisionData(BaseMaterialFactsData):
+    """회사합병 결정"""
+    mg_mth: Optional[str] = None # 합병방법
+    mg_stn: Optional[str] = None # 합병형태
+    mg_pp: Optional[str] = None # 합병목적
+    mg_rt: Optional[str] = None # 합병비율
+    mg_rt_bs: Optional[str] = None # 합병비율 산출근거
+    exevl_atn: Optional[str] = None # 외부평가에 관한 사항(외부평가 여부)
+    exevl_bs_rs: Optional[str] = None # 외부평가에 관한 사항(근거 및 사유)
+    exevl_intn: Optional[str] = None # 외부평가에 관한 사항(외부평가기관의 명칭)
+    exevl_pd: Optional[str] = None # 외부평가에 관한 사항(외부평가 기간)
+    exevl_op: Optional[str] = None # 외부평가에 관한 사항(외부평가 의견)
+    mgnstk_ostk_cnt: Optional[int] = None # 합병신주의 종류와 수(주)(보통주식) 예) 9,999,999,999
+    mgnstk_cstk_cnt: Optional[int] = None # 합병신주의 종류와 수(주)(종류주식) 예) 9,999,999,999
+    mgptncmp_cmpnm: Optional[str] = None # 합병상대회사(회사명)
+    mgptncmp_mbsn: Optional[str] = None # 합병상대회사(주요사업)
+    mgptncmp_rl_cmpn: Optional[str] = None # 합병상대회사(회사와의 관계)
+    rbsnfdtl_tast: Optional[int] = None # 합병상대회사(최근 사업연도 재무내용(원)(자산총계)) 예) 9,999,999,999
+    rbsnfdtl_tdbt: Optional[int] = None # 합병상대회사(최근 사업연도 재무내용(원)(부채총계)) 예) 9,999,999,999
+    rbsnfdtl_teqt: Optional[int] = None # 합병상대회사(최근 사업연도 재무내용(원)(자본총계)) 예) 9,999,999,999
+    rbsnfdtl_cpt: Optional[int] = None # 합병상대회사(최근 사업연도 재무내용(원)(자본금)) 예) 9,999,999,999
+    rbsnfdtl_sl: Optional[int] = None # 합병상대회사(최근 사업연도 재무내용(원)(매출액)) 예) 9,999,999,999
+    rbsnfdtl_nic: Optional[int] = None # 합병상대회사(최근 사업연도 재무내용(원)(당기순이익)) 예) 9,999,999,999
+    eadtat_intn: Optional[str] = None # 합병상대회사(외부감사 여부(기관명))
+    eadtat_op: Optional[str] = None # 합병상대회사(외부감사 여부(감사의견))
+    nmgcmp_cmpnm: Optional[str] = None # 신설합병회사(회사명)
+    ffdtl_tast: Optional[int] = None # 신설합병회사(설립시 재무내용(원)(자산총계)) 예) 9,999,999,999
+    ffdtl_tdbt: Optional[int] = None # 신설합병회사(설립시 재무내용(원)(부채총계)) 예) 9,999,999,999
+    ffdtl_teqt: Optional[int] = None # 신설합병회사(설립시 재무내용(원)(자본총계)) 예) 9,999,999,999
+    ffdtl_cpt: Optional[int] = None # 신설합병회사(설립시 재무내용(원)(자본금)) 예) 9,999,999,999
+    ffdtl_std: Optional[int] = None # 신설합병회사(설립시 재무내용(원)(현재기준))
+    nmgcmp_nbsn_rsl: Optional[int] = None # 신설합병회사(신설사업부문 최근 사업연도 매출액(원)) 예) 9,999,999,999
+    nmgcmp_mbsn: Optional[str] = None # 신설합병회사(주요사업)
+    nmgcmp_rlst_atn: Optional[str] = None # 신설합병회사(재상장신청 여부)
+    mgsc_mgctrd: Optional[str] = None # 합병일정(합병계약일)
+    mgsc_shddstd: Optional[str] = None # 합병일정(주주확정기준일)
+    mgsc_shclspd_bgd: Optional[str] = None # 합병일정(주주명부 폐쇄기간(시작일))
+    mgsc_shclspd_edd: Optional[str] = None # 합병일정(주주명부 폐쇄기간(종료일))
+    mgsc_mgop_rcpd_bgd: Optional[str] = None # 합병일정(합병반대의사통지 접수기간(시작일))
+    mgsc_mgop_rcpd_edd: Optional[str] = None # 합병일정(합병반대의사통지 접수기간(종료일))
+    mgsc_gmtsck_prd: Optional[str] = None # 합병일정(주주총회예정일자)
+    mgsc_aprskh_expd_bgd: Optional[str] = None # 합병일정(주식매수청구권 행사기간(시작일))
+    mgsc_aprskh_expd_edd: Optional[str] = None # 합병일정(주식매수청구권 행사기간(종료일))
+    mgsc_osprpd_bgd: Optional[str] = None # 합병일정(구주권 제출기간(시작일))
+    mgsc_osprpd_edd: Optional[str] = None # 합병일정(구주권 제출기간(종료일))
+    mgsc_trspprpd_bgd: Optional[str] = None # 합병일정(매매거래 정지예정기간(시작일))
+    mgsc_trspprpd_edd: Optional[str] = None # 합병일정(매매거래 정지예정기간(종료일))
+    mgsc_cdobprpd_bgd: Optional[str] = None # 합병일정(채권자이의 제출기간(시작일))
+    mgsc_cdobprpd_edd: Optional[str] = None # 합병일정(채권자이의 제출기간(종료일))
+    mgsc_mgdt: Optional[str] = None # 합병일정(합병기일)
+    mgsc_ergmd: Optional[str] = None # 합병일정(종료보고 총회일)
+    mgsc_mgrgsprd: Optional[str] = None # 합병일정(합병등기예정일자)
+    mgsc_nstkdlprd: Optional[str] = None # 합병일정(신주권교부예정일)
+    mgsc_nstklstprd: Optional[str] = None # 합병일정(신주의 상장예정일)
+    bdlst_atn: Optional[str] = None # 우회상장 해당 여부
+    otcpr_bdlst_sf_atn: Optional[str] = None # 타법인의 우회상장 요건 충족여부
+    aprskh_plnprc: Optional[int] = None # 주식매수청구권에 관한 사항(매수예정가격) 예) 9,999,999,999
+    aprskh_pym_plpd_mth: Optional[str] = None # 주식매수청구권에 관한 사항(지급예정시기, 지급방법)
+    aprskh_ctref: Optional[str] = None # 주식매수청구권에 관한 사항(계약에 미치는 효력)
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[str] = None # 사외이사참석여부(참석(명))
+    od_a_at_b: Optional[str] = None # 사외이사참석여부(불참(명))
+    adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원) 참석여부
+    popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
+    popt_ctr_cn: Optional[str] = None # 계약내용
+    rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부
+    ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CompanyMergerDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class CompanySpinoffDecisionData(BaseMaterialFactsData):
+    """회사분할 결정"""
+    dv_mth: Optional[str] = None # 분할방법
+    dv_impef: Optional[str] = None # 분할의 중요영향 및 효과
+    dv_rt: Optional[str] = None # 분할비율
+    dv_trfbsnprt_cn: Optional[str] = None # 분할로 이전할 사업 및 재산의 내용
+    atdv_excmp_cmpnm: Optional[str] = None # 분할 후 존속회사(회사명)
+    atdvfdtl_tast: Optional[int] = None # 분할 후 존속회사(분할후 재무내용(원)(자산총계)) 예) 9,999,999,999
+    atdvfdtl_tdbt: Optional[int] = None # 분할 후 존속회사(분할후 재무내용(원)(부채총계)) 예) 9,999,999,999
+    atdvfdtl_teqt: Optional[int] = None # 분할 후 존속회사(분할후 재무내용(원)(자본총계)) 예) 9,999,999,999
+    atdvfdtl_cpt: Optional[int] = None # 분할 후 존속회사(분할후 재무내용(원)(자본금)) 예) 9,999,999,999
+    atdvfdtl_std: Optional[str] = None # 분할 후 존속회사(분할후 재무내용(원)(현재기준))
+    atdv_excmp_exbsn_rsl: Optional[int] = None # 분할 후 존속회사(존속사업부문 최근 사업연도매출액(원)) 예) 9,999,999,999
+    atdv_excmp_mbsn: Optional[str] = None # 분할 후 존속회사(주요사업)
+    atdv_excmp_atdv_lstmn_atn: Optional[str] = None # 분할 후 존속회사(분할 후 상장유지 여부)
+    dvfcmp_cmpnm: Optional[str] = None # 분할설립회사(회사명)
+    ffdtl_tast: Optional[int] = None # 분할설립회사(설립시 재무내용(원)(자산총계)) 예) 9,999,999,999
+    ffdtl_tdbt: Optional[int] = None # 분할설립회사(설립시 재무내용(원)(부채총계)) 예) 9,999,999,999
+    ffdtl_teqt: Optional[int] = None # 분할설립회사(설립시 재무내용(원)(자본총계)) 예) 9,999,999,999
+    ffdtl_cpt: Optional[int] = None # 분할설립회사(설립시 재무내용(원)(자본금)) 예) 9,999,999,999
+    ffdtl_std: Optional[str] = None # 분할설립회사(설립시 재무내용(원)(현재기준))
+    dvfcmp_nbsn_rsl: Optional[int] = None # 분할설립회사(신설사업부문 최근 사업연도 매출액(원)) 예) 9,999,999,999
+    dvfcmp_mbsn: Optional[str] = None # 분할설립회사(주요사업)
+    dvfcmp_rlst_atn: Optional[str] = None # 분할설립회사(재상장신청 여부)
+    abcr_crrt: Optional[str] = None # 감자에 관한 사항(감자비율(%))
+    abcr_osprpd_bgd: Optional[str] = None # 감자에 관한 사항(구주권 제출기간(시작일))
+    abcr_osprpd_edd: Optional[str] = None # 감자에 관한 사항(구주권 제출기간(종료일))
+    abcr_trspprpd_bgd: Optional[str] = None # 감자에 관한 사항(매매거래정지 예정기간(시작일))
+    abcr_trspprpd_edd: Optional[str] = None # 감자에 관한 사항(매매거래정지 예정기간(종료일))
+    abcr_nstkascnd: Optional[str] = None # 감자에 관한 사항(신주배정조건)
+    abcr_shstkcnt_rt_at_rs: Optional[str] = None # 감자에 관한 사항(주주 주식수 비례여부 및 사유)
+    abcr_nstkasstd: Optional[str] = None # 감자에 관한 사항(신주배정기준일)
+    abcr_nstkdlprd: Optional[str] = None # 감자에 관한 사항(신주권교부예정일)
+    abcr_nstklstprd: Optional[str] = None # 감자에 관한 사항(신주의 상장예정일)
+    gmtsck_prd: Optional[str] = None # 주주총회 예정일
+    cdobprpd_bgd: Optional[str] = None # 채권자 이의제출기간(시작일)
+    cdobprpd_edd: Optional[str] = None # 채권자 이의제출기간(종료일)
+    dvdt: Optional[str] = None # 분할기일
+    dvrgsprd: Optional[str] = None # 분할등기 예정일
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명)) 예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명)) 예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원) 참석여부
+    popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
+    popt_ctr_cn: Optional[str] = None # 계약내용
+    rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부
+    ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CompanySpinoffDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class CompanySpinoffMergerDecisionData(BaseMaterialFactsData):
+    """회사분할합병 결정"""
+    dvmg_mth: Optional[str] = None # 분할합병 방법
+    dvmg_impef: Optional[str] = None # 분할합병의 중요영향 및 효과
+    dv_trfbsnprt_cn: Optional[str] = None # 분할에 관한 사항(분할로 이전할 사업 및 재산의 내용)
+    atdv_excmp_cmpnm: Optional[str] = None # 분할에 관한 사항(분할 후 존속회사(회사명))
+    atdvfdtl_tast: Optional[int] = None # 분할에 관한 사항(분할 후 존속회사(분할후 재무내용(원)(자산총계))) 예) 9,999,999,999
+    atdvfdtl_tdbt: Optional[int] = None # 분할에 관한 사항(분할 후 존속회사(분할후 재무내용(원)(부채총계))) 예) 9,999,999,999
+    atdvfdtl_teqt: Optional[int] = None # 분할에 관한 사항(분할 후 존속회사(분할후 재무내용(원)(자본총계))) 예) 9,999,999,999
+    atdvfdtl_cpt: Optional[int] = None # 분할에 관한 사항(분할 후 존속회사(분할후 재무내용(원)(자본금))) 예) 9,999,999,999
+    atdvfdtl_std: Optional[str] = None # 분할에 관한 사항(분할 후 존속회사(분할후 재무내용(원)(현재기준)))
+    atdv_excmp_exbsn_rsl: Optional[int] = None # 분할에 관한 사항(분할 후 존속회사(존속사업부문 최근 사업연도매출액(원))) 예) 9,999,999,999
+    atdv_excmp_mbsn: Optional[str] = None # 분할에 관한 사항(분할 후 존속회사(주요사업))
+    atdv_excmp_atdv_lstmn_atn: Optional[str] = None # 분할에 관한 사항(분할 후 존속회사(분할 후 상장유지 여부))
+    dvfcmp_cmpnm: Optional[str] = None # 분할에 관한 사항(분할설립 회사(회사명))
+    ffdtl_tast: Optional[int] = None # 분할에 관한 사항(분할설립 회사(설립시 재무내용(원)(자산총계))) 예) 9,999,999,999
+    ffdtl_tdbt: Optional[int] = None # 분할에 관한 사항(분할설립 회사(설립시 재무내용(원)(부채총계))) 예) 9,999,999,999
+    ffdtl_teqt: Optional[int] = None # 분할에 관한 사항(분할설립 회사(설립시 재무내용(원)(자본총계))) 예) 9,999,999,999
+    ffdtl_cpt: Optional[int] = None # 분할에 관한 사항(분할설립 회사(설립시 재무내용(원)(자본금))) 예) 9,999,999,999
+    ffdtl_std: Optional[str] = None # 분할에 관한 사항(분할설립 회사(설립시 재무내용(원)(현재기준)))
+    dvfcmp_nbsn_rsl: Optional[int] = None # 분할에 관한 사항(분할설립 회사(신설사업부문 최근 사업연도 매출액(원))) 예) 9,999,999,999
+    dvfcmp_mbsn: Optional[str] = None # 분할에 관한 사항(분할설립 회사(주요사업))
+    dvfcmp_atdv_lstmn_at: Optional[str] = None # 분할에 관한 사항(분할설립 회사(분할후 상장유지여부))
+    abcr_crrt: Optional[float] = None # 분할에 관한 사항(감자에 관한 사항(감자비율(%)))
+    abcr_osprpd_bgd: Optional[str] = None # 분할에 관한 사항(감자에 관한 사항(구주권 제출기간(시작일)))
+    abcr_osprpd_edd: Optional[str] = None # 분할에 관한 사항(감자에 관한 사항(구주권 제출기간(종료일)))
+    abcr_trspprpd_bgd: Optional[str] = None # 분할에 관한 사항(감자에 관한 사항(매매거래정지 예정기간(시작일)))
+    abcr_trspprpd_edd: Optional[str] = None # 분할에 관한 사항(감자에 관한 사항(매매거래정지 예정기간(종료일)))
+    abcr_nstkascnd: Optional[str] = None # 분할에 관한 사항(감자에 관한 사항(신주배정조건))
+    abcr_shstkcnt_rt_at_rs: Optional[str] = None # 분할에 관한 사항(감자에 관한 사항(주주 주식수 비례여부 및 사유))
+    abcr_nstkasstd: Optional[str] = None # 분할에 관한 사항(감자에 관한 사항(신주배정기준일))
+    abcr_nstkdlprd: Optional[str] = None # 분할에 관한 사항(감자에 관한 사항(신주권교부예정일))
+    abcr_nstklstprd: Optional[str] = None # 분할에 관한 사항(감자에 관한 사항(신주의 상장예정일))
+    mg_stn: Optional[str] = None # 합병에 관한 사항(합병형태)
+    mgptncmp_cmpnm: Optional[str] = None # 합병에 관한 사항(합병상대 회사(회사명))
+    mgptncmp_mbsn: Optional[str] = None # 합병에 관한 사항(합병상대 회사(주요사업))
+    mgptncmp_rl_cmpn: Optional[str] = None # 합병에 관한 사항(합병상대 회사(회사와의 관계))
+    rbsnfdtl_tast: Optional[int] = None # 합병에 관한 사항(합병상대 회사(최근 사업연도 재무내용(원)(자산총계))) 예) 9,999,999,999
+    rbsnfdtl_tdbt: Optional[int] = None # 합병에 관한 사항(합병상대 회사(최근 사업연도 재무내용(원)(부채총계))) 예) 9,999,999,999
+    rbsnfdtl_teqt: Optional[int] = None # 합병에 관한 사항(합병상대 회사(최근 사업연도 재무내용(원)(자본총계))) 예) 9,999,999,999
+    rbsnfdtl_cpt: Optional[int] = None # 합병에 관한 사항(합병상대 회사(최근 사업연도 재무내용(원)(자본금))) 예) 9,999,999,999
+    rbsnfdtl_sl: Optional[int] = None # 합병에 관한 사항(합병상대 회사(최근 사업연도 재무내용(원)(매출액))) 예) 9,999,999,999
+    rbsnfdtl_nic: Optional[int] = None # 합병에 관한 사항(합병상대 회사(최근 사업연도 재무내용(원)(당기순이익))) 예) 9,999,999,999
+    eadtat_intn: Optional[str] = None # 합병에 관한 사항(합병상대 회사(외부감사 여부(기관명)))
+    eadtat_op: Optional[str] = None # 합병에 관한 사항(합병상대 회사(외부감사 여부(감사의견)))
+    dvmgnstk_ostk_cnt: Optional[int] = None # 합병에 관한 사항(분할합병신주의 종류와 수(주)(보통주식)) 예) 9,999,999,999
+    dvmgnstk_cstk_cnt: Optional[int] = None # 합병에 관한 사항(분할합병신주의 종류와 수(주)(종류주식)) 예) 9,999,999,999
+    nmgcmp_cmpnm: Optional[str] = None # 합병에 관한 사항(합병신설 회사(회사명))
+    nmgcmp_cpt: Optional[int] = None # 합병에 관한 사항(합병신설 회사(자본금(원))) 예) 9,999,999,999
+    nmgcmp_mbsn: Optional[str] = None # 합병에 관한 사항(합병신설 회사(주요사업))
+    nmgcmp_rlst_atn: Optional[str] = None # 합병에 관한 사항(합병신설 회사(재상장신청 여부))
+    dvmg_rt: Optional[str] = None # 분할합병비율
+    dvmg_rt_bs: Optional[str] = None # 분할합병비율 산출근거
+    exevl_atn: Optional[str] = None # 외부평가에 관한 사항(외부평가 여부)
+    exevl_bs_rs: Optional[str] = None # 외부평가에 관한 사항(근거 및 사유)
+    exevl_intn: Optional[str] = None # 외부평가에 관한 사항(외부평가기관의 명칭)
+    exevl_pd: Optional[str] = None # 외부평가에 관한 사항(외부평가 기간)
+    exevl_op: Optional[str] = None # 외부평가에 관한 사항(외부평가 의견)
+    dvmgsc_dvmgctrd: Optional[str] = None # 분할합병일정(분할합병계약일)
+    dvmgsc_shddstd: Optional[str] = None # 분할합병일정(주주확정기준일)
+    dvmgsc_shclspd_bgd: Optional[str] = None # 분할합병일정(주주명부 폐쇄기간(시작일))
+    dvmgsc_shclspd_edd: Optional[str] = None # 분할합병일정(주주명부 폐쇄기간(종료일))
+    dvmgsc_dvmgop_rcpd_bgd: Optional[str] = None # 분할합병일정(분할합병반대의사통지 접수기간(시작일))
+    dvmgsc_dvmgop_rcpd_edd: Optional[str] = None # 분할합병일정(분할합병반대의사통지 접수기간(종료일))
+    dvmgsc_gmtsck_prd: Optional[str] = None # 분할합병일정(주주총회예정일자)
+    dvmgsc_aprskh_expd_bgd: Optional[str] = None # 분할합병일정(주식매수청구권 행사기간(시작일))
+    dvmgsc_aprskh_expd_edd: Optional[str] = None # 분할합병일정(주식매수청구권 행사기간(종료일))
+    dvmgsc_cdobprpd_bgd: Optional[str] = None # 분할합병일정(채권자 이의 제출기간(시작일))
+    dvmgsc_cdobprpd_edd: Optional[str] = None # 분할합병일정(채권자 이의 제출기간(종료일))
+    dvmgsc_dvmgdt: Optional[str] = None # 분할합병일정(분할합병기일)
+    dvmgsc_ergmd: Optional[str] = None # 분할합병일정(종료보고 총회일)
+    dvmgsc_dvmgrgsprd: Optional[str] = None # 분할합병일정(분할합병등기예정일)
+    bdlst_atn: Optional[str] = None # 우회상장 해당 여부
+    otcpr_bdlst_sf_atn: Optional[str] = None # 타법인의 우회상장 요건 충족여부
+    aprskh_exrq: Optional[str] = None # 주식매수청구권에 관한 사항(행사요건)
+    aprskh_plnprc: Optional[str] = None # 주식매수청구권에 관한 사항(매수예정가격)
+    aprskh_ex_pc_mth_pd_pl: Optional[str] = None # 주식매수청구권에 관한 사항(행사절차, 방법, 기간, 장소)
+    aprskh_pym_plpd_mth: Optional[str] = None # 주식매수청구권에 관한 사항(지급예정시기, 지급방법)
+    aprskh_lmt: Optional[str] = None # 주식매수청구권에 관한 사항(주식매수청구권 제한 관련 내용)
+    aprskh_ctref: Optional[str] = None # 주식매수청구권에 관한 사항(계약에 미치는 효력)
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명)) 예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명)) 예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원) 참석여부
+    popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
+    popt_ctr_cn: Optional[str] = None # 계약내용
+    rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부
+    ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CompanySpinoffMergerDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)
+
+@dataclass
+class ShareExchangeDecisionData(BaseMaterialFactsData):
+    """주식교환·이전 결정"""
+    extr_sen: Optional[str] = None # 구분
+    extr_stn: Optional[str] = None # 교환ㆍ이전 형태
+    extr_tgcmp_cmpnm: Optional[str] = None # 교환ㆍ이전 대상법인(회사명)
+    extr_tgcmp_rp: Optional[str] = None # 교환ㆍ이전 대상법인(대표자)
+    extr_tgcmp_mbsn: Optional[str] = None # 교환ㆍ이전 대상법인(주요사업)
+    extr_tgcmp_rl_cmpn: Optional[str] = None # 교환ㆍ이전 대상법인(회사와의 관계)
+    extr_tgcmp_tisstk_ostk: Optional[int] = None # 교환ㆍ이전 대상법인(발행주식총수(주)(보통주식)) 예) 9,999,999,999
+    extr_tgcmp_tisstk_cstk: Optional[int] = None # 교환ㆍ이전 대상법인(발행주식총수(주)(종류주식)) 예) 9,999,999,999
+    rbsnfdtl_tast: Optional[int] = None # 교환ㆍ이전 대상법인(최근 사업연도 요약재무내용(원)(자산총계)) 예) 9,999,999,999
+    rbsnfdtl_tdbt: Optional[int] = None # 교환ㆍ이전 대상법인(최근 사업연도 요약재무내용(원)(부채총계)) 예) 9,999,999,999
+    rbsnfdtl_teqt: Optional[int] = None # 교환ㆍ이전 대상법인(최근 사업연도 요약재무내용(원)(자본총계)) 예) 9,999,999,999
+    rbsnfdtl_cpt: Optional[int] = None # 교환ㆍ이전 대상법인(최근 사업연도 요약재무내용(원)(자본금)) 예) 9,999,999,999
+    extr_rt: Optional[str] = None # 교환ㆍ이전 비율
+    extr_rt_bs: Optional[str] = None # 교환ㆍ이전 비율 산출근거
+    exevl_atn: Optional[str] = None # 외부평가에 관한 사항(외부평가 여부)
+    exevl_bs_rs: Optional[str] = None # 외부평가에 관한 사항(근거 및 사유)
+    exevl_intn: Optional[str] = None # 외부평가에 관한 사항(외부평가기관의 명칭)
+    exevl_pd: Optional[str] = None # 외부평가에 관한 사항(외부평가 기간)
+    exevl_op: Optional[str] = None # 외부평가에 관한 사항(외부평가 의견)
+    extr_pp: Optional[str] = None # 교환ㆍ이전 목적
+    extrsc_extrctrd: Optional[str] = None # 교환ㆍ이전일정(교환ㆍ이전계약일)
+    extrsc_shddstd: Optional[str] = None # 교환ㆍ이전일정(주주확정기준일)
+    extrsc_shclspd_bgd: Optional[str] = None # 교환ㆍ이전일정(주주명부 폐쇄기간(시작일))
+    extrsc_shclspd_edd: Optional[str] = None # 교환ㆍ이전일정(주주명부 폐쇄기간(종료일))
+    extrsc_extrop_rcpd_bgd: Optional[str] = None # 교환ㆍ이전일정(주식교환ㆍ이전 반대의사 통지접수기간(시작일))
+    extrsc_extrop_rcpd_edd: Optional[str] = None # 교환ㆍ이전일정(주식교환ㆍ이전 반대의사 통지접수기간(종료일))
+    extrsc_gmtsck_prd: Optional[str] = None # 교환ㆍ이전일정(주주총회 예정일자)
+    extrsc_aprskh_expd_bgd: Optional[str] = None # 교환ㆍ이전일정(주식매수청구권 행사기간(시작일))
+    extrsc_aprskh_expd_edd: Optional[str] = None # 교환ㆍ이전일정(주식매수청구권 행사기간(종료일))
+    extrsc_osprpd_bgd: Optional[str] = None # 교환ㆍ이전일정(구주권제출기간(시작일))
+    extrsc_osprpd_edd: Optional[str] = None # 교환ㆍ이전일정(구주권제출기간(종료일))
+    extrsc_trspprpd: Optional[str] = None # 교환ㆍ이전일정(매매거래정지예정기간)
+    extrsc_trspprpd_bgd: Optional[str] = None # 교환ㆍ이전일정(매매거래정지예정기간(시작일))
+    extrsc_trspprpd_edd: Optional[str] = None # 교환ㆍ이전일정(매매거래정지예정기간(종료일))
+    extrsc_extrdt: Optional[str] = None # 교환ㆍ이전일정(교환ㆍ이전일자)
+    extrsc_nstkdlprd: Optional[str] = None # 교환ㆍ이전일정(신주권교부예정일)
+    extrsc_nstklstprd: Optional[str] = None # 교환ㆍ이전일정(신주의 상장예정일)
+    atextr_cpcmpnm: Optional[str] = None # 교환ㆍ이전 후 완전모회사명
+    aprskh_plnprc: Optional[int] = None # 주식매수청구권에 관한 사항(매수예정가격) 예) 9,999,999,999
+    aprskh_pym_plpd_mth: Optional[str] = None # 주식매수청구권에 관한 사항(지급예정시기, 지급방법)
+    aprskh_lmt: Optional[str] = None # 주식매수청구권에 관한 사항(주식매수청구권 제한 관련 내용)
+    aprskh_ctref: Optional[str] = None # 주식매수청구권에 관한 사항(계약에 미치는 효력)
+    bdlst_atn: Optional[str] = None # 우회상장 해당 여부
+    otcpr_bdlst_sf_atn: Optional[str] = None # 타법인의 우회상장 요건 충족 여부
+    bddd: Optional[str] = None # 이사회결의일(결정일)
+    od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명)) 예) 9,999,999,999
+    od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명)) 예) 9,999,999,999
+    adt_a_atn: Optional[str] = None # 참석여부	감사(사외이사가 아닌 감사위원) 참석여부
+    popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
+    popt_ctr_cn: Optional[str] = None # 계약내용
+    rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부
+    ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ShareExchangeDecisionData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        return cls(**raw_data)

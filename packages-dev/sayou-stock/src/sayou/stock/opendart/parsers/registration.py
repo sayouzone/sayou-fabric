@@ -22,6 +22,7 @@ from urllib.parse import unquote
 
 from ..client import OpenDartClient
 from ..models import (
+    OpenDartRequest,
     RegistrationEquitySecuritiesData,
     RegistrationStatementData,
     RegistrationDepositoryReceiptData,
@@ -52,13 +53,6 @@ class DartRegistrationParser:
     def __init__(self, client: OpenDartClient):
         self.client = client
 
-        self.params = {
-            "crtfc_key": self.client.api_key,
-            "corp_code": None,
-            "bgn_de": None,
-            "end_de": None,
-        }
-
     def fetch(self, corp_code: str, start_date: str, end_date: str, api_no: int = -1, api_type: str = None):
         url = None
 
@@ -67,12 +61,15 @@ class DartRegistrationParser:
 
         if not url:
             return
-        
-        self.params["corp_code"] = corp_code
-        self.params["bgn_de"] = start_date
-        self.params["end_de"] = end_date
 
-        response = self.client._get(url, params=self.params)
+        request = OpenDartRequest(
+            crtfc_key=self.client.api_key,
+            corp_code=corp_code,
+            bgn_de=start_date,
+            end_de=end_date,
+        )
+
+        response = self.client._get(url, params=request.to_params())
 
         json_data = response.json()
         #print(json_data)

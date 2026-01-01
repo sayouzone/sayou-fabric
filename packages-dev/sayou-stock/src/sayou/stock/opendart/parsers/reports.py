@@ -7,6 +7,7 @@ from urllib.parse import unquote
 
 from ..client import OpenDartClient
 from ..models import (
+    OpenDartRequest,
     StockIssuanceData,
     DividendsData,
     TreasuryStockData,
@@ -53,13 +54,6 @@ class DartReportsParser:
     def __init__(self, client: OpenDartClient):
         self.client = client
 
-        self.params = {
-            "crtfc_key": self.client.api_key,
-            "corp_code": None,
-            "bsns_year": None,
-            "reprt_code": "11011",
-        }
-
     def fetch(self, corp_code: str, year: str, quarter: int, api_no: int = -1, api_type: str = None):
         url = None
 
@@ -71,11 +65,14 @@ class DartReportsParser:
 
         report_code = quarters.get(str(quarter), "4")
         
-        self.params["corp_code"] = corp_code
-        self.params["bsns_year"] = year
-        self.params["reprt_code"] = report_code
+        request = OpenDartRequest(
+            crtfc_key=self.client.api_key,
+            corp_code=corp_code,
+            bsns_year=year,
+            reprt_code=report_code,
+        )
 
-        response = self.client._get(url, params=self.params)
+        response = self.client._get(url, params=request.to_params())
 
         json_data = response.json()
         #print(json_data)
