@@ -19,14 +19,15 @@
 4. `OpenDartCrawler`: Retrieves Company Information & Financial Statements using `OpenDart` API.
 5. `YahooCrawler`: Retrieves Company Information & Market Data using `Yahoo Finance` API.
 
-## 🤝 Usage Example
+## 🤝 Usage Examples
 
-#### Retrieve SEC EDGAR 10-K
+#### Retrieve 10-K document from `SEC EDGAR`
 
 ```python
 from sayou.stock.edgar import EDGARCrawler
 
-crawler = EDGARCrawler(user_agent="Sayouzone sjkim@sayouzone.com")
+user_agent = "YOUR_NAME YOUR_EMAIL"
+crawler = EDGARCrawler(user_agent=user_agent)
 ticker = "AAPL"
 
 # Retrieve CIK by Ticker
@@ -53,7 +54,7 @@ filings = crawler.fetch_filings(cik, doc_type="DEF 14A", count=1)
 data = crawler.extract_def14a(cik, filings[0].document_url, filings[0].accession_number)
 ```
 
-#### Retrieve FnGuide's Company Information
+#### Retrieve Company Information from `FnGuide`
 
 ```python
 from sayou.stock.fnguide import FnGuideCrawler
@@ -82,7 +83,7 @@ data = crawler.consensus(stock)
 print(data)
 ```
 
-#### Retrieve Naver's Company News
+#### Retrieve Company News from `Naver News`
 
 ```python
 from sayou.stock.naver import NaverCrawler
@@ -100,7 +101,7 @@ articles = crawler.news(query="삼성전자", max_articles=10)
 print(articles)
 ```
 
-#### Retrieve OpenDart's Company Information
+#### Retrieve Company Information from `OpenDart`
 
 ```python
 from sayou.stock.opendart import OpenDartCrawler
@@ -146,7 +147,7 @@ if status == "000" and len(list) > 0:
     print(df)
 ```
 
-#### Retrieve Yahoo's Company Information
+#### Retrieve Company Information from `Yahoo Finance`
 
 ```python
 from sayou.stock.yahoo import YahooCrawler

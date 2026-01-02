@@ -83,8 +83,6 @@ __author__ = "SeongJung Kim"
 from .crawler import OpenDartCrawler
 from .client import OpenDartClient
 from .models import (
-    # 공통
-    DartConfig,
     # 공시정보
     DisclosureData,
     # 정기보고서 주요정보
@@ -151,7 +149,6 @@ __all__ = [
     "OpenDartClient",
     
     # 데이터 모델
-    "DartConfig",
     
     # 파서
     "OpenDartDisclosureParser",

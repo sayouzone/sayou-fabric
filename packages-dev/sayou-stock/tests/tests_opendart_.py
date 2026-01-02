@@ -958,16 +958,16 @@ def main(code: str):
     print(f"\n{code} corp_code: {corp_code}")
 
     # 각 파일링 타입 데모
-    #demo_corp_code(crawler, code)
-    #demo_base_documents(crawler, code)
+    demo_corp_code(crawler, code)
+    demo_base_documents(crawler, code)
     rcept_no = demo_finance(crawler, corp_code)
     # 00126380 삼성전자 005930 반기보고서 (2025.06) 20250814003156 20250814
     rcept_no = rcept_no or "20251114002447"
-    #demo_download_xbrl(crawler, rcept_no=rcept_no)
-    #demo_reports(crawler, corp_code)
-    #demo_ownership(crawler, corp_code)
-    #demo_material_facts(crawler, corp_code)
-    #demo_registration(crawler, corp_code)
+    demo_download_xbrl(crawler, rcept_no=rcept_no)
+    demo_reports(crawler, corp_code)
+    demo_ownership(crawler, corp_code)
+    demo_material_facts(crawler, corp_code)
+    demo_registration(crawler, corp_code)
     #crawler.duplicate_keys()
     
     print("\n" + "="*60)

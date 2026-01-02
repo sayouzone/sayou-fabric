@@ -92,10 +92,6 @@ __author__ = "SeongJung Kim"
 
 from .crawler import YahooCrawler
 from .client import YahooClient
-#from .models import (
-    # 공통
-    #DartConfig,
-#)
 
 from .parsers import (
     YahooAnalysisParser,
@@ -113,7 +109,6 @@ __all__ = [
     "YahooClient",
     
     # 데이터 모델
-    #"DartConfig",
     
     # 파서
     "YahooAnalysisParser",

@@ -16,166 +16,19 @@ import os
 from dataclasses import dataclass, field, asdict, fields
 from datetime import datetime
 from enum import Enum
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, ClassVar, Dict, List, Optional, Type, TypeVar
 
-@dataclass(frozen=True)
-class DartConfig:
-    """DART 크롤러 설정."""
-    
-    bucket_name: str
-    api_key: str
-    
-    @classmethod
-    def from_env(cls) -> "DartConfig":
-        """환경 변수에서 설정을 로드합니다."""
+from .base_model import (
+    CorpClass,
+    ReportCode,
+    IndexClassCode,
+    BaseOpenDartData,
+    BaseFinanceData,
+    BaseOwnershipData,
+    BaseRegistrationData,
+)
 
-        load_dotenv()
-
-        bucket_name = "sayouzone-ai-stocks"
-        api_key = os.environ.get("DART_API_KEY", "")
-        #api_key = "fd664865257f1a3073b654f9185de11a708f726c"
-        
-        if not api_key:
-            raise ValueError("DART_API_KEY 환경 변수가 설정되지 않았습니다.")
-        
-        return cls(bucket_name=bucket_name, api_key=api_key)
-
-class CorpClass(Enum):
-    """법인 구분"""
-    KOSPI = "Y"      # 유가증권시장
-    KOSDAQ = "K"     # 코스닥
-    KONEX = "N"      # 코넥스
-    ETC = "E"        # 기타
-
-    @classmethod
-    def from_value(cls, value: Optional[str]) -> Optional["CorpClass"]:
-        """값으로부터 Enum 생성"""
-        if not value:
-            return None
-        for member in cls:
-            if member.value == value:
-                return member
-        return None
-
-    @property
-    def display_name(self) -> str:
-        """표시명"""
-        names = {
-            "Y": "유가증권",
-            "K": "코스닥",
-            "N": "코넥스",
-            "E": "기타",
-        }
-        return names.get(self.value, "알 수 없음")
-
-class ReportCode(Enum):
-    """보고서 코드"""
-    BUSINESS_REPORT = "11011"      # 사업보고서
-    FIRST_QUARTER_REPORT = "11012"     # 1분기보고서
-    SECOND_QUARTER_REPORT = "11013"      # 2분기보고서
-    THIRD_QUARTER_REPORT = "11014"        # 3분기보고서
-    YEAR_REPORT = "11015"        # 사업보고서
-
-    @classmethod
-    def from_value(cls, value: Optional[str]) -> Optional["ReportCode"]:
-        """값으로부터 Enum 생성"""
-        if not value:
-            return None
-        for member in cls:
-            if member.value == value:
-                return member
-        return None
-
-    @property
-    def display_name(self) -> str:
-        """표시명"""
-        names = {
-            "11011": "사업보고서",
-            "11012": "1분기보고서",
-            "11013": "2분기보고서",
-            "11014": "3분기보고서",
-            "11015": "사업보고서",
-        }
-        return names.get(self.value, "알 수 없음")
-
-class FinancialStatementCategory(Enum):
-    """재무제표 구분"""
-
-    BS1 = "재무상태표", "연결", "유동/비유동법"
-    BS2 = "재무상태표", "개별", "유동/비유동법"
-    BS3 = "재무상태표", "연결", "유동성배열법"
-    BS4 = "재무상태표", "개별", "유동성배열법"
-    IS1 = "별개의 손익계산서", "연결", "기능별분류"
-    IS2 = "별개의 손익계산서", "개별", "기능별분류"
-    IS3 = "별개의 손익계산서", "연결", "성격별분류"
-    IS4 = "별개의 손익계산서", "개별", "성격별분류"
-    CIS1 = "포괄손익계산서", "연결", "세후"
-    CIS2 = "포괄손익계산서", "개별", "세후"
-    CIS3 = "포괄손익계산서", "연결", "세전"
-    CIS4 = "포괄손익계산서", "개별", "세전"
-    
-    DCIS1 = "단일 포괄손익계산서", "연결", "기능별분류", "세후포괄손익"
-    DCIS2 = "단일 포괄손익계산서", "개별", "기능별분류", "세후포괄손익"
-    DCIS3 = "단일 포괄손익계산서", "연결", "기능별분류", "세전"
-    DCIS4 = "단일 포괄손익계산서", "개별", "기능별분류", "세전"
-    DCIS5 = "단일 포괄손익계산서", "연결", "성격별분류", "세후포괄손익"
-    DCIS6 = "단일 포괄손익계산서", "개별", "성격별분류", "세후포괄손익"
-    DCIS7 = "단일 포괄손익계산서", "연결", "성격별분류", "세전"
-    DCIS8 = "단일 포괄손익계산서", "개별", "성격별분류", "세전"
-    
-    CF1 = "현금흐름표", "연결", "직접법"
-    CF2 = "현금흐름표", "개별", "직접법"
-    CF3 = "현금흐름표", "연결", "간접법"
-    CF4 = "현금흐름표", "개별", "간접법"
-    SCE1 = "자본변동표", "연결"
-    SCE2 = "자본변동표", "개별"
-
-    @classmethod
-    def from_value(cls, value: Optional[str]) -> Optional["FinancialStatementCategory"]:
-        """값으로부터 Enum 생성"""
-        if not value:
-            return None
-        for member in cls:
-            if member.value == value:
-                return member
-        return None
-
-    @property
-    def display_name(self) -> str:
-        """표시명"""
-        names = {
-            "BS1": "재무상태표",
-            "BS2": "재무상태표",
-            "BS3": "재무상태표",
-            "BS4": "재무상태표",
-            
-            "IS1": "별개의 손익계산서",
-            "IS2": "별개의 손익계산서",
-            "IS3": "별개의 손익계산서",
-            "IS4": "별개의 손익계산서",
-            
-            "CIS1": "포괄손익계산서",
-            "CIS2": "포괄손익계산서",
-            "CIS3": "포괄손익계산서",
-            "CIS4": "포괄손익계산서",
-
-            "DCIS1": "단일 포괄손익계산서",
-            "DCIS2": "단일 포괄손익계산서",
-            "DCIS3": "단일 포괄손익계산서",
-            "DCIS4": "단일 포괄손익계산서",
-            "DCIS5": "단일 포괄손익계산서",
-            "DCIS6": "단일 포괄손익계산서",
-            "DCIS7": "단일 포괄손익계산서",
-            "DCIS8": "단일 포괄손익계산서",
-
-            "CF1": "현금흐름표 연결 직접법",
-            "CF2": "현금흐름표 개별 직접법",
-            "CF3": "현금흐름표 연결 간접법",
-            "CF4": "현금흐름표 개별 간접법",
-            "SCE1": "자본변동표 연결",
-            "SCE2": "자본변동표 개별",
-        }
-        return names.get(self.value, "알 수 없음")
+T = TypeVar("T", bound="BaseRegistrationData")
 
 @dataclass
 class OpenDartRequest:
@@ -186,10 +39,11 @@ class OpenDartRequest:
     bsns_year: Optional[str] = None # 사업연도	예) 사업연도(4자리) ※ 2015년 이후 부터 정보제공
     bgn_de: Optional[str] = None # 시작일(최초접수일)	예) 검색시작 접수일자(YYYYMMDD) ※ 2015년 이후 부터 정보제공
     end_de: Optional[str] = None # 종료일(최초접수일)	예) 검색종료 접수일자(YYYYMMDD) ※ 2015년 이후 부터 정보제공
+
     reprt_code: Optional[ReportCode] = None # 보고서 코드	예) 사업보고서 : 1분기보고서 : 11013, 반기보고서 : 11012, 3분기보고서 : 11014, 사업보고서 : 11011
     fs_div: Optional[str] = None # 재무제표구분	예) 재무제표구분 : OFS(재무제표), CFS(연결재무제표)
     sj_div: Optional[str] = None # 재무제표구분	예) BS1
-    idx_cl_code: Optional[str] = None # 지표분류코드	예) 수익성지표 : M210000, 안정성지표 : M220000, 성장성지표 : M230000, 활동성지표 : M240000
+    idx_cl_code: Optional[IndexClassCode] = None # 지표분류코드	예) 수익성지표 : M210000, 안정성지표 : M220000, 성장성지표 : M230000, 활동성지표 : M240000
     
     def to_params(self) -> Dict[str, Any]:
         """API 호출용 파라미터로 변환"""
@@ -252,22 +106,9 @@ class DisclosureRequest:
 
         return params
 
-@dataclass
-class BaseOpenDartData:
-    """OpenDart 데이터 베이스 클래스"""
-    rcept_no: Optional[str] = None # 접수번호
-    corp_code: Optional[str] = None # 고유번호
-    corp_cls: Optional[CorpClass] = None # 법인구분
-    corp_name: Optional[str] = None # 법인명
-
-    def to_dict(self) -> Dict[str, Any]:
-        """딕셔너리로 변환"""
-        return asdict(self)
-
-    @property
-    def corp_class_enum(self) -> Optional[CorpClass]:
-        """법인구분 Enum"""
-        return CorpClass.from_value(self.corp_cls)
+# =============================================================================
+# 공시정보 데이터 클래스
+# =============================================================================
 
 @dataclass
 class DisclosureData(BaseOpenDartData):
@@ -294,28 +135,13 @@ class DisclosureData(BaseOpenDartData):
     rcept_dt: Optional[str] = None # 접수일자
     modify_date: Optional[str] = None # 최종변경일자
 
-    def to_dict(self) -> Dict[str, Any]:
-        """딕셔너리로 변환"""
-        return asdict(self)
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "DisclosureData":
-        """API 응답에서 생성"""
-        valid_fields = {f.name for f in fields(cls)}
-        converted = {}
-        for api_field, model_field in cls.FIELD_MAPPING.items():
-            if api_field in raw_data and model_field in valid_fields:
-                converted[model_field] = raw_data[api_field]
-        return cls(**converted)
-
-    @property
-    def corp_class_enum(self) -> Optional[CorpClass]:
-        """법인구분 Enum"""
-        return CorpClass.from_value(self.corp_cls)
+# =============================================================================
+# 정기보고서 주요정보 데이터 클래스
+# =============================================================================
 
 @dataclass
 class StockIssuanceData(BaseOpenDartData):
-    """주식발행 현황 데이터 모델"""
+    """증자(감자) 현황 데이터 모델"""
 
     isu_dcrs_de: Optional[str] = None # 주식발행 감소일자
     isu_dcrs_stle: Optional[str] = None # 발행 감소 형태
@@ -324,11 +150,6 @@ class StockIssuanceData(BaseOpenDartData):
     isu_dcrs_mstvdv_fval_amount: Optional[str] = None # 발행 감소 주당 액면 가액
     isu_dcrs_mstvdv_amount: Optional[str] = None # 발행 감소 주당 가액
     stlm_dt: Optional[str] = None # 결산기준일
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "StockIssuanceData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class DividendsData(BaseOpenDartData):
@@ -340,12 +161,6 @@ class DividendsData(BaseOpenDartData):
     frmtrm: Optional[int] = None # 전기
     lwfr: Optional[int] = None # 전전기
     stlm_dt: Optional[str] = None # 결산기준일
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "DividendsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 
 @dataclass
 class TreasuryStockData(BaseOpenDartData):
@@ -363,11 +178,6 @@ class TreasuryStockData(BaseOpenDartData):
     rm: Optional[str] = None # 비고
     stlm_dt: Optional[str] = None # 결산기준일
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "TreasuryStockData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class MajorShareholderData(BaseOpenDartData):
     """주요주주 현황 데이터 모델"""
@@ -382,11 +192,6 @@ class MajorShareholderData(BaseOpenDartData):
     rm: Optional[str] = None # 비고
     stlm_dt: Optional[str] = None # 결산기준일
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "MajorShareholderData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class MajorShareholderChangeData(BaseOpenDartData):
     """주요주주 변동현황 데이터 모델"""
@@ -398,11 +203,6 @@ class MajorShareholderChangeData(BaseOpenDartData):
     change_cause: Optional[str] = None # 변동 원인
     rm: Optional[str] = None # 비고
     stlm_dt: Optional[str] = None # 결산기준일
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "MajorShareholderChangeData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class MinorShareholderData(BaseOpenDartData):
@@ -416,11 +216,6 @@ class MinorShareholderData(BaseOpenDartData):
     stock_tot_co: Optional[int] = None # 총발행 주식수
     hold_stock_rate: Optional[float] = None # 보유 주식 비율
     stlm_dt: Optional[str] = None # 결산기준일
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "MinorShareholderData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class ExecutiveData(BaseOpenDartData):
@@ -438,11 +233,6 @@ class ExecutiveData(BaseOpenDartData):
     hffc_pd: Optional[str] = None # 재직 기간
     tenure_end_on: Optional[str] = None # 임기 만료 일
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ExecutiveData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class EmployeeData(BaseOpenDartData):
@@ -463,11 +253,6 @@ class EmployeeData(BaseOpenDartData):
     jan_salary_am: Optional[int] = None # 1인평균 급여 액
     rm: Optional[str] = None # 비고
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "EmployeeData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class DirectorCompensationData(BaseOpenDartData):
@@ -478,11 +263,6 @@ class DirectorCompensationData(BaseOpenDartData):
     mendng_totamt: Optional[int] = None # 보수 총액
     mendng_totamt_ct_incls_mendng: Optional[int] = None # 보수 총액 비 포함 보수
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "DirectorCompensationData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class TotalDirectorCompensationData(BaseOpenDartData):
@@ -493,12 +273,6 @@ class TotalDirectorCompensationData(BaseOpenDartData):
     jan_avrg_mendng_am: Optional[int] = None # 1인 평균 보수 액
     rm: Optional[str] = None # 비고
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "TotalDirectorCompensationData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 
 @dataclass
 class IntercorporateInvestmentData(BaseOpenDartData):
@@ -520,11 +294,6 @@ class IntercorporateInvestmentData(BaseOpenDartData):
     recent_bsns_year_fnnr_sttus_tot_assets: Optional[int] = None # 최근 사업 연도 재무 현황 총 자산
     recent_bsns_year_fnnr_sttus_thstrm_ntpf: Optional[int] = None # 최근 사업 연도 재무 현황 당기 순이익
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "IntercorporateInvestmentData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class OutstandingSharesData(BaseOpenDartData):
@@ -542,11 +311,6 @@ class OutstandingSharesData(BaseOpenDartData):
     tesstk_co: Optional[int] = None # 자기주식수
     distb_stock_co: Optional[int] = None # 유통주식수
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "OutstandingSharesData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class DebtSecuritiesIssuanceData(BaseOpenDartData):
@@ -563,11 +327,6 @@ class DebtSecuritiesIssuanceData(BaseOpenDartData):
     repy_at: Optional[str] = None # 상환여부
     mngt_cmpny: Optional[str] = None # 주관회사
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "DebtSecuritiesIssuanceData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class CPOutstandingData(BaseOpenDartData):
@@ -585,11 +344,6 @@ class CPOutstandingData(BaseOpenDartData):
     yy3_excess: Optional[int] = None # 3년 초과
     sm: Optional[int] = None # 합계
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CPOutstandingData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class ShortTermBondsOutstandingData(BaseOpenDartData):
@@ -606,11 +360,6 @@ class ShortTermBondsOutstandingData(BaseOpenDartData):
     isu_lmt: Optional[int] = None # 발행 한도
     remndr_lmt: Optional[int] = None # 잔여 한도
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ShortTermBondsOutstandingData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class CorporateBondsOutstandingData(BaseOpenDartData):
@@ -627,11 +376,6 @@ class CorporateBondsOutstandingData(BaseOpenDartData):
     yy10_excess: Optional[int] = None # 10년초과
     sm: Optional[int] = None # 합계
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CorporateBondsOutstandingData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class HybridSecuritiesOutstandingData(BaseOpenDartData):
@@ -648,11 +392,6 @@ class HybridSecuritiesOutstandingData(BaseOpenDartData):
     yy30_excess: Optional[int] = None # 30년초과
     sm: Optional[int] = None # 합계
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "HybridSecuritiesOutstandingData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class CoCoBondsOutstandingData(BaseOpenDartData):
@@ -671,11 +410,6 @@ class CoCoBondsOutstandingData(BaseOpenDartData):
     yy30_excess: Optional[int] = None # 30년초과
     sm: Optional[int] = None # 합계
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CoCoBondsOutstandingData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class AuditOpinionsData(BaseOpenDartData):
@@ -688,11 +422,6 @@ class AuditOpinionsData(BaseOpenDartData):
     emphs_matter: Optional[str] = None # 강조사항 등
     core_adt_matter: Optional[str] = None # 핵심감사사항
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "AuditOpinionsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class AuditServiceContractsData(BaseOpenDartData):
@@ -708,11 +437,6 @@ class AuditServiceContractsData(BaseOpenDartData):
     real_exc_dtls_mendng: Optional[int] = None # 실제수행내역(보수)
     real_exc_dtls_time: Optional[int] = None # 실제수행내역(시간)
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "AuditServiceContractsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class NonAuditServiceContractsData(BaseOpenDartData):
@@ -725,11 +449,6 @@ class NonAuditServiceContractsData(BaseOpenDartData):
     servc_mendng: Optional[int] = None # 용역보수
     rm: Optional[str] = None # 비고
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "NonAuditServiceContractsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class OutsideDirectorChangesData(BaseOpenDartData):
@@ -741,11 +460,6 @@ class OutsideDirectorChangesData(BaseOpenDartData):
     rlsofc: Optional[int] = None # 사외이사 변동현황(해임)
     mdstrm_resig: Optional[int] = None # 사외이사 변동현황(중도퇴임)
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "OutsideDirectorChangesData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class UnregisteredExecutiveCompensationData(BaseOpenDartData):
@@ -757,11 +471,6 @@ class UnregisteredExecutiveCompensationData(BaseOpenDartData):
     jan_salary_am: Optional[int] = None # 1인평균 급여액
     rm: Optional[str] = None # 비고
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "UnregisteredExecutiveCompensationData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class ApprovedDirectorCompensationData(BaseOpenDartData):
@@ -772,11 +481,6 @@ class ApprovedDirectorCompensationData(BaseOpenDartData):
     gmtsck_confm_amount: Optional[int] = None # 주주총회 승인금액
     rm: Optional[str] = None # 비고
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ApprovedDirectorCompensationData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class CompensationCategoryData(BaseOpenDartData):
@@ -788,11 +492,6 @@ class CompensationCategoryData(BaseOpenDartData):
     psn1_avrg_pymntamt: Optional[int] = None # 1인당 평균보수액
     rm: Optional[str] = None # 비고
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CompensationCategoryData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class ProceedsUseData(BaseOpenDartData):
@@ -810,11 +509,6 @@ class ProceedsUseData(BaseOpenDartData):
     real_cptal_use_dtls_amount: Optional[int] = None # 실제 자금사용 내역(금액)
     dffrnc_occrrnc_resn: Optional[str] = None # 차이발생 사유 등
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ProceedsUseData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class PrivateEquityFundsUseData(BaseOpenDartData):
@@ -833,28 +527,10 @@ class PrivateEquityFundsUseData(BaseOpenDartData):
     real_cptal_use_dtls_amount: Optional[int] = None # 실제 자금사용 내역(금액)
     dffrnc_occrrnc_resn: Optional[str] = None # 차이발생 사유 등
     stlm_dt: Optional[str] = None # 결산기준일
-    
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "PrivateEquityFundsUseData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
-@dataclass
-class BaseFinanceData(BaseOpenDartData):
-    """재무제표 데이터 베이스 클래스"""
-    reprt_code: Optional[str] = None # 보고서 코드
-    bsns_year: Optional[str] = None # 사업 연도
-    stock_code: Optional[str] = None # 종목 코드
-    sj_div: Optional[str] = None # 재무제표구분	BS:재무상태표, IS:손익계산서
-    sj_nm: Optional[str] = None # 재무제표명	ex) 재무상태표 또는 손익계산서 출력
-    fs_div: Optional[str] = None # 개별/연결구분	OFS:재무제표, CFS:연결재무제표
-    fs_nm: Optional[str] = None # 개별/연결명	ex) 연결재무제표 또는 재무제표 출력
-    account_id: Optional[str] = None # 계정ID	계정 고유명칭
-    account_nm: Optional[str] = None # 계정명	ex) 자본총계
-
-    def to_dict(self) -> Dict[str, Any]:
-        """딕셔너리로 변환"""
-        return asdict(self)
+# =============================================================================
+# 정기보고서 재무정보 데이터 클래스
+# =============================================================================
 
 @dataclass
 class SingleCompanyMainAccountsData(BaseFinanceData):
@@ -874,11 +550,6 @@ class SingleCompanyMainAccountsData(BaseFinanceData):
     ord: Optional[int] = None # 계정과목 정렬순서
     currency: Optional[str] = None # 통화 단위
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "SingleCompanyMainAccountsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class MultiCompanyMainAccountsData(BaseFinanceData):
     """다중회사 주요계정 데이터 모델"""
@@ -896,11 +567,6 @@ class MultiCompanyMainAccountsData(BaseFinanceData):
     bfefrmtrm_amount: Optional[int] = None # 전전기금액	9,999,999,999(※ 사업보고서의 경우에만 출력)
     ord: Optional[int] = None # 계정과목 정렬순서	계정과목 정렬순서
     currency: Optional[str] = None # 통화 단위
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "MultiCompanyMainAccountsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class ConsolidatedFinancialStatementsData(BaseFinanceData):
@@ -920,11 +586,6 @@ class ConsolidatedFinancialStatementsData(BaseFinanceData):
     ord: Optional[int] = None # 계정과목 정렬순서
     currency: Optional[str] = None # 통화 단위
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ConsolidatedFinancialStatementsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class XBRLTaxonomyFinancialStatementsData(BaseFinanceData):
     """XBRL택사노미재무제표양식 데이터 모델"""
@@ -934,11 +595,6 @@ class XBRLTaxonomyFinancialStatementsData(BaseFinanceData):
     label_eng: Optional[str] = None # 영문 출력명
     data_tp: Optional[str] = None # 데이터 유형
     ifrs_ref: Optional[str] = None # IFRS Reference
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "XBRLTaxonomyFinancialStatementsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class SingleCompanyKeyFinancialMetricsData(BaseFinanceData):
@@ -951,11 +607,6 @@ class SingleCompanyKeyFinancialMetricsData(BaseFinanceData):
     idx_nm: Optional[str] = None # 지표명	예) 영업이익률
     idx_val: Optional[float] = None # 지표값	예) 0.256
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "SingleCompanyKeyFinancialMetricsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class MultiCompanyKeyFinancialMetricsData(BaseFinanceData):
     """다중회사 주요 재무지표 데이터 모델"""
@@ -967,20 +618,9 @@ class MultiCompanyKeyFinancialMetricsData(BaseFinanceData):
     idx_nm: Optional[str] = None # 지표명	예) 영업이익률
     idx_val: Optional[float] = None # 지표값	예) 0.256
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "MultiCompanyKeyFinancialMetricsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
-@dataclass
-class BaseOwnershipData(BaseOpenDartData):
-    """지분공시 데이터 베이스 클래스"""
-    rcept_dt: Optional[str] = None # 접수일자	예) 공시 접수일자(YYYYMMDD)
-    repror: Optional[str] = None # 대표보고자
-
-    def to_dict(self) -> Dict[str, Any]:
-        """딕셔너리로 변환"""
-        return asdict(self)
+# =============================================================================
+# 지분공시 종합정보 데이터 클래스
+# =============================================================================
 
 @dataclass
 class MajorShoreholdingsData(BaseOwnershipData):
@@ -995,11 +635,6 @@ class MajorShoreholdingsData(BaseOwnershipData):
     ctr_stkrt: Optional[str] = None # 주요체결 보유비율
     report_resn: Optional[str] = None # 보고사유
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "MajorShoreholdingsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class InsiderOwnershipData(BaseOwnershipData):
     """임원ㆍ주요주주 소유보고 데이터 모델"""
@@ -1012,382 +647,9 @@ class InsiderOwnershipData(BaseOwnershipData):
     sp_stock_lmp_rate: Optional[str] = None # 특정 증권 등 소유 비율	예) 0.00
     sp_stock_lmp_irds_rate: Optional[str] = None # 특정 증권 등 소유 증감 비율	예) 0.00
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "InsiderOwnershipData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
-@dataclass
-class BaseRegistrationData(BaseOpenDartData):
-    """지분공시 데이터 베이스 클래스"""
-    tm: Optional[str] = None # 회차
-
-    def to_dict(self) -> Dict[str, Any]:
-        """딕셔너리로 변환"""
-        return asdict(self)
-
-@dataclass
-class GeneralData(BaseRegistrationData):
-    """일반사항"""
-    title: Optional[str] = "일반사항"
-    bdnmn: Optional[str] = None # 채무증권 명칭
-    slmth: Optional[str] = None # 모집(매출)방법
-    fta: Optional[int] = None # 권면(전자등록)총액	예) 9,999,999,999
-    slta: Optional[int] = None # 모집(매출)총액	예) 9,999,999,999
-    isprc: Optional[int] = None # 발행가액	예) 9,999,999,999
-    intr: Optional[int] = None # 이자율
-    isrr: Optional[int] = None # 발행수익률
-    rpd: Optional[str] = None # 상환기일
-    print_pymint: Optional[str] = None # 원리금지급대행기관
-    mngt_cmp: Optional[str] = None # (사채)관리회사
-    cdrt_int: Optional[str] = None # 신용등급(신용평가기관)
-
-    sbd: Optional[str] = None # 청약기일
-    pymd: Optional[str] = None # 납입기일
-    sband: Optional[str] = None # 청약공고일
-    asand: Optional[str] = None # 배정공고일
-    asstd: Optional[str] = None # 배정기준일
-    exstk: Optional[str] = None # 신주인수권에 관한 사항(행사대상증권)
-    exprc: Optional[int] = None # 신주인수권에 관한 사항(행사가격)	예) 9,999,999,999
-    expd: Optional[str] = None # 신주인수권에 관한 사항(행사기간)
-    rpt_rcpn: Optional[str] = None # 주요사항보고서(접수번호)
-
-    dpcrn: Optional[str] = None # 표시통화
-    dpcr_amt: Optional[int] = None # 표시통화기준발행규모
-    usarn: Optional[str] = None # 사용지역
-    usntn: Optional[str] = None # 사용국가
-    wnexpl_at: Optional[str] = None # 원화 교환 예정 여부
-    udtintnm: Optional[str] = None # 인수기관명
-    grt_int: Optional[str] = None # 보증을 받은 경우(보증기관)
-    grt_amt: Optional[int] = None # 보증을 받은 경우(보증금액)	예) 9,999,999,999
-    icmg_mgknd: Optional[str] = None # 담보 제공의 경우(담보의 종류)
-    icmg_mgamt: Optional[int] = None # 담보 제공의 경우(담보금액)	예) 9,999,999,999
-    estk_exstk: Optional[str] = None # 지분증권과 연계된 경우(행사대상증권)
-    estk_exrt: Optional[str] = None # 지분증권과 연계된 경우(권리행사비율)
-    estk_exprc: Optional[int] = None # 지분증권과 연계된 경우(권리행사가격)	예) 9,999,999,999
-    estk_expd: Optional[str] = None # 지분증권과 연계된 경우(권리행사기간)
-    rpt_rcpn: Optional[str] = None # 주요사항보고서(접수번호)
-    drcb_at: Optional[str] = None # 파생결합사채해당여부
-    drcb_uast: Optional[str] = None # 파생결합사채(기초자산)
-    drcb_optknd: Optional[str] = None # 파생결합사채(옵션종류)
-    drcb_mtd: Optional[str] = None # 파생결합사채(만기일)
-
-    stn: Optional[str] = None # 형태
-    bddd: Optional[str] = None # 이사회 결의일
-    ctrd: Optional[str] = None # 계약일
-    gmtsck_shddstd: Optional[str] = None # 주주총회를 위한 주주확정일
-    ap_gmtsck: Optional[str] = None # 승인을 위한 주주총회일
-    aprskh_pd_bgd: Optional[str] = None # 주식매수청구권 행사 기간 및 가격(시작일)
-    aprskh_pd_edd: Optional[str] = None # 주식매수청구권 행사 기간 및 가격(종료일)
-    aprskh_prc: Optional[str] = None # 주식매수청구권 행사 기간 및 가격((주식매수청구가격-회사제시))
-    mgdt_etc: Optional[str] = None # 합병기일등
-    rt_vl: Optional[str] = None # 비율 또는 가액
-    exevl_int: Optional[str] = None # 외부평가기관
-    grtmn_etc: Optional[str] = None # 지급 교부금 등
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "GeneralData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
-@dataclass
-class StockData(BaseRegistrationData):
-    """증권의 종류"""
-    title: Optional[str] = "증권의종류"
-    stksen: Optional[str] = None # 증권의종류
-    stkcnt: Optional[int] = None # 증권수량	예) 9,999,999,999
-    fv: Optional[int] = None # 액면가액	예) 9,999,999,999
-    slprc: Optional[int] = None # 모집(매출)가액	예) 9,999,999,999
-    slta: Optional[int] = None # 모집(매출)총액	예) 9,999,999,999
-    slmthn: Optional[str] = None # 모집(매출)방법	예) 모집(매출)방법
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "StockData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
-@dataclass
-class AcquirerData(BaseRegistrationData):
-    """인수인 정보"""
-
-    title: Optional[str] = "인수인정보"
-    actsen: Optional[str] = None # 인수인구분
-    actnmn: Optional[str] = None # 인수인명
-    stksen: Optional[str] = None # 증권의종류
-    udtcnt: Optional[int] = None # 인수수량	예) 9,999,999,999
-    udtamt: Optional[int] = None # 인수금액	예) 9,999,999,999
-    udtprc: Optional[int] = None # 인수대가
-    udtmth: Optional[str] = None # 인수방법
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "AcquirerData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
-@dataclass
-class FundsPurposeData(BaseRegistrationData):
-    """자금의 사용목적"""
-
-    title: Optional[str] = "자금의사용목적"
-    se: Optional[str] = None # 구분
-    amt: Optional[int] = None # 금액	예) 9,999,999,999
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "FundsPurposeData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
-@dataclass
-class ShareholderData(BaseRegistrationData):
-    """매출인에 관한사항"""
-
-    title: Optional[str] = "매출인에관한사항"
-    hdr: Optional[str] = None # 보유자
-    rl_cmp: Optional[str] = None # 회사와의관계
-    bfsl_hdstk: Optional[int] = None # 매출전보유증권수	예) 9,999,999,999
-    slstk: Optional[int] = None # 매출증권수	예) 9,999,999,999
-    atsl_hdstk: Optional[int] = None # 매출후보유증권수	예) 9,999,999,999
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ShareholderData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
-@dataclass
-class PutBackOptionData(BaseRegistrationData):
-    """일반 청약자 환매청구권"""
-
-    title: Optional[str] = "일반청약자환매청구권"
-    grtrs: Optional[str] = None # 부여사유
-    exavivr: Optional[str] = None # 행사가능 투자자
-    grtcnt: Optional[int] = None # 부여수량	예) 9,999,999,999
-    expd: Optional[str] = None # 행사기간
-    exprc: Optional[int] = None # 행사가격	예) 9,999,999,999
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "PutBackOptionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
-@dataclass
-class IssuedSecuritiesData(BaseRegistrationData):
-    """발행증권"""
-
-    title: Optional[str] = "발행증권"
-    kndn: Optional[str] = None # 종류
-    cnt: Optional[int] = None # 수량	예) 9,999,999,999
-    fv: Optional[int] = None # 액면가액	예) 9,999,999,999
-    slprc: Optional[int] = None # 모집(매출)가액	예) 9,999,999,999
-    slta: Optional[int] = None # 모집(매출)총액	예) 9,999,999,999
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "IssuedSecuritiesData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
-@dataclass
-class CompanyData(BaseRegistrationData):
-    """당사 회사에 관한 사항"""
-    title: Optional[str] = "당사회사에관한사항" # 제목
-    cmpnm: Optional[str] = None # 회사명
-    sen: Optional[str] = None # 구분
-    tast: Optional[int] = None # 총자산	예) 9,999,999,999
-    cpt: Optional[int] = None # 자본금	예) 9,999,999,999
-    isstk_knd: Optional[str] = None # 발행주식수(주식의종류)
-    isstk_cnt: Optional[int] = None # 발행주식수(주식수)	예) 9,999,999,999
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CompanyData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
-@dataclass
-class EquitySecuritiesData(BaseRegistrationData):
-    """지분증권"""
-    title: Optional[str] = "지분증권" # 제목
-    generals: List[GeneralData] = field(default_factory=list) # 일반사항
-    stocks: List[StockData] = field(default_factory=list) # 증권의종류
-    acquirers: List[AcquirerData] = field(default_factory=list) # 인수인 정보
-    purposes: List[FundsPurposeData] = field(default_factory=list) # 자금의 사용목적
-    shareholders: List[ShareholderData] = field(default_factory=list) # 매출인에 관한사항
-    put_back_options: List[PutBackOptionData] = field(default_factory=list) # 일반 청약자 환매청구권
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict) -> "EquitySecuritiesData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        for item in raw_data.get("group", {}):
-            title = item.get("title", "")
-            list = item.get("list", [])
-
-            if title == "일반사항":
-                generals = [GeneralData.from_raw_data(item) for item in list]
-                cls.generals = generals
-            elif title == "증권의종류":
-                stocks = [StockData.from_raw_data(item) for item in list]
-                cls.stocks = stocks
-            elif title == "인수인정보":
-                acquirers = [AcquirerData.from_raw_data(item) for item in list]
-                cls.acquirers = acquirers
-            elif title == "자금의사용목적":
-                purposes = [FundsPurposeData.from_raw_data(item) for item in list]
-                cls.purposes = purposes
-            elif title == "매출인에관한사항":
-                shareholders = [ShareholderData.from_raw_data(item) for item in list]
-                cls.shareholders = shareholders
-            elif title == "일반청약자환매청구권":
-                put_back_options = [PutBackOptionData.from_raw_data(item) for item in list]
-                cls.put_back_options = put_back_options
-        
-        return cls
-
-@dataclass
-class RegistrationStatementData(BaseRegistrationData):
-    """증권신고서"""
-    title: Optional[str] = "증권신고서"
-    generals: List[GeneralData] = field(default_factory=list) # 일반사항
-    acquirers: List[AcquirerData] = field(default_factory=list) # 인수인 정보
-    purposes: List[FundsPurposeData] = field(default_factory=list) # 자금의 사용목적
-    shareholders: List[ShareholderData] = field(default_factory=list) # 매출인에 관한사항
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict) -> "RegistrationStatementData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        for item in raw_data.get("group", {}):
-            title = item.get("title", "")
-            list = item.get("list", [])
-
-            if title == "일반사항":
-                generals = [GeneralData.from_raw_data(item) for item in list]
-                cls.generals = generals
-            elif title == "인수인정보":
-                acquirers = [AcquirerData.from_raw_data(item) for item in list]
-                cls.acquirers = acquirers
-            elif title == "자금의사용목적":
-                purposes = [FundsPurposeData.from_raw_data(item) for item in list]
-                cls.purposes = purposes
-            elif title == "매출인에관한사항":
-                shareholders = [ShareholderData.from_raw_data(item) for item in list]
-                cls.shareholders = shareholders
-        
-        return cls
-
-@dataclass
-class DepositoryReceiptData(BaseRegistrationData):
-    """증권예탁증권"""
-    title: Optional[str] = "증권예탁증권"
-    generals: List[GeneralData] = field(default_factory=list) # 일반사항
-    stocks: List[StockData] = field(default_factory=list) # 증권의종류
-    acquirers: List[AcquirerData] = field(default_factory=list) # 인수인 정보
-    purposes: List[FundsPurposeData] = field(default_factory=list) # 자금의 사용목적
-    shareholders: List[ShareholderData] = field(default_factory=list) # 매출인에 관한사항
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict) -> "DepositoryReceiptData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        for item in raw_data.get("group", {}):
-            title = item.get("title", "")
-            list = item.get("list", [])
-
-            if title == "일반사항":
-                generals = [GeneralData.from_raw_data(item) for item in list]
-                cls.generals = generals
-            elif title == "증권의종류":
-                stocks = [StockData.from_raw_data(item) for item in list]
-                cls.stocks = stocks
-            elif title == "인수인정보":
-                acquirers = [AcquirerData.from_raw_data(item) for item in list]
-                cls.acquirers = acquirers
-            elif title == "자금의사용목적":
-                purposes = [FundsPurposeData.from_raw_data(item) for item in list]
-                cls.purposes = purposes
-            elif title == "매출인에관한사항":
-                shareholders = [ShareholderData.from_raw_data(item) for item in list]
-                cls.shareholders = shareholders
-        
-        return cls
-
-@dataclass
-class CompanyMergerData(BaseRegistrationData):
-    """합병"""
-    title: Optional[str] = "합병"
-    generals: List[GeneralData] = field(default_factory=list) # 일반사항
-    issued_securities: List[IssuedSecuritiesData] = field(default_factory=list) # 발행증권
-    companies: List[CompanyData] = field(default_factory=list) # 당사 회사에 관한 사항
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict) -> "CompanyMergerData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        for item in raw_data.get("group", {}):
-            title = item.get("title", "")
-            list = item.get("list", [])
-
-            if title == "일반사항":
-                generals = [GeneralData.from_raw_data(item) for item in list]
-                cls.generals = generals
-            elif title == "발행증권":
-                issued_securities = [IssuedSecuritiesData.from_raw_data(item) for item in list]
-                cls.issued_securities = issued_securities
-            elif title == "당사회사에관한사항":
-                companies = [CompanyData.from_raw_data(item) for item in list]
-                cls.companies = companies
-        
-        return cls(generals=generals, issued_securities=issued_securities, companies=companies)
-
-@dataclass
-class ShareExchangeData(BaseRegistrationData):
-    """주식의 포괄적 교환·이전"""
-
-    title: Optional[str] = "주식의포괄적교환·이전"
-    generals: List[GeneralData] = field(default_factory=list) # 일반사항
-    issued_securities: List[IssuedSecuritiesData] = field(default_factory=list) # 발행증권
-    companies: List[CompanyData] = field(default_factory=list) # 당사 회사에 관한 사항
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict) -> "ShareExchangeData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        for item in raw_data.get("group", {}):
-            title = item.get("title", "")
-            list = item.get("list", [])
-
-            if title == "일반사항":
-                generals = [GeneralData.from_raw_data(item) for item in list]
-                cls.generals = generals
-            elif title == "발행증권":
-                issued_securities = [IssuedSecuritiesData.from_raw_data(item) for item in list]
-                cls.issued_securities = issued_securities
-            elif title == "당사회사에관한사항":
-                companies = [CompanyData.from_raw_data(item) for item in list]
-                cls.companies = companies
-        
-        return cls
-
-@dataclass
-class CompanySpinoffData(BaseRegistrationData):
-    """분할"""
-    title: Optional[str] = "분할"
-    generals: List[GeneralData] = field(default_factory=list) # 일반사항
-    issued_securities: List[IssuedSecuritiesData] = field(default_factory=list) # 발행증권
-    companies: List[CompanyData] = field(default_factory=list) # 당사 회사에 관한 사항
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict) -> "CompanySpinoffData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        for item in raw_data.get("group", []):
-            title = item.get("title", "")
-            list = item.get("list", [])
-
-
-            if title == "일반사항":
-                generals = [GeneralData.from_raw_data(item) for item in list]
-                cls.generals = generals
-            elif title == "발행증권":
-                issued_securities = [IssuedSecuritiesData.from_raw_data(item) for item in list]
-                cls.issued_securities = issued_securities
-            elif title == "당사회사에관한사항":
-                companies = [CompanyData.from_raw_data(item) for item in list]
-                cls.companies = companies
-        
-        return cls
+# =============================================================================
+# 주요사항보고서 주요정보 데이터 클래스
+# =============================================================================
 
 @dataclass
 class PutOptionData(BaseOpenDartData):
@@ -1396,10 +658,6 @@ class PutOptionData(BaseOpenDartData):
     rp_rsn: Optional[str] = None # 보고 사유
     ast_inhtrf_prc: Optional[int] = None # 자산양수ㆍ도 가액	예) 9,999,999,999
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "PutOptionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class BankruptcyData(BaseOpenDartData):
@@ -1411,10 +669,6 @@ class BankruptcyData(BaseOpenDartData):
     dfd: Optional[str] = None # 최종부도(당좌거래정지)일자
     df_rs: Optional[str] = None # 부도사유 및 경위
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BankruptcyData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class SuspensionData(BaseOpenDartData):
@@ -1436,11 +690,6 @@ class SuspensionData(BaseOpenDartData):
     od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참)	예) 9,999,999,999
     adt_a_atn: Optional[str] = None # 감사(감사위원) 참석여부
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "SuspensionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class RehabilitationData(BaseOpenDartData):
     """회생절차 개시신청"""
@@ -1451,11 +700,6 @@ class RehabilitationData(BaseOpenDartData):
     rqd: Optional[str] = None # 신청일자
     ft_ctp_sc: Optional[str] = None # 향후대책 및 일정
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "RehabilitationData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class DissolutionData(BaseOpenDartData):
     """해산사유 발생"""
@@ -1465,11 +709,6 @@ class DissolutionData(BaseOpenDartData):
     od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석)	예) 9,999,999,999
     od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참)	예) 9,999,999,999
     adt_a_atn: Optional[str] = None # 감사(감사위원) 참석 여부
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "DissolutionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class RightsIssueData(BaseOpenDartData):
@@ -1491,11 +730,6 @@ class RightsIssueData(BaseOpenDartData):
     ssl_bgd: Optional[str] = None # 공매도 시작일
     ssl_edd: Optional[str] = None # 공매도 종료일
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BonusIssueData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class BonusIssueData(BaseOpenDartData):
     """무상증자 결정"""
@@ -1515,11 +749,6 @@ class BonusIssueData(BaseOpenDartData):
     od_a_at_t: Optional[int] = None # 사외이사 참석여부(참석(명))	예) 9,999,999,999
     od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참(명))	예) 9,999,999,999
     adt_a_atn: Optional[str] = None # 감사(감사위원)참석 여부
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BonusIssueData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class IssueIncreaseData(BaseOpenDartData):
@@ -1555,11 +784,6 @@ class IssueIncreaseData(BaseOpenDartData):
     ssl_at: Optional[str] = None # 공매도 해당여부
     ssl_bgd: Optional[str] = None # 공매도 시작일
     ssl_edd: Optional[str] = None # 공매도 종료일
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BonusIssueData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class CapitalReductionData(BaseOpenDartData):
@@ -1597,11 +821,6 @@ class CapitalReductionData(BaseOpenDartData):
     adt_a_atn: Optional[str] = None # 감사(감사위원) 참석여부
     ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "IssueIncreaseData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class ManagementProcedureData(BaseOpenDartData):
     """채권은행 등의 관리절차 개시"""
@@ -1610,11 +829,6 @@ class ManagementProcedureData(BaseOpenDartData):
     mngt_pd: Optional[str] = None # 관리기간
     mngt_rs: Optional[str] = None # 관리사유
     cfd: Optional[str] = None # 확인일자
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ManagementProcedureData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class LegalProceedingsData(BaseOpenDartData):
@@ -1626,11 +840,6 @@ class LegalProceedingsData(BaseOpenDartData):
     ft_ctp: Optional[str] = None # 향후대책
     lgd: Optional[str] = None # 제기일자
     cfd: Optional[str] = None # 확인일자
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "LegalProceedingsData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class ListingDecisionData(BaseOpenDartData):
@@ -1652,11 +861,6 @@ class ListingDecisionData(BaseOpenDartData):
     od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참(명))	예) 9,999,999,999
     adt_a_atn: Optional[str] = None # 감사(감사위원)참석여부
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ListingDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class DelistingDecisionData(BaseOpenDartData):
     """해외 증권시장 주권등 상장폐지 결정"""
@@ -1671,11 +875,6 @@ class DelistingDecisionData(BaseOpenDartData):
     od_a_at_b: Optional[int] = None # 사외이사 참석여부(불참(명))	예) 9,999,999,999
     adt_a_atn: Optional[str] = None # 감사(감사위원)참석여부
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "DelistingDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class ListingData(BaseOpenDartData):
     """해외 증권시장 주권등 상장"""
@@ -1686,11 +885,6 @@ class ListingData(BaseOpenDartData):
     lstd: Optional[str] = None # 상장일자	상장일자
     cfd: Optional[str] = None # 확인일자	확인일자
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ListingData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class DelistingData(BaseOpenDartData):
     """해외 증권시장 주권등 상장폐지"""
@@ -1700,11 +894,6 @@ class DelistingData(BaseOpenDartData):
     tredd: Optional[str] = None # 매매거래종료일
     dlst_rs: Optional[str] = None # 폐지사유
     cfd: Optional[str] = None # 확인일자
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "DelistingData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class CBIssuanceDecisionData(BaseOpenDartData):
@@ -1751,11 +940,6 @@ class CBIssuanceDecisionData(BaseOpenDartData):
     ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유	제출을 면제받은 경우 그 사유
     ovis_ltdtl: Optional[str] = None # 당해 사채의 해외발행과 연계된 대차거래 내역	당해 사채의 해외발행과 연계된 대차거래 내역
     ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CBIssuanceDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class BWIssuanceDecisionData(BaseOpenDartData):
@@ -1806,11 +990,6 @@ class BWIssuanceDecisionData(BaseOpenDartData):
     ovis_ltdtl: Optional[str] = None # 당해 사채의 해외발행과 연계된 대차거래 내역
     ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BWIssuanceDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class EBIssuanceDecisionData(BaseOpenDartData):
     """교환사채권 발행결정"""
@@ -1853,10 +1032,6 @@ class EBIssuanceDecisionData(BaseOpenDartData):
     ovis_ltdtl: Optional[str] = None # 당해 사채의 해외발행과 연계된 대차거래 내역
     ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ExchangeBondIssuanceDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class CreditorBankManagementProcessSuspensionData(BaseOpenDartData):
@@ -1866,11 +1041,6 @@ class CreditorBankManagementProcessSuspensionData(BaseOpenDartData):
     sp_rs: Optional[str] = None # 중단사유
     ft_ctp: Optional[str] = None # 향후대책
     cfd: Optional[str] = None # 확인일자
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CreditorBankManagementProcessSuspensionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class CoCoBondIssuanceDecisionData(BaseOpenDartData):
@@ -1906,11 +1076,6 @@ class CoCoBondIssuanceDecisionData(BaseOpenDartData):
     ovis_ltdtl: Optional[str] = None # 당해 사채의 해외발행과 연계된 대차거래 내역
     ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CoCoBondIssuanceDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class ShareBuybackDecisionData(BaseOpenDartData):
     """자기주식 취득 결정"""
@@ -1939,11 +1104,6 @@ class ShareBuybackDecisionData(BaseOpenDartData):
     adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원)참석여부
     d1_prodlm_ostk: Optional[int] = None # 1일 매수 주문수량 한도(보통주식)	9,999,999,999
     d1_prodlm_estk: Optional[int] = None # 1일 매수 주문수량 한도(기타주식)	9,999,999,999
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ShareBuybackDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class TreasuryStockDisposalDecisionData(BaseOpenDartData):
@@ -1977,11 +1137,6 @@ class TreasuryStockDisposalDecisionData(BaseOpenDartData):
     d1_slodlm_ostk: Optional[int] = None # 1일 매도 주문수량 한도(보통주식)	9,999,999,999
     d1_slodlm_estk: Optional[int] = None # 1일 매도 주문수량 한도(기타주식)	9,999,999,999
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "TreasuryStockDisposalDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class TrustAgreementAcquisitionDecisionData(BaseOpenDartData):
     """자기주식취득 신탁계약 체결 결정"""
@@ -2004,11 +1159,6 @@ class TrustAgreementAcquisitionDecisionData(BaseOpenDartData):
     od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명))	9,999,999,999
     adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원)참석여부
     cs_iv_bk: Optional[str] = None # 위탁투자중개업자
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "TrustAgreementAcquisitionDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class TrustAgreementResolutionDecisionData(BaseOpenDartData):
@@ -2033,11 +1183,6 @@ class TrustAgreementResolutionDecisionData(BaseOpenDartData):
     od_a_at_t: Optional[int] = None # 사외이사참석여부(참석(명))	9,999,999,999
     od_a_at_b: Optional[int] = None # 사외이사참석여부(불참(명))	9,999,999,999
     adt_a_atn: Optional[str] = None # 감사(사외이사가 아닌 감사위원)참석여부
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "TrustAgreementResolutionDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class BusinessAcquisitionDecisionData(BaseOpenDartData):
@@ -2087,11 +1232,6 @@ class BusinessAcquisitionDecisionData(BaseOpenDartData):
     popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
     popt_ctr_cn: Optional[str] = None # 계약내용
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BusinessAcquisitionDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class BusinessTransferDecisionData(BaseOpenDartData):
     """영업양도 결정"""
@@ -2132,11 +1272,6 @@ class BusinessTransferDecisionData(BaseOpenDartData):
     ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
     popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
     popt_ctr_cn: Optional[str] = None # 계약내용
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "BusinessTransferDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class AssetTransferDecisionData(BaseOpenDartData):
@@ -2190,11 +1325,6 @@ class AssetTransferDecisionData(BaseOpenDartData):
     ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
     popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
     popt_ctr_cn: Optional[str] = None # 계약내용
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "AssetTransferDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class OtherShareTransferDecisionData(BaseOpenDartData):
@@ -2252,11 +1382,6 @@ class OtherShareTransferDecisionData(BaseOpenDartData):
     popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
     popt_ctr_cn: Optional[str] = None # 계약내용
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "OtherShareTransferDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class EquityLinkedBondsTransferDecisionData(BaseOpenDartData):
     """주권 관련 사채권 양수/양도 결정"""
@@ -2310,11 +1435,6 @@ class EquityLinkedBondsTransferDecisionData(BaseOpenDartData):
     ftc_stt_atn: Optional[str] = None # 공정거래위원회 신고대상 여부
     popt_ctr_atn: Optional[str] = None # 풋옵션 등 계약 체결여부
     popt_ctr_cn: Optional[str] = None # 계약내용
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "EquityLinkedBondsTransferDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class CompanyMergerDecisionData(BaseOpenDartData):
@@ -2385,11 +1505,6 @@ class CompanyMergerDecisionData(BaseOpenDartData):
     rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부
     ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CompanyMergerDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class CompanySpinoffDecisionData(BaseOpenDartData):
     """회사분할 결정"""
@@ -2438,11 +1553,6 @@ class CompanySpinoffDecisionData(BaseOpenDartData):
     popt_ctr_cn: Optional[str] = None # 계약내용
     rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부
     ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유
-
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CompanySpinoffDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
 
 @dataclass
 class CompanySpinoffMergerDecisionData(BaseOpenDartData):
@@ -2534,11 +1644,6 @@ class CompanySpinoffMergerDecisionData(BaseOpenDartData):
     rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부
     ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유
 
-    @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "CompanySpinoffMergerDecisionData":
-        """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
-
 @dataclass
 class ShareExchangeDecisionData(BaseOpenDartData):
     """주식교환·이전 결정"""
@@ -2595,7 +1700,347 @@ class ShareExchangeDecisionData(BaseOpenDartData):
     rs_sm_atn: Optional[str] = None # 증권신고서 제출대상 여부
     ex_sm_r: Optional[str] = None # 제출을 면제받은 경우 그 사유
 
+# =============================================================================
+# 증권신고서 주요정보
+# 기본 구성요소 데이터 클래스
+# =============================================================================
+
+T = TypeVar("T", bound="BaseRegistrationData")
+
+@dataclass
+class GeneralData(BaseRegistrationData):
+    """일반사항"""
+    title: str = field(default="일반사항", repr=False)
+    
+    # 채무증권 관련
+    bdnmn: Optional[str] = None          # 채무증권 명칭
+    slmth: Optional[str] = None          # 모집(매출)방법
+    fta: Optional[int] = None            # 권면(전자등록)총액
+    slta: Optional[int] = None           # 모집(매출)총액
+    isprc: Optional[int] = None          # 발행가액
+    intr: Optional[float] = None         # 이자율
+    isrr: Optional[float] = None         # 발행수익률
+    rpd: Optional[str] = None            # 상환기일
+    print_pymint: Optional[str] = None   # 원리금지급대행기관
+    mngt_cmp: Optional[str] = None       # (사채)관리회사
+    cdrt_int: Optional[str] = None       # 신용등급(신용평가기관)
+
+    # 정약 관련
+    sbd: Optional[str] = None            # 청약기일
+    pymd: Optional[str] = None           # 납입기일
+    sband: Optional[str] = None          # 청약공고일
+    asand: Optional[str] = None          # 배정공고일
+    asstd: Optional[str] = None          # 배정기준일
+
+    # 신주인수권 관련
+    exstk: Optional[str] = None          # 신주인수권에 관한 사항(행사대상증권)
+    exprc: Optional[int] = None          # 신주인수권에 관한 사항(행사가격)
+    expd: Optional[str] = None           # 신주인수권에 관한 사항(행사기간)
+    rpt_rcpn: Optional[str] = None       # 주요사항보고서(접수번호)
+
+    # 해외발행 관련
+    dpcrn: Optional[str] = None          # 표시통화
+    dpcr_amt: Optional[int] = None       # 표시통화기준발행규모
+    usarn: Optional[str] = None          # 사용지역
+    usntn: Optional[str] = None          # 사용국가
+    wnexpl_at: Optional[str] = None      # 원화 교환 예정 여부
+    udtintnm: Optional[str] = None       # 인수기관명
+
+    # 보증/담보 관련
+    grt_int: Optional[str] = None        # 보증을 받은 경우(보증기관)
+    grt_amt: Optional[int] = None        # 보증을 받은 경우(보증금액)
+    icmg_mgknd: Optional[str] = None     # 담보 제공의 경우(담보의 종류)
+    icmg_mgamt: Optional[int] = None     # 담보 제공의 경우(담보금액)
+
+    # 지분증권 연계
+    estk_exstk: Optional[str] = None     # 지분증권과 연계된 경우(행사대상증권)
+    estk_exrt: Optional[str] = None      # 지분증권과 연계된 경우(권리행사비율)
+    estk_exprc: Optional[int] = None     # 지분증권과 연계된 경우(권리행사가격)
+    estk_expd: Optional[str] = None      # 지분증권과 연계된 경우(권리행사기간)
+    rpt_rcpn: Optional[str] = None       # 주요사항보고서(접수번호)
+
+    # 파생결합사채 관련
+    drcb_uast: Optional[str] = None      # 파생결합사채(기초자산)
+    drcb_optknd: Optional[str] = None    # 파생결합사채(옵션종류)
+    drcb_mtd: Optional[str] = None       # 파생결합사채(만기일)
+
+    # 합병/분할 관련
+    stn: Optional[str] = None            # 형태
+    bddd: Optional[str] = None           # 이사회 결의일
+    ctrd: Optional[str] = None           # 계약일
+    gmtsck_shddstd: Optional[str] = None # 주주총회를 위한 주주확정일
+    ap_gmtsck: Optional[str] = None      # 승인을 위한 주주총회일
+    aprskh_pd_bgd: Optional[str] = None  # 주식매수청구권 행사 기간 및 가격(시작일)
+    aprskh_pd_edd: Optional[str] = None  # 주식매수청구권 행사 기간 및 가격(종료일)
+    aprskh_prc: Optional[str] = None     # 주식매수청구권 행사 기간 및 가격((주식매수청구가격-회사제시))
+    mgdt_etc: Optional[str] = None       # 합병기일등
+    rt_vl: Optional[str] = None          # 비율 또는 가액
+    exevl_int: Optional[str] = None      # 외부평가기관
+    grtmn_etc: Optional[str] = None      # 지급 교부금 등
+
+@dataclass
+class StockData(BaseRegistrationData):
+    """증권의 종류"""
+    title: str = field(default="증권의종류", repr=False)
+    stksen: Optional[str] = None    # 증권의종류
+    stkcnt: Optional[int] = None    # 증권수량
+    fv: Optional[int] = None        # 액면가액
+    slprc: Optional[int] = None     # 모집(매출)가액
+    slta: Optional[int] = None      # 모집(매출)총액
+    slmthn: Optional[str] = None    # 모집(매출)방법
+
+@dataclass
+class AcquirerData(BaseRegistrationData):
+    """인수인 정보"""
+    title: str = field(default="인수인정보", repr=False)
+
+    actsen: Optional[str] = None # 인수인구분
+    actnmn: Optional[str] = None # 인수인명
+    stksen: Optional[str] = None # 증권의종류
+    udtcnt: Optional[int] = None # 인수수량
+    udtamt: Optional[int] = None # 인수금액
+    udtprc: Optional[int] = None # 인수대가
+    udtmth: Optional[str] = None # 인수방법
+
+@dataclass
+class FundsPurposeData(BaseRegistrationData):
+    """자금의 사용목적"""
+    title: str = field(default="자금의사용목적", repr=False)
+
+    se: Optional[str] = None  # 구분
+    amt: Optional[int] = None # 금액
+
+@dataclass
+class ShareholderData(BaseRegistrationData):
+    """매출인에 관한사항"""
+    title: str = field(default="매출인에관한사항", repr=False)
+
+    hdr: Optional[str] = None        # 보유자
+    rl_cmp: Optional[str] = None     # 회사와의관계
+    bfsl_hdstk: Optional[int] = None # 매출전보유증권수
+    slstk: Optional[int] = None      # 매출증권수
+    atsl_hdstk: Optional[int] = None # 매출후보유증권수
+
+@dataclass
+class PutBackOptionData(BaseRegistrationData):
+    """일반 청약자 환매청구권"""
+    title: str = field(default="일반청약자환매청구권", repr=False)
+
+    grtrs: Optional[str] = None      # 부여사유
+    exavivr: Optional[str] = None    # 행사가능 투자자
+    grtcnt: Optional[int] = None     # 부여수량
+    expd: Optional[str] = None       # 행사기간
+    exprc: Optional[int] = None      # 행사가격
+
+@dataclass
+class IssuedSecuritiesData(BaseRegistrationData):
+    """발행증권"""
+    title: str = field(default="발행증권", repr=False)
+
+    kndn: Optional[str] = None      # 종류
+    cnt: Optional[int] = None       # 수량
+    fv: Optional[int] = None        # 액면가액
+    slprc: Optional[int] = None     # 모집(매출)가액
+    slta: Optional[int] = None      # 모집(매출)총액
+
+@dataclass
+class CompanyData(BaseRegistrationData):
+    """당사 회사에 관한 사항"""
+    title: str = field(default="당사회사에관한사항", repr=False)
+
+    cmpnm: Optional[str] = None      # 회사명
+    sen: Optional[str] = None        # 구분
+    tast: Optional[int] = None       # 총자산
+    cpt: Optional[int] = None        # 자본금
+    isstk_knd: Optional[str] = None  # 발행주식수(주식의종류)
+    isstk_cnt: Optional[int] = None  # 발행주식수(주식수)
+
+# =============================================================================
+# 증권신고서 주요정보
+# 복합 데이터 클래스
+# =============================================================================
+
+# 타이틀 -> 클래스 매핑
+_TITLE_TO_CLASS: Dict[str, Type[BaseRegistrationData]] = {
+    "일반사항": GeneralData,
+    "증권의종류": StockData,
+    "인수인정보": AcquirerData,
+    "자금의사용목적": FundsPurposeData,
+    "매출인에관한사항": ShareholderData,
+    "일반청약자환매청구권": PutBackOptionData,
+    "발행증권": IssuedSecuritiesData,
+    "당사회사에관한사항": CompanyData,
+}
+
+
+def _parse_group_items(
+    raw_data: Dict[str, Any],
+    field_mapping: Dict[str, str],
+) -> Dict[str, List[BaseRegistrationData]]:
+    """그룹 데이터 파싱 헬퍼
+    
+    Args:
+        raw_data: API 응답 데이터
+        field_mapping: {title: field_name} 매핑
+        
+    Returns:
+        {field_name: [DataClass instances]} 딕셔너리
+    """
+    result: Dict[str, List[BaseRegistrationData]] = {
+        field_name: [] for field_name in field_mapping.values()
+    }
+    
+    for item in raw_data.get("group", []):
+        title = item.get("title", "")
+        items = item.get("list", [])
+        
+        if title not in field_mapping:
+            continue
+            
+        field_name = field_mapping[title]
+        data_class = _TITLE_TO_CLASS.get(title)
+        
+        if data_class:
+            result[field_name] = [
+                data_class.from_raw_data(i) for i in items
+            ]
+    
+    return result
+
+@dataclass
+class EquitySecuritiesData(BaseRegistrationData):
+    """지분증권"""
+    title: str = field(default="지분증권", repr=False)
+
+    generals: List[GeneralData] = field(default_factory=list)
+    stocks: List[StockData] = field(default_factory=list)
+    acquirers: List[AcquirerData] = field(default_factory=list)
+    purposes: List[FundsPurposeData] = field(default_factory=list)
+    shareholders: List[ShareholderData] = field(default_factory=list)
+    put_back_options: List[PutBackOptionData] = field(default_factory=list)
+
     @classmethod
-    def from_raw_data(cls, raw_data: Dict[str, str]) -> "ShareExchangeDecisionData":
+    def from_raw_data(cls, raw_data: Dict[str, Any]) -> "EquitySecuritiesData":
         """딕셔너리에서 데이터 클래스 생성"""
-        return cls(**raw_data)
+        field_mapping = {
+            "일반사항": "generals",
+            "증권의종류": "stocks",
+            "인수인정보": "acquirers",
+            "자금의사용목적": "purposes",
+            "매출인에관한사항": "shareholders",
+            "일반청약자환매청구권": "put_back_options",
+        }
+        
+        parsed = _parse_group_items(raw_data, field_mapping)
+        return cls(**parsed)
+
+@dataclass
+class RegistrationStatementData(BaseRegistrationData):
+    """증권신고서"""
+    title: str = field(default="증권신고서", repr=False)
+
+    generals: List[GeneralData] = field(default_factory=list)
+    acquirers: List[AcquirerData] = field(default_factory=list)
+    purposes: List[FundsPurposeData] = field(default_factory=list)
+    shareholders: List[ShareholderData] = field(default_factory=list)
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, Any]) -> "RegistrationStatementData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        field_mapping = {
+            "일반사항": "generals",
+            "인수인정보": "acquirers",
+            "자금의사용목적": "purposes",
+            "매출인에관한사항": "shareholders",
+        }
+        
+        parsed = _parse_group_items(raw_data, field_mapping)
+        return cls(**parsed)
+
+@dataclass
+class DepositoryReceiptData(BaseRegistrationData):
+    """증권예탁증권"""
+    title: str = field(default="증권예탁증권", repr=False)
+
+    generals: List[GeneralData] = field(default_factory=list)
+    stocks: List[StockData] = field(default_factory=list)
+    acquirers: List[AcquirerData] = field(default_factory=list)
+    purposes: List[FundsPurposeData] = field(default_factory=list)
+    shareholders: List[ShareholderData] = field(default_factory=list)
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, Any]) -> "DepositoryReceiptData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        field_mapping = {
+            "일반사항": "generals",
+            "증권의종류": "stocks",
+            "인수인정보": "acquirers",
+            "자금의사용목적": "purposes",
+            "매출인에관한사항": "shareholders",
+        }
+        
+        parsed = _parse_group_items(raw_data, field_mapping)
+        return cls(**parsed)
+
+@dataclass
+class CompanyMergerData(BaseRegistrationData):
+    """합병"""
+    title: str = field(default="합병", repr=False)
+    
+    generals: List[GeneralData] = field(default_factory=list)
+    issued_securities: List[IssuedSecuritiesData] = field(default_factory=list)
+    companies: List[CompanyData] = field(default_factory=list)
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, Any]) -> "CompanyMergerData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        field_mapping = {
+            "일반사항": "generals",
+            "발행증권": "issued_securities",
+            "당사회사에관한사항": "companies",
+        }
+        
+        parsed = _parse_group_items(raw_data, field_mapping)
+        return cls(**parsed)
+
+@dataclass
+class ShareExchangeData(BaseRegistrationData):
+    """주식의 포괄적 교환·이전"""
+    title: str = field(default="주식의포괄적교환·이전", repr=False)
+
+    generals: List[GeneralData] = field(default_factory=list)
+    issued_securities: List[IssuedSecuritiesData] = field(default_factory=list)
+    companies: List[CompanyData] = field(default_factory=list)
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, Any]) -> "ShareExchangeData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        field_mapping = {
+            "일반사항": "generals",
+            "발행증권": "issued_securities",
+            "당사회사에관한사항": "companies",
+        }
+        
+        parsed = _parse_group_items(raw_data, field_mapping)
+        return cls(**parsed)
+
+@dataclass
+class CompanySpinoffData(BaseRegistrationData):
+    """분할"""
+    title: str = field(default="분할", repr=False)
+
+    generals: List[GeneralData] = field(default_factory=list) # 일반사항
+    issued_securities: List[IssuedSecuritiesData] = field(default_factory=list) # 발행증권
+    companies: List[CompanyData] = field(default_factory=list) # 당사 회사에 관한 사항
+
+    @classmethod
+    def from_raw_data(cls, raw_data: Dict[str, Any]) -> "CompanySpinoffData":
+        """딕셔너리에서 데이터 클래스 생성"""
+        field_mapping = {
+            "일반사항": "generals",
+            "발행증권": "issued_securities",
+            "당사회사에관한사항": "companies",
+        }
+        
+        parsed = _parse_group_items(raw_data, field_mapping)
+        return cls(**parsed)

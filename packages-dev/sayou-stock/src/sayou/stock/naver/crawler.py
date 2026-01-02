@@ -15,7 +15,6 @@
 import logging
 
 from .client import NaverClient
-#from .models import DartConfig
 
 from .parsers import (
     NaverNewsParser,

@@ -22,7 +22,6 @@ import time
 from typing import Dict, List, Optional, Tuple
 
 from .client import OpenDartClient
-from .models import DartConfig
 from .utils import (
     duplicate_keys,
     DISCLOSURE_COLUMNS,
