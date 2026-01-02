@@ -23,12 +23,12 @@ from urllib.parse import unquote
 from ..client import OpenDartClient
 from ..models import (
     OpenDartRequest,
-    RegistrationEquitySecuritiesData,
+    EquitySecuritiesData,
     RegistrationStatementData,
-    RegistrationDepositoryReceiptData,
-    RegistrationMergedData,
-    RegistrationShareExchangeData,
-    RegistrationSplitData,
+    DepositoryReceiptData,
+    CompanyMergerData,
+    ShareExchangeData,
+    CompanySpinoffData,
 )
 from ..utils import (
     decode_euc_kr,
@@ -42,7 +42,7 @@ from ..utils import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class DartRegistrationParser:
+class OpenDartRegistrationParser:
     """
     OpenDART 증권신고서 주요정보 API 파싱 클래스
     
@@ -91,17 +91,17 @@ class DartRegistrationParser:
         
         print(f"api_key: {api_key}")
         if api_key == "지분증권":
-            return RegistrationEquitySecuritiesData.from_raw_data(json_data)
+            return EquitySecuritiesData.from_raw_data(json_data)
         elif api_key == "채무증권":
             return RegistrationStatementData.from_raw_data(json_data)
         elif api_key == "증권예탁증권":
-            return RegistrationDepositoryReceiptData.from_raw_data(json_data)
+            return DepositoryReceiptData.from_raw_data(json_data)
         elif api_key == "합병":
-            return RegistrationMergedData.from_raw_data(json_data)
+            return CompanyMergerData.from_raw_data(json_data)
         elif api_key == "주식의포괄적교환·이전":
-            return RegistrationShareExchangeData.from_raw_data(json_data)
+            return ShareExchangeData.from_raw_data(json_data)
         elif api_key == "분할":
-            return RegistrationSplitData.from_raw_data(json_data)
+            return CompanySpinoffData.from_raw_data(json_data)
         
         return None
 

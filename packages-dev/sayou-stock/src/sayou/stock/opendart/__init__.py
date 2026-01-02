@@ -127,22 +127,22 @@ from .models import (
     InsiderOwnershipData,
     # 주요사항보고서 주요정보
     # 증권신고서 주요정보
-    RegistrationEquitySecuritiesData,
+    EquitySecuritiesData,
     RegistrationStatementData,
-    RegistrationDepositoryReceiptData,
-    RegistrationMergedData,
-    RegistrationShareExchangeData,
-    RegistrationSplitData,
+    DepositoryReceiptData,
+    CompanyMergerData,
+    ShareExchangeData,
+    CompanySpinoffData,
 )
 from .parsers import (
-    DartDisclosureParser,
-    DartDocumentParser,
-    DartDocumentViewer,
-    DartFinanceParser,
-    DartMaterialFactsParser,
-    DartOwnershipParser,
-    DartRegistrationParser,
-    DartReportsParser,
+    OpenDartDisclosureParser,
+    OpenDartDocumentParser,
+    OpenDartDocumentViewer,
+    OpenDartFinanceParser,
+    OpenDartMaterialFactsParser,
+    OpenDartOwnershipParser,
+    OpenDartRegistrationParser,
+    OpenDartReportsParser,
 )
 
 __all__ = [
@@ -154,12 +154,12 @@ __all__ = [
     "DartConfig",
     
     # 파서
-    "DartDisclosureParser",
-    "DartDocumentParser",
-    "DartDocumentViewer",
-    "DartFinanceParser",
-    "DartMaterialFactsParser",
-    "DartOwnershipParser",
-    "DartRegistrationParser",
-    "DartReportsParser",
+    "OpenDartDisclosureParser",
+    "OpenDartDocumentParser",
+    "OpenDartDocumentViewer",
+    "OpenDartFinanceParser",
+    "OpenDartMaterialFactsParser",
+    "OpenDartOwnershipParser",
+    "OpenDartRegistrationParser",
+    "OpenDartReportsParser",
 ]

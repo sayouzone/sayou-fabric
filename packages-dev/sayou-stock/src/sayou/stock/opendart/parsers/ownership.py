@@ -32,7 +32,7 @@ from ..utils import (
     OWNERSHIP_COLUMNS
 )
 
-class DartOwnershipParser:
+class OpenDartOwnershipParser:
     """
     OpenDART 지분공시 종합정보 API 파싱 클래스
     

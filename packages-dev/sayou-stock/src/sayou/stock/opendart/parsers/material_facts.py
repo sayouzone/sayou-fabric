@@ -63,7 +63,7 @@ from ..utils import (
     MATERIAL_FACTS_COLUMNS
 )
 
-class DartMaterialFactsParser:
+class OpenDartMaterialFactsParser:
     """
     OpenDART 주요사항보고서 주요정보 API 파싱 클래스
     

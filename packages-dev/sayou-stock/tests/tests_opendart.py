@@ -966,8 +966,8 @@ def main(code: str):
     demo_corp_code(crawler, code)
     demo_base_documents(crawler, code)
     rcept_no = demo_finance(crawler, corp_code)
-    # 00126380      삼성전자     005930        Y                  반기보고서 (2025.06)  20250814003156              삼성전자  20250814  
-    #rcept_no="20251114002447"
+    # 00126380 삼성전자 005930 반기보고서 (2025.06) 20250814003156 20250814
+    rcept_no = rcept_no or "20251114002447"
     demo_download_xbrl(crawler, rcept_no=rcept_no)
     demo_reports(crawler, corp_code)
     demo_ownership(crawler, corp_code)

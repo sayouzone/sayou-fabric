@@ -16,22 +16,22 @@
 DART 파서 모듈
 """
 
-from .disclosure import DartDisclosureParser
-from .document import DartDocumentParser
-from .document_viewer import DartDocumentViewer
-from .finance import DartFinanceParser
-from .material_facts import DartMaterialFactsParser
-from .ownership import DartOwnershipParser
-from .registration import DartRegistrationParser
-from .reports import DartReportsParser
+from .disclosure import OpenDartDisclosureParser
+from .document import OpenDartDocumentParser
+from .document_viewer import OpenDartDocumentViewer
+from .finance import OpenDartFinanceParser
+from .material_facts import OpenDartMaterialFactsParser
+from .ownership import OpenDartOwnershipParser
+from .registration import OpenDartRegistrationParser
+from .reports import OpenDartReportsParser
 
 __all__ = [
-    "DartDisclosureParser",
-    "DartDocumentParser",
-    "DartDocumentViewer",
-    "DartFinanceParser",
-    "DartMaterialFactsParser",
-    "DartOwnershipParser",
-    "DartRegistrationParser",
-    "DartReportsParser",
+    "OpenDartDisclosureParser",
+    "OpenDartDocumentParser",
+    "OpenDartDocumentViewer",
+    "OpenDartFinanceParser",
+    "OpenDartMaterialFactsParser",
+    "OpenDartOwnershipParser",
+    "OpenDartRegistrationParser",
+    "OpenDartReportsParser",
 ]

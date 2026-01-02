@@ -42,7 +42,7 @@ from ..utils import (
     save_unzip,
 )
 
-class DartFinanceParser:
+class OpenDartFinanceParser:
     """
     OpenDART 정기보고서 재무정보 API 파싱 클래스
     

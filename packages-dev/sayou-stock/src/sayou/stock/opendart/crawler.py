@@ -34,14 +34,14 @@ from .utils import (
 )
 
 from .parsers import (
-    DartDocumentParser,
-    DartDocumentViewer,
-    DartDisclosureParser,
-    DartFinanceParser,
-    DartMaterialFactsParser,
-    DartOwnershipParser,
-    DartRegistrationParser,
-    DartReportsParser,
+    OpenDartDocumentParser,
+    OpenDartDocumentViewer,
+    OpenDartDisclosureParser,
+    OpenDartFinanceParser,
+    OpenDartMaterialFactsParser,
+    OpenDartOwnershipParser,
+    OpenDartRegistrationParser,
+    OpenDartReportsParser,
 )
 
 class OpenDartCrawler:
@@ -71,14 +71,14 @@ class OpenDartCrawler:
         self.client = OpenDartClient(self.api_key)
 
         # 파서 초기화
-        self._document_parser = DartDocumentParser(self.client)
-        self._document_viewer = DartDocumentViewer(self.client)
-        self._disclosure_parser = DartDisclosureParser(self.client)
-        self._finance_parser = DartFinanceParser(self.client)
-        self._material_facts_parser = DartMaterialFactsParser(self.client)
-        self._ownership_parser = DartOwnershipParser(self.client)
-        self._registration_parser = DartRegistrationParser(self.client)
-        self._reports_parser = DartReportsParser(self.client)
+        self._document_parser = OpenDartDocumentParser(self.client)
+        self._document_viewer = OpenDartDocumentViewer(self.client)
+        self._disclosure_parser = OpenDartDisclosureParser(self.client)
+        self._finance_parser = OpenDartFinanceParser(self.client)
+        self._material_facts_parser = OpenDartMaterialFactsParser(self.client)
+        self._ownership_parser = OpenDartOwnershipParser(self.client)
+        self._registration_parser = OpenDartRegistrationParser(self.client)
+        self._reports_parser = OpenDartReportsParser(self.client)
         self._corp_data : Optional[list] = None
 
         if os.path.exists(corpcode_filename):

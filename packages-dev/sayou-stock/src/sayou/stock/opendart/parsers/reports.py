@@ -43,7 +43,7 @@ from ..utils import (
     REPORTS_COLUMNS
 )
 
-class DartReportsParser:
+class OpenDartReportsParser:
     """
     OpenDART 정기보고서 주요정보 API 파싱 클래스
     
