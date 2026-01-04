@@ -17,10 +17,19 @@ import zipfile
 import re
 import pandas as pd
 from datetime import datetime
+from typing import Dict, Any, List, Tuple, Optional
 from urllib.parse import unquote
 
 from ..client import OpenDartClient
-
+from ..models import (
+    OpenDartRequest,
+    SingleCompanyMainAccountsData,
+    MultiCompanyMainAccountsData,
+    XBRLTaxonomyFinancialStatementsData,
+    ConsolidatedFinancialStatementsData,
+    SingleCompanyKeyFinancialMetricsData,
+    MultiCompanyKeyFinancialMetricsData,
+)
 from ..utils import (
     decode_euc_kr,
     FINANCE_URLS,
@@ -33,7 +42,7 @@ from ..utils import (
     save_unzip,
 )
 
-class DartFinanceParser:
+class OpenDartFinanceParser:
     """
     OpenDART 정기보고서 재무정보 API 파싱 클래스
     
@@ -75,8 +84,11 @@ class DartFinanceParser:
         self.client = client
 
     def finance(self, 
-        corp_code: str, year: int, quarter: int = 4, 
-        api_type: str = "단일회사 전체 재무제표", indicator_code: str="M210000"):
+        corp_code: str, 
+        year: int, 
+        quarter: int = 4, 
+        api_type: str = "단일회사 전체 재무제표", 
+        indicator_code: str="M210000") -> List[Any]:
         """
         OpenDart 정기보고서 재무정보
         corp_code으로만 조회가 가능, stock_code 및 기업명으로는 조회되지 않는다.
@@ -136,26 +148,28 @@ class DartFinanceParser:
         #corp_code,bsns_year,stacnt_code,idx_cl_code
         report_code = quarters.get(str(quarter), "4") 
 
-        params = {
-            "crtfc_key": self.client.api_key,
-            "corp_code": corp_code,
-            "bsns_year": year,
-            "reprt_code": report_code,
-        }
+        request = OpenDartRequest(
+            crtfc_key=self.client.api_key,
+            corp_code=corp_code,
+            bsns_year=year,
+            reprt_code=report_code,
+        )
 
         if api_type == "단일회사 전체 재무제표":
-            params["fs_div"] = "OFS" # OFS:재무제표, CFS:연결재무제표
+            #params["fs_div"] = "OFS" # OFS:재무제표, CFS:연결재무제표
+            request.fs_div = "OFS" # OFS:재무제표, CFS:연결재무제표
         elif api_type == "XBRL택사노미재무제표양식":
-            params["sj_div"] = "BS1" # ※재무제표구분 참조
+            #params["sj_div"] = "BS1" # ※재무제표구분 참조
+            request.sj_div = "BS1" # ※재무제표구분 참조
         elif api_type == "단일회사 주요 재무지표" or \
              api_type == "다중회사 주요 재무지표":
-            params["idx_cl_code"] = indicator_code # 수익성지표 : M210000 안정성지표 : M220000 성장성지표 : M230000 활동성지표 : M240000
+            request.idx_cl_code = indicator_code # 수익성지표 : M210000 안정성지표 : M220000 성장성지표 : M230000 활동성지표 : M240000
 
         # 기능 선택 방식에 대해서 고민 중
         url = FINANCE_URLS.get(api_type, "")
 
-        print(f"URL: {url}, params: {params}")
-        response = self.client._get(url, params=params)
+        print(f"URL: {url}, params: {request.to_params()}")
+        response = self.client._get(url, params=request.to_params())
         
         json_data = response.json()
         #print(json_data)
@@ -165,13 +179,30 @@ class DartFinanceParser:
         # 에러 체크
         if status != "000":
             print(f"Error: {json_data.get('message')}")
-            return {}
+            return []
 
         self.corp_code = json_data.get("corp_code")
         self.corp_name = json_data.get("corp_name")
         self.stock_code = json_data.get("stock_code")
 
-        return json_data
+        del json_data["status"]
+        del json_data["message"]
+        
+        data_list = json_data.get("list", [])
+        if api_type == "단일회사 주요계정":
+            return [SingleCompanyMainAccountsData(**data) for data in data_list]
+        elif api_type == "다중회사 주요계정":
+            return [MultiCompanyMainAccountsData(**data) for data in data_list]
+        elif api_type == "단일회사 전체 재무제표":
+            return [ConsolidatedFinancialStatementsData(**data) for data in data_list]
+        elif api_type == "XBRL택사노미재무제표양식":
+            return [XBRLTaxonomyFinancialStatementsData(**data) for data in data_list]
+        elif api_type == "단일회사 주요 재무지표":
+            return [SingleCompanyKeyFinancialMetricsData(**data) for data in data_list]
+        elif api_type == "다중회사 주요 재무지표":
+            return [MultiCompanyKeyFinancialMetricsData(**data) for data in data_list]
+
+        return []
 
     def finance_file(self, rcept_no, quarter: int = 4, save_path: str | None = None):
         """

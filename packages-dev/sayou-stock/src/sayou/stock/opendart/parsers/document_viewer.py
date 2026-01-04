@@ -26,7 +26,7 @@ from ..utils import (
     VIEWER_URL
 )
 
-class DartDocumentViewer:
+class OpenDartDocumentViewer:
     """DART 문서 뷰어 클래스"""
 
     def __init__(self, client: OpenDartClient):

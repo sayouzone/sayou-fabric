@@ -19,7 +19,6 @@ OpenDart API 클라이언트
 import requests
 import time
 
-from .models import DartConfig
 from .utils import API_URL
 
 class OpenDartClient:
