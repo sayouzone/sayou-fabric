@@ -7,6 +7,7 @@ from urllib.parse import unquote
 
 from ..client import OpenDartClient
 from ..models import (
+    ReportStatus,
     OpenDartRequest,
     StockIssuanceData,
     DividendsData,
@@ -40,7 +41,8 @@ from ..utils import (
     decode_euc_kr,
     REPORTS_URLS,
     quarters,
-    REPORTS_COLUMNS
+    REPORT_ITEMS,
+    REPORTS_COLUMNS,
 )
 
 class OpenDartReportsParser:
@@ -54,11 +56,11 @@ class OpenDartReportsParser:
     def __init__(self, client: OpenDartClient):
         self.client = client
 
-    def fetch(self, corp_code: str, year: str, quarter: int, api_no: int = -1, api_type: str = None):
-        url = None
+    def fetch(self, corp_code: str, year: str, quarter: int, api_no: int | ReportStatus = ReportStatus.STOCK_ISSUANCE):
+        if isinstance(api_no, int):
+            api_no = ReportStatus(api_no)
 
-        api_key = list(REPORTS_URLS.keys())[api_no] if api_no > -1 else api_type        
-        url = REPORTS_URLS.get(api_key)
+        url = ReportStatus.url_by_code(api_no.value)
 
         if not url:
             return
@@ -91,63 +93,63 @@ class OpenDartReportsParser:
         del json_data["status"]
         del json_data["message"]
         
-        print(f"api_key: {api_key}")
+        print(f"api_type: {api_no.display_name}")
         data_list = json_data.get("list", [])
-        if api_key == "증자(감자) 현황":
+        if api_no == ReportStatus.STOCK_ISSUANCE:
             return [StockIssuanceData(**data) for data in data_list]
-        elif api_key == "배당에 관한 사항":
+        elif api_no == ReportStatus.DIVIDENDS:
             return [DividendsData(**data) for data in data_list]
-        elif api_key == "자기주식 취득 및 처분 현황":
+        elif api_no == ReportStatus.TREASURY_STOCK:
             return [TreasuryStockData(**data) for data in data_list]
-        elif api_key == "최대주주 현황":
+        elif api_no == ReportStatus.MAJOR_SHAREHOLDER:
             return [MajorShareholderData(**data) for data in data_list]
-        elif api_key == "최대주주 변동현황":
+        elif api_no == ReportStatus.MAJOR_SHAREHOLDER_CHANGE:
             return [MajorShareholderChangeData(**data) for data in data_list]
-        elif api_key == "소액주주 현황":
+        elif api_no == ReportStatus.MINOR_SHAREHOLDER:
             return [MinorShareholderData(**data) for data in data_list]
-        elif api_key == "임원 현황":
+        elif api_no == ReportStatus.EXECUTIVE:
             return [ExecutiveData(**data) for data in data_list]
-        elif api_key == "직원 현황":
+        elif api_no == ReportStatus.EMPLOYEE:
             return [EmployeeData(**data) for data in data_list]
-        elif api_key == "이사·감사의 개인별 보수현황(5억원 이상)":
+        elif api_no == ReportStatus.DIRECTOR_COMPENSATION:
             return [DirectorCompensationData(**data) for data in data_list]
-        elif api_key == "이사·감사 전체의 보수현황(보수지급금액 - 이사·감사 전체)":
+        elif api_no == ReportStatus.TOTAL_DIRECTOR_COMPENSATION:
             return [TotalDirectorCompensationData(**data) for data in data_list]
-        elif api_key == "개인별 보수지급 금액(5억이상 상위5인)":
+        elif api_no == ReportStatus.TOP5_DIRECTOR_COMPENSATION:
             return [DirectorCompensationData(**data) for data in data_list]
-        elif api_key == "타법인 출자현황":
+        elif api_no == ReportStatus.INTERCORPORATE_INVESTMENT:
             return [IntercorporateInvestmentData(**data) for data in data_list]
-        elif api_key == "주식의 총수 현황":
+        elif api_no == ReportStatus.OUTSTANDING_SHARES:
             return [OutstandingSharesData(**data) for data in data_list]
-        elif api_key == "채무증권 발행실적":
+        elif api_no == ReportStatus.DEBT_SECURITIES_ISSUANCE:
             return [DebtSecuritiesIssuanceData(**data) for data in data_list]
-        elif api_key == "기업어음증권 미상환 잔액":
+        elif api_no == ReportStatus.CP_OUTSTANDING:
             return [CPOutstandingData(**data) for data in data_list]
-        elif api_key == "단기사채 미상환 잔액":
+        elif api_no == ReportStatus.SHORT_TERM_BONDS_OUTSTANDING:
             return [ShortTermBondsOutstandingData(**data) for data in data_list]
-        elif api_key == "회사채 미상환 잔액 ":
+        elif api_no == ReportStatus.CORPORATE_BONDS_OUTSTANDING:
             return [CorporateBondsOutstandingData(**data) for data in data_list]
-        elif api_key == "신종자본증권 미상환 잔액":
+        elif api_no == ReportStatus.HYBRID_SECURITIES_OUTSTANDING:
             return [HybridSecuritiesOutstandingData(**data) for data in data_list]
-        elif api_key == "조건부 자본증권 미상환 잔액":
+        elif api_no == ReportStatus.COCO_BONDS_OUTSTANDING:
             return [CoCoBondsOutstandingData(**data) for data in data_list]
-        elif api_key == "회계감사인의 명칭 및 감사의견":
+        elif api_no == ReportStatus.AUDIT_OPINIONS:
             return [AuditOpinionsData(**data) for data in data_list]
-        elif api_key == "감사용역체결현황":
+        elif api_no == ReportStatus.AUDIT_SERVICE_CONTRACTS:
             return [AuditServiceContractsData(**data) for data in data_list]
-        elif api_key == "회계감사인과의 비감사용역 계약체결 현황":
+        elif api_no == ReportStatus.NON_AUDIT_SERVICE_CONTRACTS:
             return [NonAuditServiceContractsData(**data) for data in data_list]
-        elif api_key == "사외이사 및 그 변동현황":
+        elif api_no == ReportStatus.OUTSIDE_DIRECTOR_CHANGES:
             return [OutsideDirectorChangesData(**data) for data in data_list]
-        elif api_key == "미등기임원 보수현황":
+        elif api_no == ReportStatus.UNREGISTERED_EXECUTIVE_COMPENSATION:
             return [UnregisteredExecutiveCompensationData(**data) for data in data_list]
-        elif api_key == "이사·감사 전체의 보수현황(주주총회 승인금액)":
+        elif api_no == ReportStatus.APPROVED_DIRECTOR_COMPENSATION:
             return [ApprovedDirectorCompensationData(**data) for data in data_list]
-        elif api_key == "이사·감사 전체의 보수현황(보수지급금액 - 유형별)":
+        elif api_no == ReportStatus.COMPENSATION_CATEGORY:
             return [CompensationCategoryData(**data) for data in data_list]
-        elif api_key == "공모자금의 사용내역":
+        elif api_no == ReportStatus.PROCEEDS_USE:
             return [ProceedsUseData(**data) for data in data_list]
-        elif api_key == "사모자금의 사용내역":
+        elif api_no == ReportStatus.PRIVATE_EQUITY_FUNDS_USE:
             return [PrivateEquityFundsUseData(**data) for data in data_list]
 
         return []

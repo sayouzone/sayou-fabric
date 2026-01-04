@@ -22,6 +22,14 @@ import time
 from typing import Dict, List, Optional, Tuple
 
 from .client import OpenDartClient
+from .models import (
+    IndexClassCode,
+    ReportStatus,
+    FinanceStatus,
+    OwnershipStatus,
+    MaterialFactStatus,
+    RegistrationStatus,
+)
 from .utils import (
     duplicate_keys,
     DISCLOSURE_COLUMNS,
@@ -162,28 +170,196 @@ class OpenDartCrawler:
         return stock_code
 
     def reports(self, corp_code: str, year: str, quarter: int, api_no: int = -1, api_type: str = None):
-        return self._reports_parser.fetch(corp_code, year, quarter, api_no, api_type)
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no)
+
+    def stock_inssuance(self, corp_code: str, year: str, quarter: int):
+        """증자(감자) 현황"""
+        api_no = ReportStatus.STOCK_ISSUANCE
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no)
+
+    def dividends(self, corp_code: str, year: str, quarter: int):
+        """배당에 관한 사항"""
+        api_no = ReportStatus.DIVIDENDS
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no)
+
+    def treasury_stock(self, corp_code: str, year: str, quarter: int):
+        """자기주식 취득 및 처분 현황"""
+        api_no = ReportStatus.TREASURY_STOCK
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no)
+
+    def major_stock_holders(self, corp_code: str, year: str, quarter: int):
+        """최대주주 현황"""
+        api_no = ReportStatus.MAJOR_STOCK_HOLDERS
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no)
+
+    def major_stock_holders_change(self, corp_code: str, year: str, quarter: int):
+        """최대주주 변동현황"""
+        api_no = ReportStatus.MAJOR_STOCK_HOLDERS_CHANGE
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no)
+
+    def minor_stock_holders(self, corp_code: str, year: str, quarter: int):
+        """소액주주 현황"""
+        api_no = ReportStatus.MINOR_STOCK_HOLDERS
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no)
+
+    def executives(self, corp_code: str, year: str, quarter: int):
+        """임원 현황"""
+        api_no = ReportStatus.EXECUTIVES
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no)
+
+    def employees(self, corp_code: str, year: str, quarter: int):
+        """직원 현황"""
+        api_no = ReportStatus.EMPLOYEES
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no)
+
+    def director_compensation(self, corp_code: str, year: str, quarter: int):
+        """이사·감사의 개인별 보수현황(5억원 이상)"""
+        api_no = ReportStatus.DIRECTOR_COMPENSATION
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no)
+
+    def total_director_compensation(self, corp_code: str, year: str, quarter: int):
+        """이사·감사 전체의 보수현황(보수지급금액 - 이사·감사 전체)"""
+        api_no = ReportStatus.TOTAL_DIRECTOR_COMPENSATION
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def top5_director_compensation(self, corp_code: str, year: str, quarter: int):
+        """개인별 보수지급 금액(5억이상 상위5인)"""
+        api_no = ReportStatus.TOP5_DIRECTOR_COMPENSATION
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def intercorporate_investment(self, corp_code: str, year: str, quarter: int):
+        """타법인 출자현황"""
+        api_no = ReportStatus.INTERCORPORATE_INVESTMENT
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def outstanding_shares(self, corp_code: str, year: str, quarter: int):
+        """주식의 총수 현황"""
+        api_no = ReportStatus.OUTSTANDING_SHARES
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def debt_securities_issuance(self, corp_code: str, year: str, quarter: int):
+        """채무증권 발행실적"""
+        api_no = ReportStatus.DEBT_SECURITIES_ISSUANCE
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def cp_outstanding(self, corp_code: str, year: str, quarter: int):
+        """기업어음증권 미상환 잔액"""
+        api_no = ReportStatus.CP_OUTSTANDING
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def short_term_bonds_outstanding(self, corp_code: str, year: str, quarter: int):
+        """단기사채 미상환 잔액"""
+        api_no = ReportStatus.SHORT_TERM_BONDS_OUTSTANDING
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def corporate_bonds_outstanding(self, corp_code: str, year: str, quarter: int):
+        """회사채 미상환 잔액"""
+        api_no = ReportStatus.CORPORATE_BONDS_OUTSTANDING
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def hybrid_securities_outstanding(self, corp_code: str, year: str, quarter: int):
+        """신종자본증권 미상환 잔액"""
+        api_no = ReportStatus.HYBRID_SECURITIES_OUTSTANDING
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def coca_bonds_outstanding(self, corp_code: str, year: str, quarter: int):
+        """조건부 자본증권 미상환 잔액"""
+        api_no = ReportStatus.COCO_BONDS_OUTSTANDING
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def audit_opinions(self, corp_code: str, year: str, quarter: int):
+        """회계감사인의 명칭 및 감사의견"""
+        api_no = ReportStatus.AUDIT_OPINIONS
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def audit_service_contracts(self, corp_code: str, year: str, quarter: int):
+        """감사용역체결현황"""
+        api_no = ReportStatus.AUDIT_SERVICE_CONTRACTS
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def non_audit_service_contracts(self, corp_code: str, year: str, quarter: int):
+        """회계감사인과의 비감사용역 계약체결 현황"""
+        api_no = ReportStatus.NON_AUDIT_SERVICE_CONTRACTS
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def outside_director_changes(self, corp_code: str, year: str, quarter: int):
+        """사외이사 및 그 변동현황"""
+        api_no = ReportStatus.OUTSIDE_DIRECTOR_CHANGES
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def unregistered_executive_compensation(self, corp_code: str, year: str, quarter: int):
+        """미등기임원 보수현황"""
+        api_no = ReportStatus.UNREGISTERED_EXECUTIVE_COMPENSATION
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def approved_director_compensation(self, corp_code: str, year: str, quarter: int):
+        """이사·감사 전체의 보수현황(주주총회 승인금액)"""
+        api_no = ReportStatus.APPROVED_DIRECTOR_COMPENSATION
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def compensation_category(self, corp_code: str, year: str, quarter: int):
+        """이사·감사 전체의 보수현황(보수지급금액 - 유형별)"""
+        api_no = ReportStatus.COMPENSATION_CATEGORY
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def proceeds_use(self, corp_code: str, year: str, quarter: int):
+        """공모자금의 사용내역"""
+        api_no = ReportStatus.PROCEEDS_USE
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
+
+    def private_equity_funds_use(self, corp_code: str, year: str, quarter: int):
+        """사모자금의 사용내역"""
+        api_no = ReportStatus.PRIVATE_EQUITY_FUNDS_USE
+        return self._reports_parser.fetch(corp_code, year, quarter, api_no=api_no)
 
     def ownership(self, corp_code: str, api_no: int = -1, api_type: str = None):
-        return self._ownership_parser.fetch(corp_code, api_no, api_type)
+        return self._ownership_parser.fetch(corp_code, api_no)
 
-    def material_facts(self, corp_code: str, start_date: str, end_date: str, api_no: int = -1, api_type: str = None):
-        return self._material_facts_parser.fetch(corp_code, start_date, end_date, api_no, api_type)
+    def major_ownership(self, corp_code: str):
+        """대량보유 상황보고"""
+        api_no = OwnershipStatus.MAJOR_OWNERSHIP
+        return self._ownership_parser.fetch(corp_code, api_no=api_no)
 
-    def registration(self, corp_code: str, start_date: str, end_date: str, api_no: int = -1, api_type: str = None):
-        return self._registration_parser.fetch(corp_code, start_date, end_date, api_no, api_type)
+    def insider_ownership(self, corp_code: str):
+        """임원ㆍ주요주주 소유보고"""
+        api_no = OwnershipStatus.INSIDER_OWNERSHIP
+        return self._ownership_parser.fetch(corp_code, api_no=api_no)
 
-    def merge(self, corp_code: str, start_date: str, end_date: str):
+    def material_facts(self, corp_code: str, start_date: str, end_date: str, api_no: int = -1):
+        return self._material_facts_parser.fetch(corp_code, start_date, end_date, api_no)
+
+    def registration(self, corp_code: str, start_date: str, end_date: str, api_no: int = -1):
+        return self._registration_parser.fetch(corp_code, start_date, end_date, api_no)
+
+    def equity_share(self, corp_code: str, start_date: str, end_date: str):
+        """OpenDart 지분증권 현황"""
+        api_no = RegistrationStatus.EQUITY_SHARE
+        return self._registration_parser.fetch(corp_code, start_date, end_date, api_no)
+
+    def debt_share(self, corp_code: str, start_date: str, end_date: str):
+        """OpenDart 채권증권 현황"""
+        api_no = RegistrationStatus.DEBT_SHARE
+        return self._registration_parser.fetch(corp_code, start_date, end_date, api_no)
+
+    def depository_receipt(self, corp_code: str, start_date: str, end_date: str):
         """OpenDart 합병 현황"""
-        api_no = 3
-        api_type = "합병"
-        return self._registration_parser.fetch(corp_code, start_date, end_date, api_type=api_type)
+        api_no = RegistrationStatus.DEPREPOSITORY_RECEIPT
+        return self._registration_parser.fetch(corp_code, start_date, end_date, api_no)
 
-    def split(self, corp_code: str, start_date: str, end_date: str):
+    def company_merger(self, corp_code: str, start_date: str, end_date: str):
+        """OpenDart 합병 현황"""
+        api_no = RegistrationStatus.COMPANY_MERGER
+        return self._registration_parser.fetch(corp_code, start_date, end_date, api_no)
+
+    def share_exchange(self, corp_code: str, start_date: str, end_date: str):
+        """OpenDart 주식의포괄적교환·이전 현황"""
+        api_no = RegistrationStatus.SHARE_EXCHANGE
+        return self._registration_parser.fetch(corp_code, start_date, end_date, api_no)
+
+    def company_spinoff(self, corp_code: str, start_date: str, end_date: str):
         """OpenDart 분할 현황"""
-        api_no = 5
-        api_type = "분할"
-        return self._registration_parser.fetch(corp_code, start_date, end_date, api_type=api_type)
+        api_no = RegistrationStatus.COMPANY_SPINOFF
+        return self._registration_parser.fetch(corp_code, start_date, end_date, api_no)
 
     def _fetch_stock_code_by_name(self, company: str, limit: int = 10, flags: int = re.IGNORECASE) -> str:
         print(f"Searching for corp_code by name: {company}")
@@ -361,13 +537,46 @@ class OpenDartCrawler:
         단일회사 주요 재무지표
         다중회사 주요 재무지표
         """
-        return self._finance_parser.finance(code, year, quarter, api_type=api_type, indicator_code=indicator_code)
+        api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
+        return self._finance_parser.finance(code, year, quarter, api_no=api_no, indicator_code=indicator_code)
 
     def finance_file(self, rcept_no, quarter: int = 4, save_path: str | None = None):
         """
         OpenDart 정기보고서 재무정보 - 재무제표 원본파일(XBRL)
         """
         return self._finance_parser.finance_file(rcept_no, quarter, save_path=save_path)
+
+    def single_company_main_accounts(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 단일회사 주요계정"""
+        api_no = FinanceStatus.SINGLE_COMPANY_MAIN_ACCOUNTS
+        return self._finance_parser.finance(corp_code, year, quarter, api_no=api_no)
+
+    def multi_company_main_accounts(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 다중회사 주요계정"""
+        api_no = FinanceStatus.MULTI_COMPANY_MAIN_ACCOUNTS
+        return self._finance_parser.finance(corp_code, year, quarter, api_no=api_no)
+
+    def single_company_financial_statement(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 단일회사 전체 재무제표"""
+        api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
+        return self._finance_parser.finance(corp_code, year, quarter, api_no=api_no, financial_statement="OFS")
+
+    def xbrl_taxonomy_financial_statement(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - XBRL택사노미재무제표양식"""
+        api_no = FinanceStatus.XBRL_TAXONOMY_FINANCIAL_STATEMENT
+        return self._finance_parser.finance(corp_code, year, quarter, api_no=api_no, financial_statement_type="BS1")
+
+    def single_company_financial_indicator(self, corp_code: str, year: str, quarter: int, indicator_code: str = IndexClassCode.PROFITABILITY):
+        """OpenDart 정기보고서 재무정보 - 단일회사 주요 재무지표"""
+        api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_INDICATOR
+        #indicator_code = IndexClassCode.PROFITABILITY.value
+        return self._finance_parser.finance(corp_code, year, quarter, api_no=api_no, indicator_code=indicator_code)
+
+    def multi_company_financial_indicator(self, corp_code: str, year: str, quarter: int, indicator_code: str = IndexClassCode.PROFITABILITY):
+        """OpenDart 정기보고서 재무정보 - 다중회사 주요 재무지표"""
+        api_no = FinanceStatus.MULTI_COMPANY_FINANCIAL_INDICATOR
+        #indicator_code = IndexClassCode.PROFITABILITY.value
+        return self._finance_parser.finance(corp_code, year, quarter, api_no=api_no, indicator_code=indicator_code)
 
     def _fetch_list(
         self,

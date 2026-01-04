@@ -116,17 +116,17 @@ from .models import (
     # 정기보고서 재무정보
     SingleCompanyMainAccountsData,
     MultiCompanyMainAccountsData,
-    XBRLTaxonomyFinancialStatementsData,
-    ConsolidatedFinancialStatementsData,
-    SingleCompanyKeyFinancialMetricsData,
-    MultiCompanyKeyFinancialMetricsData,
+    XBRLTaxonomyFinancialStatementData,
+    SingleFinancialStatementData,
+    SingleCompanyKeyFinancialIndicatorData,
+    MultiCompanyKeyFinancialIndicatorData,
     # 지분공시 종합정보
-    MajorShoreholdingsData,
+    MajorOwnershipData,
     InsiderOwnershipData,
     # 주요사항보고서 주요정보
     # 증권신고서 주요정보
-    EquitySecuritiesData,
-    RegistrationStatementData,
+    EquityShareData,
+    DebtShareData,
     DepositoryReceiptData,
     CompanyMergerData,
     ShareExchangeData,

@@ -21,26 +21,27 @@ from urllib.parse import unquote
 
 from ..client import OpenDartClient
 from ..models import (
+    MaterialFactStatus,
     OpenDartRequest,
     PutOptionData,
     BankruptcyData,
     SuspensionData,
-    RehabilitationData,
+    RestorationData,
     DissolutionData,
-    RightsIssueData,
-    BonusIssueData,
-    IssueIncreaseData,
+    PublicIssuanceData,
+    UnpublicIssuanceData,
+    PublicUnpublicIssuanceData,
     CapitalReductionData,
-    ManagementProcedureData,
-    LegalProceedingsData,
-    ListingDecisionData,
-    DelistingDecisionData,
-    ListingData,
-    DelistingData,
+    BankruptcyProcedureData,
+    LegalActData,
+    OverseasListingDecisionData,
+    OverseasDelistingDecisionData,
+    OverseasListingData,
+    OverseasDelistingData,
     CBIssuanceDecisionData,
     BWIssuanceDecisionData,
     EBIssuanceDecisionData,
-    CreditorBankManagementProcessSuspensionData,
+    BankruptcyProcedureSuspensionData,
     CoCoBondIssuanceDecisionData,
     ShareBuybackDecisionData,
     TreasuryStockDisposalDecisionData,
@@ -78,12 +79,11 @@ class OpenDartMaterialFactsParser:
         corp_code: str, 
         start_date: str, 
         end_date: str, 
-        api_no: int = -1, 
-        api_type: str = None):
-        url = None
+        api_no: int | MaterialFactStatus = MaterialFactStatus.PUT_OPTION):
+        if isinstance(api_no, int):
+            api_no = MaterialFactStatus(api_no)
 
-        api_key = list(MATERIAL_FACTS_URLS.keys())[api_no] if api_no > -1 else api_type        
-        url = MATERIAL_FACTS_URLS.get(api_key)
+        url = MaterialFactStatus.url_by_code(api_no.value)
 
         if not url:
             return
@@ -114,79 +114,79 @@ class OpenDartMaterialFactsParser:
         del json_data["status"]
         del json_data["message"]
         
-        print(f"api_key: {api_key}")
+        print(f"api_key: {api_no.display_name}")
         data_list = json_data.get("list", [])
-        if api_key == "자산양수도(기타), 풋백옵션":
+        if api_no == MaterialFactStatus.PUT_OPTION:
             return [PutOptionData(**data) for data in data_list]
-        elif api_key == "부도발생":
+        elif api_no == MaterialFactStatus.BANKRUPTCY:
             return [BankruptcyData(**data) for data in data_list]
-        elif api_key == "영업정지":
+        elif api_no == MaterialFactStatus.SUSPENSION:
             return [SuspensionData(**data) for data in data_list]
-        elif api_key == "회생절차 개시신청":
-            return [RehabilitationData(**data) for data in data_list]
-        elif api_key == "해산사유 발생":
+        elif api_no == MaterialFactStatus.RESTORATION:
+            return [RestorationData(**data) for data in data_list]
+        elif api_no == MaterialFactStatus.DISSOLUTION:
             return [DissolutionData(**data) for data in data_list]
-        elif api_key == "유상증자 결정":
-            return [RightsIssueData(**data) for data in data_list]
-        elif api_key == "무상증자 결정":
-            return [BonusIssueData(**data) for data in data_list]
-        elif api_key == "유무상증자 결정":
-            return [IssueIncreaseData(**data) for data in data_list]
-        elif api_key == "감자 결정":
+        elif api_no == MaterialFactStatus.PUBLIC_ISSUANCE:
+            return [PublicIssuanceData(**data) for data in data_list]
+        elif api_no == MaterialFactStatus.UNPUBLIC_ISSUANCE:
+            return [UnpublicIssuanceData(**data) for data in data_list]
+        elif api_no == MaterialFactStatus.PUBLIC_UNPUBLIC_ISSUANCE:
+            return [PublicUnpublicIssuanceData(**data) for data in data_list]
+        elif api_no == MaterialFactStatus.CAPITAL_REDUCTION:
             return [CapitalReductionData(**data) for data in data_list]
-        elif api_key == "채권은행 등의 관리절차 개시":
-            return [ManagementProcedureData(**data) for data in data_list]
-        elif api_key == "소송 등의 제기":
-            return [LegalProceedingsData(**data) for data in data_list]
-        elif api_key == "해외 증권시장 주권등 상장 결정":
-            return [ListingDecisionData(**data) for data in data_list]
-        elif api_key == "해외 증권시장 주권등 상장폐지 결정":
-            return [DelistingDecisionData(**data) for data in data_list]
-        elif api_key == "해외 증권시장 주권등 상장":
-            return [ListingData(**data) for data in data_list]
-        elif api_key == "해외 증권시장 주권등 상장폐지":
-            return [DelistingData(**data) for data in data_list]
-        elif api_key == "전환사채권 발행결정":
+        elif api_no == MaterialFactStatus.BANKRUPTCY_PROCEDURE:
+            return [BankruptcyProcedureData(**data) for data in data_list]
+        elif api_no == MaterialFactStatus.LEGAL_ACT:
+            return [LegalActData(**data) for data in data_list]
+        elif api_no == MaterialFactStatus.OVERSEAS_LISTING_DECISION:
+            return [OverseasListingDecisionData(**data) for data in data_list]
+        elif api_no == MaterialFactStatus.OVERSEAS_DELISTING_DECISION:
+            return [OverseasDelistingDecisionData(**data) for data in data_list]
+        elif api_no == MaterialFactStatus.OVERSEAS_LISTING:
+            return [OverseasListingData(**data) for data in data_list]
+        elif api_no == MaterialFactStatus.OVERSEAS_DELISTING:
+            return [OverseasDelistingData(**data) for data in data_list]
+        elif api_no == MaterialFactStatus.CB_ISSUANCE_DECISION:
             return [CBIssuanceDecisionData(**data) for data in data_list]
-        elif api_key == "신주인수권부사채권 발행결정":
+        elif api_no == MaterialFactStatus.BW_ISSUANCE_DECISION:
             return [BWIssuanceDecisionData(**data) for data in data_list]
-        elif api_key == "교환사채권 발행결정":
+        elif api_no == MaterialFactStatus.EB_ISSUANCE_DECISION:
             return [EBIssuanceDecisionData(**data) for data in data_list]
-        elif api_key == "채권은행 등의 관리절차 중단":
-            return [CreditorBankManagementProcessSuspensionData(**data) for data in data_list]
-        elif api_key == "상각형 조건부자본증권 발행결정":
+        elif api_no == MaterialFactStatus.BANKRUPTCY_PROCEDURE_SUSPENSION:
+            return [BankruptcyProcedureSuspensionData(**data) for data in data_list]
+        elif api_no == MaterialFactStatus.COCO_BOND_ISSUANCE_DECISION:
             return [CoCoBondIssuanceDecisionData(**data) for data in data_list]
-        elif api_key == "자기주식 취득 결정":
+        elif api_no == MaterialFactStatus.SHARE_BUYBACK_DECISION:
             return [ShareBuybackDecisionData(**data) for data in data_list]
-        elif api_key == "자기주식 처분 결정":
+        elif api_no == MaterialFactStatus.TREASURY_STOCK_DISPOSAL_DECISION:
             return [TreasuryStockDisposalDecisionData(**data) for data in data_list]
-        elif api_key == "자기주식취득 신탁계약 체결 결정":
+        elif api_no == MaterialFactStatus.TRUST_AGREEMENT_ACQUISITION_DECISION:
             return [TrustAgreementAcquisitionDecisionData(**data) for data in data_list]
-        elif api_key == "자기주식취득 신탁계약 해지 결정":
+        elif api_no == MaterialFactStatus.TRUST_AGREEMENT_RESOLUTION_DECISION:
             return [TrustAgreementResolutionDecisionData(**data) for data in data_list]
-        elif api_key == "영업양수 결정":
+        elif api_no == MaterialFactStatus.BUSINESS_ACQUISITION_DECISION:
             return [BusinessAcquisitionDecisionData(**data) for data in data_list]
-        elif api_key == "영업양도 결정":
+        elif api_no == MaterialFactStatus.BUSINESS_TRANSFER_DECISION:
             return [BusinessTransferDecisionData(**data) for data in data_list]
-        elif api_key == "유형자산 양수 결정":
+        elif api_no == MaterialFactStatus.ASSET_ACQUISITION_DECISION:
             return [AssetTransferDecisionData(**data) for data in data_list]
-        elif api_key == "유형자산 양도 결정":
+        elif api_no == MaterialFactStatus.ASSET_TRANSFER_DECISION:
             return [AssetTransferDecisionData(**data) for data in data_list]
-        elif api_key == "타법인 주식 및 출자증권 양수결정":
+        elif api_no == MaterialFactStatus.OTHER_SHARE_ACQUISITION_DECISION:
             return [OtherShareTransferDecisionData(**data) for data in data_list]
-        elif api_key == "타법인 주식 및 출자증권 양도결정":
+        elif api_no == MaterialFactStatus.OTHER_SHARE_TRANSFER_DECISION:
             return [OtherShareTransferDecisionData(**data) for data in data_list]
-        elif api_key == "주권 관련 사채권 양수 결정":
+        elif api_no == MaterialFactStatus.EQUITY_LINKED_BOND_ACQUISITION_DECISION:
             return [EquityLinkedBondsTransferDecisionData(**data) for data in data_list]
-        elif api_key == "주권 관련 사채권 양도 결정":
+        elif api_no == MaterialFactStatus.EQUITY_LINKED_BOND_TRANSFER_DECISION:
             return [EquityLinkedBondsTransferDecisionData(**data) for data in data_list]
-        elif api_key == "회사합병 결정":
+        elif api_no == MaterialFactStatus.COMPANY_MERGER_DECISION:
             return [CompanyMergerDecisionData(**data) for data in data_list]
-        elif api_key == "회사분할 결정":
+        elif api_no == MaterialFactStatus.COMPANY_SPINOFF_DECISION:
             return [CompanySpinoffDecisionData(**data) for data in data_list]
-        elif api_key == "회사분할합병 결정":
+        elif api_no == MaterialFactStatus.COMPANY_SPINOFF_MERGER_DECISION:
             return [CompanySpinoffMergerDecisionData(**data) for data in data_list]
-        elif api_key == "주식교환·이전 결정":
+        elif api_no == MaterialFactStatus.SHARE_EXCHANGE_DECISION:
             return [ShareExchangeDecisionData(**data) for data in data_list]
 
         return json_data

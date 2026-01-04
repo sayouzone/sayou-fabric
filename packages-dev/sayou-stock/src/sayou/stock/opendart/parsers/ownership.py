@@ -21,8 +21,9 @@ from urllib.parse import unquote
 
 from ..client import OpenDartClient
 from ..models import (
+    OwnershipStatus,
     OpenDartRequest,
-    MajorShoreholdingsData,
+    MajorOwnershipData,
     InsiderOwnershipData,
 )
 from ..utils import (
@@ -47,11 +48,12 @@ class OpenDartOwnershipParser:
             "corp_code": None,
         }
 
-    def fetch(self, corp_code: str, api_no: int = -1, api_type: str = None):
-        url = None
+    def fetch(self, corp_code: str, api_no: int | OwnershipStatus = OwnershipStatus.MAJOR_OWNERSHIP):
+        if isinstance(api_no, int):
+            api_no = OwnershipStatus(api_no)
 
-        api_key = list(OWNERSHIP_URLS.keys())[api_no] if api_no > -1 else api_type        
-        url = OWNERSHIP_URLS.get(api_key)
+        url = OwnershipStatus.url_by_code(api_no.value)
+        print(api_no, url)
 
         if not url:
             return
@@ -80,10 +82,11 @@ class OpenDartOwnershipParser:
         del json_data["status"]
         del json_data["message"]
 
+        print(f"api_type: {api_no.display_name}")
         data_list = json_data.get("list", [])
-        if api_key == "대량보유 상황보고":
-            return [MajorShoreholdingsData(**data) for data in data_list]
-        elif api_key == "임원ㆍ주요주주 소유보고":
+        if api_no == OwnershipStatus.MAJOR_OWNERSHIP:
+            return [MajorOwnershipData(**data) for data in data_list]
+        elif api_no == OwnershipStatus.INSIDER_OWNERSHIP:
             return [InsiderOwnershipData(**data) for data in data_list]
 
         return []

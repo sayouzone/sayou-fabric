@@ -15,6 +15,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from opendart import OpenDartCrawler
+from opendart.models import (
+    OwnershipStatus,
+    MaterialFactStatus,
+    RegistrationStatus,
+)
 from opendart.utils import (
     DISCLOSURE_ITEMS,
     REPORT_ITEMS,
@@ -309,7 +314,7 @@ def demo_reports(crawler: OpenDartCrawler, corp_code: str):
         
         year = "2024"
         quarter = 4
-        api_no = int(item) - 1
+        api_no = int(item)
         api_info = f"\n{api_type} ({corp_name}, {corp_code})"
         print(api_info)
         print('-'*(int(len(api_info)*1.5)))
@@ -327,23 +332,25 @@ def demo_ownership(crawler: OpenDartCrawler, corp_code: str):
     rcept_no = None
 
     # 대량보유 상황보고 현황
-    api_no = 0
-    api_type, api_desc = OWNERSHIP_ITEMS.get(str(api_no + 1))
+    api_no = OwnershipStatus.MAJOR_OWNERSHIP
+    api_type = api_no.display_name
     api_info = f"\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    data = crawler.ownership(corp_code, api_no=api_no)
+    #data = crawler.ownership(corp_code, api_no=api_no)
+    data = crawler.major_ownership(corp_code)
     print(data)
 
     # 임원ㆍ주요주주 소유보고 현황
-    api_no = 1
-    api_type, api_desc = OWNERSHIP_ITEMS.get(str(api_no + 1))
+    api_no = OwnershipStatus.INSIDER_OWNERSHIP
+    api_type = api_no.display_name
     api_info = f"\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    data = crawler.ownership(corp_code, api_no=api_no)
+    #data = crawler.ownership(corp_code, api_no=api_no)
+    data = crawler.major_ownership(corp_code)
     print(data)
 
     if data and len(data) > 0:
@@ -364,9 +371,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     corp_name = crawler.fetch_corp_name(corp_code)
     start_date = "20190101"
     end_date = "20251231"
-    api_no = 0
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_no = MaterialFactStatus.PUT_OPTION
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -377,9 +384,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 부도발생 현황
     corp_code = "00112819"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 1
+    api_no = MaterialFactStatus.BANKRUPTCY
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -390,9 +397,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 영업정지 현황
     corp_code = "00370006"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 2
+    api_no = MaterialFactStatus.SUSPENSION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -403,9 +410,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 회생절차 개시신청 현황
     corp_code = "00367482"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 3
+    api_no = MaterialFactStatus.RESTORATION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -416,9 +423,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 해산사유 발생 현황
     corp_code = "01102590"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 4
+    api_no = MaterialFactStatus.DISSOLUTION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -429,9 +436,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 유상증자 결정 현황
     corp_code = "00378363"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 5
+    api_no = MaterialFactStatus.PUBLIC_ISSUANCE
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -442,9 +449,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 무상증자 결정 현황
     corp_code = "00121932"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 6
+    api_no = MaterialFactStatus.UNPUBLIC_ISSUANCE
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -455,9 +462,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 유무상증자 결정 현황
     corp_code = "00359395"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 7
+    api_no = MaterialFactStatus.PUBLIC_UNPUBLIC_ISSUANCE
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -468,9 +475,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 감자 결정 현황
     corp_code = "00121932"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 8
+    api_no = MaterialFactStatus.CAPITAL_REDUCTION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -481,9 +488,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 채권은행 등의 관리절차 개시 현황
     corp_code = "00295857"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 9
+    api_no = MaterialFactStatus.BANKRUPTCY_PROCEDURE
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -494,9 +501,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 소송 등의 제기 현황
     corp_code = "00164830"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 10
+    api_no = MaterialFactStatus.LEGAL_ACT
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -507,9 +514,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 해외 증권시장 주권등 상장 결정 현황
     corp_code = "00258801"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 11
+    api_no = MaterialFactStatus.OVERSEAS_LISTING_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -520,9 +527,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 해외 증권시장 주권등 상장폐지 결정 현황
     corp_code = "00344287"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 12
+    api_no = MaterialFactStatus.OVERSEAS_DELISTING_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -533,9 +540,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 해외 증권시장 주권등 상장 현황
     corp_code = "01350869"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 13
+    api_no = MaterialFactStatus.OVERSEAS_LISTING
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -546,9 +553,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 해외 증권시장 주권등 상장폐지 현황
     corp_code = "00344287"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 14
+    api_no = MaterialFactStatus.OVERSEAS_LISTING
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -559,9 +566,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 전환사채권 발행결정 현황
     corp_code = "00155355"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 15
+    api_no = MaterialFactStatus.CB_ISSUANCE_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -572,9 +579,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 신주인수권부사채권 발행결정 현황
     corp_code = "00140131"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 16
+    api_no = MaterialFactStatus.BW_ISSUANCE_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -585,9 +592,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 교환사채권 발행결정 현황
     corp_code = "00273420"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 17
+    api_no = MaterialFactStatus.EB_ISSUANCE_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -598,9 +605,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 채권은행 등의 관리절차 중단 현황
     corp_code = "00141608"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 18
+    api_no = MaterialFactStatus.BANKRUPTCY_PROCEDURE_SUSPENSION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -611,9 +618,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 상각형 조건부자본증권 발행결정 현황
     corp_code = "00382199"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 19
+    api_no = MaterialFactStatus.COCO_BOND_ISSUANCE_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -624,9 +631,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 자기주식 취득 결정 현황
     corp_code = "00164742"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 20
+    api_no = MaterialFactStatus.SHARE_BUYBACK_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -637,9 +644,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 자기주식 처분 결정
     corp_code = "00121932"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 21
+    api_no = MaterialFactStatus.TREASURY_STOCK_DISPOSAL_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -650,9 +657,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 자기주식취득 신탁계약 체결 결정 현황
     corp_code = "00860332"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 22
+    api_no = MaterialFactStatus.TRUST_AGREEMENT_ACQUISITION_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -663,9 +670,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 자기주식취득 신탁계약 해지 결정 현황
     corp_code = "00382199"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 23
+    api_no = MaterialFactStatus.TRUST_AGREEMENT_RESOLUTION_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -676,9 +683,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 영업양수 결정 현황
     corp_code = "00140131"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 24
+    api_no = MaterialFactStatus.BUSINESS_ACQUISITION_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -689,9 +696,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 영업양도 결정 현황
     corp_code = "00131780"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 25
+    api_no = MaterialFactStatus.BUSINESS_TRANSFER_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -702,9 +709,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 유형자산 양수 결정
     corp_code = "00160375"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 26
+    api_no = MaterialFactStatus.ASSET_ACQUISITION_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -715,9 +722,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     #유형자산 양도 결정 현황
     corp_code = "00106395"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 27
+    api_no = MaterialFactStatus.ASSET_TRANSFER_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info  = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -728,9 +735,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 타법인 주식 및 출자증권 양수결정 현황
     corp_code = "00140131"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 28
+    api_no = MaterialFactStatus.OTHER_SHARE_ACQUISITION_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -741,9 +748,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 타법인 주식 및 출자증권 양도결정 현황
     corp_code = "00230814"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 29
+    api_no = MaterialFactStatus.OTHER_SHARE_TRANSFER_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -754,9 +761,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 주권 관련 사채권 양수 결정 현황
     corp_code = "00173449"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 30
+    api_no = MaterialFactStatus.EQUITY_LINKED_BOND_ACQUISITION_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -767,9 +774,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 주권 관련 사채권 양도 결정 현황
     corp_code = "00125965"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 31
+    api_no = MaterialFactStatus.EQUITY_LINKED_BOND_TRANSFER_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -780,9 +787,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 회사합병 결정 현황
     corp_code = "00155319"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 32
+    api_no = MaterialFactStatus.COMPANY_MERGER_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -793,9 +800,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 회사분할 결정 현황
     corp_code = "00266961"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 33
+    api_no = MaterialFactStatus.COMPANY_SPINOFF_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -806,9 +813,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 회사분할합병 결정 현황
     corp_code = "00306135"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 34
+    api_no = MaterialFactStatus.COMPANY_SPINOFF_MERGER_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -819,9 +826,9 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     # 주식교환·이전 결정 현황
     corp_code = "00219097"
     corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = 35
+    api_no = MaterialFactStatus.SHARE_EXCHANGE_DECISION
 
-    api_type, api_desc = MATERIAL_FACTS_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
@@ -847,20 +854,21 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
     start_date = "20190101"
     end_date = "20251231"
 
-    api_no = 0
+    api_no = RegistrationStatus.EQUITY_SHARE
 
-    api_type, api_desc = REGISTRATION_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
     data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data.generals)
-    print(data.stocks)
-    print(data.acquirers)
-    print(data.purposes)
-    print(data.shareholders)
-    print(data.put_back_options)
+    if data:
+        print(data.generals)
+        print(data.stocks)
+        print(data.acquirers)
+        print(data.purposes)
+        print(data.shareholders)
+        print(data.put_back_options)
 
     # 채무증권 현황
     corp_code = "00858364"
@@ -868,18 +876,19 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
     start_date = "20190101"
     end_date = "20251231"
 
-    api_no = 1
+    api_no = RegistrationStatus.DEBT_SHARE
 
-    api_type, api_desc = REGISTRATION_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
     data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data.generals)
-    print(data.acquirers)
-    print(data.purposes)
-    print(data.shareholders)
+    if data:
+        print(data.generals)
+        print(data.acquirers)
+        print(data.purposes)
+        print(data.shareholders)
 
     # 증권예탁증권 현황
     corp_code = "01338724"
@@ -887,19 +896,20 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
     start_date = "20190101"
     end_date = "20251231"
 
-    api_no = 2
+    api_no = RegistrationStatus.DEPOSITORY_RECEIPT
 
-    api_type, api_desc = REGISTRATION_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
     data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data.generals)
-    print(data.stocks)
-    print(data.acquirers)
-    print(data.purposes)
-    print(data.shareholders)
+    if data:
+        print(data.generals)
+        print(data.stocks)
+        print(data.acquirers)
+        print(data.purposes)
+        print(data.shareholders)
 
     # 합병 현황    
     corp_code = "00109718"
@@ -908,17 +918,38 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
     start_date = "20190101"
     end_date = "20251231"
 
-    api_no = 3
+    api_no = RegistrationStatus.COMPANY_MERGER
 
-    api_desc = REGISTRATION_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    data = crawler.merge(corp_code, start_date=start_date, end_date=end_date)
-    print(data.generals)
+    data = crawler.company_merger(corp_code, start_date=start_date, end_date=end_date)
+    if data:
+        print(data.generals)
     print(data.issued_securities)
     print(data.companies)
+
+    # 주식의포괄적교환·이전 현황    
+    corp_code = "00219097"
+    corp_name = crawler.fetch_corp_name(corp_code)
+    print(corp_code, corp_name)
+    start_date = "20190101"
+    end_date = "20251231"
+
+    api_no = RegistrationStatus.SHARE_EXCHANGE
+
+    api_type = api_no.display_name
+    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    data = crawler.registration(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
+    if data:
+        print(data.generals)
+        print(data.issued_securities)
+        print(data.companies)
 
     # 분할 현황    
     corp_code = "00105271"
@@ -927,17 +958,18 @@ def demo_registration(crawler: OpenDartCrawler, corp_code: str):
     start_date = "20190101"
     end_date = "20251231"
 
-    api_no = 5
+    api_no = RegistrationStatus.COMPANY_SPINOFF
 
-    api_type, api_desc = REGISTRATION_ITEMS.get(str(api_no + 1))
+    api_type = api_no.display_name
     api_info = f"\n{api_type} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    data = crawler.split(corp_code, start_date=start_date, end_date=end_date)
-    print(data.generals)
-    print(data.issued_securities)
-    print(data.companies)
+    data = crawler.company_spinoff(corp_code, start_date=start_date, end_date=end_date)
+    if data:
+        print(data.generals)
+        print(data.issued_securities)
+        print(data.companies)
 
 def main(code: str):
     """메인 데모 실행"""
@@ -963,15 +995,15 @@ def main(code: str):
     print(f"\n{code} corp_code: {corp_code}")
 
     # 각 파일링 타입 데모
-    demo_corp_code(crawler, code)
-    demo_base_documents(crawler, code)
-    rcept_no = demo_finance(crawler, corp_code)
+    #demo_corp_code(crawler, code)
+    #demo_base_documents(crawler, code)
+    #rcept_no = demo_finance(crawler, corp_code)
     # 00126380 삼성전자 005930 반기보고서 (2025.06) 20250814003156 20250814
-    rcept_no = rcept_no or "20251114002447"
-    demo_download_xbrl(crawler, rcept_no=rcept_no)
-    demo_reports(crawler, corp_code)
-    demo_ownership(crawler, corp_code)
-    demo_material_facts(crawler, corp_code)
+    #rcept_no = rcept_no or "20251114002447"
+    #demo_download_xbrl(crawler, rcept_no=rcept_no)
+    #demo_reports(crawler, corp_code)
+    #demo_ownership(crawler, corp_code)
+    #demo_material_facts(crawler, corp_code)
     demo_registration(crawler, corp_code)
     #crawler.duplicate_keys()
     

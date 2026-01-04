@@ -22,9 +22,10 @@ from urllib.parse import unquote
 
 from ..client import OpenDartClient
 from ..models import (
+    RegistrationStatus,
     OpenDartRequest,
-    EquitySecuritiesData,
-    RegistrationStatementData,
+    EquityShareData,
+    DebtShareData,
     DepositoryReceiptData,
     CompanyMergerData,
     ShareExchangeData,
@@ -53,11 +54,17 @@ class OpenDartRegistrationParser:
     def __init__(self, client: OpenDartClient):
         self.client = client
 
-    def fetch(self, corp_code: str, start_date: str, end_date: str, api_no: int = -1, api_type: str = None):
-        url = None
+    def fetch(
+        self, 
+        corp_code: str, 
+        start_date: str, 
+        end_date: str, 
+        api_no: int | RegistrationStatus = RegistrationStatus.EQUITY_SHARE):
 
-        api_key = list(REGISTRATION_URLS.keys())[api_no] if api_no > -1 else api_type        
-        url = REGISTRATION_URLS.get(api_key)
+        if isinstance(api_no, int):
+            api_no = RegistrationStatus(api_no)
+
+        url = RegistrationStatus.url_by_code(api_no.value)
 
         if not url:
             return
@@ -72,7 +79,7 @@ class OpenDartRegistrationParser:
         response = self.client._get(url, params=request.to_params())
 
         json_data = response.json()
-        #print(json_data)
+        print(json_data)
             
         status = json_data.get("status")
 
@@ -89,18 +96,18 @@ class OpenDartRegistrationParser:
         del json_data["status"]
         del json_data["message"]
         
-        print(f"api_key: {api_key}")
-        if api_key == "지분증권":
-            return EquitySecuritiesData.from_raw_data(json_data)
-        elif api_key == "채무증권":
-            return RegistrationStatementData.from_raw_data(json_data)
-        elif api_key == "증권예탁증권":
+        print(f"api_key: {api_no.display_name}")
+        if api_no == RegistrationStatus.EQUITY_SHARE:
+            return EquityShareData.from_raw_data(json_data)
+        elif api_no == RegistrationStatus.DEBT_SHARE:
+            return DebtShareData.from_raw_data(json_data)
+        elif api_no == RegistrationStatus.DEPOSITORY_RECEIPT:
             return DepositoryReceiptData.from_raw_data(json_data)
-        elif api_key == "합병":
+        elif api_no == RegistrationStatus.COMPANY_MERGER:
             return CompanyMergerData.from_raw_data(json_data)
-        elif api_key == "주식의포괄적교환·이전":
+        elif api_no == RegistrationStatus.SHARE_EXCHANGE:
             return ShareExchangeData.from_raw_data(json_data)
-        elif api_key == "분할":
+        elif api_no == RegistrationStatus.COMPANY_SPINOFF:
             return CompanySpinoffData.from_raw_data(json_data)
         
         return None
