@@ -51,65 +51,67 @@ class GmailFetcher(BaseFetcher):
 
             parsed_content = self._parse_email(msg)
 
-            return {
-                "content": parsed_content["markdown"],
-                "meta": {
-                    "source": "gmail",
-                    "subject": parsed_content["subject"],
-                    "sender": parsed_content["sender"],
-                    "date": parsed_content["date"],
-                    "uid": uid,
-                },
-            }
+            html_doc = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>{parsed_content['subject']}</title>
+                    <meta name="sender" content="{parsed_content['sender']}">
+                    <meta name="date" content="{parsed_content['date']}">
+                    <meta name="uid" content="{uid}">
+                    <meta name="source" content="gmail">
+                </head>
+                <body>
+                    {parsed_content['body']}
+                </body>
+                </html>
+            """
+
+            return html_doc.strip()
 
         finally:
             mail.logout()
 
     def _parse_email(self, msg) -> Dict[str, Any]:
-        """Helper: Parses email object to Markdown text."""
         subject = self._decode_header(msg["Subject"])
         sender = self._decode_header(msg["From"])
         date = msg["Date"]
 
-        body_text = ""
+        body_content = ""
+        html_found = False
 
         if msg.is_multipart():
             for part in msg.walk():
-                content_type = part.get_content_type()
-
-                if "attachment" in str(part.get("Content-Disposition")):
-                    continue
-
+                ctype = part.get_content_type()
                 payload = part.get_payload(decode=True)
+
                 if not payload:
                     continue
 
-                text = payload.decode(errors="ignore")
+                try:
+                    text = payload.decode(
+                        part.get_content_charset() or "utf-8", errors="ignore"
+                    )
+                except:
+                    text = payload.decode("utf-8", errors="ignore")
 
-                if content_type == "text/html":
-                    if html2text:
-                        h = html2text.HTML2Text()
-                        h.ignore_links = False
-                        body_text += h.handle(text)
-                    else:
-                        body_text += text
-                elif content_type == "text/plain":
-                    if not body_text:
-                        body_text += text
+                if ctype == "text/html":
+                    body_content = text
+                    html_found = True
+
+                elif ctype == "text/plain":
+                    if not html_found:
+                        body_content = text
+
         else:
-            payload = msg.get_payload(decode=True).decode(errors="ignore")
-            if msg.get_content_type() == "text/html" and html2text:
-                body_text = html2text.html2text(payload)
-            else:
-                body_text = payload
+            body_content = msg.get_payload(decode=True).decode(errors="ignore")
 
-        md = f"# {subject}\n\n"
-        md += f"- **From:** {sender}\n"
-        md += f"- **Date:** {date}\n\n"
-        md += "---\n\n"
-        md += body_text
-
-        return {"subject": subject, "sender": sender, "date": date, "markdown": md}
+        return {
+            "subject": subject,
+            "sender": sender,
+            "date": date,
+            "body": body_content,
+        }
 
     def _decode_header(self, header_text):
         """Decodes MIME headers (e.g., =?utf-8?b?...)"""
