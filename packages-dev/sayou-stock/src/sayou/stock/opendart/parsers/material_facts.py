@@ -59,7 +59,6 @@ from ..models import (
 )
 from ..utils import (
     decode_euc_kr,
-    MATERIAL_FACTS_URLS,
     quarters,
     MATERIAL_FACTS_COLUMNS
 )

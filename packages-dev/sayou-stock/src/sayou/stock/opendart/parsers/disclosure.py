@@ -20,10 +20,13 @@ from datetime import datetime
 from urllib.parse import unquote
 
 from ..client import OpenDartClient
-from ..models import DisclosureRequest, DisclosureData
+from ..models import (
+    DisclosureRequest,
+    DisclosureData,
+    DisclosureStatus,
+)
 from ..utils import (
     decode_euc_kr,
-    DISCLOSURE_URLS,
     quarters,
     DISCLOSURE_COLUMNS,
     save_zip_path,
@@ -78,7 +81,8 @@ class OpenDartDisclosureParser:
         while True:
             request.page_no = page
 
-            url = DISCLOSURE_URLS.get("공시검색")
+            api_no = DisclosureStatus.DISCLOSURE_SEARCH
+            url = api_no.url
             
             response = self.client._get(url, params=request.to_params())
             json_data = response.json()
@@ -130,7 +134,8 @@ class OpenDartDisclosureParser:
         params = self.params
         params["corp_code"] = code
 
-        url = DISCLOSURE_URLS.get("기업개황")
+        api_no = DisclosureStatus.COMPANY_INFORMATION
+        url = api_no.url
         print(url, params)
 
         response = self.client._get(url, params=params)
@@ -172,7 +177,8 @@ class OpenDartDisclosureParser:
         params = self.params
         params["rcept_no"] = rcept_no
 
-        url = DISCLOSURE_URLS.get("공시서류원본파일")
+        api_no = DisclosureStatus.DOCUMENT
+        url = api_no.url
 
         response = self.client._get(url, params=params)
 
@@ -244,7 +250,8 @@ class OpenDartDisclosureParser:
         
         params = self.params
 
-        url = DISCLOSURE_URLS.get("고유번호")
+        api_no = DisclosureStatus.CORP_CODE
+        url = api_no.url
         #print(url, params)
 
         response = self.client._get(url, params=params)

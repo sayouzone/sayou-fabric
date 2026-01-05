@@ -539,11 +539,11 @@ class OpenDartCrawler:
         api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
         return self._finance_parser.finance(code, year, quarter, api_no=api_no, indicator_code=indicator_code)
 
-    def finance_file(self, rcept_no, quarter: int = 4, save_path: str | None = None):
+    def finance_file(self, rcept_no, report_code: str = None, quarter: int = 4, save_path: str | None = None):
         """
         OpenDart 정기보고서 재무정보 - 재무제표 원본파일(XBRL)
         """
-        return self._finance_parser.finance_file(rcept_no, quarter, save_path=save_path)
+        return self._finance_parser.finance_file(rcept_no, report_code, quarter, save_path=save_path)
 
     def single_company_main_accounts(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 단일회사 주요계정"""

@@ -34,7 +34,6 @@ from ..models import (
 )
 from ..utils import (
     decode_euc_kr,
-    FINANCE_URLS,
     quarters,
     FINANCE_COLUMNS,
     save_zip_path,
@@ -208,7 +207,7 @@ class OpenDartFinanceParser:
 
         return []
 
-    def finance_file(self, rcept_no, quarter: int = 4, save_path: str | None = None):
+    def finance_file(self, rcept_no, report_code: str = None, quarter: int = 4, save_path: str | None = None):
         """
         OpenDart 정기보고서 재무정보 - 재무제표 원본파일(XBRL)
 
@@ -223,8 +222,9 @@ class OpenDartFinanceParser:
             pd.DataFrame: 기업개황
         """
 
-        url = FINANCE_URLS.get("재무제표 원본파일(XBRL)", "")
-        report_code = quarters.get(str(quarter), "4")
+        api_no = FinanceStatus.FINANCIAL_STATEMENT_ORIGINAL_FILE_XBRL
+        url = FinanceStatus.url_by_code(api_no.value)
+        report_code = report_code or quarters.get(str(quarter), "4")
         
         params = {
             "crtfc_key": self.client.api_key,
@@ -241,7 +241,7 @@ class OpenDartFinanceParser:
             return None
 
         content_type = response_headers.get("Content-Type")
-        if "application/xml" in content_type:
+        if "application/xml" in content_type or "application/json" in content_type:
             text_data = response.text
             print(text_data)
             return None

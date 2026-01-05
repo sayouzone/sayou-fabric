@@ -77,7 +77,7 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     print('='*60)
 
     rcept_no = None
-
+    report_code = None
 
     year = 2024
     quarter = 4
@@ -121,19 +121,21 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     for item in data:
         print(item)
         rcept_no = item.rcept_no
+        report_code = item.reprt_code
 
     print(f"\n{'='*60}")
     print(f"재무제표 원본파일(XBRL) 다운로드 - {rcept_no}")
     print('='*60)
 
     rcept_no = rcept_no or "20250814003156"
+    print(rcept_no, year, quarter)
     save_path = crawler.finance_file(rcept_no, quarter = 4)
     
     if not save_path:
         print(f"파일이 존재하지 않습니다. {rcept_no}")
     else:
         print(f"저장 경로: {save_path}")
-
+    """
     # 단일회사 주요 재무지표
     api_no = FinanceStatus.SINGLE_COMPANY_KEY_FINANCIAL_INDICATOR
     api_info = f"\n{api_no.display_name} ({corp_name}, {corp_code})"
@@ -158,6 +160,7 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         #print(data)
         for item in data:
             print(item)
+    """
 
 def demo_reports(crawler: OpenDartCrawler, corp_code: str):
     """정기보고서 주요정보 데모"""
@@ -436,13 +439,13 @@ def main(code: str):
     print(f"\n{code} corp_code: {corp_code}")
 
     # 각 파일링 타입 데모
-    demo_corp_code(crawler, code)
+    #demo_corp_code(crawler, code)
     #demo_base_documents(crawler, code)
     demo_finance(crawler, corp_code)
-    demo_reports(crawler, corp_code)
-    demo_ownership(crawler, corp_code)
-    demo_material_facts(crawler, corp_code)
-    demo_registration(crawler, corp_code)
+    #demo_reports(crawler, corp_code)
+    #demo_ownership(crawler, corp_code)
+    #demo_material_facts(crawler, corp_code)
+    #demo_registration(crawler, corp_code)
     #crawler.duplicate_keys()
     
     print("\n" + "="*60)

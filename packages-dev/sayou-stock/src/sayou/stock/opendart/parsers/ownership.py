@@ -28,7 +28,6 @@ from ..models import (
 )
 from ..utils import (
     decode_euc_kr,
-    OWNERSHIP_URLS,
     quarters,
     OWNERSHIP_COLUMNS
 )

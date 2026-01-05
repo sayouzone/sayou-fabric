@@ -33,11 +33,12 @@ from .base_model import (
 )
 
 class BaseStatus(Enum):
-    def __new__(cls, code: int, display_name: str, url: str):
+    def __new__(cls, code: int, display_name: str, url: str, desc: str):
         obj = object.__new__(cls)
         obj._value_ = code
         obj._display_name = display_name
         obj._url = url
+        obj._description = desc
         return obj
 
     @classmethod
@@ -51,6 +52,12 @@ class BaseStatus(Enum):
         """코드로 표시명 조회"""
         member = cls.from_value(code)
         return member.display_name if member else None
+
+    @classmethod
+    def description_by_code(cls, code: int) -> Optional[str]:
+        """코드로 설명 조회"""
+        member = cls.from_value(code)
+        return member.description if member else None
 
     @classmethod
     def from_value(cls, value: Optional[int]) -> Optional["ReportStatus"]:
@@ -72,100 +79,196 @@ class BaseStatus(Enum):
         """URL"""
         return self._url
 
+    @property
+    def description(self) -> str:
+        """설명"""
+        return self._description
+
+# 공시정보
+class DisclosureStatus(BaseStatus):
+    DISCLOSURE_SEARCH = (1, "공시검색", f"{API_URL}/list.json", 
+                "공시 유형별, 회사별, 날짜별 등 여러가지 조건으로 공시보고서 검색기능을 제공합니다.")
+    COMPANY_INFORMATION = (2, "기업개황", f"{API_URL}/company.json", 
+                "DART에 등록되어있는 기업의 개황정보를 제공합니다.")
+    DOCUMENT = (3, "공시서류원본파일", f"{API_URL}/document.xml", 
+                "공시보고서 원본파일을 제공합니다.")
+    CORP_CODE = (4, "고유번호", f"{API_URL}/corpCode.xml", 
+                "DART에 등록되어있는 공시대상회사의 고유번호,회사명,종목코드, 최근변경일자를 파일로 제공합니다.")
+
+# 정기보고서 주요정보
 class ReportStatus(BaseStatus):
     """정기보고서 주요정보"""
-    STOCK_ISSUANCE = (1, "증자(감자) 현황", f"{API_URL}/irdsSttus.json")
-    DIVIDENDS = (2, "배당에 관한 사항", f"{API_URL}/alotMatter.json")
-    TREASURY_STOCK = (3, "자기주식 취득 및 처분 현황", f"{API_URL}/tesstkAcqsDspsSttus.json")
-    MAJOR_SHAREHOLDER = (4, "최대주주 현황", f"{API_URL}/hyslrSttus.json")
-    MAJOR_SHAREHOLDER_CHANGE = (5, "최대주주 변동현황", f"{API_URL}/hyslrChgSttus.json")
-    MINOR_SHAREHOLDER = (6, "소액주주 현황", f"{API_URL}/mrhlSttus.json")
-    EXECUTIVE = (7, "임원 현황", f"{API_URL}/exctvSttus.json")
-    EMPLOYEE = (8, "직원 현황", f"{API_URL}/empSttus.json")
-    DIRECTOR_COMPENSATION = (9, "이사·감사의 개인별 보수현황(5억원 이상)", f"{API_URL}/hmvAuditIndvdlBySttus.json")
-    TOTAL_DIRECTOR_COMPENSATION = (10, "이사·감사 전체의 보수현황(보수지급금액 - 이사·감사 전체)", f"{API_URL}/hmvAuditAllSttus.json")
-    TOP5_DIRECTOR_COMPENSATION = (11, "개인별 보수지급 금액(5억이상 상위5인)", f"{API_URL}/indvdlByPay.json")
-    INTERCORPORATE_INVESTMENT = (12, "타법인 출자현황", f"{API_URL}/otrCprInvstmntSttus.json")
-    OUTSTANDING_SHARES = (13, "주식의 총수 현황", f"{API_URL}/stockTotqySttus.json")
-    DEBT_SECURITIES_ISSUANCE = (14, "채무증권 발행실적", f"{API_URL}/detScritsIsuAcmslt.json")
-    CP_OUTSTANDING = (15, "기업어음증권 미상환 잔액", f"{API_URL}/entrprsBilScritsNrdmpBlce.json")
-    SHORT_TERM_BONDS_OUTSTANDING = (16, "단기사채 미상환 잔액", f"{API_URL}/srtpdPsndbtNrdmpBlce.json")
-    CORPORATE_BONDS_OUTSTANDING = (17, "회사채 미상환 잔액", f"{API_URL}/cprndNrdmpBlce.json")
-    HYBRID_SECURITIES_OUTSTANDING = (18, "신종자본증권 미상환 잔액", f"{API_URL}/newCaplScritsNrdmpBlce.json")
-    COCO_BONDS_OUTSTANDING = (19, "조건부 자본증권 미상환 잔액", f"{API_URL}/cndlCaplScritsNrdmpBlce.json")
-    AUDIT_OPINIONS = (20, "회계감사인의 명칭 및 감사의견", f"{API_URL}/accnutAdtorNmNdAdtOpinion.json")
-    AUDIT_SERVICE_CONTRACTS = (21, "감사용역체결현황", f"{API_URL}/adtServcCnclsSttus.json")
-    NON_AUDIT_SERVICE_CONTRACTS = (22, "회계감사인과의 비감사용역 계약체결 현황", f"{API_URL}/accnutAdtorNonAdtServcCnclsSttus.json")
-    OUTSIDE_DIRECTOR_CHANGES = (23, "사외이사 및 그 변동현황", f"{API_URL}/outcmpnyDrctrNdChangeSttus.json")
-    UNREGISTERED_EXECUTIVE_COMPENSATION = (24, "미등기임원 보수현황", f"{API_URL}/unrstExctvMendngSttus.json")
-    APPROVED_DIRECTOR_COMPENSATION = (25, "이사·감사 전체의 보수현황(주주총회 승인금액)", f"{API_URL}/drctrAdtAllMendngSttusGmtsckConfmAmount.json")
-    COMPENSATION_CATEGORY = (26, "이사·감사 전체의 보수현황(보수지급금액 - 유형별)", f"{API_URL}/drctrAdtAllMendngSttusMendngPymntamtTyCl.json")
-    PROCEEDS_USE = (27, "공모자금의 사용내역", f"{API_URL}/pssrpCptalUseDtls.json")
-    PRIVATE_EQUITY_FUNDS_USE = (28, "사모자금의 사용내역", f"{API_URL}/prvsrpCptalUseDtls.json")
+    STOCK_ISSUANCE = (1, "증자(감자) 현황", f"{API_URL}/irdsSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 증자(감자) 현황을 제공합니다.")
+    DIVIDENDS = (2, "배당에 관한 사항", f"{API_URL}/alotMatter.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 배당에 관한 사항을 제공합니다.")
+    TREASURY_STOCK = (3, "자기주식 취득 및 처분 현황", f"{API_URL}/tesstkAcqsDspsSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 자기주식 취득 및 처분 현황을 제공합니다.")
+    MAJOR_SHAREHOLDER = (4, "최대주주 현황", f"{API_URL}/hyslrSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 최대주주 현황을 제공합니다.")
+    MAJOR_SHAREHOLDER_CHANGE = (5, "최대주주 변동현황", f"{API_URL}/hyslrChgSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 최대주주 변동현황을 제공합니다.")
+    MINOR_SHAREHOLDER = (6, "소액주주 현황", f"{API_URL}/mrhlSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 소액주주 현황을 제공합니다.")
+    EXECUTIVE = (7, "임원 현황", f"{API_URL}/exctvSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 임원 현황을 제공합니다.")
+    EMPLOYEE = (8, "직원 현황", f"{API_URL}/empSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 직원 현황을 제공합니다.")
+    DIRECTOR_COMPENSATION = (9, "이사·감사의 개인별 보수현황(5억원 이상)", f"{API_URL}/hmvAuditIndvdlBySttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 이사·감사의 개인별 보수현황(5억원 이상)을 제공합니다.")
+    TOTAL_DIRECTOR_COMPENSATION = (10, "이사·감사 전체의 보수현황(보수지급금액 - 이사·감사 전체)", f"{API_URL}/hmvAuditAllSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 이사·감사 전체의 보수현황(보수지급금액 - 이사·감사 전체)을 제공합니다.")
+    TOP5_DIRECTOR_COMPENSATION = (11, "개인별 보수지급 금액(5억이상 상위5인)", f"{API_URL}/indvdlByPay.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 개인별 보수지급 금액(5억이상 상위5인)을 제공합니다.")
+    INTERCORPORATE_INVESTMENT = (12, "타법인 출자현황", f"{API_URL}/otrCprInvstmntSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 타법인 출자현황을 제공합니다.")
+    OUTSTANDING_SHARES = (13, "주식의 총수 현황", f"{API_URL}/stockTotqySttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 주식의 총수 현황을 제공합니다.")
+    DEBT_SECURITIES_ISSUANCE = (14, "채무증권 발행실적", f"{API_URL}/detScritsIsuAcmslt.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 채무증권 발행실적을 제공합니다.")
+    CP_OUTSTANDING = (15, "기업어음증권 미상환 잔액", f"{API_URL}/entrprsBilScritsNrdmpBlce.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 기업어음증권 미상환 잔액을 제공합니다.")
+    SHORT_TERM_BONDS_OUTSTANDING = (16, "단기사채 미상환 잔액", f"{API_URL}/srtpdPsndbtNrdmpBlce.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 단기사채 미상환 잔액을 제공합니다.")
+    CORPORATE_BONDS_OUTSTANDING = (17, "회사채 미상환 잔액", f"{API_URL}/cprndNrdmpBlce.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 회사채 미상환 잔액을 제공합니다.")
+    HYBRID_SECURITIES_OUTSTANDING = (18, "신종자본증권 미상환 잔액", f"{API_URL}/newCaplScritsNrdmpBlce.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 신종자본증권 미상환 잔액을 제공합니다.")
+    COCO_BONDS_OUTSTANDING = (19, "조건부 자본증권 미상환 잔액", f"{API_URL}/cndlCaplScritsNrdmpBlce.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 조건부 자본증권 미상환 잔액을 제공합니다.")
+    AUDIT_OPINIONS = (20, "회계감사인의 명칭 및 감사의견", f"{API_URL}/accnutAdtorNmNdAdtOpinion.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 회계감사인의 명칭 및 감사의견을 제공합니다.")
+    AUDIT_SERVICE_CONTRACTS = (21, "감사용역체결현황", f"{API_URL}/adtServcCnclsSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 감사용역체결현황을 제공합니다.")
+    NON_AUDIT_SERVICE_CONTRACTS = (22, "회계감사인과의 비감사용역 계약체결 현황", f"{API_URL}/accnutAdtorNonAdtServcCnclsSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 회계감사인과의 비감사용역 계약체결 현황을 제공합니다.")
+    OUTSIDE_DIRECTOR_CHANGES = (23, "사외이사 및 그 변동현황", f"{API_URL}/outcmpnyDrctrNdChangeSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 사외이사 및 그 변동현황을 제공합니다.")
+    UNREGISTERED_EXECUTIVE_COMPENSATION = (24, "미등기임원 보수현황", f"{API_URL}/unrstExctvMendngSttus.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 미등기임원 보수현황을 제공합니다.")
+    APPROVED_DIRECTOR_COMPENSATION = (25, "이사·감사 전체의 보수현황(주주총회 승인금액)", f"{API_URL}/drctrAdtAllMendngSttusGmtsckConfmAmount.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 이사·감사 전체의 보수현황(주주총회 승인금액)을 제공합니다.")
+    COMPENSATION_CATEGORY = (26, "이사·감사 전체의 보수현황(보수지급금액 - 유형별)", f"{API_URL}/drctrAdtAllMendngSttusMendngPymntamtTyCl.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 이사·감사 전체의 보수현황(보수지급금액 - 유형별)을 제공합니다.")
+    PROCEEDS_USE = (27, "공모자금의 사용내역", f"{API_URL}/pssrpCptalUseDtls.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 공모자금의 사용내역을 제공합니다.")
+    PRIVATE_EQUITY_FUNDS_USE = (28, "사모자금의 사용내역", f"{API_URL}/prvsrpCptalUseDtls.json", 
+                "정기보고서(사업, 분기, 반기보고서) 내에 사모자금의 사용내역을 제공합니다.")
 
 class FinanceStatus(BaseStatus):
     """정기보고서 재무정보"""
-    SINGLE_COMPANY_MAIN_ACCOUNTS = (1, "단일회사 주요계정", f"{API_URL}/fnlttSinglAcnt.json")          # 상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 주요계정과목(재무상태표, 손익계산서)을 제공합니다.
-    MULTI_COMPANY_MAIN_ACCOUNTS = (2, "다중회사 주요계정", f"{API_URL}/fnlttMultiAcnt.json")          # 상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 주요계정과목(재무상태표, 손익계산서)을 제공합니다. (대상법인 복수조회 복수조회 가능)
-    FINANCIAL_STATEMENT_ORIGINAL_FILE_XBRL = (3, "재무제표 원본파일(XBRL)", f"{API_URL}/fnlttXbrl.xml")          # 상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 원본파일(XBRL)을 제공합니다.
-    SINGLE_COMPANY_FINANCIAL_STATEMENT = (4, "단일회사 전체 재무제표", f"{API_URL}/fnlttSinglAcntAll.json")   # 상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 모든계정과목을 제공합니다.
-    XBRL_TAXONOMY_FINANCIAL_STATEMENT = (5, "XBRL택사노미재무제표양식", f"{API_URL}/xbrlTaxonomy.json")      # 금융감독원 회계포탈에서 제공하는 IFRS 기반 XBRL 재무제표 공시용 표준계정과목체계(계정과목) 을 제공합니다.
-    SINGLE_COMPANY_KEY_FINANCIAL_INDICATOR = (6, "단일회사 주요 재무지표", f"{API_URL}/fnlttSinglIndx.json")      # 상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 주요 재무지표를 제공합니다.
-    MULTI_COMPANY_KEY_FINANCIAL_INDICATOR = (7, "다중회사 주요 재무지표", f"{API_URL}/fnlttCmpnyIndx.json")
+    SINGLE_COMPANY_MAIN_ACCOUNTS = (1, "단일회사 주요계정", f"{API_URL}/fnlttSinglAcnt.json", 
+                "상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 주요계정과목(재무상태표, 손익계산서)을 제공합니다.")
+    MULTI_COMPANY_MAIN_ACCOUNTS = (2, "다중회사 주요계정", f"{API_URL}/fnlttMultiAcnt.json", 
+                "상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 주요계정과목(재무상태표, 손익계산서)을 제공합니다. (대상법인 복수조회 복수조회 가능)")
+    FINANCIAL_STATEMENT_ORIGINAL_FILE_XBRL = (3, "재무제표 원본파일(XBRL)", f"{API_URL}/fnlttXbrl.xml", 
+                "상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 원본파일(XBRL)을 제공합니다.")
+    SINGLE_COMPANY_FINANCIAL_STATEMENT = (4, "단일회사 전체 재무제표", f"{API_URL}/fnlttSinglAcntAll.json", 
+                "상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 모든계정과목을 제공합니다.")
+    XBRL_TAXONOMY_FINANCIAL_STATEMENT = (5, "XBRL택사노미재무제표양식", f"{API_URL}/xbrlTaxonomy.json", 
+                "금융감독원 회계포탈에서 제공하는 IFRS 기반 XBRL 재무제표 공시용 표준계정과목체계(계정과목) 을 제공합니다.")
+    SINGLE_COMPANY_KEY_FINANCIAL_INDICATOR = (6, "단일회사 주요 재무지표", f"{API_URL}/fnlttSinglIndx.json", 
+                "상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 주요 재무지표를 제공합니다.")
+    MULTI_COMPANY_KEY_FINANCIAL_INDICATOR = (7, "다중회사 주요 재무지표", f"{API_URL}/fnlttCmpnyIndx.json", 
+                "상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 주요 재무지표를 제공합니다.(대상법인 복수조회 가능)")
 
 
 # 지분공시 종합정보
 class OwnershipStatus(BaseStatus):
-    MAJOR_OWNERSHIP = (1, "대량보유 상황보고", f"{API_URL}/majorstock.json")  # 주식등의 대량보유상황보고서 내에 대량보유 상황보고 정보를 제공합니다.
-    INSIDER_OWNERSHIP = (2, "임원ㆍ주요주주 소유보고", f"{API_URL}/elestock.json") # 임원ㆍ주요주주특정증권등 소유상황보고서 내에 임원ㆍ주요주주 소유보고 정보를 제공합니다.
+    MAJOR_OWNERSHIP = (1, "대량보유 상황보고", f"{API_URL}/majorstock.json", 
+                "주식등의 대량보유상황보고서 내에 대량보유 상황보고 정보를 제공합니다.")
+    INSIDER_OWNERSHIP = (2, "임원ㆍ주요주주 소유보고", f"{API_URL}/elestock.json", 
+                "임원ㆍ주요주주특정증권등 소유상황보고서 내에 임원ㆍ주요주주 소유보고 정보를 제공합니다.")
 
 # 주요사항보고서 주요정보
 class MaterialFactStatus(BaseStatus):
-    PUT_OPTION = (1, "자산양수도(기타), 풋백옵션", f"{API_URL}/astInhtrfEtcPtbkOpt.json") # 주요사항보고서(자산양수도(기타), 풋백옵션) 내에 주요 정보를 제공합니다.
-    BANKRUPTCY = (2, "부도발생", f"{API_URL}/dfOcr.json")                            # 주요사항보고서(부도발생) 내에 주요 정보를 제공합니다.
-    SUSPENSION = (3, "영업정지", f"{API_URL}/bsnSp.json")                            # 주요사항보고서(영업정지) 내에 주요 정보를 제공합니다.
-    RESTORATION = (4, "회생절차 개시신청", f"{API_URL}/ctrcvsBgrq.json")                # 주요사항보고서(회생절차 개시신청) 내에 주요 정보를 제공합니다.
-    DISSOLUTION = (5, "해산사유 발생", f"{API_URL}/dsRsOcr.json")                      # 주요사항보고서(해산사유 발생) 내에 주요 정보를 제공합니다.
-    PUBLIC_ISSUANCE = (6, "유상증자 결정", f"{API_URL}/piicDecsn.json")                    # 주요사항보고서(유상증자 결정) 내에 주요 정보를 제공합니다.
-    UNPUBLIC_ISSUANCE = (7, "무상증자 결정", f"{API_URL}/fricDecsn.json")                    # 주요사항보고서(무상증자 결정) 내에 주요 정보를 제공합니다.
-    PUBLIC_UNPUBLIC_ISSUANCE = (8, "유무상증자 결정", f"{API_URL}/pifricDecsn.json")                 # 주요사항보고서(유무상증자 결정) 내에 주요 정보를 제공합니다.
-    CAPITAL_REDUCTION = (9, "감자 결정", f"{API_URL}/crDecsn.json")                         # 주요사항보고서(감자 결정) 내에 주요 정보를 제공합니다.
-    BANKRUPTCY_PROCEDURE = (10, "채권은행 등의 관리절차 개시", f"{API_URL}/bnkMngtPcbg.json")        # 주요사항보고서(채권은행 등의 관리절차 개시) 내에 주요 정보를 제공합니다.
-    LEGAL_ACT = (11, "소송 등의 제기", f"{API_URL}/lwstLg.json")                      # 주요사항보고서(소송 등의 제기) 내에 주요 정보를 제공합니다.
-    OVERSEAS_LISTING_DECISION = (12, "해외 증권시장 주권등 상장 결정", f"{API_URL}/ovLstDecsn.json")      # 주요사항보고서(해외 증권시장 주권등 상장 결정) 내에 주요 정보를 제공합니다.
-    OVERSEAS_DELISTING_DECISION = (13, "해외 증권시장 주권등 상장폐지 결정", f"{API_URL}/ovDlstDecsn.json")  # 주요사항보고서(해외 증권시장 주권등 상장폐지 결정) 내에 주요 정보를 제공합니다.
-    OVERSEAS_LISTING = (14, "해외 증권시장 주권등 상장", f"{API_URL}/ovLst.json")               # 주요사항보고서(해외 증권시장 주권등 상장) 내에 주요 정보를 제공합니다.
-    OVERSEAS_DELISTING = (15, "해외 증권시장 주권등 상장폐지", f"{API_URL}/ovDlst.json")           # 주요사항보고서(해외 증권시장 주권등 상장폐지) 내에 주요 정보를 제공합니다.
-    CB_ISSUANCE_DECISION = (16, "전환사채권 발행결정", f"{API_URL}/cvbdIsDecsn.json")              # 주요사항보고서(전환사채권 발행결정) 내에 주요 정보를 제공합니다.
-    BW_ISSUANCE_DECISION = (17, "신주인수권부사채권 발행결정", f"{API_URL}/bdwtIsDecsn.json")        # 주요사항보고서(신주인수권부사채권 발행결정) 내에 주요 정보를 제공합니다.
-    EB_ISSUANCE_DECISION = (18, "교환사채권 발행결정", f"{API_URL}/exbdIsDecsn.json")              # 주요사항보고서(교환사채권 발행결정) 내에 주요 정보를 제공합니다.
-    BANKRUPTCY_PROCEDURE_SUSPENSION = (19, "채권은행 등의 관리절차 중단", f"{API_URL}/bnkMngtPcsp.json")        # 주요사항보고서(채권은행 등의 관리절차 중단) 내에 주요 정보를 제공합니다.
-    COCO_BOND_ISSUANCE_DECISION = (20, "상각형 조건부자본증권 발행결정", f"{API_URL}/wdCocobdIsDecsn.json")  # 주요사항보고서(상각형 조건부자본증권 발행결정) 내에 주요 정보를 제공합니다.
-    SHARE_BUYBACK_DECISION = (21, "자기주식 취득 결정", f"{API_URL}/tsstkAqDecsn.json")                  # 주요사항보고서(자기주식 취득 결정) 내에 주요 정보를 제공합니다.
-    TREASURY_STOCK_DISPOSAL_DECISION = (22, "자기주식 처분 결정", f"{API_URL}/tsstkDpDecsn.json")                  # 주요사항보고서(자기주식 처분 결정) 내에 주요 정보를 제공합니다.
-    TRUST_AGREEMENT_ACQUISITION_DECISION = (23, "자기주식취득 신탁계약 체결 결정", f"{API_URL}/tsstkAqTrctrCnsDecsn.json") # 주요사항보고서(자기주식취득 신탁계약 체결 결정) 내에 주요 정보를 제공합니다.
-    TRUST_AGREEMENT_RESOLUTION_DECISION = (24, "자기주식취득 신탁계약 해지 결정", f"{API_URL}/tsstkAqTrctrCcDecsn.json") # 주요사항보고서(자기주식취득 신탁계약 해지 결정) 내에 주요 정보를 제공합니다.
-    BUSINESS_ACQUISITION_DECISION = (25, "영업양수 결정", f"{API_URL}/bsnInhDecsn.json")                           # 주요사항보고서(영업양수 결정) 내에 주요 정보를 제공합니다.
-    BUSINESS_TRANSFER_DECISION = (26, "영업양도 결정", f"{API_URL}/bsnTrfDecsn.json")                           # 주요사항보고서(영업양도 결정) 내에 주요 정보를 제공합니다.
-    ASSET_ACQUISITION_DECISION = (27, "유형자산 양수 결정", f"{API_URL}/tgastInhDecsn.json")                     # 주요사항보고서(유형자산 양수 결정) 내에 주요 정보를 제공합니다.
-    ASSET_TRANSFER_DECISION = (28, "유형자산 양도 결정", f"{API_URL}/tgastTrfDecsn.json")                     # 주요사항보고서(유형자산 양도 결정) 내에 주요 정보를 제공합니다.
-    OTHER_SHARE_ACQUISITION_DECISION = (29, "타법인 주식 및 출자증권 양수결정", f"{API_URL}/otcprStkInvscrInhDecsn.json") # 주요사항보고서(타법인 주식 및 출자증권 양수결정) 내에 주요 정보를 제공합니다.
-    OTHER_SHARE_TRANSFER_DECISION = (30, "타법인 주식 및 출자증권 양도결정", f"{API_URL}/otcprStkInvscrTrfDecsn.json") # 주요사항보고서(타법인 주식 및 출자증권 양도결정) 내에 주요 정보를 제공합니다.
-    EQUITY_LINKED_BOND_ACQUISITION_DECISION = (31, "주권 관련 사채권 양수 결정", f"{API_URL}/stkrtbdInhDecsn.json")            # 주요사항보고서(주권 관련 사채권 양수 결정) 내에 주요 정보를 제공합니다.
-    EQUITY_LINKED_BOND_TRANSFER_DECISION = (32, "주권 관련 사채권 양도 결정", f"{API_URL}/stkrtbdTrfDecsn.json")            # 주요사항보고서(주권 관련 사채권 양도 결정) 내에 주요 정보를 제공합니다.
-    COMPANY_MERGER_DECISION = (33, "회사합병 결정", f"{API_URL}/cmpMgDecsn.json")                           # 주요사항보고서(회사합병 결정) 내에 주요 정보를 제공합니다.
-    COMPANY_SPINOFF_DECISION = (34, "회사분할 결정", f"{API_URL}/cmpDvDecsn.json")                           # 주요사항보고서(회사분할 결정) 내에 주요 정보를 제공합니다.
-    COMPANY_SPINOFF_MERGER_DECISION = (35, "회사분할합병 결정", f"{API_URL}/cmpDvmgDecsn.json")                      # 주요사항보고서(회사분할합병 결정) 내에 주요 정보를 제공합니다.
-    SHARE_EXCHANGE_DECISION = (36, "주식교환·이전 결정", f"{API_URL}/stkExtrDecsn.json")                     # 주요사항보고서(주식교환·이전 결정) 내에 주요 정보를 제공합니다.
+    PUT_OPTION = (1, "자산양수도(기타), 풋백옵션", f"{API_URL}/astInhtrfEtcPtbkOpt.json", 
+                "주요사항보고서(자산양수도(기타), 풋백옵션) 내에 주요 정보를 제공합니다.")
+    BANKRUPTCY = (2, "부도발생", f"{API_URL}/dfOcr.json", 
+                "주요사항보고서(부도발생) 내에 주요 정보를 제공합니다.")
+    SUSPENSION = (3, "영업정지", f"{API_URL}/bsnSp.json", 
+                "주요사항보고서(영업정지) 내에 주요 정보를 제공합니다.")
+    RESTORATION = (4, "회생절차 개시신청", f"{API_URL}/ctrcvsBgrq.json", 
+                "주요사항보고서(회생절차 개시신청) 내에 주요 정보를 제공합니다.")
+    DISSOLUTION = (5, "해산사유 발생", f"{API_URL}/dsRsOcr.json", 
+                "주요사항보고서(해산사유 발생) 내에 주요 정보를 제공합니다.")
+    PUBLIC_ISSUANCE = (6, "유상증자 결정", f"{API_URL}/piicDecsn.json", 
+                "주요사항보고서(유상증자 결정) 내에 주요 정보를 제공합니다.")
+    UNPUBLIC_ISSUANCE = (7, "무상증자 결정", f"{API_URL}/fricDecsn.json", 
+                "주요사항보고서(무상증자 결정) 내에 주요 정보를 제공합니다.")
+    PUBLIC_UNPUBLIC_ISSUANCE = (8, "유무상증자 결정", f"{API_URL}/pifricDecsn.json", 
+                "주요사항보고서(유무상증자 결정) 내에 주요 정보를 제공합니다.")
+    CAPITAL_REDUCTION = (9, "감자 결정", f"{API_URL}/crDecsn.json", 
+                "주요사항보고서(감자 결정) 내에 주요 정보를 제공합니다.")
+    BANKRUPTCY_PROCEDURE = (10, "채권은행 등의 관리절차 개시", f"{API_URL}/bnkMngtPcbg.json", 
+                "주요사항보고서(채권은행 등의 관리절차 개시) 내에 주요 정보를 제공합니다.")
+    LEGAL_ACT = (11, "소송 등의 제기", f"{API_URL}/lwstLg.json", 
+                "주요사항보고서(소송 등의 제기) 내에 주요 정보를 제공합니다.")
+    OVERSEAS_LISTING_DECISION = (12, "해외 증권시장 주권등 상장 결정", f"{API_URL}/ovLstDecsn.json", 
+                "주요사항보고서(해외 증권시장 주권등 상장 결정) 내에 주요 정보를 제공합니다.")
+    OVERSEAS_DELISTING_DECISION = (13, "해외 증권시장 주권등 상장폐지 결정", f"{API_URL}/ovDlstDecsn.json", 
+                "주요사항보고서(해외 증권시장 주권등 상장폐지 결정) 내에 주요 정보를 제공합니다.")
+    OVERSEAS_LISTING = (14, "해외 증권시장 주권등 상장", f"{API_URL}/ovLst.json", 
+                "주요사항보고서(해외 증권시장 주권등 상장) 내에 주요 정보를 제공합니다.")
+    OVERSEAS_DELISTING = (15, "해외 증권시장 주권등 상장폐지", f"{API_URL}/ovDlst.json", 
+                "주요사항보고서(해외 증권시장 주권등 상장폐지) 내에 주요 정보를 제공합니다.")
+    CB_ISSUANCE_DECISION = (16, "전환사채권 발행결정", f"{API_URL}/cvbdIsDecsn.json", 
+                "주요사항보고서(전환사채권 발행결정) 내에 주요 정보를 제공합니다.")
+    BW_ISSUANCE_DECISION = (17, "신주인수권부사채권 발행결정", f"{API_URL}/bdwtIsDecsn.json", 
+                "주요사항보고서(신주인수권부사채권 발행결정) 내에 주요 정보를 제공합니다.")
+    EB_ISSUANCE_DECISION = (18, "교환사채권 발행결정", f"{API_URL}/exbdIsDecsn.json", 
+                "주요사항보고서(교환사채권 발행결정) 내에 주요 정보를 제공합니다.")
+    BANKRUPTCY_PROCEDURE_SUSPENSION = (19, "채권은행 등의 관리절차 중단", f"{API_URL}/bnkMngtPcsp.json", 
+                "주요사항보고서(채권은행 등의 관리절차 중단) 내에 주요 정보를 제공합니다.")
+    COCO_BOND_ISSUANCE_DECISION = (20, "상각형 조건부자본증권 발행결정", f"{API_URL}/wdCocobdIsDecsn.json", 
+                "주요사항보고서(상각형 조건부자본증권 발행결정) 내에 주요 정보를 제공합니다.")
+    SHARE_BUYBACK_DECISION = (21, "자기주식 취득 결정", f"{API_URL}/tsstkAqDecsn.json", 
+                "주요사항보고서(자기주식 취득 결정) 내에 주요 정보를 제공합니다.")
+    TREASURY_STOCK_DISPOSAL_DECISION = (22, "자기주식 처분 결정", f"{API_URL}/tsstkDpDecsn.json", 
+                "주요사항보고서(자기주식 처분 결정) 내에 주요 정보를 제공합니다.")
+    TRUST_AGREEMENT_ACQUISITION_DECISION = (23, "자기주식취득 신탁계약 체결 결정", f"{API_URL}/tsstkAqTrctrCnsDecsn.json", 
+                "주요사항보고서(자기주식취득 신탁계약 체결 결정) 내에 주요 정보를 제공합니다.")
+    TRUST_AGREEMENT_RESOLUTION_DECISION = (24, "자기주식취득 신탁계약 해지 결정", f"{API_URL}/tsstkAqTrctrCcDecsn.json", 
+                "주요사항보고서(자기주식취득 신탁계약 해지 결정) 내에 주요 정보를 제공합니다.")
+    BUSINESS_ACQUISITION_DECISION = (25, "영업양수 결정", f"{API_URL}/bsnInhDecsn.json", 
+                "주요사항보고서(영업양수 결정) 내에 주요 정보를 제공합니다.")
+    BUSINESS_TRANSFER_DECISION = (26, "영업양도 결정", f"{API_URL}/bsnTrfDecsn.json", 
+                "주요사항보고서(영업양도 결정) 내에 주요 정보를 제공합니다.")
+    ASSET_ACQUISITION_DECISION = (27, "유형자산 양수 결정", f"{API_URL}/tgastInhDecsn.json", 
+                "주요사항보고서(유형자산 양수 결정) 내에 주요 정보를 제공합니다.")
+    ASSET_TRANSFER_DECISION = (28, "유형자산 양도 결정", f"{API_URL}/tgastTrfDecsn.json", 
+                "주요사항보고서(유형자산 양도 결정) 내에 주요 정보를 제공합니다.")
+    OTHER_SHARE_ACQUISITION_DECISION = (29, "타법인 주식 및 출자증권 양수결정", f"{API_URL}/otcprStkInvscrInhDecsn.json", 
+                "주요사항보고서(타법인 주식 및 출자증권 양수결정) 내에 주요 정보를 제공합니다.")
+    OTHER_SHARE_TRANSFER_DECISION = (30, "타법인 주식 및 출자증권 양도결정", f"{API_URL}/otcprStkInvscrTrfDecsn.json", 
+                "주요사항보고서(타법인 주식 및 출자증권 양도결정) 내에 주요 정보를 제공합니다.")
+    EQUITY_LINKED_BOND_ACQUISITION_DECISION = (31, "주권 관련 사채권 양수 결정", f"{API_URL}/stkrtbdInhDecsn.json", 
+                "주요사항보고서(주권 관련 사채권 양수 결정) 내에 주요 정보를 제공합니다.")
+    EQUITY_LINKED_BOND_TRANSFER_DECISION = (32, "주권 관련 사채권 양도 결정", f"{API_URL}/stkrtbdTrfDecsn.json", 
+                "주요사항보고서(주권 관련 사채권 양도 결정) 내에 주요 정보를 제공합니다.")
+    COMPANY_MERGER_DECISION = (33, "회사합병 결정", f"{API_URL}/cmpMgDecsn.json", 
+                "주요사항보고서(회사합병 결정) 내에 주요 정보를 제공합니다.")
+    COMPANY_SPINOFF_DECISION = (34, "회사분할 결정", f"{API_URL}/cmpDvDecsn.json", 
+                "주요사항보고서(회사분할 결정) 내에 주요 정보를 제공합니다.")
+    COMPANY_SPINOFF_MERGER_DECISION = (35, "회사분할합병 결정", f"{API_URL}/cmpDvmgDecsn.json", 
+                "주요사항보고서(회사분할합병 결정) 내에 주요 정보를 제공합니다.")
+    SHARE_EXCHANGE_DECISION = (36, "주식교환·이전 결정", f"{API_URL}/stkExtrDecsn.json", 
+                "주요사항보고서(주식교환·이전 결정) 내에 주요 정보를 제공합니다.")
 
 # 증권신고서 주요정보
 class RegistrationStatus(BaseStatus):
-    EQUITY_SHARE = (1, "지분증권", f"{API_URL}/estkRs.json")           # 증권신고서(지분증권) 내에 요약 정보를 제공합니다.
-    DEBT_SHARE = (2, "채무증권", f"{API_URL}/bdRs.json")             # 증권신고서(채무증권) 내에 요약 정보를 제공합니다.
-    DEPOSITORY_RECEIPT = (3, "증권예탁증권", f"{API_URL}/stkdpRs.json")       # 증권신고서(증권예탁증권) 내에 요약 정보를 제공합니다.
-    COMPANY_MERGER = (4, "합병", f"{API_URL}/mgRs.json")                # 증권신고서(합병) 내에 요약 정보를 제공합니다.
-    SHARE_EXCHANGE = (5, "주식의포괄적교환·이전", f"{API_URL}/extrRs.json")  # 증권신고서(주식의포괄적교환·이전) 내에 요약 정보를 제공합니다.
-    COMPANY_SPINOFF = (6, "분할", f"{API_URL}/dvRs.json")                # 증권신고서(분할) 내에 요약 정보를 제공합니다.
+    EQUITY_SHARE = (1, "지분증권", f"{API_URL}/estkRs.json", 
+                "증권신고서(지분증권) 내에 요약 정보를 제공합니다.")
+    DEBT_SHARE = (2, "채무증권", f"{API_URL}/bdRs.json", 
+                "증권신고서(채무증권) 내에 요약 정보를 제공합니다.")
+    DEPOSITORY_RECEIPT = (3, "증권예탁증권", f"{API_URL}/stkdpRs.json", 
+                "증권신고서(증권예탁증권) 내에 요약 정보를 제공합니다.")
+    COMPANY_MERGER = (4, "합병", f"{API_URL}/mgRs.json", 
+                "증권신고서(합병) 내에 요약 정보를 제공합니다.")
+    SHARE_EXCHANGE = (5, "주식의포괄적교환·이전", f"{API_URL}/extrRs.json", 
+                "증권신고서(주식의포괄적교환·이전) 내에 요약 정보를 제공합니다.")
+    COMPANY_SPINOFF = (6, "분할", f"{API_URL}/dvRs.json", 
+                "증권신고서(분할) 내에 요약 정보를 제공합니다.")
 
 T = TypeVar("T", bound="BaseRegistrationData")
 

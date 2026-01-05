@@ -18,12 +18,7 @@ from sayou.stock.opendart.models import (
     MaterialFactStatus,
     RegistrationStatus,
 )
-from sayou.stock.opendart.utils import (
-    REPORT_ITEMS,
-    OWNERSHIP_ITEMS,
-    MATERIAL_FACTS_ITEMS,
-    REGISTRATION_ITEMS
-)
+
 
 def year_and_quarter(year: int, quarter: int):
     now = datetime.now()
@@ -66,7 +61,7 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     print('='*60)
 
     rcept_no = None
-
+    report_code = None
 
     year = 2024
     quarter = 4
@@ -110,12 +105,14 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     for item in data:
         print(item)
         rcept_no = item.rcept_no
+        report_code = item.reprt_code
 
     print(f"\n{'='*60}")
     print(f"재무제표 원본파일(XBRL) 다운로드 - {rcept_no}")
     print('='*60)
 
     rcept_no = rcept_no or "20250814003156"
+    print(rcept_no, year, quarter)
     save_path = crawler.finance_file(rcept_no, quarter = 4)
     
     if not save_path:
@@ -157,15 +154,12 @@ def demo_reports(crawler: OpenDartCrawler, corp_code: str):
     print(f"회사명 또는 종목코드로 DART의 기업코드을 조회 - {code}")
     corp_name = crawler.fetch_corp_name(corp_code)
 
+    year = "2024"
+    quarter = 4
+
     # 정기보고서 주요정보 조회
-    for item, value in REPORT_ITEMS.items():
-        #print(item, value)
-        api_type, api_desc = value
-        
-        year = "2024"
-        quarter = 4
-        api_no = int(item)
-        api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    for api_no in ReportStatus:
+        api_info = f"\n{api_no.display_name} ({corp_name}, {corp_code})"
         print(api_info)
         print('-'*(int(len(api_info)*1.5)))
 
@@ -426,12 +420,12 @@ def main(code: str):
 
     # 각 파일링 타입 데모
     demo_corp_code(crawler, code)
-    #demo_base_documents(crawler, code)
+    demo_base_documents(crawler, code)
     demo_finance(crawler, corp_code)
-    #demo_reports(crawler, corp_code)
-    #demo_ownership(crawler, corp_code)
-    #demo_material_facts(crawler, corp_code)
-    #demo_registration(crawler, corp_code)
+    demo_reports(crawler, corp_code)
+    demo_ownership(crawler, corp_code)
+    demo_material_facts(crawler, corp_code)
+    demo_registration(crawler, corp_code)
     #crawler.duplicate_keys()
     
     print("\n" + "="*60)

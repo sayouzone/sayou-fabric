@@ -39,7 +39,6 @@ from ..models import (
 )
 from ..utils import (
     decode_euc_kr,
-    REPORTS_URLS,
     quarters,
     REPORT_ITEMS,
     REPORTS_COLUMNS,

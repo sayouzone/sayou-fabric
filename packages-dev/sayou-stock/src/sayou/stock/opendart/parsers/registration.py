@@ -33,7 +33,6 @@ from ..models import (
 )
 from ..utils import (
     decode_euc_kr,
-    REGISTRATION_URLS,
     quarters,
     duplicate_keys,
     REGISTRATION_COLUMNS
