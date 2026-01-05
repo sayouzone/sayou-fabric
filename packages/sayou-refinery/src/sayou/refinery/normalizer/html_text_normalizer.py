@@ -31,9 +31,10 @@ class HtmlTextNormalizer(BaseNormalizer):
 
         if isinstance(raw_data, str):
             sample = raw_data[:1000].lower()
-            if "<html" in sample or "<body" in sample or "<div" in sample:
-                return 0.9
-
+            if "<html" in sample or "<!doctype html" in sample:
+                return 1.0
+            if "<body" in sample or "<div" in sample:
+                return 0.95
         return 0.0
 
     def _do_normalize(self, raw_data: Any) -> List[SayouBlock]:
@@ -60,13 +61,25 @@ class HtmlTextNormalizer(BaseNormalizer):
 
         soup = BeautifulSoup(raw_data, "html.parser")
 
-        for tag in soup(["script", "style", "noscript", "iframe"]):
+        extracted_meta = {"strategy": "html_parsed"}
+
+        if soup.title and soup.title.string:
+            extracted_meta["title"] = soup.title.string.strip()
+            extracted_meta["subject"] = soup.title.string.strip()
+
+        for meta_tag in soup.find_all("meta"):
+            name = meta_tag.get("name") or meta_tag.get("property")
+            content = meta_tag.get("content")
+            if name and content:
+                extracted_meta[name] = content
+
+        for tag in soup(["script", "style", "noscript", "iframe", "head"]):
             tag.extract()
 
-        text = soup.get_text(separator="\n")
+        text_content = soup.get_text(separator="\n")
 
         import re
 
-        text = re.sub(r"\n{3,}", "\n\n", text).strip()
+        text_content = re.sub(r"\n{3,}", "\n\n", text_content).strip()
 
-        return [SayouBlock(type="text", content=text, metadata={"strategy": "html"})]
+        return [SayouBlock(type="text", content=text_content, metadata=extracted_meta)]
