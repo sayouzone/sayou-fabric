@@ -122,6 +122,9 @@ class TransferPipeline(BaseComponent):
             if not destination:
                 raise ValueError("Destination is required for TransferPipeline.")
 
+            if not os.path.exists(destination):
+                os.makedirs(destination, exist_ok=True)
+
             run_config = {**self.config._config, **kwargs}
             self._log(f"--- Starting Transfer: {source} -> {destination} ---")
 
@@ -139,19 +142,16 @@ class TransferPipeline(BaseComponent):
         # -----------------------------------------------------------
         # [Phase 1] Connector (Extract)
         # -----------------------------------------------------------
-        packets = []
+        packets_gen = None
         try:
             self._log(f"🚀 [Phase 1] Extracting from '{source}'...")
             conn_strat = strategies.get("connector", "auto")
 
             packets_gen = self.connector.run(source, strategy=conn_strat, **run_config)
-            packets = list(packets_gen) if packets_gen else []
 
-            if not packets:
-                self._log("⚠️ [Phase 1] No data extracted.", level="warning")
+            if not packets_gen:
+                self._log("⚠️ [Phase 1] No data generator returned.", level="warning")
                 return stats
-
-            self._log(f"   -> Extracted {len(packets)} packets.")
 
         except Exception as e:
             self._log(f"💥 [Phase 1] Extraction Failed: {e}", level="error")
@@ -161,79 +161,122 @@ class TransferPipeline(BaseComponent):
         # -----------------------------------------------------------
         # [Phase 2] Processing Loop (Transform & Aggregate)
         # -----------------------------------------------------------
-        data_buffer = []
 
-        for packet in packets:
+        for i, packet in enumerate(packets_gen):
             if not packet.success:
                 self._log(f"⚠️ Extract error: {packet.error}", level="warning")
                 stats["failed"] += 1
                 continue
 
-            if not use_refinery:
-                data_buffer.append(packet.data)
-                stats["read"] += 1
-                continue
+            stats["read"] += 1
 
-            items = [packet.data]
+            # 1. Data Preparation
+            current_data = packet.data
 
-            # -------------------------------------------------------
-            # [Step 2] Refinery (Optional Transform)
-            # -------------------------------------------------------
+            # 2. Refinery
             if use_refinery:
                 try:
                     ref_strat = strategies.get("refinery", "auto")
-                    processed_items = self.refinery.run(
-                        items, strategy=ref_strat, **run_config
+                    processed = self.refinery.run(
+                        current_data, strategy=ref_strat, **run_config
                     )
 
-                    if processed_items:
-                        items = processed_items
+                    if processed:
+                        current_data = processed
                     else:
+                        self._log(f"⚠️ Refinery filtered out item {i}.", level="warning")
                         continue
 
                 except Exception as e:
-                    self._log(f"💥 [Phase 2] Refinery Error: {e}", level="error")
+                    self._log(
+                        f"💥 [Phase 2] Refinery Error on item {i}: {e}", level="error"
+                    )
                     stats["failed"] += 1
                     continue
 
-            # 버퍼에 추가
-            data_buffer.extend(items)
-            stats["read"] += len(items)
+            # 3. Dynamic Destination Resolution
+            final_path = self._resolve_output_path(destination, packet, i)
 
-        if not data_buffer:
-            self._log("⚠️ [Phase 2] No valid data to load.", level="warning")
-            return stats
+            # 4. Loader (Load Immediately)
+            try:
+                load_strat = strategies.get("loader", "auto")
 
-        self._log(f"🚀 [Phase 2] Aggregated {len(data_buffer)} items.")
-
-        # -----------------------------------------------------------
-        # [Phase 3] Loader (Load)
-        # -----------------------------------------------------------
-        try:
-            load_strat = strategies.get("loader", "auto")
-            self._log(f"🚀 [Phase 3] Loading to '{destination}'...")
-
-            success = self.loader.run(
-                input_data=data_buffer,
-                destination=destination,
-                strategy=load_strat,
-                **run_config,
-            )
-
-            if success:
-                stats["written"] = len(data_buffer)
-                self._log(
-                    f"✅ [Success] Transfer Complete. Written: {stats['written']}"
+                success = self.loader.run(
+                    input_data=current_data,
+                    destination=final_path,
+                    strategy=load_strat,
+                    **run_config,
                 )
-            else:
-                self._log("❌ [Phase 3] Loader returned failure.", level="error")
-                stats["failed"] += len(data_buffer)
 
-        except Exception as e:
-            self._log(f"💥 [Phase 3] Load Error: {e}", level="error")
-            self._log(traceback.format_exc(), level="error")
-            stats["failed"] += len(data_buffer)
-            self._emit("on_error", error=e)
+                if success:
+                    stats["written"] += 1
+                    self._log(f"✅ Saved: {os.path.basename(final_path)}")
+                else:
+                    self._log(f"❌ Failed to save: {final_path}", level="error")
+                    stats["failed"] += 1
+
+            except Exception as e:
+                self._log(f"💥 [Phase 3] Load Error: {e}", level="error")
+                stats["failed"] += 1
 
         self._emit("on_finish", result_data=stats, success=True)
         return stats
+
+    def _resolve_output_path(self, base_dir: str, packet: Any, index: int) -> str:
+        """
+        Helper: Generates a unique filename with SMART extension detection.
+        """
+        import re
+        import os
+
+        # 1. Extract metadata
+        meta = {}
+        if hasattr(packet, "task") and packet.task.meta:
+            meta.update(packet.task.meta)
+        if isinstance(packet.data, dict):
+            meta.update(packet.data.get("meta", {}))
+
+        # 2. Determine file name
+        candidate = (
+            meta.get("filename")
+            or meta.get("subject")
+            or meta.get("uid")
+            or f"file_{index}"
+        )
+        safe_name = re.sub(r'[\\/*?:"<>|]', "", str(candidate)).strip()
+        safe_name = safe_name.replace(" ", "_")
+        if not safe_name:
+            safe_name = f"untitled_{index}"
+
+        # 3. Smart Extension
+        current_ext = os.path.splitext(safe_name)[1].lower()
+
+        if not current_ext:
+            data = packet.data
+
+            # Case A: HTML String
+            if isinstance(data, str):
+                sample = data[:500].lower().strip()
+                if "<html" in sample or "<!doctype html" in sample:
+                    safe_name += ".html"
+                elif sample.startswith("# ") or "**" in sample:
+                    safe_name += ".md"
+                else:
+                    safe_name += ".txt"
+
+            # Case B: Dictionary / List (JSON)
+            elif isinstance(data, (dict, list)):
+                safe_name += ".json"
+
+            # Case C: Bytes (Binary)
+            elif isinstance(data, bytes):
+                safe_name += ".bin"
+
+            # Case D: SayouBlock List
+            elif isinstance(data, list) and len(data) > 0 and hasattr(data[0], "type"):
+                safe_name += ".json"
+
+            else:
+                safe_name += ".json"
+
+        return os.path.join(base_dir, safe_name)
