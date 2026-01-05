@@ -31,23 +31,6 @@ PDF_URL = "https://dart.fss.or.kr/pdf/download/pdf.do?rcp_no={rcp_no}&dcm_no={dc
 PDF_MAIN_URL = "http://dart.fss.or.kr/pdf/download/main.do"
 VIEWER_URL = "https://dart.fss.or.kr/report/viewer.do"
 
-"""
-공시정보: Public Disclosure, https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS001
-정기보고서 주요정보: Key Information in Periodic Reports, https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS002
-정기보고서 재무정보: Financial Information in Periodic Reports, https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS003
-지분공시 종합정보: Comprehensive Share Ownership Information, https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS004
-주요사항보고서 주요정보: Key Information in Reports on Material Facts, https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS005
-증권신고서 주요정보: Key Information in Registration Statements, https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS006
-"""
-
-# 공시정보
-DISCLOSURE_URLS = {
-    "공시검색": f"{API_URL}/list.json", # 공시 유형별, 회사별, 날짜별 등 여러가지 조건으로 공시보고서 검색기능을 제공합니다.
-    "기업개황": f"{API_URL}/company.json", # DART에 등록되어있는 기업의 개황정보를 제공합니다.
-    "공시서류원본파일": f"{API_URL}/document.xml", # 공시보고서 원본파일을 제공합니다.
-    "고유번호": f"{API_URL}/corpCode.xml" # DART에 등록되어있는 공시대상회사의 고유번호,회사명,종목코드, 최근변경일자를 파일로 제공합니다.
-}
-
 quarters = {
     "1": "11013", # 1분기보고서
     "2": "11012", # 반기보고서

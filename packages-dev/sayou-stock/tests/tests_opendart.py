@@ -79,8 +79,8 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     rcept_no = None
     report_code = None
 
-    year = 2024
-    quarter = 4
+    year = 2025
+    quarter = 3
     year, quarter = year_and_quarter(year, quarter)
 
     corp_name = crawler.fetch_corp_name(corp_code)
@@ -91,7 +91,6 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    #data = crawler.finance(corp_code, year, api_type=api_type)
     data = crawler.single_company_main_accounts(corp_code, year, quarter)
     #print(data)
     for item in data:
@@ -103,20 +102,31 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    #data = crawler.finance(corp_code, year, api_type=api_type)
     data = crawler.multi_company_main_accounts(corp_code, year, quarter)
     #print(data)
     for item in data:
         print(item)
     
-    # 단일회사 전체 재무제표
+    # 단일회사 전체 재무제표 (별도)
     api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
-    api_info = f"\n{api_no.display_name} ({corp_name}, {corp_code})"
+    api_info = f"\n{api_no.display_name} (별도) ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
     
-    #data = crawler.finance(corp_code, year, api_type=api_type)
-    data = crawler.single_company_financial_statements(corp_code, year, quarter)
+    data = crawler.financial_statements(corp_code, year, quarter, financial_statement="OFS")
+    #print(data)
+    for item in data:
+        print(item)
+        rcept_no = item.rcept_no
+        report_code = item.reprt_code
+    
+    # 단일회사 전체 재무제표 (연결)
+    api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
+    api_info = f"\n{api_no.display_name} (연결) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+    
+    data = crawler.financial_statements(corp_code, year, quarter, financial_statement="CFS")
     #print(data)
     for item in data:
         print(item)
@@ -135,7 +145,7 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         print(f"파일이 존재하지 않습니다. {rcept_no}")
     else:
         print(f"저장 경로: {save_path}")
-    """
+
     # 단일회사 주요 재무지표
     api_no = FinanceStatus.SINGLE_COMPANY_KEY_FINANCIAL_INDICATOR
     api_info = f"\n{api_no.display_name} ({corp_name}, {corp_code})"
@@ -160,7 +170,40 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         #print(data)
         for item in data:
             print(item)
-    """
+
+def demo_finance1(crawler: OpenDartCrawler, corp_code: str):
+    """정기보고서 재무정보 데모"""
+    print(f"\n{'='*60}")
+    print(f"정기보고서 재무정보 조회 - {code}")
+    print('='*60)
+
+    year = None
+    quarter = None
+    year, quarter = year_and_quarter(year, quarter)
+
+    corp_name = crawler.fetch_corp_name(corp_code)
+
+    # 포괄손익계산서 (연결) (연간)
+    api_info = f"\n포괄손익계산서 (연결) (연간) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_cis, df_is, df_bs, df_cf = crawler.income_statement(corp_code, year, quarter)
+    print(df_cis)
+    print(df_is)
+    print(df_bs)
+    print(df_cf)
+
+    # 포괄손익계산서 (연결) (분기)
+    api_info = f"\n포괄손익계산서 (연결) (분기) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_cis, df_is, df_bs, df_cf = crawler.quarterly_income_statement(corp_code, year, quarter)
+    print(df_cis)
+    print(df_is)
+    print(df_bs)
+    print(df_cf)
 
 def demo_reports(crawler: OpenDartCrawler, corp_code: str):
     """정기보고서 주요정보 데모"""
@@ -441,7 +484,8 @@ def main(code: str):
     # 각 파일링 타입 데모
     #demo_corp_code(crawler, code)
     #demo_base_documents(crawler, code)
-    demo_finance(crawler, corp_code)
+    #demo_finance(crawler, corp_code)
+    demo_finance1(crawler, corp_code)
     #demo_reports(crawler, corp_code)
     #demo_ownership(crawler, corp_code)
     #demo_material_facts(crawler, corp_code)

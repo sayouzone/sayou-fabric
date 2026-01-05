@@ -75,7 +75,6 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    #data = crawler.finance(corp_code, year, api_type=api_type)
     data = crawler.single_company_main_accounts(corp_code, year, quarter)
     #print(data)
     for item in data:
@@ -87,20 +86,31 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    #data = crawler.finance(corp_code, year, api_type=api_type)
     data = crawler.multi_company_main_accounts(corp_code, year, quarter)
     #print(data)
     for item in data:
         print(item)
     
-    # 단일회사 전체 재무제표
+    # 단일회사 전체 재무제표 (별도)
     api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
-    api_info = f"\n{api_no.display_name} ({corp_name}, {corp_code})"
+    api_info = f"\n{api_no.display_name} (별도) ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
     
-    #data = crawler.finance(corp_code, year, api_type=api_type)
-    data = crawler.single_company_financial_statements(corp_code, year, quarter)
+    data = crawler.ofs_financial_statements(corp_code, year, quarter)
+    #print(data)
+    for item in data:
+        print(item)
+        rcept_no = item.rcept_no
+        report_code = item.reprt_code
+    
+    # 단일회사 전체 재무제표 (연결)
+    api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
+    api_info = f"\n{api_no.display_name} (연결) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+    
+    data = crawler.cfs_financial_statements(corp_code, year, quarter)
     #print(data)
     for item in data:
         print(item)
@@ -127,7 +137,6 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     print('-'*(int(len(api_info)*1.5)))
     
     for indicator_code in IndexClassCode:
-        #data = crawler.finance(corp_code, year, api_type=api_type)
         data = crawler.single_company_key_financial_indicators(corp_code, year, quarter, indicator_code)
         #print(data)
         for item in data:
@@ -419,13 +428,13 @@ def main(code: str):
     print(f"\n{code} corp_code: {corp_code}")
 
     # 각 파일링 타입 데모
-    demo_corp_code(crawler, code)
-    demo_base_documents(crawler, code)
+    #demo_corp_code(crawler, code)
+    #demo_base_documents(crawler, code)
     demo_finance(crawler, corp_code)
-    demo_reports(crawler, corp_code)
-    demo_ownership(crawler, corp_code)
-    demo_material_facts(crawler, corp_code)
-    demo_registration(crawler, corp_code)
+    #demo_reports(crawler, corp_code)
+    #demo_ownership(crawler, corp_code)
+    #demo_material_facts(crawler, corp_code)
+    #demo_registration(crawler, corp_code)
     #crawler.duplicate_keys()
     
     print("\n" + "="*60)

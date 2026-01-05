@@ -555,10 +555,10 @@ class OpenDartCrawler:
         api_no = FinanceStatus.MULTI_COMPANY_MAIN_ACCOUNTS
         return self._finance_parser.finance(corp_code, year, quarter, api_no=api_no)
 
-    def single_company_financial_statements(self, corp_code: str, year: str, quarter: int):
+    def financial_statements(self, corp_code: str, year: str, quarter: int, financial_statement="OFS"):
         """OpenDart 정기보고서 재무정보 - 단일회사 전체 재무제표"""
         api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
-        return self._finance_parser.finance(corp_code, year, quarter, api_no=api_no, financial_statement="OFS")
+        return self._finance_parser.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
 
     def xbrl_taxonomy_financial_statements(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - XBRL택사노미재무제표양식"""
@@ -586,6 +586,30 @@ class OpenDartCrawler:
         """OpenDart 정기보고서 재무정보 - 다중회사 주요 재무지표"""
         api_no = FinanceStatus.MULTI_COMPANY_KEY_FINANCIAL_INDICATOR
         return self._finance_parser.finance(corp_code, year, quarter, api_no=api_no, indicator_code=indicator_code)
+
+    def balance_sheet(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 재무상태표"""
+        pass
+
+    def quarterly_balance_sheet(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 재무상태표"""
+        pass
+
+    def income_statement(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 손익계산서"""
+        return self._finance_parser.income_statement(corp_code, year, quarter)
+
+    def quarterly_income_statement(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 손익계산서"""
+        return self._finance_parser.quarterly_income_statement(corp_code, year, quarter)
+
+    def cash_flow(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 현금흐름표"""
+        pass
+
+    def quarterly_cash_flow(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 현금흐름표"""
+        pass
 
     def _fetch_list(
         self,
