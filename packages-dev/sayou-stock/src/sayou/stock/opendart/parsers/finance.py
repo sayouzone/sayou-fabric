@@ -92,7 +92,7 @@ class OpenDartFinanceParser:
         api_no: int | FinanceStatus = FinanceStatus.SINGLE_COMPANY_MAIN_ACCOUNTS,
         financial_statement: str = "OFS", # OFS:재무제표, CFS:연결재무제표
         financial_statement_type: str = "BS1",
-        indicator_code: IndexClassCode = IndexClassCode.PROFITABILITY) -> List[Any]:
+        indicator_code: str | IndexClassCode = IndexClassCode.PROFITABILITY) -> List[Any]:
         """
         OpenDart 정기보고서 재무정보
         corp_code으로만 조회가 가능, stock_code 및 기업명으로는 조회되지 않는다.
@@ -164,14 +164,12 @@ class OpenDartFinanceParser:
         )
 
         if api_no == FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT:
-            #params["fs_div"] = "OFS" # OFS:재무제표, CFS:연결재무제표
             request.fs_div = financial_statement # OFS:재무제표, CFS:연결재무제표
         elif api_no == FinanceStatus.XBRL_TAXONOMY_FINANCIAL_STATEMENT:
-            #params["sj_div"] = "BS1" # ※재무제표구분 참조
             request.sj_div = financial_statement_type # ※재무제표구분 참조
-        elif api_no == FinanceStatus.SINGLE_COMPANY_FINANCIAL_INDICATOR or \
-             api_no == FinanceStatus.MULTI_COMPANY_FINANCIAL_INDICATOR:
-            request.idx_cl_code = indicator_code # 수익성지표 : M210000 안정성지표 : M220000 성장성지표 : M230000 활동성지표 : M240000
+        elif api_no == FinanceStatus.SINGLE_COMPANY_KEY_FINANCIAL_INDICATOR or \
+             api_no == FinanceStatus.MULTI_COMPANY_KEY_FINANCIAL_INDICATOR:
+            request.idx_cl_code = indicator_code.value
 
         print(f"URL: {url}, params: {request.to_params()}")
         response = self.client._get(url, params=request.to_params())

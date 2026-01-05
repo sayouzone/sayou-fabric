@@ -94,6 +94,11 @@ class IndexClassCode(Enum):
             if member.value == value:
                 return member
         return None
+    
+    @property
+    def display_name(self) -> str:
+        """표시명"""
+        return self._display_name
 
     @property
     def display_name(self) -> str:
@@ -113,10 +118,12 @@ class FinancialStatementCategory(Enum):
     BS2 = "재무상태표", "개별", "유동/비유동법"
     BS3 = "재무상태표", "연결", "유동성배열법"
     BS4 = "재무상태표", "개별", "유동성배열법"
+
     IS1 = "별개의 손익계산서", "연결", "기능별분류"
     IS2 = "별개의 손익계산서", "개별", "기능별분류"
     IS3 = "별개의 손익계산서", "연결", "성격별분류"
     IS4 = "별개의 손익계산서", "개별", "성격별분류"
+    
     CIS1 = "포괄손익계산서", "연결", "세후"
     CIS2 = "포괄손익계산서", "개별", "세후"
     CIS3 = "포괄손익계산서", "연결", "세전"

@@ -16,6 +16,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from opendart import OpenDartCrawler
 from opendart.models import (
+    IndexClassCode,
+    FinanceStatus,
+    ReportStatus,
     OwnershipStatus,
     MaterialFactStatus,
     RegistrationStatus,
@@ -83,220 +86,78 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     corp_name = crawler.fetch_corp_name(corp_code)
 
     # 단일회사 주요계정
-    api_type = "단일회사 주요계정"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    api_no = FinanceStatus.SINGLE_COMPANY_MAIN_ACCOUNTS
+    api_info = f"\n{api_no.display_name} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    data = crawler.finance(corp_code, year, api_type=api_type)
+    #data = crawler.finance(corp_code, year, api_type=api_type)
+    data = crawler.single_company_main_accounts(corp_code, year, quarter)
     #print(data)
     for item in data:
         print(item)
     
     # 다중회사 주요계정
-    api_type = "다중회사 주요계정"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    api_no = FinanceStatus.MULTI_COMPANY_MAIN_ACCOUNTS
+    api_info = f"\n{api_no.display_name} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    data = crawler.finance(corp_code, year, api_type=api_type)
+    #data = crawler.finance(corp_code, year, api_type=api_type)
+    data = crawler.multi_company_main_accounts(corp_code, year, quarter)
     #print(data)
     for item in data:
         print(item)
     
     # 단일회사 전체 재무제표
-    api_type = "단일회사 전체 재무제표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
+    api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
+    api_info = f"\n{api_no.display_name} ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
     
-    data = crawler.finance(corp_code, year, api_type=api_type)
+    #data = crawler.finance(corp_code, year, api_type=api_type)
+    data = crawler.single_company_financial_statements(corp_code, year, quarter)
     #print(data)
     for item in data:
         print(item)
-    
-    # 단일회사 주요 재무지표
-    api_type = "단일회사 주요 재무지표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-    
-    data = crawler.finance(corp_code, year, api_type=api_type)
-    #print(data)
-    for item in data:
-        print(item)
-    
-    # 다중회사 주요 재무지표
-    api_type = "다중회사 주요 재무지표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
+        rcept_no = item.rcept_no
 
-    data = crawler.finance(corp_code, year, api_type=api_type)
-    #print(data)
-    for item in data:
-        print(item)
-
-    # 단일회사 주요계정
-    api_type = "단일회사 주요계정"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type)
-    #print(data)
-    for item in data:
-        print(item)
-    
-    # 다중회사 주요계정
-    api_type = "다중회사 주요계정"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-    
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type)
-    #print(data)
-    for item in data:
-        print(item)
-    
-    # 단일회사 전체 재무제표
-    api_type = "단일회사 전체 재무제표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type)
-    #print(data)
-    for item in data:
-        print(item)
-    
-    # 수익성지표 : M210000 안정성지표 : M220000 성장성지표 : M230000 활동성지표 : M240000
-    indicator_code = "M210000"
-
-    # 단일회사 주요 재무지표
-    api_type = "단일회사 주요 재무지표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type)
-    #print(data)
-    for item in data:
-        print(item)
-    
-    api_type = "다중회사 주요 재무지표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type)
-    #print(data)
-    for item in data:
-        print(item)
-
-    api_type = "다중회사 주요 재무지표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type)
-    #print(data)
-    for item in data:
-        print(item)
-    
-    indicator_code = "M220000"
-
-    # 단일회사 주요 재무지표
-    api_type = "단일회사 주요 재무지표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
-    #print(data)
-    for item in data:
-        print(item)
-    
-    # 다중회사 주요 재무지표
-    api_type = "다중회사 주요 재무지표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-    
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
-    #print(data)
-    for item in data:
-        print(item)
-    
-    indicator_code = "M230000"
-
-    # 단일회사 주요 재무지표
-    api_type = "단일회사 주요 재무지표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
-    #print(data)
-    for item in data:
-        print(item)
-    
-    # 다중회사 주요 재무지표
-    api_type = "다중회사 주요 재무지표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
-    #print(data)
-    for item in data:
-        print(item)
-    
-    indicator_code = "M240000"
-
-    # 단일회사 주요 재무지표
-    api_type = "단일회사 주요 재무지표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-    
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
-    #print(data)
-    for item in data:
-        print(item)
-
-    # 다중회사 주요 재무지표
-    api_type = "다중회사 주요 재무지표"
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.finance(corp_code, year, quarter=quarter, api_type=api_type, indicator_code=indicator_code)
-    #print(data)
-    for item in data:
-        print(item)
-    
-    if data and len(data) > 0:
-        rcept_no = data[0].rcept_no
-        print(f"\n접수번호: {rcept_no}")
-        print(f"\n{year}년 {quarter}분기 접수번호: {rcept_no}")
-
-    return rcept_no
-
-def demo_download_xbrl(crawler: OpenDartCrawler, rcept_no: str = None):
-    """OpenDart 정기보고서 재무정보 - 재무제표 원본파일(XBRL). 다운로드"""
     print(f"\n{'='*60}")
-    print(f"OpenDart 정기보고서 재무정보 - 재무제표 원본파일(XBRL) 다운로드 - {rcept_no}")
+    print(f"재무제표 원본파일(XBRL) 다운로드 - {rcept_no}")
     print('='*60)
 
-    #rcept_no = "20190401004781"
-    rcept_no = "20250814003156" if not rcept_no else rcept_no
+    rcept_no = rcept_no or "20250814003156"
     save_path = crawler.finance_file(rcept_no, quarter = 4)
     
     if not save_path:
         print(f"파일이 존재하지 않습니다. {rcept_no}")
     else:
         print(f"저장 경로: {save_path}")
+
+    # 단일회사 주요 재무지표
+    api_no = FinanceStatus.SINGLE_COMPANY_KEY_FINANCIAL_INDICATOR
+    api_info = f"\n{api_no.display_name} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+    
+    for indicator_code in IndexClassCode:
+        #data = crawler.finance(corp_code, year, api_type=api_type)
+        data = crawler.single_company_key_financial_indicators(corp_code, year, quarter, indicator_code)
+        #print(data)
+        for item in data:
+            print(item)
+
+    # 다중회사 주요 재무지표
+    api_no = FinanceStatus.MULTI_COMPANY_KEY_FINANCIAL_INDICATOR
+    api_info = f"\n{api_no.display_name} ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+    
+    for indicator_code in IndexClassCode:
+        data = crawler.multi_company_key_financial_indicators(corp_code, year, quarter, indicator_code)
+        #print(data)
+        for item in data:
+            print(item)
 
 def demo_reports(crawler: OpenDartCrawler, corp_code: str):
     """정기보고서 주요정보 데모"""
@@ -364,477 +225,57 @@ def demo_material_facts(crawler: OpenDartCrawler, corp_code: str):
     print('='*60)
     corp_name = crawler.fetch_corp_name(corp_code)
 
-    rcept_no = None
-
-    # 자산양수도(기타), 풋백옵션 현황
-    corp_code = "00409681"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    start_date = "20190101"
+    corp_codes = {
+        MaterialFactStatus.PUT_OPTION.value: "00409681",
+        MaterialFactStatus.BANKRUPTCY.value: "00112819",
+        MaterialFactStatus.SUSPENSION.value: "00370006",
+        MaterialFactStatus.RESTORATION.value: "00367482",
+        MaterialFactStatus.DISSOLUTION.value: "01102590",
+        MaterialFactStatus.PUBLIC_ISSUANCE.value: "00378363",
+        MaterialFactStatus.UNPUBLIC_ISSUANCE.value: "00121932",
+        MaterialFactStatus.PUBLIC_UNPUBLIC_ISSUANCE.value: "00359395",
+        MaterialFactStatus.CAPITAL_REDUCTION.value: "00121932",
+        MaterialFactStatus.BANKRUPTCY_PROCEDURE.value: "00295857",
+        MaterialFactStatus.LEGAL_ACT.value: "00164830",
+        MaterialFactStatus.OVERSEAS_LISTING_DECISION.value: "00258801",
+        MaterialFactStatus.OVERSEAS_DELISTING_DECISION.value: "00344287",
+        MaterialFactStatus.OVERSEAS_LISTING.value: "01350869",
+        MaterialFactStatus.OVERSEAS_DELISTING.value: "00344287",
+        MaterialFactStatus.CB_ISSUANCE_DECISION.value: "00155355",
+        MaterialFactStatus.BW_ISSUANCE_DECISION.value: "00140131",
+        MaterialFactStatus.EB_ISSUANCE_DECISION.value: "00273420",
+        MaterialFactStatus.BANKRUPTCY_PROCEDURE_SUSPENSION.value: "00141608",
+        MaterialFactStatus.COCO_BOND_ISSUANCE_DECISION.value: "00382199",
+        MaterialFactStatus.SHARE_BUYBACK_DECISION.value: "00164742",
+        MaterialFactStatus.TREASURY_STOCK_DISPOSAL_DECISION.value: "00121932",
+        MaterialFactStatus.TRUST_AGREEMENT_ACQUISITION_DECISION.value: "00860332",
+        MaterialFactStatus.TRUST_AGREEMENT_RESOLUTION_DECISION.value: "00382199",
+        MaterialFactStatus.BUSINESS_ACQUISITION_DECISION.value: "00140131",
+        MaterialFactStatus.BUSINESS_TRANSFER_DECISION.value: "00131780",
+        MaterialFactStatus.ASSET_ACQUISITION_DECISION.value: "00160375",
+        MaterialFactStatus.ASSET_TRANSFER_DECISION.value: "00106395",
+        MaterialFactStatus.OTHER_SHARE_ACQUISITION_DECISION.value: "00140131",
+        MaterialFactStatus.OTHER_SHARE_TRANSFER_DECISION.value: "00230814",
+        MaterialFactStatus.EQUITY_LINKED_BOND_ACQUISITION_DECISION.value: "00173449",
+        MaterialFactStatus.EQUITY_LINKED_BOND_TRANSFER_DECISION.value: "00125965",
+        MaterialFactStatus.COMPANY_MERGER_DECISION.value: "00155319",
+        MaterialFactStatus.COMPANY_SPINOFF_DECISION.value: "00266961",
+        MaterialFactStatus.COMPANY_SPINOFF_MERGER_DECISION.value: "00306135",
+        MaterialFactStatus.SHARE_EXCHANGE_DECISION.value: "00219097",
+    }
+    start_date = "20160101"
     end_date = "20251231"
 
-    api_no = MaterialFactStatus.PUT_OPTION
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 부도발생 현황
-    corp_code = "00112819"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.BANKRUPTCY
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 영업정지 현황
-    corp_code = "00370006"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.SUSPENSION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 회생절차 개시신청 현황
-    corp_code = "00367482"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.RESTORATION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 해산사유 발생 현황
-    corp_code = "01102590"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.DISSOLUTION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 유상증자 결정 현황
-    corp_code = "00378363"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.PUBLIC_ISSUANCE
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 무상증자 결정 현황
-    corp_code = "00121932"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.UNPUBLIC_ISSUANCE
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 유무상증자 결정 현황
-    corp_code = "00359395"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.PUBLIC_UNPUBLIC_ISSUANCE
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 감자 결정 현황
-    corp_code = "00121932"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.CAPITAL_REDUCTION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 채권은행 등의 관리절차 개시 현황
-    corp_code = "00295857"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.BANKRUPTCY_PROCEDURE
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 소송 등의 제기 현황
-    corp_code = "00164830"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.LEGAL_ACT
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 해외 증권시장 주권등 상장 결정 현황
-    corp_code = "00258801"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.OVERSEAS_LISTING_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 해외 증권시장 주권등 상장폐지 결정 현황
-    corp_code = "00344287"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.OVERSEAS_DELISTING_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 해외 증권시장 주권등 상장 현황
-    corp_code = "01350869"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.OVERSEAS_LISTING
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 해외 증권시장 주권등 상장폐지 현황
-    corp_code = "00344287"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.OVERSEAS_LISTING
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 전환사채권 발행결정 현황
-    corp_code = "00155355"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.CB_ISSUANCE_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 신주인수권부사채권 발행결정 현황
-    corp_code = "00140131"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.BW_ISSUANCE_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 교환사채권 발행결정 현황
-    corp_code = "00273420"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.EB_ISSUANCE_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 채권은행 등의 관리절차 중단 현황
-    corp_code = "00141608"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.BANKRUPTCY_PROCEDURE_SUSPENSION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 상각형 조건부자본증권 발행결정 현황
-    corp_code = "00382199"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.COCO_BOND_ISSUANCE_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 자기주식 취득 결정 현황
-    corp_code = "00164742"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.SHARE_BUYBACK_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 자기주식 처분 결정
-    corp_code = "00121932"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.TREASURY_STOCK_DISPOSAL_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 자기주식취득 신탁계약 체결 결정 현황
-    corp_code = "00860332"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.TRUST_AGREEMENT_ACQUISITION_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 자기주식취득 신탁계약 해지 결정 현황
-    corp_code = "00382199"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.TRUST_AGREEMENT_RESOLUTION_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 영업양수 결정 현황
-    corp_code = "00140131"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.BUSINESS_ACQUISITION_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 영업양도 결정 현황
-    corp_code = "00131780"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.BUSINESS_TRANSFER_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 유형자산 양수 결정
-    corp_code = "00160375"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.ASSET_ACQUISITION_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    #유형자산 양도 결정 현황
-    corp_code = "00106395"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.ASSET_TRANSFER_DECISION
-
-    api_type = api_no.display_name
-    api_info  = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 타법인 주식 및 출자증권 양수결정 현황
-    corp_code = "00140131"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.OTHER_SHARE_ACQUISITION_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 타법인 주식 및 출자증권 양도결정 현황
-    corp_code = "00230814"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.OTHER_SHARE_TRANSFER_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 주권 관련 사채권 양수 결정 현황
-    corp_code = "00173449"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.EQUITY_LINKED_BOND_ACQUISITION_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 주권 관련 사채권 양도 결정 현황
-    corp_code = "00125965"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.EQUITY_LINKED_BOND_TRANSFER_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 회사합병 결정 현황
-    corp_code = "00155319"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.COMPANY_MERGER_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 회사분할 결정 현황
-    corp_code = "00266961"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.COMPANY_SPINOFF_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 회사분할합병 결정 현황
-    corp_code = "00306135"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.COMPANY_SPINOFF_MERGER_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
-
-    # 주식교환·이전 결정 현황
-    corp_code = "00219097"
-    corp_name = crawler.fetch_corp_name(corp_code)
-    api_no = MaterialFactStatus.SHARE_EXCHANGE_DECISION
-
-    api_type = api_no.display_name
-    api_info = f"\n\n{api_type} ({corp_name}, {corp_code})"
-    print(api_info)
-    print('-'*(int(len(api_info)*1.5)))
-
-    data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
-    print(data)
+    for api_no in MaterialFactStatus:
+        corp_code = corp_codes.get(api_no.value)
+        corp_name = crawler.fetch_corp_name(corp_code)
+
+        api_info = f"\n\n{api_no.display_name} ({corp_name}, {corp_code})"
+        print(api_info)
+        print('-'*(int(len(api_info)*1.5)))
+
+        data = crawler.material_facts(corp_code, start_date=start_date, end_date=end_date, api_no=api_no)
+        print(data)
 
 def demo_registration(crawler: OpenDartCrawler, corp_code: str):
     """증권신고서 주요정보 데모"""
@@ -995,15 +436,12 @@ def main(code: str):
     print(f"\n{code} corp_code: {corp_code}")
 
     # 각 파일링 타입 데모
-    #demo_corp_code(crawler, code)
+    demo_corp_code(crawler, code)
     #demo_base_documents(crawler, code)
-    #rcept_no = demo_finance(crawler, corp_code)
-    # 00126380 삼성전자 005930 반기보고서 (2025.06) 20250814003156 20250814
-    #rcept_no = rcept_no or "20251114002447"
-    #demo_download_xbrl(crawler, rcept_no=rcept_no)
-    #demo_reports(crawler, corp_code)
-    #demo_ownership(crawler, corp_code)
-    #demo_material_facts(crawler, corp_code)
+    demo_finance(crawler, corp_code)
+    demo_reports(crawler, corp_code)
+    demo_ownership(crawler, corp_code)
+    demo_material_facts(crawler, corp_code)
     demo_registration(crawler, corp_code)
     #crawler.duplicate_keys()
     

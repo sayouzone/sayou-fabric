@@ -110,8 +110,8 @@ class FinanceStatus(BaseStatus):
     FINANCIAL_STATEMENT_ORIGINAL_FILE_XBRL = (3, "재무제표 원본파일(XBRL)", f"{API_URL}/fnlttXbrl.xml")          # 상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 원본파일(XBRL)을 제공합니다.
     SINGLE_COMPANY_FINANCIAL_STATEMENT = (4, "단일회사 전체 재무제표", f"{API_URL}/fnlttSinglAcntAll.json")   # 상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 모든계정과목을 제공합니다.
     XBRL_TAXONOMY_FINANCIAL_STATEMENT = (5, "XBRL택사노미재무제표양식", f"{API_URL}/xbrlTaxonomy.json")      # 금융감독원 회계포탈에서 제공하는 IFRS 기반 XBRL 재무제표 공시용 표준계정과목체계(계정과목) 을 제공합니다.
-    SINGLE_COMPANY_FINANCIAL_INDICATOR = (6, "단일회사 주요 재무지표", f"{API_URL}/fnlttSinglIndx.json")      # 상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 주요 재무지표를 제공합니다.
-    MULTI_COMPANY_FINANCIAL_INDICATOR = (7, "다중회사 주요 재무지표", f"{API_URL}/fnlttCmpnyIndx.json")
+    SINGLE_COMPANY_KEY_FINANCIAL_INDICATOR = (6, "단일회사 주요 재무지표", f"{API_URL}/fnlttSinglIndx.json")      # 상장법인(유가증권, 코스닥) 및 주요 비상장법인(사업보고서 제출대상 & IFRS 적용)이 제출한 정기보고서 내에 XBRL재무제표의 주요 재무지표를 제공합니다.
+    MULTI_COMPANY_KEY_FINANCIAL_INDICATOR = (7, "다중회사 주요 재무지표", f"{API_URL}/fnlttCmpnyIndx.json")
 
 
 # 지분공시 종합정보
@@ -990,7 +990,7 @@ class OverseasListingDecisionData(BaseOpenDartData):
     psmth_nstk_sl: Optional[int] = None # 공모방법(신주발행 (주))	예) 9,999,999,999
     psmth_ostk_sl: Optional[int] = None # 공모방법(구주매출 (주))	예) 9,999,999,999
     fdpp: Optional[str] = None # 자금조달(신주발행)
-    lststk_orls: Optional[int] = None # 상장증권(원주상장 (주))	예) 9,999,999,999
+    lststk_orlst: Optional[int] = None # 상장증권(원주상장 (주))	예) 9,999,999,999
     lststk_drlst: Optional[int] = None # 상장증권(DR상장 (주))	예) 9,999,999,999
     lstex_nt: Optional[str] = None # 상장거래소(소재국가)
     lstpp: Optional[str] = None # 해외상장목적
