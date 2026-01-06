@@ -188,22 +188,18 @@ def demo_finance1(crawler: OpenDartCrawler, corp_code: str):
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    df_cis, df_is, df_bs, df_cf = crawler.income_statement(corp_code, year, quarter)
+    df_cis, df_is = crawler.income_statement(corp_code, year, quarter)
     print(df_cis)
     print(df_is)
-    print(df_bs)
-    print(df_cf)
 
     # 포괄손익계산서 (연결) (분기)
     api_info = f"\n포괄손익계산서 (연결) (분기) ({corp_name}, {corp_code})"
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
 
-    df_cis, df_is, df_bs, df_cf = crawler.quarterly_income_statement(corp_code, year, quarter)
+    df_cis, df_is = crawler.quarterly_income_statement(corp_code, year, quarter)
     print(df_cis)
     print(df_is)
-    print(df_bs)
-    print(df_cf)
 
 def demo_reports(crawler: OpenDartCrawler, corp_code: str):
     """정기보고서 주요정보 데모"""

@@ -154,6 +154,70 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
         for item in data:
             print(item)
 
+def demo_finance1(crawler: OpenDartCrawler, corp_code: str):
+    """정기보고서 재무정보 데모"""
+    print(f"\n{'='*60}")
+    print(f"정기보고서 재무정보 조회 - {code}")
+    print('='*60)
+
+    year = None
+    quarter = None
+    year, quarter = year_and_quarter(year, quarter)
+
+    corp_name = crawler.fetch_corp_name(corp_code)
+
+    # 포괄손익계산서 (연결) (연간)
+    api_info = f"\n포괄손익계산서 (연결) (연간) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_cis, df_is = crawler.income_statement(corp_code, year, quarter)
+    print(df_cis)
+    print(df_is)
+
+    # 포괄손익계산서 (연결) (분기)
+    api_info = f"\n포괄손익계산서 (연결) (분기) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_cis, df_is = crawler.quarterly_income_statement(corp_code, year, quarter)
+    print(df_cis)
+    print(df_is)
+
+
+    # 재무상태표 (연결) (연간)
+    api_info = f"\n재무상태표 (연결) (연간) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_bs = crawler.balance_sheet(corp_code, year, quarter)
+    print(df_bs)
+
+    # 재무상태표 (연결) (분기)
+    api_info = f"\n재무상태표 (연결) (분기) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_bs = crawler.quarterly_balance_sheet(corp_code, year, quarter)
+    print(df_bs)
+
+
+    # 현금흐름표 (연결) (연간)
+    api_info = f"\n현금흐름표 (연결) (연간) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_cf = crawler.cash_flow(corp_code, year, quarter)
+    print(df_cf)
+
+    # 현금흐름표 (연결) (분기)
+    api_info = f"\n현금흐름표 (연결) (분기) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_cf = crawler.quarterly_cash_flow(corp_code, year, quarter)
+    print(df_cf)
+
 def demo_reports(crawler: OpenDartCrawler, corp_code: str):
     """정기보고서 주요정보 데모"""
     print(f"\n{'='*60}")
@@ -431,6 +495,7 @@ def main(code: str):
     #demo_corp_code(crawler, code)
     #demo_base_documents(crawler, code)
     demo_finance(crawler, corp_code)
+    demo_finance1(crawler, corp_code)
     #demo_reports(crawler, corp_code)
     #demo_ownership(crawler, corp_code)
     #demo_material_facts(crawler, corp_code)

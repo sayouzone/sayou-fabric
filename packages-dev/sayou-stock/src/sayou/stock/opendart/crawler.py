@@ -589,11 +589,11 @@ class OpenDartCrawler:
 
     def balance_sheet(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 재무상태표"""
-        pass
+        return self._finance_parser.balance_sheet(corp_code, year, quarter)
 
     def quarterly_balance_sheet(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 재무상태표"""
-        pass
+        return self._finance_parser.quarterly_balance_sheet(corp_code, year, quarter)
 
     def income_statement(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 손익계산서"""
@@ -605,11 +605,11 @@ class OpenDartCrawler:
 
     def cash_flow(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 현금흐름표"""
-        pass
+        return self._finance_parser.cash_flow(corp_code, year, quarter)
 
     def quarterly_cash_flow(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 현금흐름표"""
-        pass
+        return self._finance_parser.quarterly_cash_flow(corp_code, year, quarter)
 
     def _fetch_list(
         self,

@@ -187,100 +187,55 @@ class OpenDartFinanceParser:
 
         return []
 
+    def balance_sheet(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 재무상태표"""
+
+        financial_statement = "CFS"
+        df_bs = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
+        
+        return df_bs
+
+    def quarterly_balance_sheet(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 재무상태표"""
+
+        financial_statement = "CFS"
+        df_bs = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement, yearly=False)
+        
+        return df_bs
+
     def income_statement(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 손익계산서"""
 
-        financial_statement="CFS"
-
-        total_cis = []
-        total_is = []
-        total_bs = []
-        total_cf = []
-
-        api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
-        data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
-        if len(data) == 0:
-            year = year - 1 if quarter == 1 else year
-            quarter = 4 if quarter == 1 else quarter - 1
-            data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
-
-        for item in data:
-            if item.sj_div == 'CIS':
-                total_cis.append(item.to_dict())
-            elif item.sj_div == 'IS':
-                total_is.append(item.to_dict())
-            elif item.sj_div == 'BS':
-                total_bs.append(item.to_dict())
-            elif item.sj_div == 'CF':
-                total_cf.append(item.to_dict())
-
-        year = year - 1
-        quarter = 4
-        data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
-
-        for item in data:
-            if item.sj_div == 'CIS':
-                total_cis.append(item.to_dict())
-            elif item.sj_div == 'IS':
-                total_is.append(item.to_dict())
-            elif item.sj_div == 'BS':
-                total_bs.append(item.to_dict())
-            elif item.sj_div == 'CF':
-                total_cf.append(item.to_dict())
-
-        year = year - 1
-        data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
-        for item in data:
-            if item.sj_div == 'CIS':
-                total_cis.append(item.to_dict())
-            elif item.sj_div == 'IS':
-                total_is.append(item.to_dict())
-            elif item.sj_div == 'BS':
-                total_bs.append(item.to_dict())
-            elif item.sj_div == 'CF':
-                total_cf.append(item.to_dict())
-
-        year = year - 1
-        data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
-        for item in data:
-            if item.sj_div == 'CIS':
-                total_cis.append(item.to_dict())
-            elif item.sj_div == 'IS':
-                total_is.append(item.to_dict())
-            elif item.sj_div == 'BS':
-                total_bs.append(item.to_dict())
-            elif item.sj_div == 'CF':
-                total_cf.append(item.to_dict())
+        financial_statement = "CFS"
+        df_cis, df_is, df_bs, df_cf = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
         
-        df_cis = self._to_dataframe(total_cis)
-        df_is = self._to_dataframe(total_is)
-        df_bs = self._to_dataframe(total_bs)
-        df_cf = self._to_dataframe(total_cf)
-
-        print(df_cis.columns)
-
-        drop_columns = ['rcept_no', 'corp_code', 'corp_cls', 'corp_name', 'stock_code', 'fs_div', 'fs_nm', 'sj_div', 'sj_nm', 'account_id', 'account_detail', 'currency', 'frmtrm_nm', 'frmtrm_amount', 'frmtrm_q_nm', 'frmtrm_q_amount', 'frmtrm_add_amount', 'bfefrmtrm_nm', 'bfefrmtrm_amount']
-        drop_columns = ['rcept_no', 'corp_code', 'corp_cls', 'corp_name', 'stock_code', 'fs_div', 'sj_div', 'fs_nm', 'sj_nm', 'account_id', 'account_detail', 'currency', 'thstrm_nm', 'frmtrm_nm', 'frmtrm_amount', 'frmtrm_q_nm', 'frmtrm_q_amount', 'frmtrm_add_amount', 'bfefrmtrm_nm', 'bfefrmtrm_amount']
-        df_cis.drop(drop_columns, axis=1, inplace=True)
-        df_is.drop(drop_columns, axis=1, inplace=True)
-        df_bs.drop(drop_columns, axis=1, inplace=True)
-        df_cf.drop(drop_columns, axis=1, inplace=True)
-
-        print(df_cis.columns)
-
-        df_cis = df_cis.set_index(['bsns_year', 'ord'])
-        df_is = df_is.set_index(['bsns_year', 'ord'])
-        df_bs = df_bs.set_index(['bsns_year', 'ord'])
-        df_cf = df_cf.set_index(['bsns_year', 'ord'])
-
-
-        return df_cis, df_is, df_bs, df_cf
+        return df_cis, df_is
 
     def quarterly_income_statement(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 손익계산서"""
 
-        financial_statement="CFS"
+        financial_statement = "CFS"
+        df_cis, df_is, df_bs, df_cf = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement, yearly=False)
+        
+        return df_cis, df_is
 
+    def cash_flow(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 현금흐름표"""
+
+        financial_statement = "CFS"
+        df_cis, df_is, df_bs, df_cf = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
+
+        return df_cf
+
+    def quarterly_cash_flow(self, corp_code: str, year: str, quarter: int):
+        """OpenDart 정기보고서 재무정보 - 현금흐름표"""
+
+        financial_statement = "CFS"
+        df_cis, df_is, df_bs, df_cf = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement, yearly=False)
+
+        return df_cf
+
+    def _financial_statements(self, corp_code: str, year: str, quarter: int, financial_statement: str = "CFS", yearly: bool = True):
         total_cis = []
         total_is = []
         total_bs = []
@@ -288,7 +243,6 @@ class OpenDartFinanceParser:
 
         api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
         data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
-
         if len(data) == 0:
             year = year - 1 if quarter == 1 else year
             quarter = 4 if quarter == 1 else quarter - 1
@@ -304,61 +258,213 @@ class OpenDartFinanceParser:
             elif item.sj_div == 'CF':
                 total_cf.append(item.to_dict())
 
-        year = year - 1 if quarter == 1 else year
-        quarter = 4 if quarter == 1 else quarter - 1
-        data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
-        for item in data:
-            if item.sj_div == 'CIS':
-                total_cis.append(item.to_dict())
-            elif item.sj_div == 'IS':
-                total_is.append(item.to_dict())
-            elif item.sj_div == 'BS':
-                total_bs.append(item.to_dict())
-            elif item.sj_div == 'CF':
-                total_cf.append(item.to_dict())
-
-        year = year - 1 if quarter == 1 else year
-        quarter = 4 if quarter == 1 else quarter - 1
-        data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
-        for item in data:
-            if item.sj_div == 'CIS':
-                total_cis.append(item.to_dict())
-            elif item.sj_div == 'IS':
-                total_is.append(item.to_dict())
-            elif item.sj_div == 'BS':
-                total_bs.append(item.to_dict())
-            elif item.sj_div == 'CF':
-                total_cf.append(item.to_dict())
-
-        year = year - 1 if quarter == 1 else year
-        quarter = 4 if quarter == 1 else quarter - 1
-        data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
-        for item in data:
-            if item.sj_div == 'CIS':
-                total_cis.append(item.to_dict())
-            elif item.sj_div == 'IS':
-                total_is.append(item.to_dict())
-            elif item.sj_div == 'BS':
-                total_bs.append(item.to_dict())
-            elif item.sj_div == 'CF':
-                total_cf.append(item.to_dict())
+        if yearly:
+            year = year - 1
+            quarter = 4
+        else:
+            year = year - 1 if quarter == 1 else year
+            quarter = 4 if quarter == 1 else quarter - 1
         
-        df_cis = self._to_dataframe(total_cis)
-        df_is = self._to_dataframe(total_is)
-        df_bs = self._to_dataframe(total_bs)
-        df_cf = self._to_dataframe(total_cf)
+        data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
 
-        df_cis.drop(['rcept_no', 'corp_code', 'corp_cls', 'corp_name', 'reprt_code', 'bsns_year', 'fs_div', 'sj_div', 'currency', 'bfefrmtrm_nm', 'bfefrmtrm_amount'], axis=1, inplace=True)
-        df_is.drop(['rcept_no', 'corp_code', 'corp_cls', 'corp_name', 'reprt_code', 'bsns_year', 'fs_div', 'sj_div', 'currency', 'bfefrmtrm_nm', 'bfefrmtrm_amount'], axis=1, inplace=True)
-        df_bs.drop(['rcept_no', 'corp_code', 'corp_cls', 'corp_name', 'reprt_code', 'bsns_year', 'fs_div', 'sj_div', 'currency', 'bfefrmtrm_nm', 'bfefrmtrm_amount'], axis=1, inplace=True)
-        df_cf.drop(['rcept_no', 'corp_code', 'corp_cls', 'corp_name', 'reprt_code', 'bsns_year', 'fs_div', 'sj_div', 'currency', 'bfefrmtrm_nm', 'bfefrmtrm_amount'], axis=1, inplace=True)
+        for item in data:
+            if item.sj_div == 'CIS':
+                total_cis.append(item.to_dict())
+            elif item.sj_div == 'IS':
+                total_is.append(item.to_dict())
+            elif item.sj_div == 'BS':
+                total_bs.append(item.to_dict())
+            elif item.sj_div == 'CF':
+                total_cf.append(item.to_dict())
 
-        df_cis = df_cis.set_index('ord')
-        df_is = df_is.set_index('ord')
-        df_bs = df_bs.set_index('ord')
-        df_cf = df_cf.set_index('ord')
+        if yearly:
+            year = year - 1
+        else:
+            year = year - 1 if quarter == 1 else year
+            quarter = 4 if quarter == 1 else quarter - 1
+        
+        data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
+        for item in data:
+            if item.sj_div == 'CIS':
+                total_cis.append(item.to_dict())
+            elif item.sj_div == 'IS':
+                total_is.append(item.to_dict())
+            elif item.sj_div == 'BS':
+                total_bs.append(item.to_dict())
+            elif item.sj_div == 'CF':
+                total_cf.append(item.to_dict())
+
+        if yearly:
+            year = year - 1
+        else:
+            year = year - 1 if quarter == 1 else year
+            quarter = 4 if quarter == 1 else quarter - 1
+        
+        data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
+        for item in data:
+            if item.sj_div == 'CIS':
+                total_cis.append(item.to_dict())
+            elif item.sj_div == 'IS':
+                total_is.append(item.to_dict())
+            elif item.sj_div == 'BS':
+                total_bs.append(item.to_dict())
+            elif item.sj_div == 'CF':
+                total_cf.append(item.to_dict())
+
+        #print(total_cis)
+        #print(total_is)
+        #print(total_bs)
+        #print(total_cf)
+
+        df_cis = self._transform_dart_financial_data(total_cis)
+        df_is = self._transform_dart_financial_data(total_is)
+        df_bs = self._transform_dart_financial_data(total_bs)
+        df_cf = self._transform_dart_financial_data(total_cf)
 
         return df_cis, df_is, df_bs, df_cf
+
+    def _transform_dart_financial_data(self, data: List[Dict[str, Any]]) -> pd.DataFrame:
+        """
+        DART API 응답 데이터(List[Dict])를 피벗된 DataFrame으로 변환합니다.
+
+        1분기보고서 : 11013
+        반기보고서 : 11012
+        3분기보고서 : 11014
+        사업보고서 : 11011
+        
+        Parameters
+        ----------
+        data : List[Dict[str, Any]]
+            DART API에서 반환된 재무제표 데이터
+            
+        Returns
+        -------
+        pd.DataFrame
+            account_nm을 인덱스로, 연도/분기별 금액을 컬럼으로 가진 DataFrame
+        """
+        df = pd.DataFrame(data)
+        
+        # 금액 컬럼 숫자 변환
+        amount_cols = ['thstrm_amount', 'thstrm_add_amount', 'frmtrm_amount', 
+                    'frmtrm_q_amount', 'frmtrm_add_amount', 'bfefrmtrm_amount']
+        for col in amount_cols:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+        # 기간 컬럼명 생성 함수
+        def get_period_label(reprt_code: str, bsns_year: str) -> str:
+            """reprt_code와 bsns_year로 기간 라벨 생성"""
+            code_to_quarter = {
+                '11013': '03',  # 1분기
+                '11012': '06',  # 반기
+                '11014': '09',  # 3분기
+                '11011': '12',  # 사업보고서
+            }
+            quarter = code_to_quarter.get(reprt_code, '12')
+            return f"{bsns_year}/{quarter}"
+        
+        # 계정명 정규화 함수
+        def normalize_account_nm(name: str) -> str:
+            """계정명에서 주석 제거 및 통합"""
+            if pd.isna(name):
+                return name
+            # (*3), (*4) 등 주석 제거
+            name = re.sub(r'\(\*\d+\)', '', name).strip()
+            # 계정명 통합
+            name_mapping = {
+                '당기순이익(손실)': '당기순이익',
+                '분기순이익': '당기순이익',
+                '분기총포괄손익': '총포괄손익',
+                '당기손익으로 재분류되는 세후기타포괄손익': '후속적으로 당기손익으로 재분류되는 포괄손익',
+            }
+            return name_mapping.get(name, name)
+
+        def format_amount(value, unit: int = 100_000_000) -> str:
+            """
+            금액을 단위로 나누고 천단위 콤마 포맷으로 변환합니다.
+            
+            Parameters
+            ----------
+            value : float or int
+                원본 금액 (원 단위)
+            unit : int
+                나눌 단위 (기본값: 1억 = 100,000,000)
+                
+            Returns
+            -------
+            str
+                포맷된 문자열 (예: "207,114")
+            """
+            if pd.isna(value):
+                return ''
+            return f"{round(value / unit):,}"
+        
+        # 계정명 정규화
+        df['account_nm_norm'] = df['account_nm'].apply(normalize_account_nm)
+        
+        # 기간 라벨 생성
+        df['period'] = df.apply(lambda x: get_period_label(x['reprt_code'], x['bsns_year']), axis=1)
+        
+        # 결과 저장용 딕셔너리
+        result_data = {}
+        
+        # 각 행 처리
+        for _, row in df.iterrows():
+            account = row['account_nm_norm']
+            period = row['period']
+            
+            if account not in result_data:
+                result_data[account] = {}
+            
+            # thstrm_amount (당기)
+            unit = 100_000_000
+            if pd.notna(row['thstrm_amount']):
+                result_data[account][period] = format_amount(row['thstrm_amount'])
+            
+            # thstrm_add_amount (당기 누적) - 분기 보고서만 해당
+            if pd.notna(row['thstrm_add_amount']) and row['reprt_code'] != '11011':
+                result_data[account][f"{period}(+)"] = format_amount(row['thstrm_add_amount'])
+        
+        # DataFrame 생성
+        result_df = pd.DataFrame(result_data).T
+        
+        # 컬럼 정렬 (최신 연도/분기 우선)
+        def sort_key(col: str) -> tuple:
+            """컬럼 정렬 키 생성"""
+            is_cumulative = '(+)' in col
+            base_col = col.replace('(+)', '')
+            year, month = base_col.split('/')
+            # 연도 내림차순, 월 내림차순, 누적은 기본 뒤에
+            return (-int(year), -int(month), is_cumulative)
+        
+        sorted_cols = sorted(result_df.columns, key=sort_key)
+        result_df = result_df[sorted_cols]
+        
+        # 행 순서 정의
+        row_order = [
+            '총포괄손익',
+            '비지배지분',
+            '지배기업 소유주지분',
+            '기타포괄손익',
+            '후속적으로 당기손익으로 재분류되는 포괄손익',
+            '현금흐름위험회피파생상품평가손익',
+            '해외사업장환산외환차이',
+            '관계기업 및 공동기업의 기타포괄손익에 대한 지분',
+            '후속적으로 당기손익으로 재분류되지 않는 포괄손익',
+            '기타포괄손익-공정가치금융자산평가손익',
+            '순확정급여부채(자산) 재측정요소',
+            '당기순이익',
+        ]
+        
+        # 존재하는 행만 순서대로 정렬
+        existing_rows = [r for r in row_order if r in result_df.index]
+        remaining_rows = [r for r in result_df.index if r not in row_order]
+        result_df = result_df.loc[existing_rows + remaining_rows]
+        
+        # 인덱스명 설정
+        result_df.index.name = 'IFRS'
+        
+        return result_df
 
     def finance_file(self, rcept_no, report_code: str = None, quarter: int = 4, save_path: str | None = None):
         """
