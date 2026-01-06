@@ -26,6 +26,7 @@ class RefineryPipeline(BaseComponent):
     def __init__(
         self,
         extra_normalizers: Optional[List[Type[BaseNormalizer]]] = None,
+        extra_processors: Optional[List[Type[BaseProcessor]]] = None,
         **kwargs,
     ):
         """
@@ -51,6 +52,10 @@ class RefineryPipeline(BaseComponent):
             for cls in extra_normalizers:
                 self._register_manual(cls)
 
+        if extra_processors:
+            for cls in extra_processors:
+                self._register_manual(cls)
+
         self.global_config = kwargs
 
         self.initialize(**kwargs)
@@ -67,6 +72,7 @@ class RefineryPipeline(BaseComponent):
 
         name = getattr(cls, "component_name", cls.__name__)
         self.normalizer_cls_map[name] = cls
+        self.processor_cls_map[name] = cls
 
     @classmethod
     def process(
@@ -200,30 +206,55 @@ class RefineryPipeline(BaseComponent):
         # ---------------------------------------------------------
         # Step 2: Process Chain (Dynamic Execution)
         # ---------------------------------------------------------
-        chain_names = (
-            processors if processors is not None else run_config.get("processors", [])
-        )
+        # 1. Select Processor
+        candidate_processors = []
 
-        if not chain_names and not processors:
-            chain_names = []
+        # Case A: Manual Chain
+        target_names = processors or kwargs.get("processors")
 
-        active_processors = []
+        if target_names:
+            for name in target_names:
+                proc_cls = self._resolve_processor_by_name(name)
+                if proc_cls:
+                    candidate_processors.append(proc_cls)
+                else:
+                    self._log(f"Processor '{name}' not found.", level="warning")
 
-        for name in chain_names:
-            proc_cls = self._resolve_processor_by_name(name)
-            if proc_cls:
-                proc = proc_cls()
-                proc.initialize(**run_config)
-                active_processors.append(proc)
-            else:
-                self._log(f"Processor '{name}' not found in registry.", level="warning")
+        # Case B: Auto Chain
+        else:
+            candidate_processors = list(set(self.processor_cls_map.values()))
 
-        for proc in active_processors:
+        # 2. Execution
+        active_instances = []
+
+        for proc_cls in candidate_processors:
+            try:
+                score = proc_cls.can_handle(blocks)
+
+                if score > 0.0:
+                    proc = proc_cls()
+                    if hasattr(self, "_callbacks"):
+                        for cb in self._callbacks:
+                            proc.add_callback(cb)
+
+                    proc.initialize(**run_config)
+                    active_instances.append(proc)
+
+            except Exception as e:
+                self._log(f"Check failed for {proc_cls.__name__}: {e}", level="debug")
+
+        # 3. Chaining
+        if not active_instances:
+            self._log("No processors activated for this data.", level="debug")
+
+        for proc in active_instances:
             try:
                 self._log(f"Running Processor: {proc.component_name}")
                 blocks = proc.process(blocks)
             except Exception as e:
-                self._log(f"Processor {proc.component_name} failed: {e}", level="error")
+                self._log(
+                    f"Processor {proc.component_name} crashed: {e}", level="error"
+                )
 
         self._emit("on_finish", result_data={"blocks_count": len(blocks)}, success=True)
         return blocks
