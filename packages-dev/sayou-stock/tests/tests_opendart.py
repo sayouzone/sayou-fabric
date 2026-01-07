@@ -201,6 +201,40 @@ def demo_finance1(crawler: OpenDartCrawler, corp_code: str):
     print(df_cis)
     print(df_is)
 
+
+    # 재무상태표 (연결) (연간)
+    api_info = f"\n재무상태표 (연결) (연간) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_bs = crawler.balance_sheet(corp_code, year, quarter)
+    print(df_bs)
+
+    # 재무상태표 (연결) (분기)
+    api_info = f"\n재무상태표 (연결) (분기) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_bs = crawler.quarterly_balance_sheet(corp_code, year, quarter)
+    print(df_bs)
+
+
+    # 현금흐름표 (연결) (연간)
+    api_info = f"\n현금흐름표 (연결) (연간) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_cf = crawler.cash_flow(corp_code, year, quarter)
+    print(df_cf)
+
+    # 현금흐름표 (연결) (분기)
+    api_info = f"\n현금흐름표 (연결) (분기) ({corp_name}, {corp_code})"
+    print(api_info)
+    print('-'*(int(len(api_info)*1.5)))
+
+    df_cf = crawler.quarterly_cash_flow(corp_code, year, quarter)
+    print(df_cf)
+
 def demo_reports(crawler: OpenDartCrawler, corp_code: str):
     """정기보고서 주요정보 데모"""
     print(f"\n{'='*60}")
