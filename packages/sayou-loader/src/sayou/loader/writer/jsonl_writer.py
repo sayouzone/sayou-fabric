@@ -21,7 +21,7 @@ class JsonLineWriter(BaseWriter):
 
     @classmethod
     def can_handle(
-        cls, input_data: Any, destination: str, trategy: str = "auto"
+        cls, input_data: Any, destination: str, strategy: str = "auto"
     ) -> float:
         if strategy in cls.SUPPORTED_TYPES:
             return 1.0
