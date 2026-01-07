@@ -90,6 +90,12 @@ class OpenDartFinanceParser:
         self._cash_flow_statement = None
         self._equity_statement = None
 
+        self._df_cis = pd.DataFrame()
+        self._df_is = pd.DataFrame()
+        self._df_bs = pd.DataFrame()
+        self._df_cf = pd.DataFrame()
+        self._df_sce = pd.DataFrame()
+
     def finance(self, 
         corp_code: str, 
         year: int, 
@@ -191,48 +197,76 @@ class OpenDartFinanceParser:
         """OpenDart 정기보고서 재무정보 - 재무상태표"""
 
         financial_statement = "CFS"
-        df_bs = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
+        yearly = True
+        if self._df_bs.empty or not (self._df_bs['yearly'] == yearly).any():
+            self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
         
+        df_bs = self._df_bs[(self._df_bs['financial_statement'] == financial_statement) & (self._df_bs['yearly'] == yearly)]
+        df_bs.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_bs
 
     def quarterly_balance_sheet(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 재무상태표"""
 
         financial_statement = "CFS"
-        df_bs = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement, yearly=False)
+        yearly = False
+        if self._df_bs.empty or not (self._df_bs['yearly'] == yearly).any():
+            self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement, yearly=yearly)
         
+        df_bs = self._df_bs[(self._df_bs['financial_statement'] == financial_statement) & (self._df_bs['yearly'] == yearly)]
+        df_bs.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_bs
 
     def income_statement(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 손익계산서"""
 
         financial_statement = "CFS"
-        df_cis, df_is, df_bs, df_cf = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
+        yearly = True
+        if self._df_cis.empty or not (self._df_cis['yearly'] == yearly).any():
+            self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
         
+        df_cis = self._df_cis[(self._df_cis['financial_statement'] == financial_statement) & (self._df_cis['yearly'] == yearly)]
+        df_cis.drop(columns=['financial_statement', 'yearly'], inplace=True)
+        df_is = self._df_is[(self._df_is['financial_statement'] == financial_statement) & (self._df_is['yearly'] == yearly)]
+        df_is.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_cis, df_is
 
     def quarterly_income_statement(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 손익계산서"""
 
         financial_statement = "CFS"
-        df_cis, df_is, df_bs, df_cf = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement, yearly=False)
+        yearly = False
+        if self._df_cis.empty or not (self._df_cis['yearly'] == yearly).any():
+            self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement, yearly=yearly)
         
+        df_cis = self._df_cis[(self._df_cis['financial_statement'] == financial_statement) & (self._df_cis['yearly'] == yearly)]
+        df_cis.drop(columns=['financial_statement', 'yearly'], inplace=True)
+        df_is = self._df_is[(self._df_is['financial_statement'] == financial_statement) & (self._df_is['yearly'] == yearly)]
+        df_is.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_cis, df_is
 
     def cash_flow(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 현금흐름표"""
 
         financial_statement = "CFS"
-        df_cis, df_is, df_bs, df_cf = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
+        yearly = True
+        if self._df_cf.empty or not (self._df_cf['yearly'] == yearly).any():
+            self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
 
+        df_cf = self._df_cf[(self._df_cf['financial_statement'] == financial_statement) & (self._df_cf['yearly'] == yearly)]
+        df_cf.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_cf
 
     def quarterly_cash_flow(self, corp_code: str, year: str, quarter: int):
         """OpenDart 정기보고서 재무정보 - 현금흐름표"""
 
         financial_statement = "CFS"
-        df_cis, df_is, df_bs, df_cf = self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement, yearly=False)
+        yearly = False
+        if self._df_cf.empty or not (self._df_cf['yearly'] == yearly).any():
+            self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
 
+        df_cf = self._df_cf[(self._df_cf['financial_statement'] == financial_statement) & (self._df_cf['yearly'] == yearly)]
+        df_cf.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_cf
 
     def _financial_statements(self, corp_code: str, year: str, quarter: int, financial_statement: str = "CFS", yearly: bool = True):
@@ -240,6 +274,7 @@ class OpenDartFinanceParser:
         total_is = []
         total_bs = []
         total_cf = []
+        total_sce = []
 
         api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
         data = self.finance(corp_code, year, quarter, api_no=api_no, financial_statement=financial_statement)
@@ -257,6 +292,8 @@ class OpenDartFinanceParser:
                 total_bs.append(item.to_dict())
             elif item.sj_div == 'CF':
                 total_cf.append(item.to_dict())
+            elif item.sj_div == 'SCE':
+                total_sce.append(item.to_dict())
 
         if yearly:
             year = year - 1
@@ -276,6 +313,8 @@ class OpenDartFinanceParser:
                 total_bs.append(item.to_dict())
             elif item.sj_div == 'CF':
                 total_cf.append(item.to_dict())
+            elif item.sj_div == 'SCE':
+                total_sce.append(item.to_dict())
 
         if yearly:
             year = year - 1
@@ -293,6 +332,8 @@ class OpenDartFinanceParser:
                 total_bs.append(item.to_dict())
             elif item.sj_div == 'CF':
                 total_cf.append(item.to_dict())
+            elif item.sj_div == 'SCE':
+                total_sce.append(item.to_dict())
 
         if yearly:
             year = year - 1
@@ -310,20 +351,28 @@ class OpenDartFinanceParser:
                 total_bs.append(item.to_dict())
             elif item.sj_div == 'CF':
                 total_cf.append(item.to_dict())
+            elif item.sj_div == 'SCE':
+                total_sce.append(item.to_dict())
 
         #print(total_cis)
         #print(total_is)
         #print(total_bs)
         #print(total_cf)
+        #print(total_sce)
 
-        df_cis = self._transform_dart_financial_data(total_cis)
-        df_is = self._transform_dart_financial_data(total_is)
-        df_bs = self._transform_dart_financial_data(total_bs)
-        df_cf = self._transform_dart_financial_data(total_cf)
+        df_cis = self._transform_dart_financial_data(total_cis, financial_statement=financial_statement, yearly=yearly)
+        df_is = self._transform_dart_financial_data(total_is, financial_statement=financial_statement, yearly=yearly)
+        df_bs = self._transform_dart_financial_data(total_bs, financial_statement=financial_statement, yearly=yearly)
+        df_cf = self._transform_dart_financial_data(total_cf, financial_statement=financial_statement, yearly=yearly)
+        df_sce = self._transform_dart_financial_data(total_sce, financial_statement=financial_statement, yearly=yearly)
 
-        return df_cis, df_is, df_bs, df_cf
+        self._df_cis = pd.concat([self._df_cis, df_cis], ignore_index=True)
+        self._df_is = pd.concat([self._df_is, df_is], ignore_index=True)
+        self._df_bs = pd.concat([self._df_bs, df_bs], ignore_index=True)
+        self._df_cf = pd.concat([self._df_cf, df_cf], ignore_index=True)
+        self._df_sce = pd.concat([self._df_sce, df_sce], ignore_index=True)
 
-    def _transform_dart_financial_data(self, data: List[Dict[str, Any]]) -> pd.DataFrame:
+    def _transform_dart_financial_data(self, data: List[Dict[str, Any]], financial_statement: str, yearly: bool) -> pd.DataFrame:
         """
         DART API 응답 데이터(List[Dict])를 피벗된 DataFrame으로 변환합니다.
 
@@ -427,6 +476,7 @@ class OpenDartFinanceParser:
         
         # DataFrame 생성
         result_df = pd.DataFrame(result_data).T
+        print(result_df)
         
         # 컬럼 정렬 (최신 연도/분기 우선)
         def sort_key(col: str) -> tuple:
@@ -457,12 +507,17 @@ class OpenDartFinanceParser:
         ]
         
         # 존재하는 행만 순서대로 정렬
-        existing_rows = [r for r in row_order if r in result_df.index]
-        remaining_rows = [r for r in result_df.index if r not in row_order]
-        result_df = result_df.loc[existing_rows + remaining_rows]
+        #existing_rows = [r for r in row_order if r in result_df.index]
+        #remaining_rows = [r for r in result_df.index if r not in row_order]
+        #result_df = result_df.loc[existing_rows + remaining_rows]
         
         # 인덱스명 설정
-        result_df.index.name = 'IFRS'
+        #result_df.index.name = 'IFRS'
+
+        result_df['financial_statement'] = financial_statement
+        result_df['yearly'] = yearly
+
+        result_df = result_df.reset_index()
         
         return result_df
 

@@ -97,7 +97,7 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
     
-    data = crawler.ofs_financial_statements(corp_code, year, quarter)
+    data = crawler.financial_statements(corp_code, year, quarter, financial_statement="OFS")
     #print(data)
     for item in data:
         print(item)
@@ -110,7 +110,7 @@ def demo_finance(crawler: OpenDartCrawler, corp_code: str):
     print(api_info)
     print('-'*(int(len(api_info)*1.5)))
     
-    data = crawler.cfs_financial_statements(corp_code, year, quarter)
+    data = crawler.financial_statements(corp_code, year, quarter, financial_statement="CFS")
     #print(data)
     for item in data:
         print(item)
@@ -494,7 +494,7 @@ def main(code: str):
     # 각 파일링 타입 데모
     #demo_corp_code(crawler, code)
     #demo_base_documents(crawler, code)
-    demo_finance(crawler, corp_code)
+    #demo_finance(crawler, corp_code)
     demo_finance1(crawler, corp_code)
     #demo_reports(crawler, corp_code)
     #demo_ownership(crawler, corp_code)
