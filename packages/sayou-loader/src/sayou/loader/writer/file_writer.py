@@ -47,57 +47,81 @@ class FileWriter(BaseWriter):
         """
         Write data to file. Creates parent directories if they don't exist.
         """
-        # 1. Handle Directory Destination
+        # 1. Directory Setup
         if destination.endswith(os.sep) or (
             os.path.exists(destination) and os.path.isdir(destination)
         ):
             destination = os.path.join(destination, "output.json")
-            self._log(f"Destination is a directory. Appended filename: {destination}")
+            self._log(f"Destination is a directory. Defaulting to: {destination}")
 
-        # 2. Create Parent Directory
         folder = os.path.dirname(destination)
         if folder:
             os.makedirs(folder, exist_ok=True)
 
-        mode = kwargs.get("mode", "w")
         encoding = kwargs.get("encoding", "utf-8")
 
-        ext = os.path.splitext(destination)[1].lower()
-
         try:
-            # 3. Determine Content & Mode
+            # 2. Wrapped Content Detection
+            real_content = None
+            metadata = {}
 
-            # Case A: Binary Data
-            if isinstance(input_data, bytes):
-                content = input_data
-                mode = "wb"
-                encoding = None
+            # 1) Type: List
+            if isinstance(input_data, list) and len(input_data) == 1:
+                item = input_data[0]
+                if isinstance(item, dict) and isinstance(item.get("content"), bytes):
+                    real_content = item["content"]
+                    metadata = item.get("meta") or item.get("metadata", {})
 
-            # Case B: JSON (Explicit .json extension OR Dict/List structure)
-            elif ext == ".json" or isinstance(input_data, (dict, list, tuple)):
-                content = json.dumps(
-                    input_data, indent=2, ensure_ascii=False, default=self._serializer
+            # 2) Type: Dict
+            elif isinstance(input_data, dict) and isinstance(
+                input_data.get("content"), bytes
+            ):
+                real_content = input_data["content"]
+                metadata = input_data.get("meta") or input_data.get("metadata", {})
+
+            # 3) Discovery of a wrapped binary
+            if real_content is not None:
+                input_data = real_content
+                new_ext = metadata.get("extension", "")
+                suggested_name = metadata.get("suggested_filename", "")
+
+                if suggested_name:
+                    destination = os.path.join(
+                        os.path.dirname(destination), suggested_name
+                    )
+                elif new_ext and destination.endswith(".json"):
+                    destination = destination.replace(".json", new_ext)
+
+                self._log(
+                    f"📦 Detected Wrapped Binary. Saving as raw file: {destination}"
                 )
 
-            # Case C: Simple String (Not targeting JSON)
-            elif isinstance(input_data, str):
-                content = input_data
+            ext = os.path.splitext(destination)[1].lower()
 
-            # Case D: Fallback (Pickle)
+            # Case A: Binary Data (Docs, Xlsx, Images...)
+            if isinstance(input_data, bytes):
+                with open(destination, "wb") as f:
+                    f.write(input_data)
+
+            # Case B: JSON
+            elif ext == ".json" or isinstance(input_data, (dict, list, tuple)):
+                content = json.dumps(
+                    input_data, indent=2, ensure_ascii=False, default=str
+                )
+                with open(destination, "w", encoding=encoding) as f:
+                    f.write(content)
+
+            # Case C: Simple String (CSV, TXT)
+            elif isinstance(input_data, str):
+                with open(destination, "w", encoding=encoding) as f:
+                    f.write(input_data)
+
+            # Case D: Fallback
             else:
                 if not destination.endswith(".pkl"):
                     destination += ".pkl"
-
-                self._log(
-                    f"Unknown type {type(input_data)}. Falling back to pickle: {destination}"
-                )
                 with open(destination, "wb") as f:
                     pickle.dump(input_data, f)
-                return True
-
-            # 4. Write File (Text/JSON/Bytes)
-            with open(destination, mode, encoding=encoding) as f:
-                f.write(content)
 
             self._log(f"💾 Saved to {destination}")
             return True
