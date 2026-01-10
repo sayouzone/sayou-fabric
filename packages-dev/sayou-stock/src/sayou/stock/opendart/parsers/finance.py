@@ -193,10 +193,9 @@ class OpenDartFinanceParser:
 
         return []
 
-    def balance_sheet(self, corp_code: str, year: str, quarter: int):
+    def balance_sheet(self, corp_code: str, year: str, quarter: int, financial_statement: str = "CFS"):
         """OpenDart 정기보고서 재무정보 - 재무상태표"""
 
-        financial_statement = "CFS"
         yearly = True
         if self._df_bs.empty or not (self._df_bs['yearly'] == yearly).any():
             self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
@@ -205,10 +204,9 @@ class OpenDartFinanceParser:
         df_bs.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_bs
 
-    def quarterly_balance_sheet(self, corp_code: str, year: str, quarter: int):
+    def quarterly_balance_sheet(self, corp_code: str, year: str, quarter: int, financial_statement: str = "CFS"):
         """OpenDart 정기보고서 재무정보 - 재무상태표"""
 
-        financial_statement = "CFS"
         yearly = False
         if self._df_bs.empty or not (self._df_bs['yearly'] == yearly).any():
             self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement, yearly=yearly)
@@ -217,10 +215,9 @@ class OpenDartFinanceParser:
         df_bs.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_bs
 
-    def income_statement(self, corp_code: str, year: str, quarter: int):
+    def income_statement(self, corp_code: str, year: str, quarter: int, financial_statement: str = "CFS"):
         """OpenDart 정기보고서 재무정보 - 손익계산서"""
 
-        financial_statement = "CFS"
         yearly = True
         if self._df_cis.empty or not (self._df_cis['yearly'] == yearly).any():
             self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
@@ -231,10 +228,9 @@ class OpenDartFinanceParser:
         df_is.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_cis, df_is
 
-    def quarterly_income_statement(self, corp_code: str, year: str, quarter: int):
+    def quarterly_income_statement(self, corp_code: str, year: str, quarter: int, financial_statement: str = "CFS"):
         """OpenDart 정기보고서 재무정보 - 손익계산서"""
 
-        financial_statement = "CFS"
         yearly = False
         if self._df_cis.empty or not (self._df_cis['yearly'] == yearly).any():
             self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement, yearly=yearly)
@@ -245,10 +241,9 @@ class OpenDartFinanceParser:
         df_is.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_cis, df_is
 
-    def cash_flow(self, corp_code: str, year: str, quarter: int):
+    def cash_flow(self, corp_code: str, year: str, quarter: int, financial_statement: str = "CFS"):
         """OpenDart 정기보고서 재무정보 - 현금흐름표"""
 
-        financial_statement = "CFS"
         yearly = True
         if self._df_cf.empty or not (self._df_cf['yearly'] == yearly).any():
             self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
@@ -257,10 +252,9 @@ class OpenDartFinanceParser:
         df_cf.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_cf
 
-    def quarterly_cash_flow(self, corp_code: str, year: str, quarter: int):
+    def quarterly_cash_flow(self, corp_code: str, year: str, quarter: int, financial_statement: str = "CFS"):
         """OpenDart 정기보고서 재무정보 - 현금흐름표"""
 
-        financial_statement = "CFS"
         yearly = False
         if self._df_cf.empty or not (self._df_cf['yearly'] == yearly).any():
             self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
@@ -268,6 +262,28 @@ class OpenDartFinanceParser:
         df_cf = self._df_cf[(self._df_cf['financial_statement'] == financial_statement) & (self._df_cf['yearly'] == yearly)]
         df_cf.drop(columns=['financial_statement', 'yearly'], inplace=True)
         return df_cf
+
+    def equity_change(self, corp_code: str, year: str, quarter: int, financial_statement: str = "CFS"):
+        """OpenDart 정기보고서 재무정보 - 자본변동표"""
+
+        yearly = True
+        if self._df_sce.empty or not (self._df_sce['yearly'] == yearly).any():
+            self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
+
+        df_sce = self._df_sce[(self._df_sce['financial_statement'] == financial_statement) & (self._df_sce['yearly'] == yearly)]
+        df_sce.drop(columns=['financial_statement', 'yearly'], inplace=True)
+        return df_sce
+
+    def quarterly_equity_change(self, corp_code: str, year: str, quarter: int, financial_statement: str = "CFS"):
+        """OpenDart 정기보고서 재무정보 - 자본변동표"""
+
+        yearly = False
+        if self._df_sce.empty or not (self._df_sce['yearly'] == yearly).any():
+            self._financial_statements(corp_code, year, quarter, financial_statement = financial_statement)
+
+        df_sce = self._df_sce[(self._df_sce['financial_statement'] == financial_statement) & (self._df_sce['yearly'] == yearly)]
+        df_sce.drop(columns=['financial_statement', 'yearly'], inplace=True)
+        return df_sce
 
     def _financial_statements(self, corp_code: str, year: str, quarter: int, financial_statement: str = "CFS", yearly: bool = True):
         total_cis = []

@@ -5,16 +5,10 @@ Naver Crawler 사용 예시
 
 import os
 import pandas as pd
-import sys
 
-from datetime import datetime
 from dotenv import load_dotenv
-from pathlib import Path
 
-# 상위 디렉토리를 path에 추가
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from naver import NaverCrawler
+from sayou.stock.naver import NaverCrawler, NewsArticle
 
 def demo_market(crawler: NaverCrawler, code: str):
     """Naver 주요 시세 조회 데모"""
