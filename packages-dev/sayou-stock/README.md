@@ -18,6 +18,7 @@
 3. `NaverCrawler`: Retrieves Market News using `Naver` API and Crawls Market Data from `Naver`.
 4. `OpenDartCrawler`: Retrieves Company Information & Financial Statements using `OpenDart` API.
 5. `YahooCrawler`: Retrieves Company Information & Market Data using `Yahoo Finance` API.
+6. `KisratingCrawler`: Crawls statistics spread from `Kisrating`.
 
 ## 🤝 Usage Examples
 
@@ -170,6 +171,21 @@ print(data)
 # Earnings History
 data = crawler.earnings_history(ticker)
 print(data)
+```
+
+#### Retrieve statistics spread from `Kisrating`
+
+```python
+from sayou.stock.kisrating import KisratingCrawler
+
+crawler = KisratingCrawler()
+
+# Statistics Spread
+data = crawler.statistics()
+print("\nYield")
+print(data.yield_df)
+print("\nSpread")
+print(data.spread_df)
 ```
 
 ## 📜 License
