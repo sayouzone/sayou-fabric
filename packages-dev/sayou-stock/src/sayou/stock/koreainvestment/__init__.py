@@ -66,19 +66,19 @@ __author__ = "SeongJung Kim"
 
 from .crawler import KoreainvestmentCrawler
 from .client import KoreainvestmentClient
-from .models.base_model import (
+from .models import (
+    AccountConfig,
     AccessToken,
     RequestHeader,
 )
-from .models.domestic import (
+from .models import (
     BalanceQueryParam,
     DomesticStockBalance,
     DomesticAccountSummary,
     DomesticBalanceResponse,
     SearchInfoResponse,
     SearchStockInfoResponse,
-)
-from .models.domestic_finance import (
+
     BalanceSheetResponse,
     IncomeStatementResponse,
     FinancialRatioResponse,
@@ -87,17 +87,20 @@ from .models.domestic_finance import (
     StabilityRatioResponse,
     GrowthRatioResponse,
 )
-from .models.overseas import (
+from .models import (
     OverseasBalanceQueryParam,
     OverseasStockBalance,
     OverseasBalanceSummary,
     OverseasBalanceResponse,
+    OverseasTradingParam,
+    OverseasTradingResponse,
 )
 from .parsers import (
     DomesticParser,
     DomesticFinanceParser,
     DomesticKsdinfoParser,
     OverseasParser,
+    OverseasTradingParser,
 )
 
 __all__ = [
@@ -126,10 +129,13 @@ __all__ = [
     "OverseasStockBalance",
     "OverseasBalanceSummary",
     "OverseasBalanceResponse",
+    "OverseasTradingParam",
+    "OverseasTradingResponse",
     
     # 파서
     "DomesticParser",
     "DomesticFinanceParser",
     "DomesticKsdinfoParser",
     "OverseasParser",
+    "OverseasTradingParser",
 ]

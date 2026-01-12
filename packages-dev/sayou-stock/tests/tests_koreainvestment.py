@@ -115,6 +115,41 @@ def demo_overseas(crawler: KoreainvestmentCrawler):
     for balance in data.balances:
         print(balance.to_korean())
 
+def demo_overseas_trading(crawler: KoreainvestmentCrawler):
+    """한국투자증권 해외 거래 데모"""
+    print(f"\n{'='*60}")
+    print(f"한국투자증권 해외 거래")
+    print('='*60)
+    
+    buy_data = [
+        ("DOW", 10, 24.0, "NYSE")
+    ]
+
+    # 해외주식 매수 주문
+    print(f"\n해외주식 매수 주문")
+    for info in buy_data:
+        data = crawler.overseas_buy_stock(info[0], info[1], info[2], info[3])
+        print(data.response_body.to_korean())
+        print(data.trading.to_korean())
+    
+    sell_data = [
+        ("SPY", 2, 700.0, "AMEX"),
+        ("KO", 10, 72.5, "NYSE"),
+        ("QQQ", 1, 630.0, "NASD"),
+        ("MVIS", 100, 1.2, "NASD"),
+        ("IONQ", 5, 60.0, "NYSE"),
+        ("INUV", 100, 3.5, "AMEX"),
+        ("ARKG", 10, 35.0, "AMEX"),
+        ("DOW", 10, 28.0, "NYSE"),
+        ("NNDM", 100, 2.0, "NASD")
+    ]
+
+    # 해외주식 매도 주문
+    print(f"\n해외주식 매도 주문")
+    for info in sell_data:
+        data = crawler.overseas_sell_stock(info[0], info[1], info[2], info[3])
+        print(data)
+
 def main():
     """메인 데모 실행"""
     
@@ -131,6 +166,7 @@ def main():
     #demo_domestic_finance(crawler)
     #demo_domestic_ksdinfo(crawler)
     demo_overseas(crawler)
+    #demo_overseas_trading(crawler)
     
     print("\n" + "="*60)
     print("Demo completed!")

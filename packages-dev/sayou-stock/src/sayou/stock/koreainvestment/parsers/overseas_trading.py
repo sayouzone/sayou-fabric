@@ -27,9 +27,8 @@ from ..models.base_model import (
     AccountConfig,
     RequestHeader,
 )
-from ..models.overseas import (
-    OverseasBalanceQueryParam,
-    OverseasBalanceResponse,
+from ..models import (
+    OverseasTradingResponse,
 )
 from ..utils.token_manager import TokenManager
 from ..utils.utils import (
@@ -41,7 +40,7 @@ from ..utils.utils import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class OverseasParser:
+class OverseasTradingParser:
     """KIS 해외 데이터를 파싱하는 클래스"""
 
     def __init__(
@@ -56,39 +55,56 @@ class OverseasParser:
         )
         self._token_manager = TokenManager(client)
     
-    def inquire_balance(self) -> OverseasBalanceResponse:
+    def buy_stock(self, stock_code: str, order_quantity: int, order_price: float, exchange_code: str = "NASD"):
+        tr_id = "TTTT1002U"
+        currency_code = "USD"
+
+        return self.order(stock_code, order_quantity, order_price, tr_id, exchange_code, currency_code)
+    
+    def sell_stock(self, stock_code: str, order_quantity: int, order_price: float, exchange_code: str = "NASD"):
+        tr_id = "TTTT1006U"
+        currency_code = "USD"
+
+        return self.order(stock_code, order_quantity, order_price, tr_id, exchange_code, currency_code)
+
+    def order(
+        self,
+        stock_code: str,
+        order_quantity: int,
+        order_price: float,
+        tr_id: str = "TTTT1002U",
+        exchange_code: str = "NASD",
+        currency_code: str = "USD",
+    ):
         """
-        주식잔고조회
+        해외주식 주문[v1_해외주식-001]
 
-        https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/overseas-stock/v1/trading/inquire-balance
+        https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/overseas-stock/v1/trading/order
         """
-        url = KIS_OPENAPI_PROD + "/uapi/overseas-stock/v1/trading/inquire-balance"
+        url = KIS_OPENAPI_PROD + "/uapi/overseas-stock/v1/trading/order"
 
-        headers = self._build_headers(tr_id="TTTS3012R")
-        params = OverseasBalanceQueryParam(
-            CANO=self._account.CANO,
-            ACNT_PRDT_CD=self._account.ACNT_PRDT_CD,
-            OVRS_EXCG_CD="NASD",
-            TR_CRCY_CD="USD",
-            CTX_AREA_FK200="",
-            CTX_AREA_NK200="",
-            OFL_YN="",
-        )
-
+        headers = self._build_headers(tr_id=tr_id)
+        params = {
+            "CANO": self._account.CANO,
+            "ACNT_PRDT_CD": self._account.ACNT_PRDT_CD,
+            "OVRS_EXCG_CD": exchange_code,
+            "PDNO": stock_code,
+            "ORD_QTY": str(order_quantity),
+            "OVRS_ORD_UNPR": str(order_price),
+            "ORD_SVR_DVSN_CD": "0",
+            "ORD_DVSN": "00",
+        }
         logger.debug(f"Request URL: {url}")
         logger.debug(f"Request Headers: {headers.to_dict()}")
-        logger.debug(f"Request Params: {params.to_dict()}")
+        logger.debug(f"Request Params: {params}")
 
-        response = self._client._get(
-            url,
-            params=params.to_dict(),
-            headers=headers.to_dict(),
-        )
+        response = self._client._post(url, json=params, headers=headers.to_dict())
+        #response = requests.post(url, json=params, headers=headers.to_dict())
 
         if response.status_code != 200:
             self._handle_error(response)
 
-        return OverseasBalanceResponse.from_response(response.json())
+        return OverseasTradingResponse.from_response(response.json())
 
     def _build_headers(self, tr_id: str, **kwargs) -> RequestHeader:
         """공통 헤더 생성"""

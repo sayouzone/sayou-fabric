@@ -52,12 +52,12 @@ class KoreainvestmentClient:
     def _get(self, url: str, params: dict = None, headers: dict = None, referer: str = None) -> requests.Response:
         """GET Request (Rate Limit)"""
         self._rate_limit()
-        
-        if referer:
-            self.session.headers.update({'Referer': referer})
 
         if headers:
             self.session.headers.update(headers)
+        
+        if referer:
+            self.session.headers.update({'Referer': referer})
         
         response = self.session.get(url, params=params, timeout=10)
 
@@ -69,6 +69,9 @@ class KoreainvestmentClient:
     def _post(self, url: str, params: dict = None, data: dict = None, json: dict = None, headers: dict = None, referer: str = None, timeout: int = 10) -> requests.Response:
         """POST Request (Rate Limit)"""
         self._rate_limit()
+
+        if headers:
+            self.session.headers.update(headers)
         
         if referer:
             self.session.headers.update({'Referer': referer})

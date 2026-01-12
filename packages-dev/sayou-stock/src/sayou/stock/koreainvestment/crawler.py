@@ -21,6 +21,7 @@ from .parsers import (
     DomesticFinanceParser,
     DomesticKsdinfoParser,
     OverseasParser,
+    OverseasTradingParser,
 )
 
 # 로깅 설정
@@ -40,6 +41,7 @@ class KoreainvestmentCrawler:
         self._domestic_finance_parser = DomesticFinanceParser(self.client)
         self._domestic_ksdinfo_parser = DomesticKsdinfoParser(self.client)
         self._overseas_parser = OverseasParser(self.client)
+        self._overseas_trading_parser = OverseasTradingParser(self.client)
 
     def domestic(self, start_date: str = None):
         return self._domestic_parser.fetch(start_date)
@@ -79,3 +81,9 @@ class KoreainvestmentCrawler:
 
     def overseas_inquire_balance(self):
         return self._overseas_parser.inquire_balance()
+
+    def overseas_buy_stock(self, stock_code: str, order_quantity: int, order_price: float, exchange_type: str = "NASD"):
+        return self._overseas_trading_parser.buy_stock(stock_code, order_quantity, order_price, exchange_type)
+
+    def overseas_sell_stock(self, stock_code: str, order_quantity: int, order_price: float, exchange_type: str = "NASD"):
+        return self._overseas_trading_parser.sell_stock(stock_code, order_quantity, order_price, exchange_type)

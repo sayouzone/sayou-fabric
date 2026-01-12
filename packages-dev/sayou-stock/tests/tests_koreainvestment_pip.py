@@ -3,6 +3,7 @@
 Koreainvestment Crawler 사용 예시
 """
 
+import os
 from dotenv import load_dotenv
 
 from sayou.stock.koreainvestment import KoreainvestmentCrawler
@@ -119,8 +120,8 @@ def main():
 
     # 각 파일링 타입 데모
     demo_domestic(crawler)
-    #demo_domestic_finance(crawler)
-    #demo_domestic_ksdinfo(crawler)
+    demo_domestic_finance(crawler)
+    demo_domestic_ksdinfo(crawler)
     demo_overseas(crawler)
     
     print("\n" + "="*60)

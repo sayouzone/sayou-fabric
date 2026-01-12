@@ -61,14 +61,14 @@ class AccessToken:
     access_token: str
     token_type: str = "Bearer"
     expires_in: int = 86400
-    expired_at: Optional[str] = None
+    access_token_token_expired: Optional[str] = None
 
     @property
     def is_expired(self) -> bool:
         """토큰 만료 여부 확인"""
-        if not self.expired_at:
+        if not self.access_token_token_expired:
             return True
-        return self.expired_at < datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return self.access_token_token_expired < datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     @property
     def authorization(self) -> str:
@@ -82,7 +82,7 @@ class AccessToken:
             access_token=response_data.get("access_token", ""),
             token_type=response_data.get("token_type", "Bearer"),
             expires_in=response_data.get("expires_in", 86400),
-            expired_at=response_data.get("access_token_token_expired"),
+            access_token_token_expired=response_data.get("access_token_token_expired"),
         )
 
     def to_bytes(self) -> bytes:

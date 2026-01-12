@@ -48,6 +48,10 @@ from .overseas import (
     OverseasBalanceSummary,
     OverseasBalanceResponse,
 )
+from .overseas_trading import (
+    OverseasTradingParam,
+    OverseasTradingResponse,
+)
 
 __all__ = [
     "AccountConfig",
@@ -76,4 +80,7 @@ __all__ = [
     "OverseasStockBalance",
     "OverseasBalanceSummary",
     "OverseasBalanceResponse",
+    # 해외 주식 주문
+    "OverseasTradingParam",
+    "OverseasTradingResponse",
 ]

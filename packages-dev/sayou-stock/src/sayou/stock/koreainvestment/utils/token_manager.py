@@ -40,7 +40,8 @@ class TokenManager:
     def token(self) -> AccessToken:
         """유효한 토큰 반환 (만료 시 자동 갱신)"""
         if self._token is None:
-            self._token = self._storage.read_token()
+            token = self._storage.read_token()
+            self._token = token
         
         if self._token is None or self._token.is_expired:
             self._refresh_token()
@@ -63,6 +64,7 @@ class TokenManager:
             "grant_type": "client_credentials",
         }
 
+        print(self.OAUTH_URL, params)
         response = self._client._post(self.OAUTH_URL, json=params)
 
         if response.status_code != 200:
