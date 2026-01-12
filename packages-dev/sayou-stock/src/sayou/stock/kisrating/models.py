@@ -96,4 +96,4 @@ class DownloadFile:
         return self.file_type == FileType.EXCEL
 
     def is_zip(self) -> bool:
-        return self.file_type == FileType.ZIP햣
+        return self.file_type == FileType.ZIP

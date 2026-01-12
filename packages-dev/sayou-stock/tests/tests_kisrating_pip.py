@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Naver Crawler 사용 예시
+Kisrating Crawler 사용 예시
 """
 
 import os

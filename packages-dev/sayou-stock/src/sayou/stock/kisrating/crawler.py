@@ -28,7 +28,7 @@ class KisratingCrawler:
         
     """한국신용평가 > 신용등급 > 등급통계 > 등급별금리스프레드"""
     
-    def __init__(self, client_id: str = None, client_secret: str = None):
+    def __init__(self):
         """크롤러를 초기화합니다."""
         self.client = KisratingClient()
 

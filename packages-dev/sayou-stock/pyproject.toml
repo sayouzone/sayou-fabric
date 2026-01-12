@@ -7,11 +7,11 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-stock"
-version = "0.2.2"
+version = "0.2.3"
 authors = [
     { name = "Sayouzone", email = "support@sayouzone.com" },
 ]
-description = "Sayou Stock Package for Financial Data from SEC, FnGuide, Naver, OpenDART, Yahoo"
+description = "Sayou Stock Package for Financial Data from SEC, FnGuide, Naver, OpenDART, Yahoo, Korean Investment Securities"
 readme = "README.md"
 license = { file = "./LICENSE" }
 requires-python = ">=3.9"
