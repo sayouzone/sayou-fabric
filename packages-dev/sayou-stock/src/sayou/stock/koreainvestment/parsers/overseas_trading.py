@@ -28,12 +28,15 @@ from ..models.base_model import (
     RequestHeader,
 )
 from ..models import (
-    OverseasTradingResponse,
+    ExchangeCode,
+    OverseasTrId,
+    OverseasOrderParam,
+    OverseasRevisionCancelParam,
+    OverseasOrderResponse,
 )
 from ..utils.token_manager import TokenManager
 from ..utils.utils import (
     KIS_OPENAPI_PROD,
-    KIS_OPENAPI_OPS,
 )
 
 # 로깅 설정
@@ -41,70 +44,189 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class OverseasTradingParser:
-    """KIS 해외 데이터를 파싱하는 클래스"""
+    """KIS 해외주식 주문을 처리하는 클래스"""
+
+    ORDER_URL = KIS_OPENAPI_PROD + "/uapi/overseas-stock/v1/trading/order"
+    REVISION_CANCEL_URL = KIS_OPENAPI_PROD + "/uapi/overseas-stock/v1/trading/order-rvsecncl"
 
     def __init__(
         self,
         client: KoreainvestmentClient,
+        account: AccountConfig,
     ):
         self._client = client
-
-        self._account = AccountConfig(
-            account_number="72749154",
-            product_code="01",
-        )
+        self._account = account
         self._token_manager = TokenManager(client)
     
-    def buy_stock(self, stock_code: str, order_quantity: int, order_price: float, exchange_code: str = "NASD"):
-        tr_id = "TTTT1002U"
-        currency_code = "USD"
-
-        return self.order(stock_code, order_quantity, order_price, tr_id, exchange_code, currency_code)
-    
-    def sell_stock(self, stock_code: str, order_quantity: int, order_price: float, exchange_code: str = "NASD"):
-        tr_id = "TTTT1006U"
-        currency_code = "USD"
-
-        return self.order(stock_code, order_quantity, order_price, tr_id, exchange_code, currency_code)
-
-    def order(
+    def buy(
         self,
         stock_code: str,
-        order_quantity: int,
-        order_price: float,
-        tr_id: str = "TTTT1002U",
-        exchange_code: str = "NASD",
-        currency_code: str = "USD",
+        quantity: int,
+        price: float,
+        exchange: ExchangeCode | str = ExchangeCode.NASD,
+    ) -> OverseasOrderResponse:
+        """
+        해외주식 매수
+
+        Args:
+            stock_code: 종목코드 (예: AAPL)
+            quantity: 주문수량
+            price: 주문단가
+            exchange: 거래소코드 (기본값: NASD)
+        """
+        return self._order(
+            stock_code=stock_code,
+            quantity=quantity,
+            price=price,
+            tr_id=OverseasTrId.BUY,
+            exchange=exchange,
+        )
+    
+    def sell(
+        self,
+        stock_code: str,
+        quantity: int,
+        price: float,
+        exchange: ExchangeCode | str = ExchangeCode.NASD,
+    ) -> OverseasOrderResponse:
+        """
+        해외주식 매도
+
+        Args:
+            stock_code: 종목코드 (예: AAPL)
+            quantity: 주문수량
+            price: 주문단가
+            exchange: 거래소코드 (기본값: NASD)
+        """
+        return self._order(
+            stock_code=stock_code,
+            quantity=quantity,
+            price=price,
+            tr_id=OverseasTrId.SELL,
+            exchange=exchange,
+        )
+    
+    def revise(
+        self,
+        stock_code: str,
+        order_no: str,
+        quantity: int,
+        price: float,
+        exchange: ExchangeCode | str = ExchangeCode.NASD,
+    ) -> OverseasOrderResponse:
+        """
+        해외주식 정정
+
+        Args:
+            stock_code: 종목코드
+            order_no: 원주문번호
+            quantity: 정정수량
+            price: 정정단가
+            exchange: 거래소코드
+        """
+        params = OverseasRevisionCancelParam.create_revision(
+            account_number=self._account.CANO,
+            product_code=self._account.ACNT_PRDT_CD,
+            stock_code=stock_code,
+            order_no=order_no,
+            quantity=quantity,
+            price=price,
+            exchange=exchange,
+        )
+        return self._revision_cancel(params)
+
+    def cancel(
+        self,
+        stock_code: str,
+        order_no: str,
+        quantity: int,
+        exchange: ExchangeCode | str = ExchangeCode.NASD,
+    ) -> OverseasOrderResponse:
+        """
+        해외주식 취소
+
+        Args:
+            stock_code: 종목코드
+            order_no: 원주문번호
+            quantity: 취소수량
+            exchange: 거래소코드
+        """
+        params = OverseasRevisionCancelParam.create_cancel(
+            account_number=self._account.CANO,
+            product_code=self._account.ACNT_PRDT_CD,
+            stock_code=stock_code,
+            order_no=order_no,
+            quantity=quantity,
+            exchange=exchange,
+        )
+        return self._revision_cancel(params)
+
+    def _order(
+        self,
+        stock_code: str,
+        quantity: int,
+        price: float,
+        tr_id: OverseasTrId,
+        exchange: ExchangeCode | str,
     ):
         """
         해외주식 주문[v1_해외주식-001]
-
         https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/overseas-stock/v1/trading/order
         """
-        url = KIS_OPENAPI_PROD + "/uapi/overseas-stock/v1/trading/order"
+        headers = self._build_headers(tr_id=tr_id.value)
+        params = OverseasOrderParam.create(
+            account_number=self._account.CANO,
+            product_code=self._account.ACNT_PRDT_CD,
+            stock_code=stock_code,
+            quantity=quantity,
+            price=price,
+            exchange=exchange,
+        )
+        logger.debug(f"Order Request - URL: {self.ORDER_URL}")
+        logger.debug(f"Order Request - Headers: {headers.to_dict()}")
+        logger.debug(f"Order Request - Params: {params.to_dict()}")
 
-        headers = self._build_headers(tr_id=tr_id)
-        params = {
-            "CANO": self._account.CANO,
-            "ACNT_PRDT_CD": self._account.ACNT_PRDT_CD,
-            "OVRS_EXCG_CD": exchange_code,
-            "PDNO": stock_code,
-            "ORD_QTY": str(order_quantity),
-            "OVRS_ORD_UNPR": str(order_price),
-            "ORD_SVR_DVSN_CD": "0",
-            "ORD_DVSN": "00",
-        }
-        logger.debug(f"Request URL: {url}")
-        logger.debug(f"Request Headers: {headers.to_dict()}")
-        logger.debug(f"Request Params: {params}")
-
-        response = self._client._post(url, json=params, headers=headers.to_dict())
-        #response = requests.post(url, json=params, headers=headers.to_dict())
+        response = self._client._post(
+            self.ORDER_URL,
+            json=params.to_dict(),
+            headers=headers.to_dict(),
+        )
 
         if response.status_code != 200:
             self._handle_error(response)
 
-        return OverseasTradingResponse.from_response(response.json())
+        return OverseasOrderResponse.from_response(response.json())
+
+    def _revision_cancel(
+        self,
+        params: OverseasRevisionCancelParam,
+    ):
+        """
+        해외주식 정정취소주문[v1_해외주식-003]
+        https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/overseas-stock/v1/trading/order-rvsecncl
+        """
+        headers = self._build_headers(tr_id=OverseasTrId.REVISION_CANCEL.value)
+        print(f"Revision/Cancel Request - URL: {self.REVISION_CANCEL_URL}")
+        print(f"Request Headers: {headers.to_dict()}")
+        print(f"Request Params: {params.to_dict()}")
+
+        """
+        response = self._client._post(
+            self.REVISION_CANCEL_URL,
+            json=params.to_dict(),
+            headers=headers.to_dict(),
+        )
+        """
+        response = requests.post(
+            self.REVISION_CANCEL_URL,
+            json=params.to_dict(),
+            headers=headers.to_dict(),
+        )
+
+        if response.status_code != 200:
+            self._handle_error(response)
+
+        return OverseasOrderResponse.from_response(response.json())
 
     def _build_headers(self, tr_id: str, **kwargs) -> RequestHeader:
         """공통 헤더 생성"""

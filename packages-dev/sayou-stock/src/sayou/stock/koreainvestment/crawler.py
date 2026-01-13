@@ -15,7 +15,7 @@
 import logging
 
 from .client import KoreainvestmentClient
-
+from .models import AccountConfig
 from .parsers import (
     DomesticParser,
     DomesticFinanceParser,
@@ -36,12 +36,17 @@ class KoreainvestmentCrawler:
         """Initialize Koreainvestment Crawler"""
         self.client = KoreainvestmentClient(app_key, app_secret)
 
+        self._account = AccountConfig(
+            account_number="72749154",
+            product_code="01",
+        )
+
         # Parser initialization
         self._domestic_parser = DomesticParser(self.client)
         self._domestic_finance_parser = DomesticFinanceParser(self.client)
         self._domestic_ksdinfo_parser = DomesticKsdinfoParser(self.client)
         self._overseas_parser = OverseasParser(self.client)
-        self._overseas_trading_parser = OverseasTradingParser(self.client)
+        self._overseas_trading_parser = OverseasTradingParser(self.client, self._account)
 
     def domestic(self, start_date: str = None):
         return self._domestic_parser.fetch(start_date)
@@ -79,11 +84,33 @@ class KoreainvestmentCrawler:
     def dividend(self, stock_code: str):
         return self._domestic_ksdinfo_parser.dividend(stock_code)
 
-    def overseas_inquire_balance(self):
+    def inquire_balance_overseas(self):
         return self._overseas_parser.inquire_balance()
 
-    def overseas_buy_stock(self, stock_code: str, order_quantity: int, order_price: float, exchange_type: str = "NASD"):
-        return self._overseas_trading_parser.buy_stock(stock_code, order_quantity, order_price, exchange_type)
+    def buy_stock_overseas(self, stock_code: str, order_quantity: int, order_price: float, exchange_type: str):
+        return self._overseas_trading_parser.buy(stock_code, order_quantity, order_price, exchange_type)
 
-    def overseas_sell_stock(self, stock_code: str, order_quantity: int, order_price: float, exchange_type: str = "NASD"):
-        return self._overseas_trading_parser.sell_stock(stock_code, order_quantity, order_price, exchange_type)
+    def sell_stock_overseas(self, stock_code: str, order_quantity: int, order_price: float, exchange_type: str):
+        return self._overseas_trading_parser.sell(stock_code, order_quantity, order_price, exchange_type)
+
+    def revise_stock_overseas(
+        self,
+        stock_code: str,
+        quantity: int,
+        price: float,
+        order_no: str,
+        exchange_type: str,
+    ):    
+        """해외주식 정정주문"""
+        return self._overseas_trading_parser.revise(stock_code, order_no, quantity, price, exchange=exchange_type)
+
+    def cancel_stock_overseas(
+        self,
+        stock_code: str,
+        quantity: int,
+        price: float,
+        order_no: str,
+        exchange_type: str,
+    ):
+        """해외주식 취소주문"""
+        return self._overseas_trading_parser.cancel(stock_code, order_no, quantity, exchange=exchange_type)

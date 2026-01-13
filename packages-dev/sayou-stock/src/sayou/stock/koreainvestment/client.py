@@ -43,7 +43,7 @@ class KoreainvestmentClient:
         
         self.session = requests.Session()
         self.session.headers.update(self.headers)
-        self._rate_limit_delay = 0.1  # Request Limit
+        self._rate_limit_delay = 0.5  # Request Limit
     
     def _rate_limit(self):
         """API Request Limit"""
