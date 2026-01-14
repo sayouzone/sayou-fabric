@@ -11,13 +11,8 @@ from ..interfaces.base_writer import BaseWriter
 @register_component("writer")
 class FileWriter(BaseWriter):
     """
-    Writes data to the local file system.
-
-    Automatically handles format serialization:
-    - Dict/List -> JSON
-    - Str -> Text file
-    - Bytes -> Binary file
-    - Others -> Pickle
+    Writes data to the local filesystem with intelligent extension detection.
+    Robustly handles raw data even without metadata using content sniffing.
     """
 
     component_name = "FileWriter"
@@ -44,101 +39,168 @@ class FileWriter(BaseWriter):
         return 0.0
 
     def _do_write(self, input_data: Any, destination: str, **kwargs) -> bool:
-        """
-        Write data to file. Creates parent directories if they don't exist.
-        """
         # 1. Directory Setup
         if destination.endswith(os.sep) or (
             os.path.exists(destination) and os.path.isdir(destination)
         ):
-            destination = os.path.join(destination, "output.json")
-            self._log(f"Destination is a directory. Defaulting to: {destination}")
+            destination = os.path.join(destination, "output")
 
         folder = os.path.dirname(destination)
         if folder:
             os.makedirs(folder, exist_ok=True)
 
+        mode = kwargs.get("mode", "w")
         encoding = kwargs.get("encoding", "utf-8")
 
         try:
-            # 2. Wrapped Content Detection
-            real_content = None
+            # 2. Unwrap Data & Metadata extraction
+            real_content = input_data
             metadata = {}
 
-            # 1) Type: List
-            if isinstance(input_data, list) and len(input_data) == 1:
-                item = input_data[0]
-                if isinstance(item, dict) and isinstance(item.get("content"), bytes):
-                    real_content = item["content"]
-                    metadata = item.get("meta") or item.get("metadata", {})
-
-            # 2) Type: Dict
-            elif isinstance(input_data, dict) and isinstance(
-                input_data.get("content"), bytes
-            ):
+            # Sayou Dictionary Wrapper processing
+            if isinstance(input_data, dict) and "content" in input_data:
                 real_content = input_data["content"]
                 metadata = input_data.get("meta") or input_data.get("metadata", {})
 
-            # 3) Discovery of a wrapped binary
-            if real_content is not None:
-                input_data = real_content
-                new_ext = metadata.get("extension", "")
-                suggested_name = metadata.get("suggested_filename", "")
+            # SayouBlock List processing (Refinery result)
+            elif (
+                isinstance(input_data, list)
+                and len(input_data) > 0
+                and hasattr(input_data[0], "type")
+            ):
+                metadata["extension"] = ".json"
 
-                if suggested_name:
-                    destination = os.path.join(
-                        os.path.dirname(destination), suggested_name
-                    )
-                elif new_ext and destination.endswith(".json"):
-                    destination = destination.replace(".json", new_ext)
+            # 3. Intelligent Detection
+            filename, current_ext = os.path.splitext(destination)
 
-                self._log(
-                    f"📦 Detected Wrapped Binary. Saving as raw file: {destination}"
+            if not current_ext:
+                detected_ext = self._detect_extension(real_content, metadata)
+                destination = f"{filename}{detected_ext}"
+
+            # 4. Save Logic (Type-based Writing)
+
+            # Case A: Binary (Bytes)
+            if isinstance(real_content, bytes):
+                write_mode = "wb"
+                final_data = real_content
+
+            # Case B: JSON Structure (Dict/List)
+            elif isinstance(real_content, (dict, list, tuple)):
+                write_mode = "w"
+                final_data = json.dumps(
+                    real_content, indent=2, ensure_ascii=False, default=str
                 )
 
-            ext = os.path.splitext(destination)[1].lower()
+            # Case C: String (Text/HTML/CSV/Markdown)
+            elif isinstance(real_content, str):
+                write_mode = "w"
+                final_data = real_content
 
-            # Case A: Binary Data (Docs, Xlsx, Images...)
-            if isinstance(input_data, bytes):
-                with open(destination, "wb") as f:
-                    f.write(input_data)
-
-            # Case B: JSON
-            elif ext == ".json" or isinstance(input_data, (dict, list, tuple)):
-                content = json.dumps(
-                    input_data, indent=2, ensure_ascii=False, default=str
-                )
-                with open(destination, "w", encoding=encoding) as f:
-                    f.write(content)
-
-            # Case C: Simple String (CSV, TXT)
-            elif isinstance(input_data, str):
-                with open(destination, "w", encoding=encoding) as f:
-                    f.write(input_data)
-
-            # Case D: Fallback
+            # Case D: Others (Pickle Fallback)
             else:
+                write_mode = "wb"
+                final_data = pickle.dumps(real_content)
                 if not destination.endswith(".pkl"):
                     destination += ".pkl"
-                with open(destination, "wb") as f:
-                    pickle.dump(input_data, f)
 
-            self._log(f"💾 Saved to {destination}")
+            with open(
+                destination,
+                write_mode,
+                encoding=None if "b" in write_mode else encoding,
+            ) as f:
+                f.write(final_data)
+
+            self._log(
+                f"💾 Saved to {destination} ({len(final_data) if isinstance(final_data, (bytes, str)) else 'obj'} bytes)"
+            )
             return True
 
         except Exception as e:
             self._log(f"Write failed: {e}", level="error")
             raise e
 
-    def _serializer(self, obj):
+    def _detect_extension(self, data: Any, metadata: dict) -> str:
         """
-        Helper: Custom object serializer for JSON.
-        Handles SayouBlock, SayouNode, etc.
+        메타데이터가 없어도 데이터 내용(Signature)을 분석하여 확장자를 찾아냅니다.
         """
-        if hasattr(obj, "to_dict"):
-            return obj.to_dict()
+        # 1. Metadata Priority
+        if metadata.get("extension"):
+            ext = metadata["extension"]
+            return ext if ext.startswith(".") else f".{ext}"
 
-        if hasattr(obj, "__dict__"):
-            return obj.__dict__
+        mime = metadata.get("mime_type", "")
+        if "json" in mime:
+            return ".json"
+        if "csv" in mime:
+            return ".csv"
+        if "html" in mime:
+            return ".html"
+        if "pdf" in mime:
+            return ".pdf"
+        if "spreadsheet" in mime or "excel" in mime:
+            return ".xlsx"
 
-        return str(obj)
+        # 2. Content Sniffing
+
+        # [String Sniffing]
+        if isinstance(data, str):
+            sample = data[:1000].strip()
+
+            # JSON String Check
+            if (sample.startswith("{") and sample.endswith("}")) or (
+                sample.startswith("[") and sample.endswith("]")
+            ):
+                try:
+                    json.loads(data)
+                    return ".json"
+                except:
+                    pass
+
+            # HTML Check
+            if (
+                "<html" in sample.lower()
+                or "<!doctype html" in sample.lower()
+                or "<body" in sample.lower()
+            ):
+                return ".html"
+
+            # Markdown Check
+            if sample.startswith("# ") or "\n# " in sample or "```" in sample:
+                return ".md"
+
+            # CSV Check
+            if "\n" in sample and "," in sample:
+                lines = sample.splitlines()
+                if len(lines) > 1:
+                    first_line_commas = lines[0].count(",")
+                    second_line_commas = lines[1].count(",")
+                    if (
+                        first_line_commas > 0
+                        and first_line_commas == second_line_commas
+                    ):
+                        return ".csv"
+
+            return ".txt"
+
+        # [Binary Sniffing]
+        if isinstance(data, bytes):
+            # Magic Numbers (File Header Signature)
+            if data.startswith(b"PK\x03\x04"):
+                # ZIP format (xlsx, docx, pptx, zip all included)
+                return ".zip"
+            if data.startswith(b"%PDF"):
+                return ".pdf"
+            if data.startswith(b"\x89PNG"):
+                return ".png"
+            if data.startswith(b"\xff\xd8\xff"):
+                return ".jpg"
+            if data.startswith(b"GIF8"):
+                return ".gif"
+
+            return ".bin"
+
+        # [Object Sniffing]
+        if isinstance(data, (dict, list)):
+            return ".json"
+
+        return ".dat"
