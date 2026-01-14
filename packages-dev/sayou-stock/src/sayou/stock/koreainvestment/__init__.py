@@ -97,7 +97,9 @@ from .models import (
     OverseasTrId,
     OverseasOrderParam,
     OverseasRevisionCancelParam,
+    OverseasConclusionListParam,
     OverseasOrderResponse,
+    OverseasConclusionListResponse,
 )
 from .parsers import (
     DomesticParser,
@@ -137,7 +139,9 @@ __all__ = [
     "OverseasTrId",
     "OverseasOrderParam",
     "OverseasRevisionCancelParam",
+    "OverseasConclusionListParam",
     "OverseasOrderResponse",
+    "OverseasConclusionListResponse",
     
     # 파서
     "DomesticParser",

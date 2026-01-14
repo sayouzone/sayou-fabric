@@ -75,6 +75,11 @@ class AccessToken:
         """Authorization 헤더 값 반환"""
         return f"{self.token_type} {self.access_token}"
 
+    @property
+    def expired_at(self) -> str:
+        """토큰 만료 시간 반환"""
+        return self.access_token_token_expired
+
     @classmethod
     def from_response(cls, response_data: dict) -> "AccessToken":
         """API 응답으로부터 AccessToken 생성"""

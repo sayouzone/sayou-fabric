@@ -32,7 +32,9 @@ from ..models import (
     OverseasTrId,
     OverseasOrderParam,
     OverseasRevisionCancelParam,
+    OverseasConclusionListParam,
     OverseasOrderResponse,
+    OverseasConclusionListResponse,
 )
 from ..utils.token_manager import TokenManager
 from ..utils.utils import (
@@ -48,6 +50,7 @@ class OverseasTradingParser:
 
     ORDER_URL = KIS_OPENAPI_PROD + "/uapi/overseas-stock/v1/trading/order"
     REVISION_CANCEL_URL = KIS_OPENAPI_PROD + "/uapi/overseas-stock/v1/trading/order-rvsecncl"
+    CONCLUSION_LIST_URL = KIS_OPENAPI_PROD + "/uapi/overseas-stock/v1/trading/inquire-ccnl"
 
     def __init__(
         self,
@@ -160,6 +163,47 @@ class OverseasTradingParser:
             exchange=exchange,
         )
         return self._revision_cancel(params)
+
+    def conclusion_list(
+        self,
+        stock_code: str,
+        start_date: str,
+        end_date: str,
+        exchange: ExchangeCode | str = ExchangeCode.ALL,
+    ) -> OverseasOrderResponse:
+        """
+        해외주식 정정
+        해외주식 주문체결내역[v1_해외주식-007]
+
+        Args:
+            stock_code: 종목코드
+            start_date: 시작일
+            end_date: 종료일
+            exchange: 거래소코드
+        """
+        headers = self._build_headers(tr_id=OverseasTrId.CONCLUSION_LIST.value)
+        params = OverseasConclusionListParam.create(
+            account_number=self._account.CANO,
+            product_code=self._account.ACNT_PRDT_CD,
+            stock_code=stock_code,
+            start_date=start_date,
+            end_date=end_date,
+            exchange=exchange,
+        )
+        logger.info(f"Conclusion List Request - URL: {self.CONCLUSION_LIST_URL}")
+        logger.info(f"Conclusion List Request - Headers: {headers.to_dict()}")
+        logger.info(f"Conclusion List Request - Params: {params.to_dict()}")
+
+        response = self._client._get(
+            self.CONCLUSION_LIST_URL,
+            params=params.to_dict(),
+            headers=headers.to_dict(),
+        )
+
+        if response.status_code != 200:
+            self._handle_error(response)
+
+        return OverseasConclusionListResponse.from_response(response.json())
 
     def _order(
         self,

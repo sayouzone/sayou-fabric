@@ -11,10 +11,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from pathlib import Path
 
-# 상위 디렉토리를 path에 추가
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from koreainvestment import KoreainvestmentCrawler
+from sayou.stock.koreainvestment import KoreainvestmentCrawler
 
 def demo_overseas(crawler: KoreainvestmentCrawler):
     """한국투자증권 해외 조회 데모"""
@@ -104,19 +101,6 @@ def demo_overseas_trading(crawler: KoreainvestmentCrawler):
         print(data.response_body.to_korean())
         print(data.order.to_korean())
 
-def demo_overseas_conclusion(crawler: KoreainvestmentCrawler):
-    """한국투자증권 해외 거래 데모"""
-    print(f"\n{'='*60}")
-    print(f"한국투자증권 해외 거래")
-    print('='*60)
-
-    # 해외주식 주문체결내역
-    print("\n해외주식 주문체결내역")
-    data = crawler.conclusion_list_overseas("%", "20260113", "20260113", "%")
-    print(data.response_body.to_korean())
-    for conclusion in data.conclusions:
-        print(conclusion.to_korean())
-
 def main():
     """메인 데모 실행"""
     
@@ -129,9 +113,8 @@ def main():
     crawler = KoreainvestmentCrawler(app_key, app_secret)
 
     # 각 파일링 타입 데모
-    #demo_overseas(crawler)
-    #demo_overseas_trading(crawler)
-    demo_overseas_conclusion(crawler)
+    demo_overseas(crawler)
+    demo_overseas_trading(crawler)
     
     print("\n" + "="*60)
     print("Demo completed!")

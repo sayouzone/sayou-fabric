@@ -53,7 +53,9 @@ from .overseas_trading import (
     OverseasTrId,
     OverseasOrderParam,
     OverseasRevisionCancelParam,
+    OverseasConclusionListParam,
     OverseasOrderResponse,
+    OverseasConclusionListResponse,
 )
 
 __all__ = [
@@ -88,5 +90,7 @@ __all__ = [
     "OverseasTrId",
     "OverseasOrderParam",
     "OverseasRevisionCancelParam",
+    "OverseasConclusionListParam",
     "OverseasOrderResponse",
+    "OverseasConclusionListResponse",
 ]

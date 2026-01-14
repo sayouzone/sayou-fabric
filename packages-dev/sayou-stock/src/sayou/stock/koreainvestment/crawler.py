@@ -114,3 +114,13 @@ class KoreainvestmentCrawler:
     ):
         """해외주식 취소주문"""
         return self._overseas_trading_parser.cancel(stock_code, order_no, quantity, exchange=exchange_type)
+
+    def conclusion_list_overseas(
+        self,
+        stock_code: str,
+        start_date: str,
+        end_date: str,
+        exchange_type: str,
+    ):
+        """해외주식 결론 리스트"""
+        return self._overseas_trading_parser.conclusion_list(stock_code, start_date, end_date, exchange=exchange_type)
