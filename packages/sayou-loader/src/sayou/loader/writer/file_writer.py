@@ -1,6 +1,7 @@
 import json
 import os
 import pickle
+import re
 from typing import Any
 
 from sayou.core.registry import register_component
@@ -71,7 +72,7 @@ class FileWriter(BaseWriter):
                 metadata["extension"] = ".json"
 
             # 3. Intelligent Detection
-            filename, current_ext = os.path.splitext(destination)
+            filename, current_ext = self.split_path_smart(destination)
 
             if not current_ext:
                 detected_ext = self._detect_extension(real_content, metadata)
@@ -118,6 +119,13 @@ class FileWriter(BaseWriter):
         except Exception as e:
             self._log(f"Write failed: {e}", level="error")
             raise e
+
+    def split_path_smart(self, path: str):
+        root, ext = os.path.splitext(path)
+        if not re.match(r"^\.[a-zA-Z0-9]{1,10}$", ext):
+            return path, ""
+
+        return root, ext
 
     def _detect_extension(self, data: Any, metadata: dict) -> str:
         """
