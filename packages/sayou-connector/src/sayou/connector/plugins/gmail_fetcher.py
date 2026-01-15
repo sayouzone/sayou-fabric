@@ -1,8 +1,9 @@
 import base64
-from typing import Dict, Any
+from typing import Any, Dict
 
 from sayou.core.registry import register_component
 from sayou.core.schemas import SayouTask
+
 from ..interfaces.base_fetcher import BaseFetcher
 
 try:
