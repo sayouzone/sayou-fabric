@@ -1,5 +1,4 @@
 import os
-import traceback
 from typing import Any, Dict
 
 from sayou.connector import ConnectorPipeline
@@ -222,61 +221,45 @@ class TransferPipeline(BaseComponent):
         self._emit("on_finish", result_data=stats, success=True)
         return stats
 
-    def _resolve_output_path(self, base_dir: str, packet: Any, index: int) -> str:
+    def _resolve_output_path(self, destination: str, packet: dict, index: int) -> str:
         """
         Helper: Generates a unique filename with SMART extension detection.
         """
-        import re
         import os
 
         # 1. Extract metadata
         meta = {}
-        if hasattr(packet, "task") and packet.task.meta:
-            meta.update(packet.task.meta)
-        if isinstance(packet.data, dict):
-            meta.update(packet.data.get("meta", {}))
+
+        if hasattr(packet, "task") and packet.task:
+            task_meta = getattr(packet.task, "meta", {})
+            if task_meta:
+                meta.update(task_meta)
+
+        payload = getattr(packet, "data", None) or getattr(packet, "content", None)
+
+        if isinstance(payload, dict):
+            meta.update(payload.get("meta", {}))
+        elif hasattr(packet, "meta") and packet.meta:
+            meta.update(packet.meta)
 
         # 2. Determine file name
-        candidate = (
+        raw_name = (
             meta.get("filename")
             or meta.get("subject")
+            or meta.get("title")
             or meta.get("uid")
+            or meta.get("file_id")
             or f"file_{index}"
         )
-        safe_name = re.sub(r'[\\/*?:"<>|]', "", str(candidate)).strip()
-        safe_name = safe_name.replace(" ", "_")
-        if not safe_name:
-            safe_name = f"untitled_{index}"
 
-        # 3. Smart Extension
-        current_ext = os.path.splitext(safe_name)[1].lower()
+        safe_name = self._sanitize_filename(str(raw_name))
 
-        if not current_ext:
-            data = packet.data
+        if os.path.splitext(destination)[1]:
+            return destination
 
-            # Case A: HTML String
-            if isinstance(data, str):
-                sample = data[:500].lower().strip()
-                if "<html" in sample or "<!doctype html" in sample:
-                    safe_name += ".html"
-                elif sample.startswith("# ") or "**" in sample:
-                    safe_name += ".md"
-                else:
-                    safe_name += ".txt"
+        return os.path.join(destination, safe_name)
 
-            # Case B: Dictionary / List (JSON)
-            elif isinstance(data, (dict, list)):
-                safe_name += ".json"
+    def _sanitize_filename(self, name: str) -> str:
+        import re
 
-            # Case C: Bytes (Binary)
-            elif isinstance(data, bytes):
-                safe_name += ".bin"
-
-            # Case D: SayouBlock List
-            elif isinstance(data, list) and len(data) > 0 and hasattr(data[0], "type"):
-                safe_name += ".json"
-
-            else:
-                safe_name += ".json"
-
-        return os.path.join(base_dir, safe_name)
+        return re.sub(r'[<>:"/\\|?*]', "_", name).strip()
