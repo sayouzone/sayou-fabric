@@ -128,9 +128,6 @@ class FileWriter(BaseWriter):
         return root, ext
 
     def _detect_extension(self, data: Any, metadata: dict) -> str:
-        """
-        메타데이터가 없어도 데이터 내용(Signature)을 분석하여 확장자를 찾아냅니다.
-        """
         # 1. Metadata Priority
         if metadata.get("extension"):
             ext = metadata["extension"]
@@ -154,16 +151,6 @@ class FileWriter(BaseWriter):
         if isinstance(data, str):
             sample = data[:1000].strip()
 
-            # JSON String Check
-            if (sample.startswith("{") and sample.endswith("}")) or (
-                sample.startswith("[") and sample.endswith("]")
-            ):
-                try:
-                    json.loads(data)
-                    return ".json"
-                except:
-                    pass
-
             # HTML Check
             if (
                 "<html" in sample.lower()
@@ -173,8 +160,13 @@ class FileWriter(BaseWriter):
                 return ".html"
 
             # Markdown Check
-            if sample.startswith("# ") or "\n# " in sample or "```" in sample:
+            if sample.startswith("# ") or sample.startswith("---") or "\n# " in sample:
                 return ".md"
+
+            if any(
+                t in sample.lower() for t in ["<div", "<p", "<a href", "<br", "<span"]
+            ):
+                return ".html"
 
             # CSV Check
             if "\n" in sample and "," in sample:
@@ -187,6 +179,16 @@ class FileWriter(BaseWriter):
                         and first_line_commas == second_line_commas
                     ):
                         return ".csv"
+
+            # JSON String Check
+            if (sample.startswith("{") and sample.endswith("}")) or (
+                sample.startswith("[") and sample.endswith("]")
+            ):
+                try:
+                    json.loads(data)
+                    return ".json"
+                except:
+                    pass
 
             return ".txt"
 
