@@ -1,4 +1,3 @@
-import imaplib
 from typing import Iterator
 
 from sayou.core.registry import register_component
@@ -6,11 +5,17 @@ from sayou.core.schemas import SayouTask
 
 from ..interfaces.base_generator import BaseGenerator
 
+try:
+    from google.oauth2.credentials import Credentials
+    from googleapiclient.discovery import build
+except ImportError:
+    build = None
+
 
 @register_component("generator")
 class GmailGenerator(BaseGenerator):
     """
-    Scans Gmail inbox and generates tasks for individual emails.
+    Scans Gmail inbox using Gmail API (OAuth) and generates tasks.
     """
 
     component_name = "GmailGenerator"
@@ -22,60 +27,55 @@ class GmailGenerator(BaseGenerator):
 
     def _do_generate(self, source: str, **kwargs) -> Iterator[SayouTask]:
         """
-        Connects to Gmail -> Search -> Yield Tasks.
+        Connects to Gmail API -> Search (List) -> Yield Tasks.
+        source example: gmail://me (default) or gmail://me?q=is:unread
         """
-        # 1. Parse connection information (gmail://username:password@host...)
-        username = kwargs.get("username")
-        password = kwargs.get("password")
-
-        if not username or not password:
-            raise ValueError("Gmail credentials required in kwargs.")
-
-        folder = kwargs.get("folder", "INBOX")
-        limit = int(kwargs.get("limit", 10))
-
-        # 2. IMAP connection and search
-        mail = imaplib.IMAP4_SSL("imap.gmail.com")
-        try:
-            mail.login(username, password)
-            mail.select(folder)
-
-            # Search criteria (e.g., '(UNSEEN)' or 'ALL')
-            criteria = kwargs.get("search_criteria", "ALL")
-            status, messages = mail.search(None, criteria)
-
-            if status != "OK":
-                return
-
-            mail_ids = messages[0].split()
-            target_ids = mail_ids[-limit:]
-
-            self._log(
-                f"📧 Found {len(mail_ids)} emails. Generating tasks for last {len(target_ids)}."
+        if not build:
+            raise ImportError(
+                "Please install google-api-python-client google-auth-oauthlib"
             )
 
-            # 3. Task generation (one task per email)
-            for b_id in reversed(target_ids):
-                uid = b_id.decode()
+        token_path = kwargs.get("token_path")
+        if not token_path:
+            raise ValueError("GmailGenerator requires 'token_path' in kwargs.")
 
-                # Fetcher will process this internal protocol
-                task_uri = f"gmail-msg://{folder}/{uid}"
+        # 1. Parsing Parameters
+        query = kwargs.get("query", "is:inbox")
+        max_results = int(kwargs.get("limit", 10))
+
+        # 2. Connect to Gmail API
+        creds = Credentials.from_authorized_user_file(token_path)
+        service = build("gmail", "v1", credentials=creds)
+
+        try:
+            # 3. Fetch email list
+            results = (
+                service.users()
+                .messages()
+                .list(userId="me", q=query, maxResults=max_results)
+                .execute()
+            )
+
+            messages = results.get("messages", [])
+
+            self._log(f"📧 Found {len(messages)} emails. Generating tasks...")
+
+            # 4. Generate tasks
+            for msg in messages:
+                msg_id = msg["id"]
+                thread_id = msg["threadId"]
+                task_uri = f"gmail-msg://{msg_id}"
 
                 yield SayouTask(
                     uri=task_uri,
                     source_type="gmail",
                     params={
-                        "username": username,
-                        "password": password,
-                        "uid": uid,
-                        "folder": folder,
+                        "token_path": token_path,
+                        "msg_id": msg_id,
+                        "thread_id": thread_id,
                     },
                 )
 
         except Exception as e:
-            raise RuntimeError(f"Gmail connection failed: {e}")
-        finally:
-            try:
-                mail.logout()
-            except:
-                pass
+            self._log(f"Gmail API List failed: {e}", level="error")
+            raise e
