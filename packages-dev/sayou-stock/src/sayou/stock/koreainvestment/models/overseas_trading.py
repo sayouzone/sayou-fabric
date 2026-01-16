@@ -41,6 +41,16 @@ class ExchangeCode(str, Enum):
     VNSE = "VNSE"   # 베트남호치민
 
 
+class NationCode(str, Enum):
+    """국가코드"""
+    ALL = "000"    # 전체
+    US = "840"     # 미국
+    HK = "344"     # 홍콩
+    CN = "156"     # 중국
+    JP = "392"     # 일본
+    VN = "704"     # 베트남
+
+
 class CurrencyCode(str, Enum):
     """통화코드"""
     USD = "USD"     # 미국달러
@@ -48,7 +58,6 @@ class CurrencyCode(str, Enum):
     CNY = "CNY"     # 중국위안
     JPY = "JPY"     # 일본엔
     VND = "VND"     # 베트남동
-
 
 class OrderDivision(str, Enum):
     """주문구분"""
@@ -322,37 +331,37 @@ class OverseasResponseBody(ResponseBody):
 class OverseasConclusionList:
     """해외주식 주문체결내역"""
 
-    ord_dt: str    # 주문일자
-    ord_gno_brno: str    # 주문채번지점번호
-    odno: str    # 주문번호
-    orgn_odno: str    # 원주문번호
-    sll_buy_dvsn_cd: str    # 매도매수구분코드
-    sll_buy_dvsn_cd_name: str    # 매도매수구분코드명
-    rvse_cncl_dvsn: str    # 정정취소구분
-    rvse_cncl_dvsn_name: str    # 정정취소구분명
-    pdno: str    # 상품번호
-    prdt_name: str    # 상품명
-    ft_ord_qty: str    # FT주문수량
-    ft_ord_unpr3: str    # FT주문단가3
-    ft_ccld_qty: str    # FT체결수량
-    ft_ccld_unpr3: str    # FT체결단가3
-    ft_ccld_amt3: str    # FT체결금액3
-    nccs_qty: str    # 미체결수량
-    prcs_stat_name: str    # 처리상태명
-    rjct_rson: str    # 거부사유
-    rjct_rson_name: str    # 거부사유명
-    ord_tmd: str    # 주문시각
-    tr_mket_name: str    # 거래시장명
-    tr_natn: str    # 거래국가
-    tr_natn_name: str    # 거래국가명
-    ovrs_excg_cd: str    # 해외거래소코드
-    tr_crcy_cd: str    # 거래통화코드
-    dmst_ord_dt: str    # 국내주문일자
-    thco_ord_tmd: str    # 당사주문시각
-    loan_type_cd: str    # 대출유형코드
-    loan_dt: str    # 대출일자
-    mdia_dvsn_name: str    # 매체구분명
-    usa_amk_exts_rqst_yn: str    # 미국애프터마켓연장신청여부
+    ord_dt: str                # 주문일자
+    ord_gno_brno: str          # 주문채번지점번호
+    odno: str                  # 주문번호
+    orgn_odno: str             # 원주문번호
+    sll_buy_dvsn_cd: str       # 매도매수구분코드
+    sll_buy_dvsn_cd_name: str  # 매도매수구분코드명
+    rvse_cncl_dvsn: str        # 정정취소구분
+    rvse_cncl_dvsn_name: str   # 정정취소구분명
+    pdno: str                  # 상품번호
+    prdt_name: str             # 상품명
+    ft_ord_qty: str            # FT주문수량
+    ft_ord_unpr3: str          # FT주문단가3
+    ft_ccld_qty: str           # FT체결수량
+    ft_ccld_unpr3: str         # FT체결단가3
+    ft_ccld_amt3: str          # FT체결금액3
+    nccs_qty: str              # 미체결수량
+    prcs_stat_name: str        # 처리상태명
+    rjct_rson: str             # 거부사유
+    rjct_rson_name: str        # 거부사유명
+    ord_tmd: str               # 주문시각
+    tr_mket_name: str          # 거래시장명
+    tr_natn: str               # 거래국가
+    tr_natn_name: str          # 거래국가명
+    ovrs_excg_cd: str          # 해외거래소코드
+    tr_crcy_cd: str            # 거래통화코드
+    dmst_ord_dt: str           # 국내주문일자
+    thco_ord_tmd: str          # 당사주문시각
+    loan_type_cd: str          # 대출유형코드
+    loan_dt: str               # 대출일자
+    mdia_dvsn_name: str        # 매체구분명
+    usa_amk_exts_rqst_yn: str  # 미국애프터마켓연장신청여부
     splt_buy_attr_name: str    # 분할매수/매도속성명
 
     FIELD_NAMES_KO = {
@@ -430,17 +439,22 @@ class OverseasConclusionList:
 
     def to_korean(self) -> dict:
         """필드명을 한글로 변환한 딕셔너리 반환."""
-        def format_value(v):
+        def format_value(k, v):
+            #print(k, v)
             if isinstance(v, Decimal):
                 # 불필요한 소수점 이하 0 제거 후 천단위 구분자 적용
                 normalized = v.normalize()
                 if normalized == normalized.to_integral_value():
                     return f"{int(normalized):,}"
                 return f"{normalized:,.2f}"  # 소수점 이하 2자리까지 표시
+            elif k in ["ft_ord_unpr3", "ft_ccld_unpr3", "ft_ccld_amt3"]:
+                # 불필요한 소수점 이하 0 제거 후 천단위 구분자 적용
+                normalized = float(v)
+                return f"{normalized:,.2f}"  # 소수점 이하 2자리까지 표시
             return v
         
         return {
-            self.FIELD_NAMES_KO.get(k, k): format_value(v)
+            self.FIELD_NAMES_KO.get(k, k): format_value(k, v)
             for k, v in self.__dict__.items()
             if v is not None
         }

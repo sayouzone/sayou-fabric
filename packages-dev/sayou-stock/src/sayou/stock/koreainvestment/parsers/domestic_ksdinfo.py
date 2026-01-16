@@ -57,7 +57,7 @@ class DomesticKsdinfoParser:
             "HIGH_GB": "",
         }
 
-        response = self._client._get(url, params=params, headers=headers.to_dict())
+        response = self._client.get(url, params=params, headers=headers.to_dict())
 
         if response.status_code != 200:
             self._handle_error(response)

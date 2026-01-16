@@ -190,11 +190,11 @@ class OverseasTradingParser:
             end_date=end_date,
             exchange=exchange,
         )
-        logger.info(f"Conclusion List Request - URL: {self.CONCLUSION_LIST_URL}")
-        logger.info(f"Conclusion List Request - Headers: {headers.to_dict()}")
-        logger.info(f"Conclusion List Request - Params: {params.to_dict()}")
+        logger.debug(f"Conclusion List Request - URL: {self.CONCLUSION_LIST_URL}")
+        logger.debug(f"Conclusion List Request - Headers: {headers.to_dict()}")
+        logger.debug(f"Conclusion List Request - Params: {params.to_dict()}")
 
-        response = self._client._get(
+        response = self._client.get(
             self.CONCLUSION_LIST_URL,
             params=params.to_dict(),
             headers=headers.to_dict(),
@@ -230,7 +230,7 @@ class OverseasTradingParser:
         logger.debug(f"Order Request - Headers: {headers.to_dict()}")
         logger.debug(f"Order Request - Params: {params.to_dict()}")
 
-        response = self._client._post(
+        response = self._client.post(
             self.ORDER_URL,
             json=params.to_dict(),
             headers=headers.to_dict(),
@@ -250,12 +250,12 @@ class OverseasTradingParser:
         https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/overseas-stock/v1/trading/order-rvsecncl
         """
         headers = self._build_headers(tr_id=OverseasTrId.REVISION_CANCEL.value)
-        print(f"Revision/Cancel Request - URL: {self.REVISION_CANCEL_URL}")
-        print(f"Request Headers: {headers.to_dict()}")
-        print(f"Request Params: {params.to_dict()}")
+        logger.debug(f"Revision/Cancel Request - URL: {self.REVISION_CANCEL_URL}")
+        logger.debug(f"Request Headers: {headers.to_dict()}")
+        logger.debug(f"Request Params: {params.to_dict()}")
 
         """
-        response = self._client._post(
+        response = self._client.post(
             self.REVISION_CANCEL_URL,
             json=params.to_dict(),
             headers=headers.to_dict(),

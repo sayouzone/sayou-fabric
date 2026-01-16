@@ -72,7 +72,7 @@ class DomesticParser:
             OFL_YN="",
         )
 
-        response = self._client._get(
+        response = self._client.get(
             url,
             params=params.to_dict(),
             headers=headers.to_dict(),
@@ -96,7 +96,7 @@ class DomesticParser:
             "PRDT_TYPE_CD": stock_type,
         }
 
-        response = self._client._get(url, params=params, headers=headers.to_dict())
+        response = self._client.get(url, params=params, headers=headers.to_dict())
 
         if response.status_code != 200:
             self._handle_error(response)
@@ -116,7 +116,7 @@ class DomesticParser:
             "PRDT_TYPE_CD": stock_type,
         }
 
-        response = self._client._get(url, params=params, headers=headers.to_dict())
+        response = self._client.get(url, params=params, headers=headers.to_dict())
 
         if response.status_code != 200:
             self._handle_error(response)

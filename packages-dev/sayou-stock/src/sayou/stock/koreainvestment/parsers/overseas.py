@@ -79,7 +79,7 @@ class OverseasParser:
         logger.debug(f"Request Headers: {headers.to_dict()}")
         logger.debug(f"Request Params: {params.to_dict()}")
 
-        response = self._client._get(
+        response = self._client.get(
             url,
             params=params.to_dict(),
             headers=headers.to_dict(),

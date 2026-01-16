@@ -1,4 +1,4 @@
-# Copyright (c) 2025, Sayouzone
+# Copyright (c) 2025-2026, Sayouzone
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,82 +12,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Koreainvestment Client
-"""
+"""Korea Investment Securities API Client."""
 
 import logging
-import requests
-import time
+import sys
+from pathlib import Path
+
+# 상위 디렉토리를 path에 추가
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from base.client import BaseClient
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class KoreainvestmentClient:
-    """Koreainvestment Client"""
+class KoreainvestmentClient(BaseClient):
+    """Korea Investment Securities API Client.
+    
+    HTTP 클라이언트로서 rate limiting과 자동 재시도 기능을 제공합니다.
+    """
 
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                        'AppleWebKit/537.36 (KHTML, like Gecko) '
-                        'Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;'
-                    'q=0.9,image/avif,image/webp,image/apng,*/*;' 
-                    'q=0.8,application/signed-exchange;v=b3;q=0.7'
-    }
+    DEFAULT_TIMEOUT: int = 10
+    DEFAULT_RATE_LIMIT_DELAY: float = 1.0
 
-    def __init__(self, app_key: str = None, app_secret: str = None):
-        """Initialize Koreainvestment Client"""
+    def __init__(
+        self,
+        app_key: str | None = None,
+        app_secret: str | None = None,
+        rate_limit_delay: float = DEFAULT_RATE_LIMIT_DELAY,
+        timeout: int = DEFAULT_TIMEOUT,
+    ):
+        """Initialize Korea Investment Client.
+        
+        Args:
+            app_key: API 앱 키
+            app_secret: API 앱 시크릿
+            rate_limit_delay: 요청 간 대기 시간 (초)
+            timeout: 요청 타임아웃 (초)
+        """
+        super().__init__(rate_limit_delay, timeout)
         self.app_key = app_key
         self.app_secret = app_secret
-        
-        self.session = requests.Session()
-        self.session.headers.update(self.headers)
-        self._rate_limit_delay = 0.5  # Request Limit
-    
-    def _rate_limit(self):
-        """API Request Limit"""
-        time.sleep(self._rate_limit_delay)
-
-    def _get(self, url: str, params: dict = None, headers: dict = None, referer: str = None) -> requests.Response:
-        """GET Request (Rate Limit)"""
-        self._rate_limit()
-
-        if headers:
-            self.session.headers.update(headers)
-        
-        if referer:
-            self.session.headers.update({'Referer': referer})
-        
-        response = self.session.get(url, params=params, timeout=10)
-
-        response.raise_for_status()
-        response.encoding = 'utf-8'
-
-        return response
-
-    def _post(self, url: str, params: dict = None, data: dict = None, json: dict = None, headers: dict = None, referer: str = None, timeout: int = 10) -> requests.Response:
-        """POST Request (Rate Limit)"""
-        self._rate_limit()
-
-        if headers:
-            self.session.headers.update(headers)
-        
-        if referer:
-            self.session.headers.update({'Referer': referer})
-        
-        if params and data:
-            response = self.session.post(url, params=params, data=data, headers=headers, timeout=timeout)
-        elif params and json:
-            response = self.session.post(url, params=params, json=json, headers=headers, timeout=timeout)
-        elif data:
-            response = self.session.post(url, data=data, headers=headers, timeout=timeout)
-        elif json:
-            response = self.session.post(url, json=json, headers=headers, timeout=timeout)
-        else:
-            response = self.session.post(url, headers=headers, timeout=timeout)
-
-        response.raise_for_status()
-        response.encoding = 'utf-8'
-
-        return response

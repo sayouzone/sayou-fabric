@@ -67,7 +67,7 @@ class DomesticFinanceParser:
             "PRDT_TYPE_CD": stock_type,
         }
 
-        response = self._client._get(url, params=params, headers=headers.to_dict())
+        response = self._client.get(url, params=params, headers=headers.to_dict())
 
         if response.status_code != 200:
             self._handle_error(response)
@@ -88,7 +88,7 @@ class DomesticFinanceParser:
             "fid_input_iscd": stock_code,
         }
 
-        response = self._client._get(url, params=params, headers=headers.to_dict())
+        response = self._client.get(url, params=params, headers=headers.to_dict())
 
         if response.status_code != 200:
             self._handle_error(response)
@@ -109,7 +109,7 @@ class DomesticFinanceParser:
             "fid_input_iscd": stock_code,
         }
 
-        response = self._client._get(url, params=params, headers=headers.to_dict())
+        response = self._client.get(url, params=params, headers=headers.to_dict())
 
         if response.status_code != 200:
             self._handle_error(response)
@@ -130,7 +130,7 @@ class DomesticFinanceParser:
             "fid_input_iscd": stock_code,
         }
 
-        response = self._client._get(url, params=params, headers=headers.to_dict())
+        response = self._client.get(url, params=params, headers=headers.to_dict())
 
         if response.status_code != 200:
             self._handle_error(response)
@@ -151,7 +151,7 @@ class DomesticFinanceParser:
             "fid_input_iscd": stock_code,
         }
 
-        response = self._client._get(url, params=params, headers=headers.to_dict())
+        response = self._client.get(url, params=params, headers=headers.to_dict())
 
         if response.status_code != 200:
             self._handle_error(response)
@@ -172,7 +172,7 @@ class DomesticFinanceParser:
             "fid_input_iscd": stock_code,
         }
 
-        response = self._client._get(url, params=params, headers=headers.to_dict())
+        response = self._client.get(url, params=params, headers=headers.to_dict())
 
         if response.status_code != 200:
             self._handle_error(response)
@@ -193,7 +193,7 @@ class DomesticFinanceParser:
             "fid_input_iscd": stock_code,
         }
 
-        response = self._client._get(url, params=params, headers=headers.to_dict())
+        response = self._client.get(url, params=params, headers=headers.to_dict())
 
         if response.status_code != 200:
             self._handle_error(response)
