@@ -65,7 +65,7 @@ class TokenManager:
         }
 
         print(self.OAUTH_URL, params)
-        response = self._client._post(self.OAUTH_URL, json=params)
+        response = self._client.post(self.OAUTH_URL, json=params)
 
         if response.status_code != 200:
             raise Exception(f"Failed to get access token: {response.content}")

@@ -1,4 +1,4 @@
-# Copyright (c) 2025, Sayouzone
+# Copyright (c) 2025-2026, Sayouzone
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ Installation:
     pip install requests beautifulsoup4 lxml
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "SeongJung Kim"
 
 from .client import BaseClient

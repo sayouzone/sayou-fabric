@@ -56,21 +56,15 @@ class BaseClient:
 
     def __init__(
         self,
-        app_key: str | None = None,
-        app_secret: str | None = None,
         rate_limit_delay: float = DEFAULT_RATE_LIMIT_DELAY,
         timeout: int = DEFAULT_TIMEOUT,
     ):
-        """Initialize Korea Investment Client.
+        """Initialize Base Client.
         
         Args:
-            app_key: API 앱 키
-            app_secret: API 앱 시크릿
             rate_limit_delay: 요청 간 대기 시간 (초)
             timeout: 요청 타임아웃 (초)
         """
-        self.app_key = app_key
-        self.app_secret = app_secret
         self._rate_limit_delay = rate_limit_delay
         self._timeout = timeout
         

@@ -38,7 +38,7 @@ def demo_overseas(crawler: KoreainvestmentCrawler):
     df_balances.drop(columns=["종합계좌번호", "계좌상품코드", "상품유형코드", "종목명", "대출유형코드"], inplace=True)
     print(df_balances)
 
-def demo_overseas_trading(crawler: KoreainvestmentCrawler):
+def demo_overseas_trading1(crawler: KoreainvestmentCrawler):
     """한국투자증권 해외 거래 데모"""
     print(f"\n{'='*60}")
     print(f"한국투자증권 해외 거래")
@@ -118,7 +118,7 @@ def demo_overseas_trading(crawler: KoreainvestmentCrawler):
         print(data.order.to_korean())
 
 
-def demo_overseas_trading1(crawler: KoreainvestmentCrawler):
+def demo_overseas_trading(crawler: KoreainvestmentCrawler):
     """한국투자증권 해외거래 데모"""
     print(f"\n{'='*60}")
     print(f"한국투자증권 해외거래")

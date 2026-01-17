@@ -20,6 +20,8 @@ from .parsers import (
     DomesticParser,
     DomesticFinanceParser,
     DomesticKsdinfoParser,
+    DomesticPriceParser,
+    DomesticRSIParser,
     OverseasParser,
     OverseasTradingParser,
 )
@@ -45,6 +47,8 @@ class KoreainvestmentCrawler:
         self._domestic_parser = DomesticParser(self.client)
         self._domestic_finance_parser = DomesticFinanceParser(self.client)
         self._domestic_ksdinfo_parser = DomesticKsdinfoParser(self.client)
+        self._domestic_price_parser = DomesticPriceParser(self.client)
+        self._domestic_rsi_parser = DomesticRSIParser(self.client)
         self._overseas_parser = OverseasParser(self.client)
         self._overseas_trading_parser = OverseasTradingParser(self.client, self._account)
 
@@ -124,3 +128,39 @@ class KoreainvestmentCrawler:
     ):
         """해외주식 결론 리스트"""
         return self._overseas_trading_parser.conclusion_list(stock_code, start_date, end_date, exchange=exchange_type)
+
+    def price(self, stock_code: str):
+        """주식현재가 조회"""
+        return self._domestic_price_parser.price(stock_code)
+
+    def daily_price(self, stock_code: str, start_date: str = None, end_date: str = None):
+        """주식일봉 조회"""
+        return self._domestic_price_parser.daily_price(stock_code, start_date, end_date)
+    
+    def rsi(self, stock_codes: list[str], rsi_period: int, oversold_threshold: int, overbought_threshold: int):
+        """RSI 기반 종목 선택"""
+        return self._domestic_rsi_parser.rsi_screening(
+            stock_codes=stock_codes,
+            rsi_period=rsi_period,
+            oversold_threshold=oversold_threshold,
+            overbought_threshold=overbought_threshold
+        )
+    
+    def advanced_rsi(self, stock_codes: list[str]):
+        """RSI 기반 종목 선택"""
+        return self._domestic_rsi_parser.advanced_rsi_screening(
+            stock_codes=stock_codes
+        )
+    
+    def advanced_rsi_detailed(
+        self,
+        stock_codes: list[str],
+        rsi_threshold: int = 30,
+        volume_multiplier: float = 1.5
+    ):
+        """RSI 기반 종목 선택"""
+        return self._domestic_rsi_parser.advanced_rsi_screening_detailed(
+            stock_codes=stock_codes,
+            rsi_threshold=rsi_threshold,
+            volume_multiplier=volume_multiplier
+        )
