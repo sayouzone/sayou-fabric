@@ -2,9 +2,8 @@ import json
 import logging
 
 from sayou.chunking.pipeline import ChunkingPipeline
-from sayou.chunking.plugins.audited_fixed_length_splitter import (
-    AuditedFixedLengthSplitter,
-)
+from sayou.chunking.plugins.audited_fixed_length_splitter import \
+    AuditedFixedLengthSplitter
 from sayou.chunking.plugins.markdown_splitter import MarkdownSplitter
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -13,7 +12,9 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 def run_demo():
     print(">>> Initializing Sayou Chunking Pipeline...")
 
-    pipeline = ChunkingPipeline(extra_splitters=[MarkdownSplitter, AuditedFixedLengthSplitter])
+    pipeline = ChunkingPipeline(
+        extra_splitters=[MarkdownSplitter, AuditedFixedLengthSplitter]
+    )
 
     md_content = """
 # Sayou Chunking Demo
