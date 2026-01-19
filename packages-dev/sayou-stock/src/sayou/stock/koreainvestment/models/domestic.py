@@ -538,6 +538,35 @@ class SearchStockInfo:
         "nxt_tr_stop_yn": "NXT 거래정지여부",
     }
 
+    MARKET_MAP = {
+        "01": "KOSPI", # 한국증권
+        "02": "KRX", # 증권거래소
+        "03": "KOSDAQ", # 코스닥
+        "04": "K-OTC", # K-OTC
+        "05": "KOFEX", # 선물거래소
+        "06": "CME", # CME
+        "07": "EUREX", # EUREX
+        "21": "Gold Spot", # 금현물
+        "50": "US Daytime", # 미국주간
+        "51": "HK", # 홍콩
+        "52": "SH-B", # 상해B
+        "53": "SZ-B", # 심천
+        "54": "HKEX", # 홍콩거래소
+        "55": "US", # 미국
+        "56": "JP", # 일본
+        "57": "SH-A", # 상해A
+        "58": "SZ-A", # 심천A
+        "59": "VN", # 베트남
+        "61": "Pre-Market", # 장전시간외시장
+        "64": "Competitive Block Trading", # 경쟁대량매매
+        "65": "Auction Market", # 경매매시장
+        "81": "After-Hours Single Price", # 시간외단일가시장
+    }
+
+    @property
+    def market(self) -> str:
+        return self.MARKET_MAP.get(self.excg_dvsn_cd, "Unknown")
+
     @classmethod
     def from_dict(cls, data: dict) -> "StockBasicInfo":
         return cls(

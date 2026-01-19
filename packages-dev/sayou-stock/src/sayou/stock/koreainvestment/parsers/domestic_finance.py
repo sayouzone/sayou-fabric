@@ -60,11 +60,13 @@ class DomesticFinanceParser:
         """
         url = KIS_OPENAPI_PROD + "/uapi/domestic-stock/v1/finance/balance-sheet"
 
-        headers = self._build_headers(tr_id="CTPF1002R")
+        headers = self._build_headers(tr_id="FHKST66430100")
         params = {
             "FID_DIV_CLS_CODE": "0",
-            "PDNO": stock_code,
-            "PRDT_TYPE_CD": stock_type,
+            "fid_cond_mrkt_div_code": "J",
+            "fid_input_iscd": stock_code,
+            #"PDNO": stock_code,
+            #"PRDT_TYPE_CD": stock_type,
         }
 
         response = self._client.get(url, params=params, headers=headers.to_dict())

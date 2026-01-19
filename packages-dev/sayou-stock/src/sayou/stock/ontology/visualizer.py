@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from pyvis.network import Network
 from rdflib import Graph, Namespace, RDF, RDFS, OWL, Literal, URIRef
 
-from .kg import StockKnowledgeGraph
+from .stock_kg import StockKnowledgeGraph
 
 class KnowledgeGraphVisualizer:
     """Knowledge Graph 시각화"""

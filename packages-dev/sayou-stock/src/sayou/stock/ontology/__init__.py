@@ -15,13 +15,18 @@
 __version__ = "0.1.0"
 __author__ = "SeongJung Kim"
 
-from .analyzer import StockTrendAnalyzer
-from .kg import StockKnowledgeGraph
-from .ontology import StockOntology
+from .models import CompanyData, StockPriceData
+
+from .analyzer import StockAnalyzer
+from .stock_kg import StockKnowledgeGraph
+from .stock import StockOntology
 from .visualizer import KnowledgeGraphVisualizer
 
 __all__ = [
-    "StockTrendAnalyzer",
+    "CompanyData",
+    "StockPriceData",
+
+    "StockAnalyzer",
     "StockKnowledgeGraph",
     "StockOntology",
     "KnowledgeGraphVisualizer",
