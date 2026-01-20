@@ -187,7 +187,7 @@ class WrapperPipeline(BaseComponent):
 
         try:
             # 4. Execute
-            output = adapter.adapt(input_data)
+            output = adapter.adapt(input_data, **kwargs)
 
             self._emit("on_finish", result_data={"output": output}, success=True)
             return output

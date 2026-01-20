@@ -25,7 +25,7 @@ class BaseAdapter(BaseComponent):
         return 0.0
 
     @measure_time
-    def adapt(self, input_data: Any) -> SayouOutput:
+    def adapt(self, input_data: Any, **kwargs) -> SayouOutput:
         """
         [Template Method] Execute the adaptation process.
 
@@ -42,7 +42,7 @@ class BaseAdapter(BaseComponent):
         self._emit("on_start", input_data={"strategy": self.component_name})
 
         try:
-            output = self._do_adapt(input_data)
+            output = self._do_adapt(input_data, **kwargs)
 
             self._emit("on_finish", result_data={"output": output}, success=True)
             self._log(f"Adaptation complete. Generated {len(output.nodes)} nodes.")
@@ -54,7 +54,7 @@ class BaseAdapter(BaseComponent):
             raise AdaptationError(f"[{self.component_name}] {str(e)}")
 
     @abstractmethod
-    def _do_adapt(self, input_data: Any) -> SayouOutput:
+    def _do_adapt(self, input_data: Any, **kwargs) -> SayouOutput:
         """
         [Abstract Hook] Implement the mapping logic to create SayouNodes.
 
