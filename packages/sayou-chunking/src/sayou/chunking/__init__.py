@@ -1,5 +1,6 @@
 from .pipeline import ChunkingPipeline
 from .plugins.audited_fixed_length_splitter import AuditedFixedLengthSplitter
+from .plugins.code_splitter import CodeSplitter
 from .plugins.langchain_splitter import LangchainSplitter
 from .plugins.markdown_splitter import MarkdownSplitter
 from .splitter.agentic_splitter import AgenticSplitter
@@ -11,13 +12,14 @@ from .splitter.structure_splitter import StructureSplitter
 
 __all__ = [
     "ChunkingPipeline",
+    "AuditedFixedLengthSplitter",
+    "CodeSplitter",
+    "LangchainSplitter",
+    "MarkdownSplitter",
     "AgenticSplitter",
     "FixedLengthSplitter",
     "ParentDocumentSplitter",
     "RecursiveSplitter",
     "SemanticSplitter",
     "StructureSplitter",
-    "AuditedFixedLengthSplitter",
-    "LangchainSplitter",
-    "MarkdownSplitter",
 ]
