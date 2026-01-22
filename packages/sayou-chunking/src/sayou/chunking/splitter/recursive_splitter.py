@@ -29,7 +29,7 @@ class RecursiveSplitter(BaseSplitter):
 
         if isinstance(input_data, SayouBlock):
             if input_data.type in ["text", "txt", "string"]:
-                return 1.0
+                return 0.9
             return 0.1
 
         if isinstance(input_data, str):
