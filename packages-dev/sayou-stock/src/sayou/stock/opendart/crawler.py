@@ -105,18 +105,7 @@ class OpenDartCrawler:
     def corp_data(self) -> list[dict]:
         """Lazy initialization of corpcode data"""
         if self._corp_data is None:
-            result = self._disclosure_parser.fetch_corp_code()
-            for data in result.get("xml_data"):
-                filename = data.get("filename", "")
-                print(f"Filename: {filename}")
-                if filename != "CORPCODE.xml":
-                    continue
-                
-                content = data.get("content", "")
-                corp_list = content.get("result", {}).get("list", [])
-                # "stock_code" 값이 있는 항목만 필터링
-                listed = list(filter(lambda x: x["stock_code"], corp_list))
-                self._corp_data = listed
+            self.fetch_corp_data()
         return self._corp_data
 
     def load_corp_data(self, filename: str):
@@ -141,13 +130,29 @@ class OpenDartCrawler:
         seen, duplicates = duplicate_keys(REGISTRATION_COLUMNS)
         print(f"Registration Columns: {seen}")
 
+    def fetch_corp_data(self):
+        result = self._disclosure_parser.fetch_corp_code()
+
+        for data in result.get("xml_data"):
+            filename = data.get("filename", "")
+            print(f"Filename: {filename}")
+            if filename != "CORPCODE.xml":
+                continue
+            
+            content = data.get("content", "")
+            corp_list = content.get("result", {}).get("list", [])
+            # "stock_code" 값이 있는 항목만 필터링
+            listed = list(filter(lambda x: x["stock_code"], corp_list))
+            self._corp_data = listed
+        return self._corp_data
+
     def fetch_corp_code(self, company: str, limit: int = 10, flags: int = re.IGNORECASE) -> str:
         """
         corpcode.json 파일이 없으면 fetch_corp_code를 호출하여 데이터를 가져옵니다.
         corpcode.json 파일이 있으면 corp_data를 가져옵니다.
         corp_data를 통해 회사이름 또는 코드를 통해 corp_code를 찾습니다.
         """
-        self.corp_data
+        self.fetch_corp_data()
         
         corp_code = self._fetch_corp_code_by_name(company, limit, flags)
         if corp_code:
@@ -163,7 +168,7 @@ class OpenDartCrawler:
         corpcode.json 파일이 있으면 corp_data를 가져옵니다.
         corp_data를 통해 회사이름 또는 코드를 통해 corp_code를 찾습니다.
         """
-        self.corp_data
+        self.fetch_corp_data()
         
         stock_code = self._fetch_stock_code_by_name(company, limit, flags)
 
@@ -532,12 +537,12 @@ class OpenDartCrawler:
         code: str,
         year: str,
         quarter: int = 4,
-        api_type: str = "단일회사 전체 재무제표",
+        financial_statement: str = "CFS",
         indicator_code: IndexClassCode = IndexClassCode.PROFITABILITY
     ):
         """OpenDart 정기보고서 재무정보"""
         api_no = FinanceStatus.SINGLE_COMPANY_FINANCIAL_STATEMENT
-        return self._finance_parser.finance(code, year, quarter, api_no=api_no, indicator_code=indicator_code)
+        return self._finance_parser.finance(code, year, quarter, api_no=api_no, financial_statement=financial_statement, indicator_code=indicator_code)
 
     def finance_file(self, rcept_no, report_code: str = None, quarter: int = 4, save_path: str | None = None):
         """

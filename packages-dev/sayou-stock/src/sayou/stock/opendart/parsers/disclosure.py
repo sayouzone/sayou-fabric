@@ -1,4 +1,4 @@
-# Copyright (c) 2025, Sayouzone
+# Copyright (c) 2025-2026, Sayouzone
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +13,11 @@
 # limitations under the License.
  
 import io
-import zipfile
-import re
+import logging
 import pandas as pd
+import re
+import zipfile
+
 from datetime import datetime
 from urllib.parse import unquote
 
@@ -33,6 +35,10 @@ from ..utils import (
     parse_xml,
     parse_unzip_xml,
 )
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class OpenDartDisclosureParser:
     """
@@ -136,7 +142,8 @@ class OpenDartDisclosureParser:
 
         api_no = DisclosureStatus.COMPANY_INFORMATION
         url = api_no.url
-        print(url, params)
+        logger.debug(f"Request URL: {url}")
+        logger.debug(f"Request Params: {params}")
 
         response = self.client._get(url, params=params)
         

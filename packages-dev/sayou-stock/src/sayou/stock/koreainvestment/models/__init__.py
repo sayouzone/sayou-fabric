@@ -33,6 +33,7 @@ from .domestic_price import (
     DailyPriceParam,
     StockCurrentPriceResponse,
     StockDailyPriceResponse,
+    StockDailyItemchartPriceResponse,
 )
 from .domestic_finance import (
     BalanceSheetResponse,
@@ -78,6 +79,7 @@ __all__ = [
     "DailyPriceParam",
     "StockCurrentPriceResponse",
     "StockDailyPriceResponse",
+    "StockDailyItemchartPriceResponse",
     # 국내 재무
     "BalanceSheetResponse",
     "IncomeStatementResponse",

@@ -18,7 +18,9 @@ Naver 클라이언트
 
 import logging
 import requests
+import sys
 import time
+from pathlib import Path
 
 from .utils import (
     NEWS_URLS,
@@ -26,12 +28,18 @@ from .utils import (
     FINANCE_API_URL
 )
 
+# 상위 디렉토리를 path에 추가
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from base.client import BaseClient
+
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+"""
 class NaverClient:
-    """Naver 클라이언트"""
+    #Naver 클라이언트
     
     def __init__(self):
         self.session = requests.Session()
@@ -46,11 +54,11 @@ class NaverClient:
         self._rate_limit_delay = 0.1  # FnGuide 요청 제한 준수
     
     def _rate_limit(self):
-        """호출 제한"""
+        #호출 제한
         time.sleep(self._rate_limit_delay)
 
-    def _get(self, url: str, params: dict = None, headers: dict = None, referer: str = None, timeout: int = 30) -> requests.Response:
-        """GET 요청 (rate limit 적용)"""
+    def get(self, url: str, params: dict = None, headers: dict = None, referer: str = None, timeout: int = 30) -> requests.Response:
+        #GET 요청 (rate limit 적용)
         self._rate_limit()
         
         if referer:
@@ -62,3 +70,39 @@ class NaverClient:
         response.encoding = 'utf-8'
 
         return response
+"""
+
+class NaverClient(BaseClient):
+    """Korea Investment Securities API Client.
+    
+    HTTP 클라이언트로서 rate limiting과 자동 재시도 기능을 제공합니다.
+    """
+
+    DEFAULT_TIMEOUT: int = 10
+    DEFAULT_RATE_LIMIT_DELAY: float = 1.0
+
+    def __init__(
+        self,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        rate_limit_delay: float = DEFAULT_RATE_LIMIT_DELAY,
+        timeout: int = DEFAULT_TIMEOUT,
+    ):
+        """Initialize Korea Investment Client.
+        
+        Args:
+            app_key: API 앱 키
+            app_secret: API 앱 시크릿
+            rate_limit_delay: 요청 간 대기 시간 (초)
+            timeout: 요청 타임아웃 (초)
+        """
+        super().__init__(rate_limit_delay, timeout)
+        self.client_id = client_id
+        self.client_secret = client_secret
+
+        if client_id and client_secret:
+            news_api_headers = {
+                "X-Naver-Client-Id": client_id,
+                "X-Naver-Client-Secret": client_secret
+            }
+            self.session.headers.update(news_api_headers)

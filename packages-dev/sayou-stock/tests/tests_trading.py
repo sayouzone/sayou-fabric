@@ -148,6 +148,9 @@ def demo_overseas_trading(crawler: KoreainvestmentCrawler):
         print(item)
         ticker, quantity, price, market, order_type = item
         
+        "msg_cd: APBK1664, msg1: 금일은 해외 휴장일로 주문이 불가합니다"
+        "msg_cd: IGW00022, msg1: 원주문번호를 확인해주세요."
+
         data = None
         if order_type == "Buy":
             data = crawler.buy_stock_overseas(ticker, quantity, price, market)
@@ -165,6 +168,10 @@ def demo_overseas_trading(crawler: KoreainvestmentCrawler):
 
         print(data.response_body.to_korean())
         if data.response_body.rt_cd != "0":
+            if data.response_body.msg_cd == "APBK1664" or "휴장" in data.response_body.msg1:
+                print(data.response_body.msg1)
+                break
+
             continue
 
         print(data.order.to_korean())

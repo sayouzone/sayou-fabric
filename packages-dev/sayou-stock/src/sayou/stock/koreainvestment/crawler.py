@@ -1,4 +1,4 @@
-# Copyright (c) 2025, Sayouzone
+# Copyright (c) 2025-2026, Sayouzone
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -133,9 +133,13 @@ class KoreainvestmentCrawler:
         """주식현재가 조회"""
         return self._domestic_price_parser.price(stock_code)
 
-    def daily_price(self, stock_code: str, start_date: str = None, end_date: str = None):
+    def daily_price(self, stock_code: str, period: str = "D", adjust_price: int = 0):
         """주식일봉 조회"""
-        return self._domestic_price_parser.daily_price(stock_code, start_date, end_date)
+        return self._domestic_price_parser.daily_price(stock_code, period=period, adjust_price=adjust_price)
+
+    def daily_itemchart_price(self, stock_code: str, start_date: str = None, end_date: str = None):
+        """주식일봉 조회"""
+        return self._domestic_price_parser.daily_itemchart_price(stock_code, start_date, end_date)
     
     def rsi(self, stock_codes: list[str], rsi_period: int, oversold_threshold: int, overbought_threshold: int):
         """RSI 기반 종목 선택"""

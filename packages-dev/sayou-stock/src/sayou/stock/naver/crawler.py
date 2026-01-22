@@ -14,6 +14,9 @@
 
 import logging
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from .client import NaverClient
 
 from .parsers import (
@@ -49,8 +52,12 @@ class NaverCrawler:
     def company_metadata(self, stock: str):
         return self._market_parser.fetch_company_metadata(stock)
 
-    def news(self, query: str, max_articles: int = 100):
-        news_list = self._news_parser.fetch(query=query, max_articles=max_articles)
+    def news(self, query: str, start_date: str = None, max_articles: int = 100):
+        if start_date:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            start_date = start_date.replace(tzinfo=ZoneInfo("Asia/Seoul"))
+        
+        news_list = self._news_parser.fetch(query=query, start_date=start_date, max_articles=max_articles)
 
         return self._news_parser.parse(news_list)
 

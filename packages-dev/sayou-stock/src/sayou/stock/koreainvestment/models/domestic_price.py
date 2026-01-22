@@ -454,6 +454,88 @@ class StockDailyPrice:
     """국내주식 가격 정보."""
     
     stck_bsop_date: str               # 주식 영업 일자
+    stck_oprc: str                    # 주식 시가2
+    stck_hgpr: str                    # 주식 최고가
+    stck_lwpr: str                    # 주식 최저가
+    stck_clpr: str                    # 주식 종가
+    acml_vol: str                     # 누적 거래량
+    prdy_vrss_vol_rate: str           # 전일 대비 거래량 비율
+    prdy_vrss: str                    # 전일 대비
+    prdy_vrss_sign: str               # 전일 대비 부호
+    prdy_ctrt: str                    # 전일 대비율
+    hts_frgn_ehrt: str                # HTS 외국인 소진율
+    frgn_ntby_qty: str                # 외국인 순매수 수량
+    flng_cls_code: str                # 락 구분 코드
+    acml_prtt_rate: str               # 누적 분할 비율
+
+    FIELD_NAMES_KO = {
+        "stck_bsop_date": "주식 영업 일자",
+        "stck_oprc": "주식 시가2",
+        "stck_hgpr": "주식 최고가",
+        "stck_lwpr": "주식 최저가",
+        "stck_clpr": "주식 종가",
+        "acml_vol": "누적 거래량",
+        "prdy_vrss_vol_rate": "전일 대비 거래량 비율",
+        "prdy_vrss": "전일 대비",
+        "prdy_vrss_sign": "전일 대비 부호",
+        "prdy_ctrt": "전일 대비율",
+        "hts_frgn_ehrt": "HTS 외국인 소진율",
+        "frgn_ntby_qty": "외국인 순매수 수량",
+        "flng_cls_code": "락 구분 코드",
+        "acml_prtt_rate": "누적 분할 비율",
+    }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "StockDailyPrice":
+        """딕셔너리에서 StockDailyPrice 객체 생성."""
+        return cls(
+            stck_bsop_date=data.get("stck_bsop_date", ""),
+            stck_oprc=data.get("stck_oprc", ""),
+            stck_hgpr=data.get("stck_hgpr", ""),
+            stck_lwpr=data.get("stck_lwpr", ""),
+            stck_clpr=data.get("stck_clpr", ""),
+            acml_vol=data.get("acml_vol", ""),
+            prdy_vrss_vol_rate=data.get("prdy_vrss_vol_rate", ""),
+            prdy_vrss=data.get("prdy_vrss", ""),
+            prdy_vrss_sign=data.get("prdy_vrss_sign", ""),
+            prdy_ctrt=data.get("prdy_ctrt", ""),
+            hts_frgn_ehrt=data.get("hts_frgn_ehrt", ""),
+            frgn_ntby_qty=data.get("frgn_ntby_qty", ""),
+            flng_cls_code=data.get("flng_cls_code", ""),
+            acml_prtt_rate=data.get("acml_prtt_rate", ""),
+        )
+
+    def to_korean(self) -> dict:
+        """필드명을 한글로 변환한 딕셔너리 반환."""
+        def format_value(k, v):
+            #print(k, v)
+            if isinstance(v, Decimal):
+                # 불필요한 소수점 이하 0 제거 후 천단위 구분자 적용
+                normalized = v.normalize()
+                if normalized == normalized.to_integral_value():
+                    return f"{int(normalized):,}"
+                return f"{normalized:,.2f}"  # 소수점 이하 2자리까지 표시
+            elif k in ["prdy_vrss_vol_rate", "acml_prtt_rate"]:
+                # 불필요한 소수점 이하 0 제거 후 천단위 구분자 적용
+                normalized = float(v)
+                return f"{normalized:,.4f}"  # 소수점 이하 2자리까지 표시
+            elif k in ["prdy_ctrt", "hts_frgn_ehrt"]:
+                # 불필요한 소수점 이하 0 제거 후 천단위 구분자 적용
+                normalized = float(v)
+                return f"{normalized:,.2f}"  # 소수점 이하 2자리까지 표시
+            return v
+        
+        return {
+            self.FIELD_NAMES_KO.get(k, k): format_value(k, v)
+            for k, v in self.__dict__.items()
+            if v is not None
+        }
+
+@dataclass
+class StockDailyItemchartPrice:
+    """국내주식 가격 정보."""
+    
+    stck_bsop_date: str               # 주식 영업 일자
     stck_clpr: str                    # 주식 종가
     stck_oprc: str                    # 주식 시가
     stck_hgpr: str                    # 주식 최고가
@@ -484,8 +566,8 @@ class StockDailyPrice:
     }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "StockPrice":
-        """딕셔너리에서 StockPrice 객체 생성."""
+    def from_dict(cls, data: dict) -> "StockDailyItemchartPrice":
+        """딕셔너리에서 StockDailyItemchartPrice 객체 생성."""
         return cls(
             stck_bsop_date=data.get("stck_bsop_date", ""),
             stck_clpr=data.get("stck_clpr", ""),
@@ -580,7 +662,6 @@ class StockDailyPriceResponse:
     """국내주식 일일가격 조회 API 응답."""
     
     response_body: ResponseBody
-    info: StockBasicInfo
     prices: list[StockDailyPrice] # 개별 종목 잔고 목록 (output1)
 
     @property
@@ -597,6 +678,31 @@ class StockDailyPriceResponse:
                 msg_cd=data["msg_cd"],
                 msg1=data["msg1"].strip(),
             ),
+            prices=[StockDailyPrice.from_dict(item) for item in data.get("output", [])],
+        )
+
+@dataclass
+class StockDailyItemchartPriceResponse:
+    """국내주식 일일가격 조회 API 응답."""
+    
+    response_body: ResponseBody
+    info: StockBasicInfo
+    prices: list[StockDailyItemchartPrice] # 개별 종목 잔고 목록 (output1)
+
+    @property
+    def is_success(self) -> bool:
+        """API 호출 성공 여부."""
+        return self.rt_cd == "0"
+
+    @classmethod
+    def from_response(cls, data: dict) -> "StockDailyItemchartPriceResponse":
+        """딕셔너리에서 StockDailyItemchartPriceResponse 객체 생성."""
+        return cls(
+            response_body=ResponseBody(
+                rt_cd=data["rt_cd"],
+                msg_cd=data["msg_cd"],
+                msg1=data["msg1"].strip(),
+            ),
             info=StockBasicInfo.from_dict(data.get("output1", {})),
-            prices=[StockDailyPrice.from_dict(item) for item in data.get("output2", [])],
+            prices=[StockDailyItemchartPrice.from_dict(item) for item in data.get("output2", [])],
         )

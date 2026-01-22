@@ -336,6 +336,7 @@ class NewsArticle:
     뉴스 기사 데이터 모델
     
     Attributes:
+        article_id: 기사 ID
         url: 기사 URL
         query: 검색어 또는 카테고리명
         title: 기사 제목
@@ -346,6 +347,7 @@ class NewsArticle:
         published_date: 기사 입력일
         crawled_at: 크롤링 시각
     """
+    article_id: str
     url: str
     query: Optional[str] = None
     title: Optional[str] = None

@@ -11,12 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
- 
+
+import hashlib
 import logging
 import random
+import re
 import time
 
 from bs4 import BeautifulSoup, Tag
+from datetime import datetime
 from typing import Dict, Any, List, Tuple, Optional
 from urllib import parse
 
@@ -73,6 +76,8 @@ class NaverNewsParser:
         category: str = "조회",
         query: Optional[str] = None,
         url: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
         max_articles: int = 100
     ) -> List[Dict]:
         """
@@ -95,11 +100,6 @@ class NaverNewsParser:
         url = NEWS_URLS.get("openapi") if not url else url
         enc_text = parse.quote(query)
         #api_url = url.format(query=enc_text, display=max_articles)
-
-        params = {
-            "query": enc_text,
-            "display": max_articles
-        }
         
         api_headers = {
             "X-Naver-Client-Id": self.client_id,
@@ -107,27 +107,74 @@ class NaverNewsParser:
         }
 
         articles = []
-        try:
-            logger.info(f"News 목록 URL: {url}, params: {params}")
-            response = self.client._get(url, params=params, headers=api_headers)
-            search_result = response.json()
-
-            # JSON에서 link 정보 추출
-            news_list = search_result.get('items', [])
-            #print(f"Items: {news_list}")
-            for item in news_list:
-                article = NewsArticle(
-                    url=item.get("link"),
-                    query=query,
-                    title=item.get("title")
-                )
-                articles.append(article)
-            
-            return articles
-        except Exception as e:
-            print(f"Exception: 뉴스 검색 실패 {e}")
+        display = min(100, max_articles)  # 한 번에 최대 100개
+        start = 1
         
-        return articles
+        while len(articles) < max_articles:
+            params = {
+                "query": query,
+                "display": display,
+                "start": start,
+                "sort": "date"  # 최신순
+            }
+
+            try:
+                logger.info(f"News 목록 URL: {url}, params: {params}")
+                response = self.client.get(url, params=params, headers=api_headers)
+                search_result = response.json()
+
+                # JSON에서 link 정보 추출
+                news_list = search_result.get('items', [])
+                #print(f"Items: {news_list}")
+                for item in news_list:
+                    # HTML 태그 제거
+                    title = re.sub(r'<[^>]+>', '', item.get("title", ""))
+                    description = re.sub(r'<[^>]+>', '', item.get("description", ""))
+
+                    # 발행일
+                    pub_date_str = item.get("pubDate", "")
+                    try:
+                        pub_date = datetime.strptime(
+                            pub_date_str, 
+                            "%a, %d %b %Y %H:%M:%S %z"
+                        )
+                    except ValueError:
+                        pub_date = datetime.now()
+                    #print(f"pub_date: {pub_date}, {type(pub_date)} {start_date} {type(start_date)}")
+
+                    # 날짜 필터링
+                    if start_date and pub_date < start_date:
+                        continue
+                    if end_date and pub_date > end_date:
+                        continue
+
+                    # 고유 ID 생성
+                    article_id = hashlib.md5(
+                        item.get("link", "").encode()
+                    ).hexdigest()[:12]
+                
+                    article = NewsArticle(
+                        article_id=article_id,
+                        content=description,
+                        url=item.get("originallink") or item.get("link"),
+                        query=query,
+                        title=title,
+                        published_date=datetime.strftime(pub_date, "%Y-%m-%d %H:%M:%S"),
+                        crawled_at=datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S"),
+                    )
+                    articles.append(article)
+
+                # 더 이상 결과가 없으면 종료
+                if len(news_list) < display:
+                    break
+                
+                start += display
+
+            except Exception as e:
+                print(f"Exception: 뉴스 검색 실패 {e}")
+                break
+        
+        return articles[:max_articles]
 
     def parse(
         self,
@@ -180,7 +227,7 @@ class NaverNewsParser:
         articles = []
 
         try:
-            response = self.client._get(
+            response = self.client.get(
                 category_url,
                 referer=NEWS_BASE_URL,
                 timeout=30,
@@ -258,7 +305,7 @@ class NaverNewsDetailParser:
         """        
         try:
             logger.info(f"News Detail URL: {article.url}")
-            response = self.client._get(article.url)
+            response = self.client.get(article.url)
 
             # 뉴스 상세 정보 파싱
             self._parse_and_update(article, response.text)

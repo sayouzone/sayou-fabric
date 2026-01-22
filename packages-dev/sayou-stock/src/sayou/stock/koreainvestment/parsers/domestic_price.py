@@ -28,6 +28,7 @@ from ..models import (
     DailyPriceParam,
     StockCurrentPriceResponse,
     StockDailyPriceResponse,
+    StockDailyItemchartPriceResponse,
 )
 from ..utils.token_manager import TokenManager
 from ..utils.utils import (
@@ -42,7 +43,8 @@ class DomesticPriceParser:
     """KIS 국내 주식 가격 데이터를 파싱하는 클래스"""
 
     PRICE_URL = KIS_OPENAPI_PROD + "/uapi/domestic-stock/v1/quotations/inquire-price"
-    DAILY_PRICE_URL = KIS_OPENAPI_PROD + "/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice"
+    DAILY_PRICE_URL = KIS_OPENAPI_PROD + "/uapi/domestic-stock/v1/quotations/inquire-daily-price"
+    DAILY_ITEMCHART_PRICE_URL = KIS_OPENAPI_PROD + "/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice"
 
     def __init__(
         self,
@@ -90,6 +92,43 @@ class DomesticPriceParser:
     def daily_price(
         self,
         stock_code: str,
+        period: str = "D",
+        adjust_price: int = 0,
+    ) -> pd.DataFrame:
+        """일봉 데이터 조회
+        주식현재가 일자별[v1_국내주식-010]
+        https://apiportal.koreainvestment.com/apiservice-apiservice?/uapi/domestic-stock/v1/quotations/inquire-daily-price
+        
+        Args:
+            stock_code: 종목코드 (6자리)
+            period: 조회 기간 (일)
+            start_date: 조회 시작일 (YYYYMMDD)
+            end_date: 조회 종료일 (YYYYMMDD)
+            adjust_price: 수정주가 (0:수정주가, 1:원주가)
+        
+        Returns:
+            DataFrame with columns: date, open, high, low, close, volume
+        """
+        
+        params = DailyPriceParam(
+            FID_COND_MRKT_DIV_CODE="J",
+            FID_INPUT_ISCD=stock_code,
+            FID_PERIOD_DIV_CODE=period,
+            FID_ORG_ADJ_PRC=adjust_price,
+        )
+        headers = self._build_headers("FHKST01010400")
+
+        response = self._client.get(self.DAILY_PRICE_URL, headers=headers.to_dict(), params=params.to_dict())
+        logger.debug(f"일봉 조회 응답: {response.json()}")
+        
+        if response.status_code != 200:
+            raise Exception(f"일봉 조회 실패: {response.text}")
+        
+        return StockDailyPriceResponse.from_response(response.json())
+
+    def daily_itemchart_price(
+        self,
+        stock_code: str,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         period: str = "D",
@@ -125,12 +164,12 @@ class DomesticPriceParser:
         headers = self._build_headers("FHKST03010100")
         #logger.info(f"일봉 조회 요청: {params.to_dict()}")
         
-        response = self._client.get(self.DAILY_PRICE_URL, headers=headers.to_dict(), params=params.to_dict())
+        response = self._client.get(self.DAILY_ITEMCHART_PRICE_URL, headers=headers.to_dict(), params=params.to_dict())
         
         if response.status_code != 200:
             raise Exception(f"일봉 조회 실패: {response.text}")
         
-        return StockDailyPriceResponse.from_response(response.json())
+        return StockDailyItemchartPriceResponse.from_response(response.json())
 
     def _build_headers(self, tr_id: str, **kwargs) -> RequestHeader:
         """공통 헤더 생성"""
