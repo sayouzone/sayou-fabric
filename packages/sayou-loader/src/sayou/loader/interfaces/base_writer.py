@@ -26,12 +26,6 @@ class BaseWriter(BaseComponent):
         """
         return 0.0
 
-    def initialize(self, **kwargs):
-        """
-        Optional hook for writer initialization (e.g., auth setup).
-        """
-        pass
-
     @measure_time
     @retry(max_retries=3, delay=1.0)
     def write(self, input_data: Any, destination: str, **kwargs) -> bool:

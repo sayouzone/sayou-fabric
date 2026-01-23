@@ -176,13 +176,12 @@ class LoaderPipeline(BaseComponent):
 
         # 3. Instantiate & Initialize (Lazy Loading)
         writer = writer_cls()
-        writer.initialize(**run_config)
 
         self._log(f"Routing to writer: {writer.component_name}")
 
         try:
             # 4. Execute
-            writer.write(input_data, destination)
+            writer.write(input_data, destination, **run_config)
 
             self._emit(
                 "on_finish", result_data={"destination": destination}, success=True
