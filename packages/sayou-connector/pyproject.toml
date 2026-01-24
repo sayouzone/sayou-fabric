@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-connector"
-version = "0.3.18"
+version = "0.3.19"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
@@ -16,10 +16,10 @@ readme = "README.md"
 license = { file = "../../LICENSE" }
 requires-python = ">=3.9"
 classifiers = [
-    "Programming Language :: Python :: 3.9",
+"Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "License :: OSI Approved :: Apache Software License",
+        "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
