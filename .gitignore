@@ -3,6 +3,12 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+sayou-stock/tests/tests_fibo.py
+sayou-stock/tests/tests_ontology.py
+sayou-stock/tests/tests_rsi.py
+sayou-stock/tests/tests_trading.py
+sayou-stock/tests/tests_trading_pip.py
+sayou-stock/src/sayou/stock/ontology/
 # C extensions
 *.so
 

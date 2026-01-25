@@ -119,6 +119,7 @@ class YahooCrawler:
         return self.news_parser.fetch(query, max_articles, period)
     
     def chart(self, ticker: str, start_date: str | None = None, end_date: str | None = None):
+        """기업 차트 (Chart) 조회 (yf.Ticker.history)"""
         return self.chart_parser.fetch(ticker, start_date=start_date, end_date=end_date)
 
     def dividends(self, ticker: str):
