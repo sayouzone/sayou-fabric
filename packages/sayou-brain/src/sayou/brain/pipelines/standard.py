@@ -18,7 +18,7 @@ from ..core.config import SayouConfig
 
 class StandardPipeline(BaseComponent):
     """
-    (Tier 1) The All-in-One ETL Orchestrator.
+    The All-in-One ETL Orchestrator.
 
     Automates the entire journey from raw data to database:
     Connector -> Document -> Refinery -> Chunking -> Wrapper -> Assembler -> Loader

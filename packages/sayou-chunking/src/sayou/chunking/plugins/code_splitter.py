@@ -10,7 +10,7 @@ from ..interfaces.base_splitter import BaseSplitter
 @register_component("splitter")
 class CodeSplitter(BaseSplitter):
     """
-    (Tier 1) Polyglot Code Splitter.
+    Polyglot Code Splitter.
     - Python: Uses AST for structural splitting (Preserves Decorators & Context).
     - Others: Uses Regex with indentation awareness.
     """
