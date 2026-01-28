@@ -5,13 +5,16 @@ from collections import defaultdict
 from sayou.core.base_component import BaseComponent
 
 
-class KGRenderer(BaseComponent):
+class ShowcaseKGRenderer(BaseComponent):
     """
-    Renders 3D KG with 'Virtual Hierarchy'.
-    Injects missing Parent Nodes based on metadata and applies Semantic Styling.
+    Renders an immersive 3D Knowledge Graph designed for high-level visualization and presentation.
+
+    Focuses on the 'Big Picture' and aesthetic impact using spatial layouts and semantic coloring.
+    Ideal for demonstrating data scale, clustering patterns, and global connectivity (Wow Effect),
+    rather than granular node analysis.
     """
 
-    component_name = "KGRenderer"
+    component_name = "ShowcaseKGRenderer"
 
     def render(self, json_path: str, output_path: str = "kg_view_3d.html"):
         if not os.path.exists(json_path):
