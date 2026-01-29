@@ -66,7 +66,7 @@ class CodeStructureBuilder(BaseBuilder):
         self._log(
             f"📊 [MAP STATS] Files: {len(file_map)}, Symbols indexed: {sum(len(v) for v in symbol_map.values())}"
         )
-        # print(f"   (Sample File Key): {list(file_map.keys())[0] if file_map else 'None'}")
+        # self._log(f"   (Sample File Key): {list(file_map.keys())[0] if file_map else 'None'}")
 
         # -----------------------------------------------------
         # 2. Connection Logic (With Detailed Logs)
