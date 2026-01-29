@@ -108,7 +108,7 @@ class User {
     output_data = [c.model_dump() for c in chunks_py + chunks_js]
     with open("examples/code_chunk_result.json", "w", encoding="utf-8") as f:
         json.dump(output_data, f, indent=2, ensure_ascii=False)
-    print("\n✅ Saved results to examples/code_chunk_result.json")
+    print("\n✅ Saved results to examples/code_chunk_result_demo.json")
 
 
 if __name__ == "__main__":

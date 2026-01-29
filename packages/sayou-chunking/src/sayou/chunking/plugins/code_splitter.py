@@ -1,5 +1,6 @@
 import ast
-from typing import List
+import textwrap
+from typing import Any, Dict, List
 
 from sayou.core.registry import register_component
 from sayou.core.schemas import SayouBlock, SayouChunk
@@ -83,33 +84,52 @@ class CodeSplitter(BaseSplitter):
     def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
         config = doc.metadata.get("config", {})
         chunk_size = int(config.get("chunk_size", 1000))
-        chunk_overlap = int(config.get("chunk_overlap", 0))
 
         ext = doc.metadata.get("extension", "").lower()
         lang = self.EXTENSION_MAP.get(ext, "default")
 
-        # 1. Python: AST Parser
         if lang == "python":
+            self._log(
+                f"\n[DEBUG] 🐍 Python AST Splitter Start (Size: {len(doc.content)} chars)"
+            )
             return self._split_python_ast(doc, chunk_size)
 
-        # 2. Others: Regex Parser
-        return self._split_regex(doc, lang, chunk_size, chunk_overlap)
+        return self._split_regex(doc, lang, chunk_size, 0)
 
     # =========================================================================
     # [Logic A] Python AST Splitter
     # =========================================================================
     def _split_python_ast(self, doc: SayouBlock, chunk_size: int) -> List[SayouChunk]:
+        content = doc.content
+        source_lines = content.splitlines()
+
         try:
-            tree = ast.parse(doc.content)
-            source_lines = doc.content.splitlines()
-        except SyntaxError:
-            return self._split_regex(doc, "python", chunk_size, 0)
+            tree = ast.parse(content)
+            self._log("[DEBUG] ✅ AST Parse Success (Raw Content)")
+        except SyntaxError as e:
+            self._log(f"❌ [AST Fail] SyntaxError in {doc.metadata.get('source')}: {e}")
+            try:
+                dedented_content = textwrap.dedent(content)
+                tree = ast.parse(dedented_content)
+                source_lines = dedented_content.splitlines()
+                self._log("[DEBUG] ✅ AST Parse Success (After Dedent)")
+            except SyntaxError as e2:
+                self._log(f"[DEBUG] ❌ AST Parse Failed Completely: {e2}")
+                self._log("[DEBUG] -> Falling back to Regex Splitter")
+                return self._split_regex(doc, "python", chunk_size, 0)
+            except Exception:
+                self._log("⚠️ [AST Fail] Falling back to Regex.")
+                return self._split_regex(doc, "python", chunk_size, 0)
 
         chunks = []
         current_chunk_lines = []
         current_size = 0
+        current_imports = []
 
-        for node in tree.body:
+        self._log(f"[DEBUG] Top-level nodes found: {len(tree.body)}")
+
+        for i, node in enumerate(tree.body):
+            node_type = type(node).__name__
             start = node.lineno - 1
             if hasattr(node, "decorator_list") and node.decorator_list:
                 start = node.decorator_list[0].lineno - 1
@@ -119,80 +139,169 @@ class CodeSplitter(BaseSplitter):
             node_text = "\n".join(node_lines)
             node_len = len(node_text)
 
-            if node_len > chunk_size * 1.5 and isinstance(node, ast.ClassDef):
-                if current_chunk_lines:
-                    self._flush_chunk(chunks, current_chunk_lines, doc)
-                    current_chunk_lines = []
-                    current_size = 0
+            self._log(
+                f"[DEBUG] Node {i} [{node_type}]: Lines {start+1}~{end} (Len: {node_len})"
+            )
+
+            # [CASE 0] Import
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                extracted_imports = self._extract_import_objects(node)
+                current_imports.extend(extracted_imports)
+
+            # [CASE 1] ClassDef
+            if isinstance(node, ast.ClassDef):
+                self._log(f"   -> Found Class '{node.name}'. Processing structure...")
+
+                base_classes = []
+                for base in node.bases:
+                    if isinstance(base, ast.Name):
+                        base_classes.append(base.id)
+                    elif isinstance(base, ast.Attribute):
+                        base_classes.append(f"{base.value.id}.{base.attr}")
 
                 self._separate_class_structure(
-                    node, source_lines, doc, chunk_size, chunks
+                    node,
+                    source_lines,
+                    doc,
+                    chunk_size,
+                    chunks,
+                    inheritance_info=base_classes,
                 )
 
-            else:
-                if current_size + node_len > chunk_size:
+            # [CASE 2] FunctionDef
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                self._log(
+                    f"   -> Found Function '{node.name}'. Creating independent chunk."
+                )
+
+                if current_chunk_lines:
                     self._flush_chunk(chunks, current_chunk_lines, doc)
                     current_chunk_lines = []
                     current_size = 0
 
-                if current_chunk_lines:
-                    current_chunk_lines.append("")
-                    current_size += 1
+                self._flush_chunk(
+                    chunks,
+                    node_lines,
+                    doc,
+                    extra_meta={
+                        "semantic_type": "function",
+                        "function_name": node.name,
+                    },
+                )
+
+            # [CASE 3] Others (Imports, Variables...)
+            else:
+                self._log(f"   -> Found Minor Node ({node_type}). Merging...")
+
+                if current_size + node_len > chunk_size:
+                    self._log("      -> Buffer full. Flushing previous chunk.")
+                    self._flush_chunk(chunks, current_chunk_lines, doc)
+                    current_chunk_lines = []
+                    current_size = 0
 
                 current_chunk_lines.extend(node_lines)
                 current_size += node_len
 
         if current_chunk_lines:
-            self._flush_chunk(chunks, current_chunk_lines, doc)
-
+            self._flush_chunk(
+                chunks,
+                current_chunk_lines,
+                doc,
+                extra_meta={"imports": current_imports} if current_imports else None,
+            )
+        self._log(f"[DEBUG] AST Split Finished. Total chunks: {len(chunks)}")
         return chunks
 
-    def _separate_class_structure(self, node, source_lines, doc, chunk_size, chunks):
+    def _extract_import_objects(self, node) -> List[Dict[str, Any]]:
+        """
+        Extracts detailed information from AST Import nodes.
+        This includes relative path levels and module/type information, rather than just strings.
+        """
+        imports = []
+
+        # Case A: import os, sys
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports.append(
+                    {
+                        "type": "absolute",
+                        "module": alias.name,
+                        "name": None,
+                        "alias": alias.asname,
+                        "level": 0,
+                    }
+                )
+
+        # Case B: from .core import BaseComponent
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            level = node.level
+
+            for alias in node.names:
+                imports.append(
+                    {
+                        "type": "relative" if level > 0 else "absolute",
+                        "module": module,
+                        "name": alias.name,
+                        "alias": alias.asname,
+                        "level": level,
+                        "raw_path": (
+                            f"{'.' * level}{module}.{alias.name}"
+                            if module
+                            else f"{'.' * level}{alias.name}"
+                        ),
+                    }
+                )
+
+        return imports
+
+    def _separate_class_structure(
+        self, node, source_lines, doc, chunk_size, chunks, inheritance_info=None
+    ):
         """
         [Advanced Logic] Class structure separated into 3 steps.
         1. Header Chunk: Decorators + Class Def + Docstring
         2. Attribute Chunk: Class Variables
         3. Method Chunks: Functions
         """
-        if not node.body:
-            return
+        parent_name = node.name
 
         # ---------------------------------------------------------
         # 1. Create Header Chunk (Class Def + Docstring)
         # ---------------------------------------------------------
-
         start_line = node.lineno - 1
         if hasattr(node, "decorator_list") and node.decorator_list:
             start_line = node.decorator_list[0].lineno - 1
 
-        docstring_node = None
-        first_real_child_index = 0
+        header_end_line = node.lineno
 
         if (
             len(node.body) > 0
             and isinstance(node.body[0], ast.Expr)
             and isinstance(node.body[0].value, (ast.Str, ast.Constant))
         ):
-
-            docstring_node = node.body[0]
-            first_real_child_index = 1
-
-            header_end_line = docstring_node.end_lineno
+            header_end_line = node.body[0].end_lineno
+            first_child_idx = 1
         else:
-            header_end_line = node.body[0].lineno - 1
-            if hasattr(node.body[0], "decorator_list") and node.body[0].decorator_list:
-                header_end_line = node.body[0].decorator_list[0].lineno - 1
+            if len(node.body) > 0:
+                first_child = node.body[0]
+                header_end_line = first_child.lineno - 1
+                if (
+                    hasattr(first_child, "decorator_list")
+                    and first_child.decorator_list
+                ):
+                    header_end_line = first_child.decorator_list[0].lineno - 1
+            else:
+                header_end_line = node.end_lineno
+            first_child_idx = 0
 
         header_lines = source_lines[start_line:header_end_line]
-        header_chunk_index = len(chunks)
-        parent_name = node.name
+        header_meta = {"semantic_type": "class_header", "class_name": node.name}
+        if inheritance_info:
+            header_meta["inherits_from"] = inheritance_info
 
-        self._flush_chunk(
-            chunks,
-            header_lines,
-            doc,
-            extra_meta={"semantic_type": "class_header", "class_name": parent_name},
-        )
+        self._flush_chunk(chunks, header_lines, doc, extra_meta=header_meta)
+        header_chunk_index = len(chunks) - 1
 
         # ---------------------------------------------------------
         # 2. Body Traversal (Attributes vs Methods)
@@ -200,18 +309,8 @@ class CodeSplitter(BaseSplitter):
 
         current_attr_lines = []
 
-        for child in node.body[first_real_child_index:]:
-
-            # [Type A] Attributes
-            if isinstance(child, (ast.Assign, ast.AnnAssign)):
-                c_start = child.lineno - 1
-                c_end = child.end_lineno
-                current_attr_lines.extend(source_lines[c_start:c_end])
-
-            # [Type B] Methods or Nested Class
-            elif isinstance(
-                child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-            ):
+        for child in node.body[first_child_idx:]:
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 if current_attr_lines:
                     self._flush_chunk(
                         chunks,
@@ -220,24 +319,31 @@ class CodeSplitter(BaseSplitter):
                         extra_meta={
                             "semantic_type": "class_attributes",
                             "parent_node": parent_name,
-                            "parent_chunk_index": header_chunk_index,
                         },
                     )
                     current_attr_lines = []
 
-                self._process_method_node(
-                    child,
-                    source_lines,
-                    doc,
-                    chunk_size,
+                c_start = child.lineno - 1
+                if hasattr(child, "decorator_list") and child.decorator_list:
+                    c_start = child.decorator_list[0].lineno - 1
+                c_end = child.end_lineno
+
+                method_lines = source_lines[c_start:c_end]
+                self._flush_chunk(
                     chunks,
-                    parent_name,
-                    header_chunk_index,
+                    method_lines,
+                    doc,
+                    extra_meta={
+                        "semantic_type": "method",
+                        "parent_node": parent_name,
+                        "function_name": child.name,
+                    },
                 )
 
-            # [Type C] Other (Pass, Comments etc.) -> Attribute or Ignore
             else:
-                pass
+                c_start = child.lineno - 1
+                c_end = child.end_lineno
+                current_attr_lines.extend(source_lines[c_start:c_end])
 
         if current_attr_lines:
             self._flush_chunk(
@@ -247,9 +353,17 @@ class CodeSplitter(BaseSplitter):
                 extra_meta={
                     "semantic_type": "class_attributes",
                     "parent_node": parent_name,
-                    "parent_chunk_index": header_chunk_index,
                 },
             )
+
+    def _flush_chunk(self, chunks, lines, doc, extra_meta=None):
+        content = "\n".join(lines).strip()
+        if content:
+            meta = doc.metadata.copy()
+            meta["chunk_index"] = len(chunks)
+            if extra_meta:
+                meta.update(extra_meta)
+            chunks.append(SayouChunk(content=content, metadata=meta))
 
     def _process_method_node(
         self, child, source_lines, doc, chunk_size, chunks, parent_name, parent_index
