@@ -1,6 +1,7 @@
 from sayou.core.base_component import BaseComponent
 
-from .renderer.kg_renderer import KGRenderer
+from .renderer.analytic_kg_renderer import AnalyticKGRenderer
+from .renderer.showcase_kg_renderer import ShowcaseKGRenderer
 from .renderer.pyvis_renderer import PyVisRenderer
 from .tracer.graph_tracer import GraphTracer
 from .tracer.rich_tracer import RichConsoleTracer
@@ -81,11 +82,20 @@ class VisualizerPipeline(BaseComponent):
         self._renderer = PyVisRenderer()
         self._renderer.render(self._graph_tracer.graph, output_path, **kwargs)
 
-    def render_kg(self, json_path: str, output_path: str = "kg_view.html"):
+    def render_analytic_kg(self, json_path: str, output_path: str = "kg_view.html"):
         """
         Visualizes the OUTPUT JSON (Knowledge Graph).
         """
-        self._kg_renderer = KGRenderer()
+        self._kg_renderer = AnalyticKGRenderer()
+        self._kg_renderer.render(json_path, output_path)
+
+    def render_showcase_kg(
+        self, json_path: str, output_path: str = "showcase_kg_view.html"
+    ):
+        """
+        Visualizes the OUTPUT JSON (Knowledge Graph).
+        """
+        self._kg_renderer = ShowcaseKGRenderer()
         self._kg_renderer.render(json_path, output_path)
 
     def save_live_log(self, output_path="live_status.html"):
