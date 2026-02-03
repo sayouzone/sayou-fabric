@@ -1,6 +1,7 @@
 from .pipeline import ChunkingPipeline
 from .plugins.audited_fixed_length_splitter import AuditedFixedLengthSplitter
 from .plugins.code_splitter import CodeSplitter
+from .plugins.json_splitter import JsonSplitter
 from .plugins.langchain_splitter import LangchainSplitter
 from .plugins.markdown_splitter import MarkdownSplitter
 from .splitter.agentic_splitter import AgenticSplitter
@@ -14,6 +15,7 @@ __all__ = [
     "ChunkingPipeline",
     "AuditedFixedLengthSplitter",
     "CodeSplitter",
+    "JsonSplitter",
     "LangchainSplitter",
     "MarkdownSplitter",
     "AgenticSplitter",
