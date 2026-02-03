@@ -1,0 +1,98 @@
+/* -----------------------------------------------------------
+   Sayouzone Documentation Theme (Clean Indigo Style)
+   ----------------------------------------------------------- */
+
+.md-main__inner {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.md-typeset {
+    font-family: "Inter", "Noto Sans KR", sans-serif;
+    line-height: 1.75;
+}
+
+.md-typeset h1, .md-typeset h2, .md-typeset h3 {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-top: 2em;
+    margin-bottom: 0.6em;
+}
+
+.md-nav__link--active {
+    color: #3f51b5;
+    font-weight: 600;
+    border-left: 3px solid #3f51b5;
+    background-color: rgba(63, 81, 181, 0.08);
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 2em 0;
+}
+
+.md-typeset a {
+    color: #3f51b5;
+    text-decoration: none;
+}
+
+.md-typeset a:hover {
+    color: #283593;
+    text-decoration: underline;
+}
+
+.md-typeset code {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.85em;
+}
+
+.md-typeset pre {
+    border-radius: 6px;
+    padding: 1em;
+    background-color: var(--md-code-bg-color);
+}
+
+.md-sidebar--secondary {
+    display: block !important;
+    width: 250px;
+    flex: 0 0 250px;
+}
+
+.md-sidebar--primary {
+    width: 260px;
+    flex: 0 0 260px;
+}
+
+@media screen and (max-width: 1220px) {
+    .md-sidebar--secondary {
+        display: none !important;
+    }
+}
+
+.md-button {
+    border-radius: 4px;
+    padding: 0.5em 1.2em;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.md-button--primary {
+    background-color: #3f51b5;
+    color: white;
+}
+
+.md-button--primary:hover {
+    background-color: #283593;
+}
+
+.md-footer-meta {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+:root {
+    --md-primary-fg-color: #3f51b5;
+    --md-accent-fg-color: #3f51b5;
+}
