@@ -23,18 +23,21 @@ _**Observe, Structure, and Assemble your Knowledge Graph.**_
 
 ## 1. Philosophy: Why Sayou Fabric?
 
-**Sayou Fabric** operates on a simple premise: **"The quality of your RAG depends on the structure of your data, not just the model."**
-
-While other frameworks focus on chaining LLMs, Sayou Fabric focuses on the **Data Lifecycle**. It decomposes the complex RAG pipeline into **10 atomic stages**, ensuring that raw data is meticulously cleaned, structured, and assembled into a Knowledge Graph before it ever touches an LLM.
+Current RAG frameworks rely heavily on probabilistic models (LLMs) to understand data structure. This is expensive, slow, and prone to errors. **Sayou Fabric takes a different approach: Deterministic Construction.**
 
 ### 1.1. Structure-First Architecture
-We don't just split text; we understand it. By preserving document hierarchy (headers, tables, code blocks) and enforcing strict schemas, we eliminate context loss and hallucination at the source.
+
+We extract the intrinsic structure of data using static analysis and metadata parsing, not prompts.
+* **Code**: Parsed via AST to link Classes, Methods, and Imports.
+* **Media**: Structured via Timeline and Semantic Segments.
+* **Docs**: Hierarchically organized by Headers, Tables, and Sections.
 
 ### 1.2. The 3-Tier Design Pattern
-Every library in the ecosystem follows a consistent **Interface-Template-Plugin** pattern, guaranteeing both stability and infinite extensibility.
-* **Tier 1 (Interface):** The immutable contract.
-* **Tier 2 (Template):** Batteries-included standard logic.
-* **Tier 3 (Plugin):** Vendor-specific or custom logic extensions.
+
+Inspired by robust enterprise architectures, every component follows a strict hierarchy to ensure stability at scale:
+* **Tier 1 (Interface)**: The immutable contract defining behavior.
+* **Tier 2 (Template)**: Standardized logic for ETL pipelines (Battery-included).
+* **Tier 3 (Plugin)**: Vendor-specific implementations (e.g., YouTube, GitHub, Notion).
 
 ---
 
@@ -88,9 +91,13 @@ The `StandardPipeline` in `sayou-brain` acts as a Facade, abstracting away the c
 from sayou.brain import StandardPipeline
 ```
 
+```python
+from sayou.brain import NormalPipeline
+```
+
 ### Step 2: Execute Process (ETL)
 
-Just point to a file or a URL. The brain handles **Connecting -> Parsing -> Refining -> Chunking -> Wrapping -> Assembling -> Loading**.
+StandardPipeline handles **Connector -> Document -> Refinery -> Chunking -> Wrapper -> Assembler -> Loader**.
 
 ```python
 result = StandardPipeline().process(
@@ -99,6 +106,17 @@ result = StandardPipeline().process(
 )
 
 print(f"Ingestion Complete. Processed: {result['processed']}")
+```
+
+NormalPipeline handles **Connecting -> Refining -> Chunking -> Wrapper -> Assembler -> Loader**.
+
+```python
+result = NormalPipeline().process(
+    source="youtube://YOUTUBE_VIDEO_ID",
+    destination="./output/graph_data.json"
+)
+
+print(f"Graph Construction Complete. Nodes: {len(result['nodes'])}")
 ```
 
 ### Step 3: Check Result
@@ -121,6 +139,21 @@ The output is a structured JSON ready for Graph Databases or Vector Stores.
   ]
 }
 ```
+```json
+{
+  "nodes": [
+    {
+      "node_id": "sayou:video:rxYhBE91SCk",
+      "node_class": "sayou:Video",
+      "attributes": { "sayou:title": "RAG Pipeline Explanation", "sayou:duration": 540 },
+      "relationships": { "sayou:contains": ["sayou:segment:001", "sayou:segment:002"] }
+    }
+  ],
+  "edges": [
+    { "……" }
+  ]
+}
+```
 
 ---
 
@@ -135,11 +168,14 @@ Monitor the execution flow of your pipeline in real-time. See exactly which plug
 
 ### 🌌 3D Knowledge Graph (Holographic View)
 Visualize your document structure as a 3D city. 
-* **Red Cubes:** Documents (Virtual Parents)
-* **Blue Orbs:** Chunks (Data Blocks)
-* **Orange Octahedrons:** Headers (Structural Anchors)
 
-<img src="https://github.com/sayouzone/sayou-fabric/blob/main/docs/assets/kg_renderer.png?raw=true" width="800">
+**Analytics Knowledge Graph**
+
+<img src="https://github.com/sayouzone/sayou-fabric/blob/main/docs/assets/kg_analytic.png?raw=true" width="800">
+
+**Showcase Knowledge Graph**
+
+<img src="https://github.com/sayouzone/sayou-fabric/blob/main/docs/assets/kg_showcase.png?raw=true" width="800">
 
 ---
 
