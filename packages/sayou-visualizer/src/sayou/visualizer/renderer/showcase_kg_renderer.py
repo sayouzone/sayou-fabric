@@ -1,6 +1,9 @@
 import json
 import os
+
 from sayou.core.base_component import BaseComponent
+
+from ..core.styles import HIDDEN_ATTR_PREFIXES, SHOWCASE_STYLE_MAP
 
 
 class ShowcaseKGRenderer(BaseComponent):
@@ -15,6 +18,7 @@ class ShowcaseKGRenderer(BaseComponent):
 
     def render(self, json_path: str, output_path: str = "sayou_showcase_3d.html"):
         if not os.path.exists(json_path):
+            self._log(f"❌ File not found: {json_path}", level="error")
             return
 
         with open(json_path, "r", encoding="utf-8") as f:
@@ -24,64 +28,44 @@ class ShowcaseKGRenderer(BaseComponent):
         links = []
         existing_ids = set()
 
+        # 1. Nodes Processing
         for node in raw_data.get("nodes", []):
             node_id = node.get("node_id")
+            if not node_id:
+                continue
             existing_ids.add(node_id)
+
             attrs = node.get("attributes", {})
-            n_cls = node.get("node_class", "unknown").lower()
+            n_cls = node.get("node_class", "unknown")
 
-            group = "Chunk"
-            color = "#4a69bd"
-            val = 3
+            style = SHOWCASE_STYLE_MAP.get(n_cls, SHOWCASE_STYLE_MAP["default"])
 
-            if "file" in n_cls or "package" in n_cls:
-                group = "Document"
-                color = "#00d2d3"  # Cyan
-                val = 20
-            elif "class" in n_cls:
-                group = "Header"
-                color = "#ff6b81"  # Pink
-                val = 12
-            elif "method" in n_cls or "function" in n_cls:
-                group = "Code"
-                color = "#feca57"  # Gold
-                val = 6
-            elif "library" in n_cls:
-                group = "Library"
-                color = "#2ed573"  # Green
-                val = 10
+            val = attrs.get("val", style["val"])
 
-            label = attrs.get("label") or node.get("friendly_name") or node_id
-            if group == "Document":
-                label = os.path.basename(attrs.get("sayou:filePath", label))
+            label = node.get("friendly_name") or attrs.get("label") or node_id
 
-            clean_attrs = {}
-            for k, v in attrs.items():
-                if isinstance(v, str) and len(v) > 200:
-                    clean_attrs[k] = v[:200] + "..."
-                elif not k.startswith("sayou:"):
-                    clean_attrs[k] = v
+            clean_attrs = self._clean_attributes(attrs)
 
             nodes.append(
                 {
                     "id": node_id,
                     "label": label,
-                    "group": group,
-                    "color": color,
+                    "group": style["group"],
+                    "color": style["color"],
                     "val": val,
                     "attributes": clean_attrs,
                 }
             )
 
-        # [2] Edge data processing
+        # 2. Edges Processing
         for edge in raw_data.get("edges", []):
             src = edge.get("source")
             tgt = edge.get("target")
-
             if src in existing_ids and tgt in existing_ids:
                 e_type = edge.get("type", "relates")
-                is_import = "import" in e_type or "calls" in e_type
-
+                is_import = any(
+                    k in e_type for k in ["import", "calls", "next", "contains"]
+                )
                 links.append(
                     {
                         "source": src,
@@ -94,6 +78,19 @@ class ShowcaseKGRenderer(BaseComponent):
         graph_data = {"nodes": nodes, "links": links}
         self._generate_html(graph_data, output_path)
         self._log(f"✅ Final Visual Showcase generated at: {output_path}")
+
+    def _clean_attributes(self, attrs):
+        """설정 파일 기반 속성 정제"""
+        clean = {}
+        for k, v in attrs.items():
+            if any(k.startswith(prefix) for prefix in HIDDEN_ATTR_PREFIXES):
+                continue
+            s = str(v)
+            if len(s) > 200:
+                clean[k] = s[:200] + "..."
+            else:
+                clean[k] = v
+        return clean
 
     def _generate_html(self, graph_data, output_path):
         json_str = json.dumps(graph_data)

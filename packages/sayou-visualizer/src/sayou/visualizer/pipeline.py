@@ -1,8 +1,8 @@
 from sayou.core.base_component import BaseComponent
 
 from .renderer.analytic_kg_renderer import AnalyticKGRenderer
-from .renderer.showcase_kg_renderer import ShowcaseKGRenderer
 from .renderer.pyvis_renderer import PyVisRenderer
+from .renderer.showcase_kg_renderer import ShowcaseKGRenderer
 from .tracer.graph_tracer import GraphTracer
 from .tracer.rich_tracer import RichConsoleTracer
 from .tracer.websocket_tracer import WebSocketTracer
