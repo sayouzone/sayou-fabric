@@ -1,8 +1,9 @@
+import os
 from typing import Any, List, Union
 
+from sayou.core.ontology import SayouAttribute, SayouClass, SayouPredicate
 from sayou.core.registry import register_component
 from sayou.core.schemas import SayouNode, SayouOutput
-from sayou.core.vocabulary import SayouAttribute
 
 from ..interfaces.base_adapter import BaseAdapter
 
@@ -36,76 +37,64 @@ class CodeChunkAdapter(BaseAdapter):
     def _do_adapt(self, input_data: Union[List[Any], Any], **kwargs) -> SayouOutput:
         if not isinstance(input_data, list):
             input_data = [input_data]
-
         nodes = []
-
-        # Source Path -> Node ID
         file_nodes_map = {}
 
         for chunk in input_data:
-            # Chunk -> Dict
             chunk_data = chunk.model_dump() if hasattr(chunk, "model_dump") else chunk
             content = chunk_data.get("content", "")
             meta = chunk_data.get("metadata", {})
 
-            # 1. Base Info
             source_path = meta.get("source", "unknown")
             chunk_idx = meta.get("chunk_index", 0)
-
-            # 2. Node ID Generation (Deterministic)
-            # sayou:code:<path>:<chunk_index>
             safe_path = source_path.replace("/", "_").replace(".", "_")
             node_id = f"sayou:code:{safe_path}:{chunk_idx}"
 
-            # 3. Class & Attribute Mapping
+            # 3. Class Mapping (Logic using Ontology)
             sem_type = meta.get("semantic_type", "code_block")
 
             if sem_type == "class_header":
-                node_class = "sayou:Class"  # SayouClass.CLASS
-                friendly_name = f"CLASS [{meta.get('class_name')}]"
+                node_class = SayouClass.CLASS
+                friendly_name = meta.get("class_name")
             elif sem_type == "method":
-                node_class = "sayou:Method"
-                friendly_name = f"METHOD [{meta.get('function_name')}]"
-            elif sem_type == "function":  # Top-level Function
-                node_class = "sayou:Function"
-                friendly_name = f"FUNC [{meta.get('function_name')}]"
+                node_class = SayouClass.METHOD
+                friendly_name = meta.get("function_name")
+            elif sem_type == "function":
+                node_class = SayouClass.FUNCTION
+                friendly_name = meta.get("function_name")
             elif sem_type == "class_attributes":
-                node_class = "sayou:AttributeBlock"
-                friendly_name = f"ATTRS [{meta.get('parent_node')}]"
+                node_class = SayouClass.ATTRIBUTE_BLOCK
+                friendly_name = "Attributes"
             else:
-                node_class = "sayou:CodeBlock"
-                friendly_name = f"CODE [{chunk_idx}]"
+                node_class = SayouClass.CODE_BLOCK
+                friendly_name = f"CodeBlock:{chunk_idx}"
 
             attributes = {
                 SayouAttribute.TEXT: content,
-                "sayou:semanticType": sem_type,
-                "sayou:filePath": source_path,
-                "sayou:lineStart": meta.get("start_line"),
+                SayouAttribute.SEMANTIC_TYPE: sem_type,
+                SayouAttribute.FILE_PATH: source_path,
+                SayouAttribute.LINE_START: meta.get("start_line"),
             }
+
             for k, v in meta.items():
                 if k not in ["source", "chunk_index", "semantic_type"]:
                     attributes[f"meta:{k}"] = v
 
-            # 4. Relationships (Parent Linking)
+            # 4. Relationships
             relationships = {}
 
-            # 4-1. File Relationship
+            # File Node Linking
             file_node_id = f"sayou:file:{safe_path}"
-            relationships["sayou:definedIn"] = [file_node_id]
+            relationships[SayouPredicate.DEFINED_IN] = [file_node_id]
 
             if file_node_id not in file_nodes_map:
                 file_nodes_map[file_node_id] = SayouNode(
                     node_id=file_node_id,
-                    node_class="sayou:File",
-                    friendly_name=f"FILE [{source_path}]",
-                    attributes={"sayou:filePath": source_path},
+                    node_class=SayouClass.FILE,
+                    friendly_name=os.path.basename(source_path),
+                    attributes={SayouAttribute.FILE_PATH: source_path},
                 )
 
-            # 4-2. Logical Parent (Method -> Class)
-            if "parent_node" in meta:
-                attributes["_hint_parent_class"] = meta["parent_node"]
-
-            # 5. Create Node
             node = SayouNode(
                 node_id=node_id,
                 node_class=node_class,
@@ -116,5 +105,4 @@ class CodeChunkAdapter(BaseAdapter):
             nodes.append(node)
 
         all_nodes = list(file_nodes_map.values()) + nodes
-
         return SayouOutput(nodes=all_nodes, metadata={"source": "sayou-code-adapter"})
