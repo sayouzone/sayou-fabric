@@ -1,33 +1,43 @@
 # Contributing to Sayou Fabric
 
-Thank you for your interest in contributing to Sayou Fabric! We welcome contributions from everyone.
+Thank you for your interest in contributing to Sayou Fabric! We use a **Monorepo** structure, meaning multiple libraries (`sayou-core`, `sayou-brain`, etc.) coexist in this single repository.
 
-## How to Contribute
+## 🚀 Quick Start (Development Setup)
 
-### 1. Reporting Bugs
-- Ensure the bug was not already reported by searching on GitHub under [Issues](https://github.com/sayouzone/sayou-fabric/issues).
-- If you're unable to find an open issue addressing the problem, open a new one. Be sure to include a **title and clear description**, as well as as much relevant information as possible.
+Since this is a monorepo, you need to install the packages in **editable mode** to test your changes immediately.
 
-### 2. Pull Requests
-Sayou Fabric is structured as a **Monorepo**.
-- **Core Logic:** Modify `sayou-core` or `sayou-brain`.
-- **New Plugin:** Add a new directory in `sayou-connector` or `sayou-loader`.
+### 1. Fork & Clone
 
-1. Fork the repo and create your branch from `main`.
-2. If you've added code that should be tested, add tests.
-3. Ensure the test suite passes.
-4. Issue that pull request!
+    git clone https://github.com/YOUR_USERNAME/sayou-fabric.git
+    cd sayou-fabric
 
-## Development Setup
+### 2. Install in Editable Mode
+We recommend installing `sayou-brain` (which pulls in most dependencies) or the specific library you are working on.
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
+    # Install core dependencies in editable mode
+    pip install -e ./sayou-core
+    pip install -e ./sayou-brain
+   
+    # If working on a specific plugin (e.g., connector)
+    pip install -e ./sayou-connector
 
-# Run tests
-pytest
-```
+### 3. Run Tests
+You can run tests for the entire project or a specific module.
 
-## Style Guide
+    # Run all tests
+    pytest
+
+    # Run tests for a specific module (Recommended)
+    pytest tests/connector
+
+## 📝 Pull Requests Protocol
+
+1. **Focus**: Keep PRs focused on a single library if possible (e.g., "Add Notion Fetcher to sayou-connector").
+2. **Naming**: Start commit messages with the component name.
+    * Good: `[connector] Add Notion support`
+    * Good: `[core] Fix retry decorator`
+3. **Tests**: Ensure you added a unit test in `tests/{library_name}/`.
+
+## 🎨 Style Guide
 - We follow **PEP 8**.
-- Please use **Black** formatter before committing.
+- Please run **Black** and **Isort** before committing.
