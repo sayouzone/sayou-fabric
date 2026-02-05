@@ -4,83 +4,145 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/library-guides/chunking/)
 
+**The Structure-Aware Splitter for Sayou Fabric.**
 
-**The Intelligent Text Splitter for Sayou Fabric.**
+`sayou-chunking` splits large texts into smaller, semantically meaningful units called **Chunks**. Unlike traditional splitters that blindly cut text by character count, this library understands the **syntax structure** of the data.
 
-`sayou-chunking` splits large texts into smaller, semantically meaningful units called **Chunks**. This is a critical step for RAG (Retrieval-Augmented Generation) systems, as it directly impacts retrieval accuracy.
+It focuses on preserving the integrity of code blocks, tables, and JSON objects, ensuring that Retrieval (RAG) systems fetch complete and executable contexts.
 
-It goes beyond simple character splitting by offering structure-aware, semantic, and hierarchical chunking strategies.
+---
 
-## 💡 Core Philosophy
+## 1. Architecture & Role
 
-**"Context is King."**
+The Chunking engine takes raw text (from Refinery) and applies a **Syntax-Aware Strategy** to produce atomic chunks.
 
-Blindly cutting text at 500 characters breaks sentences and loses meaning. `sayou-chunking` aims to preserve context by:
+```mermaid
+graph LR
+    Text[Refined Text] --> Pipeline[Chunking Pipeline]
+    
+    subgraph Strategies
+        MD[Markdown Header]
+        Code[Code AST]
+        JSON[JSON Object]
+    end
+    
+    Pipeline -->|Config Routing| Strategies
+    Strategies --> Chunks[Atomic Chunks]
+```
 
-1.  **Structure Awareness:** Respects document headers, tables, and code blocks (especially in Markdown).
-2.  **Semantic Coherence:** Groups sentences that belong to the same topic using similarity metrics.
-3.  **Hierarchy:** Maintains Parent-Child relationships to retrieve small precise chunks while providing large context to the LLM.
+### 1.1. Core Features
+* **Syntax Awareness**: Never splits in the middle of a code block or a markdown table.
+* **Hierarchy Preservation**: Attaches metadata about the parent section (e.g., Header Path, Class Name) to every chunk.
+* **Atomic Integrity**: Ensures that a JSON object or a Python function remains a single unit.
 
-## 📦 Installation
+---
+
+## 2. Available Strategies
+
+`sayou-chunking` prioritizes deterministic structural splitting over probabilistic methods.
+
+| Strategy Key | Target Format | Description |
+| :--- | :--- | :--- |
+| **`markdown`** | Markdown, Text | Splits by Headers (`#`, `##`). Preserves Tables and Code Blocks as atomic units. |
+| **`code`** | Python, JS, Java | Uses AST (Abstract Syntax Tree) to split by Class and Function definitions. |
+| **`json`** | JSON, JSONL | Splits large JSON arrays into individual records or sub-trees. |
+
+---
+
+## 3. Installation
 
 ```bash
 pip install sayou-chunking
 ```
 
-## ⚡ Quick Start
+---
 
-The `ChunkingPipeline` provides a unified interface for various splitting strategies.
+## 4. Usage
+
+The `ChunkingPipeline` is the entry point. It accepts a `ChunkingRequest` containing content and metadata.
+
+### Case A: Markdown Splitting (RAG Standard)
+
+Ideal for documentation. It splits by headers while keeping sections together.
 
 ```python
-from sayou.chunking.pipeline import ChunkingPipeline
+from sayou.chunking import ChunkingPipeline
 
-def run_demo():
-    # 1. Initialize Pipeline
-    pipeline = ChunkingPipeline()
-    pipeline.initialize()
+text_content = """
+# Section 1
+Introduction text...
 
-    # 2. Prepare Input (e.g., from Refinery)
-    text_content = """
-    # Section 1: Introduction
-    Chunking is the process of breaking text down.
-    
-    ## Benefits
-    - Better Retrieval
-    - Context Preservation
-    """
-    
-    request = {
-        "content": text_content,
-        "metadata": {"source": "doc.md"},
-        "config": {"chunk_size": 50}
-    }
+## Subsection 1.1
+- Item A
+- Item B
+"""
 
-    # 3. Run with Strategy ('markdown', 'recursive', 'semantic', etc.)
-    chunks = pipeline.run(request, strategy="markdown")
+chunks = ChunkingPipeline.process(
+    data={"content": text_content, "metadata": {"source": "doc.md"}},
+    strategy="markdown"
+)
 
-    # 4. Result
-    for i, chunk in enumerate(chunks):
-        print(f"[{i}] Type: {chunk.metadata.get('semantic_type')}")
-        print(f"    Content: {chunk.content}")
-
-if __name__ == "__main__":
-    run_demo()
+# 4. Result
+for chunk in chunks:
+    print(f"[{chunk.metadata['type']}] {chunk.content[:20]}...")
+    # Output: [heading] # Section 1...
+    # Output: [text] Introduction text...
 ```
 
-## 🔑 Key Components
+### Case B: Code Splitting (Python AST)
 
-### Splitter
-* **`RecursiveSplitter`**: The standard strategy. Splits by paragraph -> line -> sentence -> word to keep related text together.
-* **`MarkdownSplitter`**: Aware of Markdown syntax. Splits by headers (#) first, protecting tables and code blocks.
-* **`FixedLengthSplitter`**: Hard split by character count. Useful when strict token limits are required.
-* **`StructureSplitter`**: Splits based on user-defined regex patterns (e.g., "Article \d+").
-* **`SemanticSplitter`**: Uses cosine similarity between sentences to find topic breakpoints.
-* **`ParentDocumentSplitter`**: Creates large "Parent" chunks for context and small "Child" chunks for retrieval, linking them together.
+Ideal for code analysis. It splits by logical units (Functions/Classes).
 
-## 🤝 Contributing
+```python
+from sayou.chunking import ChunkingPipeline
 
-We welcome contributions for New Strategies (e.g., `CodeSplitter` for Python/JS) or Integrations with other embedding models for Semantic Splitting.
+code_content = """
+class MyClass:
+    def method_a(self):
+        print("hello")
 
-## 📜 License
+def global_func():
+    pass
+"""
 
-Apache 2.0 License © 2025 Sayouzone
+chunks = ChunkingPipeline.process(
+    data={"content": code_content, "metadata": {"language": "python"}},
+    strategy="code"
+)
+
+# Result: 2 Chunks (1 Class block, 1 Function block)
+print(f"Generated {len(chunks)} logic blocks.")
+```
+
+### Case C: JSON Splitting
+
+Ideal for processing large data logs or API responses.
+
+```python
+from sayou.chunking import ChunkingPipeline
+
+json_content = '[{"id": 1, "val": "A"}, {"id": 2, "val": "B"}]'
+
+chunks = ChunkingPipeline.process(
+    data={"content": json_content, "metadata": {}},
+    strategy="json"
+)
+
+# Result: 2 Chunks (Each object is a separate chunk)
+```
+
+---
+
+## 5. Configuration Keys
+
+Customize the behavior of each splitter via the `config` dictionary.
+
+* **`markdown`**: `header_depth` (1-6), `strip_headers` (bool).
+* **`code`**: `language` (python), `chunk_lines` (min/max lines).
+* **`json`**: `jq_query` (filter pattern), `max_size`.
+
+---
+
+## 6. License
+
+Apache 2.0 License © 2026 **Sayouzone**

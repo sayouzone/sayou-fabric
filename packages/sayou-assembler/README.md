@@ -6,71 +6,135 @@
 
 **The Knowledge Builder for Sayou Fabric.**
 
-`sayou-assembler` is the construction site of the data pipeline. It takes the standardized `SayouNode` objects produced by the Wrapper and assembles them into target-specific formats ready for loading into databases.
+`sayou-assembler` acts as the structural engineer of the pipeline. It accepts flat lists of `SayouNode` objects produced by the Wrapper and constructs meaningful relationships (Edges), embeddings, or specific query payloads.
 
-It bridges the gap between the abstract data model and concrete storage technologies (Graph DBs, Vector DBs).
+While the Wrapper focuses on *what* the data is (Schema), the Assembler focuses on *how* the data connects (Topology).
 
-## 💡 Core Philosophy
+---
 
-**"Build Once, Deploy Anywhere."**
+## 1. Architecture & Role
 
-The Assembler decouples the *structure* of knowledge from the *syntax* of the database.
-* **Graph Builder:** Constructs a topology of Nodes and Edges (including automatic reverse linking).
-* **Vector Builder:** Transforms nodes into embeddings and metadata payloads.
-* **Query Builder:** Generates specific query languages like Cypher or SQL.
+The Assembler takes standardized Nodes and applies a **Building Strategy** to generate a connected graph structure or vector payloads ready for loading.
 
-## 📦 Installation
+```mermaid
+graph LR
+    Nodes[Flat SayouNodes] --> Pipeline[Assembler Pipeline]
+    
+    subgraph Builders
+        Graph[General Graph]
+        Code[Python AST]
+        Time[Timeline]
+        Vector[Embeddings]
+        Cypher[Cypher Query]
+    end
+    
+    Pipeline -->|Config Routing| Builders
+    Builders --> Payload[Connected Payload]
+```
+
+### 1.1. Core Features
+* **Topology Construction**: Automatically links nodes (e.g., Parent-Child, Function-Class) based on metadata.
+* **Domain Specificity**: Dedicated builders for Python code analysis and Video timelines.
+* **Bi-directional Linking**: Automatically generates reverse edges (e.g., `contains` <-> `belongsTo`) to ensure graph traversability.
+
+---
+
+## 2. Available Strategies
+
+`sayou-assembler` provides specialized builders for different data domains.
+
+| Strategy Key | Builder Class | Description |
+| :--- | :--- | :--- |
+| **`graph`** | `GraphBuilder` | **[Default]** Generic builder. Links nodes based on `parent_id` and generic relationships. |
+| **`code`** | `CodeGraphBuilder` | **[Code]** Parses Python AST metadata to link Imports, Classes, and Methods. |
+| **`timeline`** | `TimelineBuilder` | **[Media]** Sequences video segments or logs chronologically (`NEXT`, `PREV`). |
+| **`vector`** | `VectorBuilder` | **[Search]** Converts node content into vector embeddings. |
+| **`cypher`** | `CypherBuilder` | **[DB]** Generates Neo4j `MERGE` statements for idempotent inserts. |
+
+---
+
+## 3. Installation
 
 ```bash
 pip install sayou-assembler
 ```
 
-## ⚡ Quick Start
+---
 
-The `AssemblerPipeline` converts standardized data into database payloads.
+## 4. Usage
+
+The `AssemblerPipeline` is the entry point. It transforms `SayouOutput` (from Wrapper) into a dictionary containing `nodes` and `edges`.
+
+### Case A: General Graph Construction
+
+The default strategy for general documents (PDF, Markdown).
 
 ```python
-from sayou.assembler.pipeline import AssemblerPipeline
+from sayou.assembler import AssemblerPipeline
 
-def run_demo():
-    # 1. Initialize (Inject embedding function for Vector Builder)
-    pipeline = AssemblerPipeline()
-    pipeline.initialize(embedding_fn=my_embedding_func)
+wrapper_output = {
+    "nodes": [
+        {"node_id": "doc:1", "node_class": "sayou:Document", "attributes": {...}},
+        {"node_id": "doc:1:header", "attributes": {"meta:parent_id": "doc:1"}, ...}
+    ]
+}
 
-    # 2. Input Data (from sayou-wrapper)
-    wrapper_output = {
-        "nodes": [
-            {"node_id": "doc_1", "node_class": "sayou:Document", "attributes": {"text": "..."}},
-            # ...
-        ]
-    }
+graph_data = AssemblerPipeline.process(data=wrapper_output)
 
-    # 3. Build for Graph DB (Nodes + Edges)
-    graph_data = pipeline.run(wrapper_output, strategy="graph")
-    print(f"Edges created: {len(graph_data['edges'])}")
-    
-    # 4. Build for Vector DB (Embeddings)
-    vector_data = pipeline.run(wrapper_output, strategy="vector")
-    print(f"Vectors created: {len(vector_data)}")
-
-if __name__ == "__main__":
-    def my_embedding_func(text): return [0.1, 0.2, 0.3] # Dummy
-    run_demo()
+print(f"Nodes: {len(graph_data['nodes'])}, Edges: {len(graph_data['edges'])}")
 ```
 
-## 🔑 Key Components
+### Case B: Python Code Graph
 
-### Builders
-* **`GraphBuilder`**: Converts nodes into a generic graph structure (Dictionary). Automatically creates reverse edges (e.g., `hasChild` from `hasParent`) to ensure bi-directional traversability.
-* **`VectorBuilder`**: Extracts text from nodes, computes embeddings, and formats payloads for Vector DBs.
+Links functions to classes and resolves import dependencies.
 
-### Plugins
-* **`CypherBuilder`**: Generates Neo4j `MERGE` queries to insert nodes and relationships idempotently.
+```python
+from sayou.assembler import AssemblerPipeline
 
-## 🤝 Contributing
+wrapper_output = {
+    "nodes": [
+        {"node_id": "doc:1", "node_class": "sayou:Document", "attributes": {...}},
+        {"node_id": "doc:1:header", "attributes": {"meta:parent_id": "doc:1"}, ...}
+    ]
+}
 
-We welcome builders for other targets (e.g., `SqlBuilder`, `GremlinBuilder`).
+code_graph = AssemblerPipeline.process(data=wrapper_output)
 
-## 📜 License
+print(f"Dependency Edges: {len(code_graph['edges'])}")
+```
 
-Apache 2.0 License © 2025 Sayouzone
+### Case C: Multimedia Timeline
+
+Sequences video segments by time.
+
+```python
+from sayou.assembler import AssemblerPipeline
+
+wrapper_output = {
+    "nodes": [
+        {"node_id": "doc:1", "node_class": "sayou:Document", "attributes": {...}},
+        {"node_id": "doc:1:header", "attributes": {"meta:parent_id": "doc:1"}, ...}
+    ]
+}
+
+timeline_graph = AssemblerPipeline.process(data=wrapper_output)
+print(f"Timeline Sequence Created.")
+```
+
+---
+
+## 5. Configuration Keys
+
+You can customize the building process via the `config` dictionary.
+
+* **`graph`**: `create_reverse_edges` (bool), `default_edge_label`.
+* **`python`**: `resolve_imports` (bool), `include_external_libs` (bool).
+* **`timeline`**: `interval_threshold` (float).
+* **`vector`**: `embedding_model` (e.g., openai, huggingface), `batch_size`.
+* **`cypher`**: `merge_mode` (bool), `batch_size`.
+
+---
+
+## 6. License
+
+Apache 2.0 License © 2026 **Sayouzone**

@@ -6,86 +6,135 @@
 
 **The Universal Data Cleaning & Normalization Engine for Sayou Fabric.**
 
-`sayou-refinery` acts as the "Cleaning Plant" in your data pipeline.
+`sayou-refinery` acts as the "Cleaning Plant" in your data pipeline. It transforms heterogeneous raw data (JSON Documents, HTML, DB Records) into a standardized stream of **SayouBlocks**.
 
-It transforms heterogeneous raw data (JSON Documents, HTML, DB Records) into a standardized stream of **SayouBlocks**, ensuring that downstream components (like Chunkers or LLMs) receive clean, uniform data regardless of the original source format.
+It ensures that downstream components (like Chunkers or LLMs) receive clean, uniform data regardless of whether the source was a messy web scrape or a structured database row.
 
-## 💡 Core Philosophy
+---
 
-**"Flatten Structure, Polish Content."**
+## 1. Architecture & Role
 
-Refinery operates in two distinct stages to guarantee data quality:
+Refinery operates in two distinct stages to guarantee data quality: **Normalization** (Shape Shifting) and **Processing** (Hygiene).
 
-1.  **Normalization (Shape Shifting):** Converts complex structures (nested JSON, HTML trees, DB Rows) into a linear list of `SayouBlocks`.
-2.  **Processing (Cleaning):** Applies a chain of cleaning agents (Regex, Masking, Deduplication) to improve data hygiene.
+```mermaid
+graph LR
+    Raw[Raw Input] --> Pipeline[Refinery Pipeline]
+    
+    subgraph Stage1 [Normalization]
+        Doc[Doc Normalizer]
+        Html[Html Normalizer]
+        Json[Json Normalizer]
+    end
+    
+    subgraph Stage2 [Processing Chain]
+        Space[Whitespace]
+        PII[PII Masker]
+        Link[Link Extractor]
+    end
+    
+    Pipeline --> Stage1
+    Stage1 --> Stage2
+    Stage2 --> Blocks[Clean SayouBlocks]
+```
 
-## 📦 Installation
+### 1.1. Core Features
+* **Normalization**: Flattens complex structures (Nested JSON, HTML Trees) into a linear list of blocks.
+* **Hygiene**: Removes invisible characters, normalizes Unicode, and fixes broken encoding.
+* **Safety**: Automatically masks sensitive information (PII) like emails or phone numbers before they reach the LLM.
+
+---
+
+## 2. Available Strategies
+
+`sayou-refinery` provides strategies tailored to specific input formats.
+
+| Strategy Key | Target Format | Description |
+| :--- | :--- | :--- |
+| **`standard_doc`** | Sayou Document | **[Default]** Converts parsed document dictionaries into Markdown blocks. Applies standard text cleaning. |
+| **`html`** | Web Pages | Strips HTML tags, extracts links, and converts the DOM tree into readable text blocks. |
+| **`json`** | API/DB Records | Flattens JSON objects into key-value pairs or text representations. |
+
+---
+
+## 3. Installation
 
 ```bash
 pip install sayou-refinery
 ```
 
-## ⚡ Quick Start
+---
+
+## 4. Usage
 
 The `RefineryPipeline` orchestrates the normalization and processing chain.
 
+### Case A: Document Cleaning (Standard)
+
+Cleans messy OCR output or parsed document text.
+
 ```python
-from sayou.refinery.pipeline import RefineryPipeline
+from sayou.refinery import RefineryPipeline
 
-def run_demo():
-    # 1. Initialize with specific cleaning rules
-    pipeline = RefineryPipeline()
-    pipeline.initialize(
-        mask_email=True,
-        outlier_rules={"price": {"min": 0, "max": 1000, "action": "clamp"}}
-    )
+raw_doc = {
+    "metadata": {"title": "Test Doc"},
+    "pages": [{
+        "elements": [
+            {"type": "text", "text": "Contact:   admin@sayou.ai  "},
+            {"type": "text", "text": "Generic    Whitespace   Error"}
+        ]
+    }]
+}
 
-    # 2. Raw Data (e.g., from sayou-document)
-    raw_doc = {
-        "metadata": {"title": "Test Doc"},
-        "pages": [{
-            "elements": [
-                {"type": "text", "text": "Contact: admin@sayou.ai"},
-                {"type": "text", "text": "   Dirty   Whitespace   "}
-            ]
-        }]
-    }
+blocks = RefineryPipeline.process(
+    data=raw_doc,
+    strategy="standard_doc"
+)
 
-    # 3. Run Pipeline
-    # strategy: 'standard_doc', 'html', 'json', etc.
-    blocks = pipeline.run(raw_doc, strategy="standard_doc")
-
-    # 4. Result
-    for block in blocks:
-        print(f"[{block.type}] {block.content}")
-        
-        # Output:
-        # [md_meta] --- title: Test Doc ...
-        # [md] Contact: [EMAIL]
-        # [md] Dirty Whitespace
-
-if __name__ == "__main__":
-    run_demo()
+for block in blocks:
+    print(f"[{block.type}] {block.content}")
+    # Output: [text] Contact: [EMAIL]
+    # Output: [text] Generic Whitespace Error
 ```
 
-## 🔑 Key Components
+### Case B: HTML Processing
 
-### Normalizers
-* **`DocMarkdownNormalizer`**: Converts Sayou Document Dicts into Markdown blocks.
-* **`HtmlTextNormalizer`**: Strips HTML tags and scripts, extracting clean text.
-* **`RecordNormalizer`**: Converts DB rows or JSON objects into 'record' blocks.
+Converts web content into clean text while preserving hyperlinks.
 
-### Processors
-* **`TextCleaner`**: Normalizes whitespace and removes noise via regex.
-* **`PiiMasker`**: Masks sensitive info like emails and phone numbers.
-* **`Deduplicator`**: Removes duplicate content blocks.
-* **`Imputer`**: Fills missing values in record blocks.
-* **`OutlierHandler`**: Filters or clamps numerical outliers in records.
+```python
+from sayou.refinery import RefineryPipeline
 
-## 🤝 Contributing
+raw_html = """
+<html>
+    <body>
+        <h1>Welcome</h1>
+        <p>Click <a href='https://sayou.ai'>here</a>.</p>
+    </body>
+</html>
+"""
 
-We welcome contributions for new Normalizers (e.g., `CsvNormalizer`, `LogNormalizer`) or Processors (e.g., `LangChainFilter`).
+blocks = RefineryPipeline.process(
+    data=raw_html,
+    strategy="html"
+)
 
-## 📜 License
+# Result:
+# [heading] Welcome
+# [text] Click here (Link: https://sayou.ai)
+```
 
-Apache 2.0 License © 2025 Sayouzone
+---
+
+## 5. Configuration Keys
+
+Customize the cleaning processors via the `config` dictionary.
+
+* **`mask_pii`**: (bool) Mask emails, phone numbers, and IP addresses.
+* **`normalize_whitespace`**: (bool) Collapse multiple spaces and trim lines.
+* **`extract_links`**: (bool) Extract `<a>` tags or markdown links into metadata.
+* **`remove_stopwords`**: (bool) Filter out common stopwords (optional).
+
+---
+
+## 6. License
+
+Apache 2.0 License © 2026 **Sayouzone**

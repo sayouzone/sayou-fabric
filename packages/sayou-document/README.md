@@ -8,28 +8,50 @@
 
 `sayou-document` is a high-fidelity parsing engine that converts diverse document formats (PDF, DOCX, PPTX, XLSX, Images) into a unified, structured **Document Object Model (DOM)**.
 
-Unlike simple text extractors, it preserves the semantic structure of documents—headers, tables, charts, and layout coordinates—making it ideal for RAG (Retrieval-Augmented Generation) and Layout-aware LLM applications.
+Unlike simple text extractors, it preserves the semantic structure of documents—headers, tables, charts, and layout coordinates—making it ideal for RAG applications that require layout awareness.
 
-## 💡 Core Philosophy
+---
 
-**"One Interface, High Fidelity."**
+## 1. Architecture & Role
 
-We abstract away the complexity of proprietary file formats. Whether it's a slide deck or a spreadsheet, `sayou-document` normalizes it into a consistent `Document` > `Page` > `Element` hierarchy.
-
-1.  **Smart Routing:** Automatically detects file types (and converts images to PDF if needed) to select the optimal parser.
-2.  **Hybrid Extraction:** Combines native text extraction with OCR fallback for scanned pages or images.
-3.  **Strict Schema:** Outputs data strictly adhering to Pydantic models, ready for the next pipeline stage (Refinery).
+The Document engine acts as a normalizer. It accepts raw file bytes and applies the optimal **Parser Strategy** to output a structured `SayouDocument`.
 
 ```mermaid
-flowchart LR
+graph LR
     File[Raw File] --> Pipeline[Document Pipeline]
-    Pipeline -->|PDF/Image| OCR[PDF Parser + OCR]
-    Pipeline -->|Office| Office[DOCX/PPTX/XLSX Parser]
-    OCR --> DOM[Structured Document Model]
-    Office --> DOM
+    
+    subgraph Parsers
+        PDF[PDF Parser + OCR]
+        Office[Office Parser]
+        Img[Image Converter]
+    end
+    
+    Pipeline -->|Type Detection| Parsers
+    Parsers --> DOM[Structured DOM]
 ```
 
-## 📦 Installation
+### 1.1. Core Features
+* **Smart Routing**: Automatically detects file types (signatures) and selects the best parser.
+* **Hybrid Extraction**: Combines native text extraction for digital PDFs with OCR fallback for scanned images.
+* **Strict Schema**: Outputs a standardized hierarchy (`Document` > `Page` > `Element`) regardless of input format.
+
+---
+
+## 2. Supported Formats
+
+`sayou-document` supports the following file types out-of-the-box.
+
+| Format | Strategy Key | Description |
+| :--- | :--- | :--- |
+| **PDF** | `pdf` | Extracts text, images, and TOC using `PyMuPDF`. Supports OCR. |
+| **Word** | `docx` | Parses DOCX files, preserving heading levels and lists. |
+| **PowerPoint** | `pptx` | Extracts text frames, speaker notes, and tables from slides. |
+| **Excel** | `xlsx` | Converts sheets into table elements and extracts embedded charts. |
+| **Image** | `image` | Auto-converts JPG/PNG/TIFF to PDF, then applies OCR. |
+
+---
+
+## 3. Installation
 
 ```bash
 pip install sayou-document
@@ -38,60 +60,88 @@ pip install sayou-document
 pip install "sayou-document[ocr]"
 ```
 
-## ⚡ Quick Start
+---
 
-The `DocumentPipeline` handles file detection, conversion, and parsing automatically.
+## 4. Usage
+
+The `DocumentPipeline` orchestrates file detection and parsing. It standardizes the input via the `process` method.
+
+### Case A: PDF Parsing (Standard)
+
+Processes a PDF file to extract structured text and layout info.
 
 ```python
 import os
-from sayou.document.pipeline import DocumentPipeline
+from sayou.document import DocumentPipeline
 
-def run_demo():
-    # 1. Initialize Pipeline (with optional OCR)
-    pipeline = DocumentPipeline(use_default_ocr=True)
-    pipeline.initialize()
+file_path = "quarterly_report.pdf"
+with open(file_path, "rb") as f:
+    file_bytes = f.read()
 
-    # 2. Parse a file (PDF, Word, Excel, PPT, or Image)
-    file_path = "quarterly_report.pdf"
-    # file_path = "scan_image.png"  # Images are auto-converted to PDF & OCR'd
-    
-    with open(file_path, "rb") as f:
-        file_bytes = f.read()
-        
-    doc = pipeline.run(file_bytes, os.path.basename(file_path))
-    
-    if doc:
-        print(f"File: {doc.file_name} ({doc.doc_type})")
-        print(f"Pages: {doc.page_count}")
-        
-        # 3. Access Structured Data
-        first_page = doc.pages[0]
-        if first_page.elements:
-            print(f"Content Preview: {first_page.elements[0].text[:100]}...")
-        
-        # Export to JSON
-        print(doc.model_dump_json(indent=2))
+doc = DocumentPipeline.process(
+    data=file_bytes,
+    metadata={"filename": os.path.basename(file_path)}
+)
 
-if __name__ == "__main__":
-    run_demo()
+# 4. Result
+print(f"File: {doc.file_name}, Pages: {doc.page_count}")
+print(f"First Element: {doc.pages[0].elements[0].text}")
 ```
 
-## 🔑 Key Components
+### Case B: Office Documents (Word/Excel)
 
-### Parsers
-* **`PdfParser`**: Extracts text, images, and TOC from PDFs using `PyMuPDF`. Supports full-page OCR for scanned documents.
-* **`DocxParser`**: Parses Word documents, preserving heading levels and table structures.
-* **`PptxParser`**: Extracts text frames, notes, and tables from slides.
-* **`ExcelParser`**: Converts sheets into table elements and extracts embedded images.
+Parses Office formats while preserving table structures.
 
-### Converters & OCR
-* **`ImageToPdfConverter`**: Automatically converts JPG/PNG images to PDF to leverage the robust PDF parsing pipeline.
-* **`TesseractOCR`**: (Optional) Provides OCR capabilities for handling scanned content and embedded images.
+```python
+from sayou.document import DocumentPipeline
 
-## 🤝 Contributing
+with open("salary_table.xlsx", "rb") as f:
+    file_bytes = f.read()
 
-We welcome contributions for new Parsers (e.g., `HwpParser` for Korean documents, `HtmlParser`) or Enhanced OCR integrations (e.g., Google Vision API).
+doc = DocumentPipeline.process(
+    data=file_bytes,
+    metadata={"filename": "salary_table.xlsx"}
+)
 
-## 📜 License
+# Access tables
+tables = [e for p in doc.pages for e in p.elements if e.category == "table"]
+print(f"Extracted {len(tables)} tables.")
+```
 
-Apache 2.0 License © 2025 Sayouzone
+### Case C: Image with OCR
+
+Automatically handles image conversion and OCR processing.
+
+```python
+from sayou.document import DocumentPipeline
+
+# Initialize with OCR enabled
+pipeline = DocumentPipeline(config={"use_ocr": True, "ocr_lang": "eng"})
+
+with open("scanned_receipt.png", "rb") as f:
+    file_bytes = f.read()
+
+doc = pipeline.process(
+    data=file_bytes,
+    metadata={"filename": "scanned_receipt.png"}
+)
+
+print(f"OCR Result: {doc.pages[0].elements[0].text}")
+```
+
+---
+
+## 5. Configuration Keys
+
+Customize the parsing behavior via the `config` dictionary.
+
+* **`use_ocr`**: (bool) Enable OCR for scanned pages or images.
+* **`ocr_lang`**: (str) Tesseract language code (default: `eng+kor`).
+* **`extract_images`**: (bool) Whether to extract embedded images to disk.
+* **`table_strategy`**: (str) `fast` (text-based) or `accurate` (vision-based).
+
+---
+
+## 6. License
+
+Apache 2.0 License © 2026 **Sayouzone**

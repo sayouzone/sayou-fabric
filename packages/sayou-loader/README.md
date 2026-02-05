@@ -6,86 +6,140 @@
 
 **The Universal Data Transport Engine for Sayou Fabric.**
 
-`sayou-loader` is the final mile delivery system.
+`sayou-loader` is the final mile delivery system. It abstracts the complexity of writing to external systems, providing a **Unified Interface** to save your Knowledge Graph, Embeddings, or Structured Records.
 
-It takes the assembled payloads (Graph structures, Vector lists, SQL queries) produced by `sayou-assembler` and reliably transports them to their final destination—whether it's a local file system, a data warehouse, or a vector database.
+Whether you are saving to a local file for debugging or pushing millions of vectors to a production database, the interface remains consistent: just call `process()`.
 
-## 💡 Core Philosophy
+---
 
-**"Safe Delivery, Guaranteed."**
+## 1. Architecture & Role
 
-Writing to external systems is the most fragile part of any pipeline due to network issues or database locks. `sayou-loader` ensures stability through:
-
-1.  **Unified Interface:** A single `.write()` method covers Files, SQL, NoSQL, and Vector DBs.
-2.  **Resilience:** Built-in `@retry` logic with exponential backoff for network operations.
-3.  **Flexibility:** Supports various formats (JSON, JSONL, Pickle) and destinations out-of-the-box.
+The Loader takes the **Assembled Payload** (Nodes, Edges, Documents) and reliably transports it to the target destination based on the selected strategy.
 
 ```mermaid
-flowchart LR
+graph LR
     Payload[Assembled Payload] --> Pipeline[Loader Pipeline]
-    Pipeline -->|Strategy: file| File[Local File System]
-    Pipeline -->|Strategy: neo4j| GraphDB[(Graph DB)]
-    Pipeline -->|Strategy: vector| VectorDB[(Vector DB)]
-    Pipeline -->|Strategy: console| Stdout[Console/Log]
+    
+    subgraph Strategies
+        File[File System]
+        RDB[PostgreSQL]
+        NoSQL[MongoDB]
+        Graph[Neo4j]
+        Search[Elasticsearch]
+        Vector[ChromaDB]
+    end
+    
+    Pipeline -->|Config Routing| Strategies
 ```
 
-## 📦 Installation
+### 1.1. Core Features
+* **Unified Write API**: Switch from `JSON` to `PostgreSQL` by changing just one config string.
+* **Resilience**: Built-in retry logic with exponential backoff for database connections.
+* **Batching**: Automatically handles bulk inserts for high-throughput performance.
+
+---
+
+## 2. Available Strategies
+
+`sayou-loader` supports the following storage backends out-of-the-box.
+
+| Category | Strategy Key | Description |
+| :--- | :--- | :--- |
+| **File System** | `file` | Saves as JSON, JSONL, or Pickle. Ideal for local debugging. |
+| **Graph DB** | `neo4j` | Pushes Nodes and Edges via Cypher queries. |
+| **RDB** | `postgres` | Maps structured attributes to Relational Tables. |
+| **NoSQL** | `mongo` | Stores raw documents and metadata collections. |
+| **Vector DB** | `chroma` | Upserts embeddings for semantic search. |
+| **Search Engine** | `elasticsearch` | Indexes text fields for keyword search (BM25). |
+
+---
+
+## 3. Installation
 
 ```bash
 pip install sayou-loader
 ```
 
-## ⚡ Quick Start
+## 4. Usage
 
-The `LoaderPipeline` routes data to the appropriate writer.
+The `LoaderPipeline` is the entry point. You must provide a **Strategy** and the corresponding **Configuration** (credentials).
+
+### Case A: Local File (Simple)
+
+Useful for checking the output of the Assembler during development.
 
 ```python
-from sayou.loader.pipeline import LoaderPipeline
+from sayou.loader import LoaderPipeline
 
-def run_demo():
-    # 1. Initialize
-    pipeline = LoaderPipeline()
-    pipeline.initialize()
+payload = {
+    "nodes": [{"id": "1", "label": "Topic"}],
+    "edges": [{"source": "1", "target": "2", "type": "LINK"}]
+}
 
-    # 2. Prepare Data (Simulated output from Assembler)
-    graph_data = {
-        "nodes": [{"id": "1", "label": "Topic"}],
-        "edges": [{"source": "1", "target": "2", "type": "LINK"}]
-    }
-
-    # 3. Load to File (JSON)
-    pipeline.run(
-        data=graph_data, 
-        destination="./output/graph.json", 
-        strategy="file"
-    )
-    
-    # 4. Load to Console (Debug)
-    pipeline.run(
-        data="Deploying to Production DB...", 
-        destination="STDOUT", 
-        strategy="console"
-    )
-
-if __name__ == "__main__":
-    run_demo()
+LoaderPipeline().process(
+    data=payload,
+    destination="./output/graph.json",
+    strategy="file"
+)
 ```
 
-## 🔑 Key Components
+### Case B: Knowledge Graph (Neo4j)
 
-### Templates
-* **`FileWriter`**: Saves data to local disk. Supports JSON, JSONL, and Pickle formats automatically based on data type or extension.
-* **`JsonLineWriter`**: Efficiently writes large lists of dictionaries line-by-line (NDJSON), ideal for streaming data.
-* **`ConsoleWriter`**: Prints data to stdout. Useful for debugging pipelines without side effects.
+Connects to a Neo4j instance and synchronizes the graph topology.
 
-### Plugins
-* **`Neo4jWriter`**: Executes Cypher queries against a Neo4j database.
-* **`VectorDbWriter`**: Upserts vector payloads to Pinecone, Chroma, etc.
+```python
+from sayou.loader import LoaderPipeline
 
-## 🤝 Contributing
+neo4j_config = {
+    "uri": "bolt://localhost:7687",
+    "user": "neo4j",
+    "password": "password",
+    "batch_size": 1000
+}
 
-We welcome writers for cloud storages (e.g., `S3Writer`, `GCSWriter`) or specific databases.
+LoaderPipeline().process(
+    data=payload,
+    destination="Neo4j Connection",
+    strategy="neo4j",
+    config=neo4j_config
+)
+```
 
-## 📜 License
+### Case C: Vector Database (Chroma)
 
-Apache 2.0 License © 2025 Sayouzone
+Stores text chunks and their vector embeddings.
+
+```python
+from sayou.loader import LoaderPipeline
+
+chroma_config = {
+    "host": "localhost",
+    "port": 8000,
+    "collection_name": "sayou_rag"
+}
+
+LoaderPipeline().process(
+    data=payload,
+    destination="ChromaDB",
+    strategy="chroma",
+    config=chroma_config
+)
+```
+
+---
+
+## 5. Configuration Keys
+
+When using Database strategies, the `config` dictionary is mandatory.
+
+* **`neo4j`**: `uri`, `user`, `password`, `database` (optional), `batch_size`.
+* **`postgres`**: `host`, `port`, `user`, `password`, `dbname`, `table_name`.
+* **`mongo`**: `connection_string`, `db_name`, `collection_name`.
+* **`elasticsearch`**: `hosts`, `index_name`, `http_auth` (user, pass).
+* **`chroma`**: `path` (for local), `host`, `port`, `collection_name`.
+
+---
+
+## 6. License
+
+Apache 2.0 License © 2026 **Sayouzone**

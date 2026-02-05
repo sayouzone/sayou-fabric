@@ -10,77 +10,128 @@
 
 It applies the **Sayou Ontology Schema** (Namespace -> Class -> Predicate) to raw data, turning simple text into semantically rich entities.
 
-## 💡 Core Philosophy
+---
 
-**"From Data to Knowledge."**
+## 1. Architecture & Role
 
-While Chunking slices the data, Wrapper gives it meaning.
-* It assigns **Ontology Classes** (e.g., `sayou:Topic`, `sayou:Table`) based on metadata.
-* It defines **Relationships** (e.g., `sayou:hasParent`) to preserve context.
-* It normalizes IDs into **URIs** (e.g., `sayou:doc:123`) for global uniqueness.
+The Wrapper sits between Chunking and Assembly. It transforms raw dictionaries (Chunks) into standardized Objects (Nodes) with globally unique URIs.
 
-## 📦 Installation
+```mermaid
+graph LR
+    Chunks[Raw Chunks] --> Pipeline[Wrapper Pipeline]
+    
+    subgraph Logic
+        Schema[Schema Mapping]
+        URI[URI Generation]
+        Attr[Attribute Norm]
+    end
+    
+    Pipeline --> Logic
+    Logic --> Nodes[SayouNodes]
+```
+
+### 1.1. Core Features
+* **Ontology Enforcement**: Assigns strict classes (e.g., `sayou:Topic`, `sayou:Function`) based on chunk metadata.
+* **URI Normalization**: Generates idempotent IDs (e.g., `sayou:doc:hash_123`) to prevent duplication.
+* **Metadata Preservation**: Carries over source coordinates (page numbers, line numbers) into node attributes.
+
+---
+
+## 2. Available Strategies
+
+`sayou-wrapper` applies different mapping rules based on the source domain.
+
+| Strategy Key | Target Domain | Description |
+| :--- | :--- | :--- |
+| **`document_chunk`** | PDF, Markdown | Maps headers to `sayou:Topic` and text to `sayou:TextFragment`. Preserves hierarchy metadata. |
+| **`code_chunk`** | Python, Java | Maps AST objects to `sayou:Class`, `sayou:Function`, or `sayou:Module`. |
+| **`video_chunk`** | YouTube, MP4 | Maps timestamps to `sayou:VideoSegment`. Preserves start/end times. |
+| **`general`** | Plain Text | **[Default]** Treats everything as generic `sayou:Unstructured` nodes. |
+
+---
+
+## 3. Installation
 
 ```bash
 pip install sayou-wrapper
 ```
 
-## ⚡ Quick Start
+---
+
+## 4. Usage
+
+The `WrapperPipeline` converts a list of dictionaries (Chunks) into a `WrapperOutput` object containing nodes.
+
+### Case A: Document Processing (Default)
+
+Converts hierarchical chunks into Topic and Fragment nodes.
 
 ```python
-from sayou.wrapper.pipeline import WrapperPipeline
+from sayou.wrapper import WrapperPipeline
 
-def run_demo():
-    # 1. Initialize
-    pipeline = WrapperPipeline()
-    pipeline.initialize()
-
-    # 2. Input Data (Simulated output from sayou-chunking)
-    chunks = [
-        {
-            "content": "# Introduction",
-            "metadata": {
-                "chunk_id": "h_1", 
-                "semantic_type": "heading", 
-                "is_header": True
-            }
-        },
-        {
-            "content": "Sayou is great.",
-            "metadata": {
-                "chunk_id": "p_1", 
-                "parent_id": "h_1",
-                "semantic_type": "text"
-            }
+chunks = [
+    {
+        "content": "# Introduction",
+        "metadata": {
+            "chunk_id": "h_1", 
+            "semantic_type": "heading", 
+            "depth": 1
         }
-    ]
+    },
+    {
+        "content": "Sayou is great.",
+        "metadata": {
+            "chunk_id": "p_1", 
+            "parent_id": "h_1",
+            "semantic_type": "text"
+        }
+    }
+]
 
-    # 3. Run Wrapper
-    output = pipeline.run(chunks, strategy="document_chunk")
+result = WrapperPipeline.process(
+    data=chunks,
+    strategy="document_chunk"
+)
 
-    # 4. Result (SayouNodes)
-    for node in output.nodes:
-        print(f"[{node.node_class}] {node.node_id}")
-        print(f"   Attrs: {node.attributes}")
-        print(f"   Rels : {node.relationships}")
-
-if __name__ == "__main__":
-    run_demo()
+for node in result.nodes:
+    print(f"[{node.node_class}] {node.node_id}")
 ```
 
-## 🔑 Key Components
+### Case B: Code Processing
 
-### Adapters
-* **`DocumentChunkAdapter`**: The standard adapter. Converts document chunks into `sayou:Topic`, `sayou:TextFragment`, etc., and links them via `sayou:hasParent`.
+Converts AST-based chunks into structural code nodes.
 
-### Schema (Sayouzone Standard)
-* **`SayouNode`**: The atomic unit of the Knowledge Graph. Contains ID, Class, Attributes, and Relationships.
-* **`WrapperOutput`**: A container holding a list of nodes and global metadata.
+```python
+from sayou.wrapper import WrapperPipeline
 
-## 🤝 Contributing
+code_chunks = [
+    {
+        "content": "def my_func(): pass",
+        "metadata": {"type": "function", "name": "my_func"}
+    }
+]
 
-We welcome adapters for other data sources (e.g., `SqlRecordAdapter`, `LogAdapter`).
+result = WrapperPipeline.process(
+    data=code_chunks,
+    strategy="code_chunk"
+)
 
-## 📜 License
+print(f"Node Class: {result.nodes[0].node_class}")
+```
 
-Apache 2.0 License © 2025 Sayouzone
+---
+
+## 5. Configuration Keys
+
+The `config` dictionary controls how IDs are generated and which schema strictness to apply.
+
+* **`namespace`**: The prefix for URIs (default: `sayou:`).
+* **`id_strategy`**: `hash` (deterministic) or `uuid` (random).
+* **`strict_mode`**: If `True`, raises error for unknown semantic types.
+* **`attribute_filter`**: List of metadata keys to exclude from the final Node attributes.
+
+---
+
+## 6. License
+
+Apache 2.0 License © 2026 **Sayouzone**

@@ -6,44 +6,75 @@
 
 **The Fundamental Foundation for Sayou Fabric.**
 
-`sayou-core` provides the shared DNA for all Sayou libraries. It defines the base architecture, standard data protocols, and utility decorators that ensure consistency across the entire ecosystem.
+`sayou-core` provides the shared DNA for all Sayou libraries. It defines the **Base Architecture**, **Standard Data Protocols**, and the **Ontology Definitions** that ensure consistency across the entire ecosystem.
 
-While you might not use `sayou-core` directly in your application, it acts as the **spinal cord** connecting Connector, Refinery, Document, and other modules.
+While users typically interact with high-level pipelines (like `sayou-brain`), `sayou-core` acts as the invisible **Spinal Cord**, defining how modules communicate and how data is structured.
 
-## 💡 Core Philosophy
+---
 
-**"Stability through Standardization."**
+## 1. Architecture & Role
 
-To build a modular and scalable data pipeline, every component must speak the same language and behave predictably. `sayou-core` enforces this by providing:
+Core is not a processing engine itself but a **Library of Standards**. It enforces structure so that a Connector written by one developer can seamlessly talk to a Refinery written by another.
 
-1.  **Unified Component Architecture:** Every plugin (Fetcher, Parser, Refiner) inherits from `BaseComponent`, guaranteeing standardized logging and lifecycle management.
-2.  **Strict Data Contracts:** Defines Pydantic schemas like `SayouPacket` and `SayouBlock` to ensure type safety between modules.
-3.  **Resilience Patterns:** Provides decorators for retries, timing, and safe execution, reducing boilerplate code in downstream libraries.
+```mermaid
+graph TD
+    Core[Sayou Core]
+    
+    subgraph Standards
+        Base[BaseComponent]
+        Schema[Schemas & Protocols]
+        Onto[Ontology Definitions]
+        Reg[Plugin Registry]
+    end
+    
+    Core --> Base & Schema & Onto & Reg
+    
+    Lib1[Connector] -.->|Inherits| Base
+    Lib2[Wrapper] -.->|Uses| Onto
+```
 
-## 📦 Installation
+### 1.1. Core Features
+* **Unified Component Model**: Every plugin inherits from `BaseComponent`, guaranteeing standardized logging (`self._log`) and lifecycle management.
+* **Lingua Franca (Schemas)**: Defines `SayouPacket` and `SayouBlock` so modules exchange typed objects, not random dictionaries.
+* **Ontology Hub**: Centralizes vocabulary (`sayou:Topic`, `sayou:hasChild`) to prevent semantic drift.
 
-`sayou-core` is automatically installed when you install any Sayou library.
+---
 
-    pip install sayou-core
+## 2. Key Components
 
-## 🔑 Key Components
+### 2.1. Schemas (`schemas.py`)
+The immutable data contracts used throughout the pipeline.
+* **`SayouPacket`**: The universal container for raw data transport (Connector -> Refinery).
+* **`SayouBlock`**: The atomic unit of refined content (Refinery -> Chunking).
+* **`SayouNode`**: The graph entity with ID, Class, and Attributes (Wrapper -> Assembler).
 
-### Base Architecture
-* **`BaseComponent`**: The root class for all Sayou objects. It handles logger initialization (`self._log`) and configuration injection.
+### 2.2. Ontology (`ontology.py`)
+Defines the semantic vocabulary for the Knowledge Graph.
+* **`SayouClass`**: Enum of node types (e.g., `Document`, `Video`, `Function`).
+* **`SayouRelation`**: Enum of edge types (e.g., `contains`, `calls`, `next`).
 
-### Standard Schemas (The Protocol)
-* **`SayouTask`**: Defines a unit of work (e.g., "Download this URL").
-* **`SayouPacket`**: The universal container for transporting raw data between pipelines.
-* **`SayouBlock`**: The atomic unit of refined content (Text, Markdown, Record) used by Refinery and Chunking.
+### 2.3. Base Architecture (`base_component.py`)
+The root class for all Sayou objects. It handles configuration injection and provides utility decorators like `@safe_run` and `@measure_time`.
 
-### Decorators (The Safety Net)
-* **`@safe_run`**: Prevents pipeline crashes by catching exceptions and returning a fallback value.
-* **`@retry`**: Automatically retries operations (like API calls) with exponential backoff.
-* **`@measure_time`**: logs execution duration for performance monitoring.
+---
 
-## 🤝 Usage Example
+## 3. Installation
 
-If you are building a custom plugin for Sayou Fabric, you will use `sayou-core` extensively.
+`sayou-core` is a dependency of all Sayou libraries and is installed automatically.
+
+```bash
+pip install sayou-core
+```
+
+---
+
+## 4. Developer Guide (Usage)
+
+Unlike other modules, you use `sayou-core` when **building extensions** or **custom plugins**, not for running pipelines.
+
+### Case A: Creating a Custom Component
+
+Inherit from `BaseComponent` to get logging, error handling, and config management for free.
 
 ```python
 from sayou.core.base_component import BaseComponent
@@ -55,12 +86,31 @@ class MyCustomPlugin(BaseComponent):
 
     @measure_time
     @safe_run(default_return=None)
-    def process(self, data) -> SayouPacket:
-        self._log(f"Processing {data}...")
-        # Your logic here
-        return SayouPacket(data="Processed", success=True)
+    def process(self, data: str) -> SayouPacket:
+        self._log(f"Processing data: {data}...")
+        
+        # Your custom logic here
+        result = data.upper()
+        
+        return SayouPacket(data=result, success=True)
 ```
 
-## 📜 License
+### Case B: Using the Ontology
 
-Apache 2.0 License © 2025 Sayouzone
+Use the centralized ontology enums to ensure your graph nodes are compatible with the standard visualizer.
+
+```python
+from sayou.core.ontology import SayouClass, SayouRelation
+
+# Correct usage
+node_type = SayouClass.TOPIC      # "sayou:Topic"
+edge_type = SayouRelation.CONTAINS # "sayou:contains"
+
+print(f"Creating a node of type: {node_type.value}")
+```
+
+---
+
+## 5. License
+
+Apache 2.0 License © 2026 **Sayouzone**

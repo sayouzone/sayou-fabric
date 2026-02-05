@@ -6,79 +6,145 @@
 
 **The Universal Data Ingestion Engine for Sayou Fabric.**
 
-`sayou-connector` provides a unified interface to fetch data from diverse sources—Local Files, Web URLs, and Databases—normalizing everything into a standard format called **SayouPacket**.
+`sayou-connector` provides a unified interface to fetch data from diverse sources—Files, Cloud Drives, Databases, and SaaS APIs—normalizing everything into a standard format called **SayouPacket**.
 
-It separates the logic of **Navigation** (Generator) from **Retrieval** (Fetcher), enabling complex recursive crawling and pagination strategies out of the box.
+It decouples the logic of **Navigation** (Generator) from **Retrieval** (Fetcher), enabling complex recursive crawling, pagination, and API traversal strategies out of the box.
 
-## 💡 Core Philosophy
+---
 
-**"Navigate First, Fetch Later."**
+## 1. Architecture & Role
 
-Data collection is not just about downloading; it's about discovery. We decouple the responsibility into two roles:
+The Connector Pipeline manages the **Feedback Loop** between discovery and retrieval. It yields a stream of `SayouPacket` objects ready for the next stage (Refinery).
 
-1.  **Generator (Navigator):** The "Brain". It decides *what* to fetch next (e.g., calculates DB offsets, finds next page links) and yields a Task.
-2.  **Fetcher (Driver):** The "Muscle". It executes the actual retrieval (e.g., HTTP GET, SQL Query) and returns a Packet.
+```mermaid
+graph LR
+    Source[Source String] --> Pipeline[Connector Pipeline]
+    
+    subgraph Generators [Navigation]
+        Dir[File Walker]
+        Crawler[Web Frontier]
+        APIPag[API Paginator]
+    end
+    
+    subgraph Fetchers [Retrieval]
+        Local[File Read]
+        HTTP[Requests]
+        SQL[DB Query]
+    end
+    
+    Pipeline --> Generators
+    Generators -->|Task| Fetchers
+    Fetchers -->|Packet| Pipeline
+    Pipeline -->|Feedback| Generators
+```
 
-This separation enables the **Feedback Loop**, where the result of a fetch (e.g., found links) feeds back into the Generator to discover more targets.
+### 1.1. Core Features
+* **Generator/Fetcher Pattern**: Separates "Where to go next" (Generator) from "How to get it" (Fetcher).
+* **Unified Packet**: Whether the source is a Notion Page or a PostgreSQL Row, the output is always a uniform `SayouPacket`.
+* **Resilience**: Built-in rate limiting, retries, and error handling for unstable network sources.
 
-## 📦 Installation
+---
+
+## 2. Supported Sources
+
+`sayou-connector` supports a vast array of plugins, continuously expanding to cover Enterprise SaaS and Databases.
+
+| Category | Key Sources | Description |
+| :--- | :--- | :--- |
+| **Local / File** | `file`, `obsidian` | Local file systems, Markdown vaults. |
+| **Web / Media** | `web`, `youtube`, `wikipedia`, `rss` | Web crawling (Trafilatura), YouTube transcripts, Wiki articles. |
+| **SaaS / Cloud** | `github`, `notion`, `google_drive`, `gmail` | Repository code, Notion workspaces, G-Suite documents. |
+| **Database** | `postgres`, `mysql`, `mongodb`, `oracle` | SQL/NoSQL databases with pagination support. |
+
+---
+
+## 3. Installation
 
 ```bash
 pip install sayou-connector
 ```
 
-## ⚡ Quick Start
+---
 
-The `ConnectorPipeline` manages the feedback loop between Generators and Fetchers.
+## 4. Usage
+
+The `ConnectorPipeline` acts as the entry point. It automatically detects the source type or accepts a specific strategy.
+
+### Case A: Local & Web (Simple)
+
+Fetching simple files or web pages.
 
 ```python
-from sayou.connector.pipeline import ConnectorPipeline
+from sayou.connector import ConnectorPipeline
 
-def run_demo():
-    # 1. Initialize Pipeline
-    pipeline = ConnectorPipeline()
-    pipeline.initialize()
+packets = ConnectorPipeline.process(
+    source="./my_docs",
+    strategy="file"
+)
 
-    # 2. Run (Example: Web Crawling)
-    print("Starting Web Crawl...")
-    
-    # Returns an iterator of 'SayouPacket' objects
-    packets = pipeline.run(
-        source="https://news.daum.net/tech",
-        strategy="requests",
-        link_pattern=r"https://v\.daum\.net/v/\d+",
-        max_depth=1
-    )
+web_packets = ConnectorPipeline.process(
+    source="https://news.daum.net/tech",
+    strategy="web"
+)
 
-    # 3. Process Results (Stream)
-    for packet in packets:
-        if packet.success:
-            print(f"[Fetched] {packet.task.uri}")
-            # packet.data contains the extracted content (dict, bytes, etc.)
-            print(f"   Data: {str(packet.data)[:50]}...")
-        else:
-            print(f"[Error] {packet.error}")
-
-if __name__ == "__main__":
-    run_demo()
+for packet in web_packets:
+    print(f"[Fetched] {packet.uri} ({len(packet.data)} bytes)")
 ```
 
-## 🔑 Key Concepts
+### Case B: SaaS Integration (GitHub / Notion)
 
-### Generators
-* **`FileGenerator`**: Recursively scans directories to find files matching extensions or patterns.
-* **`SqlGenerator`**: Generates paginated SQL queries (LIMIT/OFFSET) to fetch large tables in batches.
-* **`WebCrawlGenerator`**: Manages a URL frontier queue for BFS/DFS web crawling with depth control.
+Fetching structured data from external APIs.
 
-### Fetchers
-* **`FileFetcher`**: Reads binary or text content from the local file system.
-* **`SqliteFetcher`**: Executes SQL queries against SQLite databases securely.
-* **`SimpleWebFetcher`**: Fetches HTML pages and extracts data/links using BeautifulSoup.
+```python
+from sayou.connector import ConnectorPipeline
 
-## 🤝 Contributing
+repo_packets = ConnectorPipeline.process(
+    source="https://github.com/sayouzone/sayou-fabric",
+    strategy="github"
+)
 
-We welcome contributions for new Fetchers (e.g., `S3Fetcher`, `KafkaFetcher`) or Generators (e.g., `SitemapGenerator`)!
+print(f"Collected {len(list(repo_packets))} files from repo.")
+```
 
-## 📜 License
+### Case C: Database Ingestion
 
-Apache 2.0 License © 2025 Sayouzone
+Fetching rows from a database table.
+
+```python
+from sayou.connector import ConnectorPipeline
+
+db_config = {
+    "host": "localhost",
+    "user": "admin",
+    "password": "password",
+    "db": "sales_db"
+}
+
+# Fetch rows from 'orders' table
+db_packets = ConnectorPipeline.process(
+    source="orders", 
+    strategy="postgres",
+    config=db_config
+)
+
+# Each packet contains a batch of rows
+for packet in db_packets:
+    print(f"Batch rows: {len(packet.data)}")
+```
+
+---
+
+## 5. Configuration Keys
+
+The `config` dictionary is crucial for authentication and connection settings.
+
+* **`auth`**: API Keys (e.g., `github_token`, `notion_token`, `google_creds`).
+* **`db`**: Database credentials (`host`, `port`, `user`, `password`).
+* **`crawl`**: Web crawling settings (`user_agent`, `depth_limit`, `domain_lock`).
+* **`filter`**: File extensions to include/exclude (e.g., `include=[".py", ".md"]`).
+
+---
+
+## 6. License
+
+Apache 2.0 License © 2026 **Sayouzone**

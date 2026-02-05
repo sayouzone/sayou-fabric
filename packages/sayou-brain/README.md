@@ -4,33 +4,56 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/sayou-agent/overview/)
 
-**The Central Nervous System of Sayou Fabric.**
+**The Central Nervous System (Orchestrator) of Sayou Fabric.**
 
-`sayou-brain` is the all-in-one orchestrator that connects and manages the entire lifecycle of data within the Sayou ecosystem. Instead of manually wiring `connector` → `document` → `refinery` → ... → `loader`, you simply ask the Brain to **"Ingest this"**, and it handles the rest.
+`sayou-brain` acts as the **Control Tower** for the entire Sayou ecosystem. It provides high-level **Pipeline Facades** that abstract away the complexity of connecting individual modules (`connector`, `document`, `chunking`, etc.).
 
-It serves as the **Control Plane**, managing configurations, intelligently routing data based on file types, and executing the ETL pipeline efficiently.
+Instead of manually wiring components, you simply invoke a Pipeline, and the Brain handles **routing, configuration propagation, and error handling**.
 
-## 💡 Core Philosophy
+---
 
-**"Simplicity for Users, Power for Developers."**
+## 1. Architecture & Role
 
-* **Smart Routing:** Automatically determines whether to parse a file (PDF/Images) or read it directly (Markdown/JSON) and selects the appropriate strategy.
-* **Centralized Config:** Manages settings for all sub-modules (PII masking rules, Chunk sizes, DB credentials) in one place.
+The Brain sits between the User and the low-level modules. It directs data flow based on the chosen Pipeline strategy.
 
 ```mermaid
-flowchart LR
-    User -- "Ingest(source, dest)" --> Brain[StandardPipeline]
-    Brain --> Connector
-    Brain --> Document
-    Brain --> Refinery
-    Brain --> Chunking
-    Brain --> Wrapper
-    Brain --> Assembler
-    Brain --> Loader
-    Loader -- Save --> DB[(Database)]
+graph LR
+    User -->|Invoke| Brain[Sayou Brain]
+    
+    subgraph Pipelines
+        SP[StandardPipeline]
+        NP[NormalPipeline]
+    end
+    
+    Brain --> SP & NP
+    
+    SP -->|Layout Preserving| Doc[Document Parser]
+    NP -->|Logic/Time Based| Chunk[Context Chunker]
+    
+    Doc & Chunk --> Wrap[Wrapper]
+    Wrap --> Assem[Assembler]
+    Assem --> Load[Loader]
 ```
 
-## 📦 Installation
+### 1.1. Core Features
+* **Facade Pattern**: Users only interact with `Pipeline.process()`. No need to import sub-modules directly.
+* **Config Propagation**: A single config dictionary is distributed to all sub-modules.
+* **Smart Routing**: Automatically selects the optimal `Connector` based on the input source string.
+
+---
+
+## 2. Available Pipelines
+
+Sayou Brain provides two distinct pipelines optimized for different data types.
+
+| Pipeline | Best For | Description |
+| :--- | :--- | :--- |
+| **`StandardPipeline`** | PDF, Office, HWP | Uses `sayou-document` to preserve **spatial layout, headers, and tables**. Maintains visual hierarchy. |
+| **`NormalPipeline`** | Code, Video, Web | Bypasses layout parsing. Focuses on **semantic logic** (AST for code, Timeline for video). |
+
+---
+
+## 3. Installation
 
 Installing `sayou-brain` automatically installs all core dependencies and sub-modules.
 
@@ -38,79 +61,59 @@ Installing `sayou-brain` automatically installs all core dependencies and sub-mo
 pip install sayou-brain
 ```
 
-## ⚡ Quick Start
+---
 
-#### 1. Basic Usage (Zero Config)
+## 4. Usage
 
-The simplest way to ingest a local folder into a Knowledge Graph file.
+### Case A: StandardPipeline (Document-Centric)
 
-```python
-from sayou.brain.pipelines.standard import StandardPipeline
-
-def run_simple():
-    # 1. Initialize
-    brain = StandardPipeline()
-    brain.initialize()
-
-    # 2. Ingest Data (End-to-End)
-    # Reads local files -> Parses -> Chunks -> Assembles Graph -> Saves JSON
-    result = brain.ingest(
-        source="./my_documents",
-        destination="./output_graph.json"
-    )
-    
-    print(f"Processed: {result['processed']} files.")
-
-if __name__ == "__main__":
-    run_simple()
-```
-
-#### 2. Advanced Usage (With Configuration)
-
-Control the behavior of sub-modules using a configuration dictionary (or YAML).
+Use this for documents where visual layout matters (e.g., Financial Reports, Papers).
 
 ```python
-import yaml
-from sayou.brain.pipelines.standard import StandardPipeline
+from sayou.brain import StandardPipeline
 
-def run_advanced():
-    # 1. Configuration (e.g., PII masking, Chunk size)
-    config = {
-        "refinery": {"mask_email": True},
-        "chunking": {"chunk_size": 500},
-        "loader": {"mode": "w"}
-    }
+result = StandardPipeline.process(
+    source="./reports/financial_q1.pdf",
+    destination="./examples/output/financial_graph.json"
+)
 
-    # 2. Initialize Brain with Config
-    brain = StandardPipeline()
-    brain.initialize(config=config)
-
-    # 3. Ingest with specific strategies
-    # Brain automatically detects file types, but you can enforce strategies.
-    result = brain.ingest(
-        source="https://news.daum.net/tech",
-        destination="./news_graph.json",
-        strategies={
-            "connector": "file",    # Crawl the web
-            "assembler": "graph",        # Build a knowledge graph
-            "loader": "file"             # Save to local file
-        }
-    )
-    print(f"Result: {result}")
+print(f"Processed Nodes: {len(result['nodes'])}")
 ```
 
-## 🔑 Key Components
+### Case B: NormalPipeline (Logic-Centric)
 
-- `StandardPipeline`: The default ETL flow. It intelligently routes data based on file types.
-    - Images → Auto-converted to PDF → OCR
-    - Markdown/Text → Bypasses Parser → Direct to Refinery
-    - JSON/DB Rows → Treated as structured Records
-- `Config`: Centralized configuration management. Parameters passed to `brain.initialize()` are propagated down to every sub-module.
+Use this for structured data, code, or multimedia streams.
 
-## 🤝 Contributing
+```python
+from sayou.brain import NormalPipeline
 
-We welcome contributions for new pipeline flows (e.g., `RealtimePipeline` for streaming data, `RagPipeline` for inference).
+result = NormalPipeline.process(
+    source="github://sayouzone/sayou-fabric",
+    destination="./examples/output/code_graph.json",
+    token="GITHUB_TOKEN",
+    path="packages/sayou-connector/src/sayou/connector",
+)
 
-## 📜 License
+nodes = result.get("nodes", [])
+edges = result.get("edges", [])
 
-Apache 2.0 License © 2025 Sayouzone
+print(f"Total Nodes: {len(nodes)}")
+print(f"Total Edges: {len(edges)}")
+```
+
+---
+
+## 5. Configuration Keys
+
+The following keys can be used in the `config` dictionary passed to the Pipeline:
+
+* **`connector`**: User-Agent, Timeout settings, Proxy config.
+* **`refinery`**: PII masking rules, Unicode normalization, Regex filters.
+* **`chunking`**: Strategy selection (Token/Line/Semantic), Size limits, Overlap.
+* **`loader`**: Database credentials, Output paths, File modes.
+
+---
+
+## 6. License
+
+Apache 2.0 License © 2026 **Sayouzone**
