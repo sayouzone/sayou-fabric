@@ -7,24 +7,24 @@ build-backend = "hatchling.build"
 # -----------------
 [project]
 name = "sayou-refinery"
-version = "0.3.8"
+version = "0.4.0"
 authors = [
     { name = "Sayouzone", email = "contact@sayouzone.com" },
 ]
 description = "Refinery components for the Sayou Data Platform"
 readme = "README.md"
 license = { file = "../../LICENSE" }
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 classifiers = [
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 dependencies = [
-    "sayou-core ~= 0.3.0"
+    "sayou-core ~= 0.4.0"
 ]
 
 # -----------------
