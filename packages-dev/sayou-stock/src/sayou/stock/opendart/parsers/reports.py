@@ -1,53 +1,56 @@
 import io
-import zipfile
 import re
-import pandas as pd
+import zipfile
 from datetime import datetime
+from typing import Any
 from urllib.parse import unquote
+
+import pandas as pd
 
 from ..client import OpenDartClient
 from ..models import (
-    ReportStatus,
-    OpenDartRequest,
-    StockIssuanceData,
-    DividendsData,
-    TreasuryStockData,
-    MajorShareholderData,
-    MajorShareholderChangeData,
-    MinorShareholderData,
-    ExecutiveData,
-    EmployeeData,
-    DirectorCompensationData,
-    TotalDirectorCompensationData,
-    IntercorporateInvestmentData,
-    OutstandingSharesData,
-    DebtSecuritiesIssuanceData,
-    CPOutstandingData,
-    ShortTermBondsOutstandingData,
-    CorporateBondsOutstandingData,
-    HybridSecuritiesOutstandingData,
-    CoCoBondsOutstandingData,
+    ApprovedDirectorCompensationData,
     AuditOpinionsData,
     AuditServiceContractsData,
-    NonAuditServiceContractsData,
-    OutsideDirectorChangesData,
-    UnregisteredExecutiveCompensationData,
-    ApprovedDirectorCompensationData,
+    CoCoBondsOutstandingData,
     CompensationCategoryData,
-    ProceedsUseData,
+    CorporateBondsOutstandingData,
+    CPOutstandingData,
+    DebtSecuritiesIssuanceData,
+    DirectorCompensationData,
+    DividendsData,
+    EmployeeData,
+    ExecutiveData,
+    HybridSecuritiesOutstandingData,
+    IntercorporateInvestmentData,
+    MajorShareholderChangeData,
+    MajorShareholderData,
+    MinorShareholderData,
+    NonAuditServiceContractsData,
+    OpenDartRequest,
+    OutsideDirectorChangesData,
+    OutstandingSharesData,
     PrivateEquityFundsUseData,
+    ProceedsUseData,
+    ReportStatus,
+    ShortTermBondsOutstandingData,
+    StockIssuanceData,
+    TotalDirectorCompensationData,
+    TreasuryStockData,
+    UnregisteredExecutiveCompensationData,
 )
 from ..utils import (
-    decode_euc_kr,
-    quarters,
     REPORT_ITEMS,
     REPORTS_COLUMNS,
+    decode_euc_kr,
+    quarters,
 )
+
 
 class OpenDartReportsParser:
     """
     OpenDART 정기보고서 주요정보 API 파싱 클래스
-    
+
     정기보고서 주요정보 (Key Information in Periodic Reports):
     - https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS002
     """
@@ -55,17 +58,23 @@ class OpenDartReportsParser:
     def __init__(self, client: OpenDartClient):
         self.client = client
 
-    def fetch(self, corp_code: str, year: str, quarter: int, api_no: int | ReportStatus = ReportStatus.STOCK_ISSUANCE):
+    def fetch(
+        self,
+        corp_code: str,
+        year: str | int,
+        quarter: int,
+        api_no: int | ReportStatus = ReportStatus.STOCK_ISSUANCE,
+    ) -> list[Any]:
         if isinstance(api_no, int):
             api_no = ReportStatus(api_no)
 
         url = ReportStatus.url_by_code(api_no.value)
 
         if not url:
-            return
+            return []
 
         report_code = quarters.get(str(quarter), "4")
-        
+
         request = OpenDartRequest(
             crtfc_key=self.client.api_key,
             corp_code=corp_code,
@@ -76,8 +85,8 @@ class OpenDartReportsParser:
         response = self.client._get(url, params=request.to_params())
 
         json_data = response.json()
-        #print(json_data)
-            
+        # print(json_data)
+
         status = json_data.get("status")
 
         # 에러 체크
@@ -91,7 +100,7 @@ class OpenDartReportsParser:
 
         del json_data["status"]
         del json_data["message"]
-        
+
         print(f"api_type: {api_no.display_name}")
         data_list = json_data.get("list", [])
         if api_no == ReportStatus.STOCK_ISSUANCE:
@@ -150,5 +159,5 @@ class OpenDartReportsParser:
             return [ProceedsUseData(**data) for data in data_list]
         elif api_no == ReportStatus.PRIVATE_EQUITY_FUNDS_USE:
             return [PrivateEquityFundsUseData(**data) for data in data_list]
-
-        return []
+        else:
+            return []
