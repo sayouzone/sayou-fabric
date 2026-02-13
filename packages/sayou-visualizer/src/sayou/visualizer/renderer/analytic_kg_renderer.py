@@ -68,8 +68,19 @@ class AnalyticKGRenderer(BaseComponent):
         self._log(f"✅ Pure Graph View saved to: {output_path}")
 
     def _generate_html(self, elements: list, output_path: str):
-        style_json = json.dumps(self.STYLE_SHEET)
-        elements_json = json.dumps(elements)
+        elements_json = (
+            json.dumps(elements, ensure_ascii=False)
+            .replace("<", "\\u003c")
+            .replace(">", "\\u003e")
+            .replace("\u2028", "\\u2028")
+            .replace("\u2029", "\\u2029")
+        )
+
+        style_json = (
+            json.dumps(self.STYLE_SHEET, ensure_ascii=False)
+            .replace("<", "\\u003c")
+            .replace("\u2028", "\\u2028")
+        )
 
         html_content = f"""
 <!DOCTYPE html>
@@ -281,5 +292,8 @@ class AnalyticKGRenderer(BaseComponent):
 </body>
 </html>
 """
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
+        try:
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write(html_content)
+        except Exception as e:
+            self._log(f"💥 Failed to write HTML: {e}", level="error")
