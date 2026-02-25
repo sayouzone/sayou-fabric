@@ -192,6 +192,36 @@ class StructurePipeline(BaseComponent):
                 if "source" not in input_doc.metadata:
                     input_doc.metadata["source"] = f"unknown_block_{i}"
 
+            elif isinstance(raw_data, (bytes, str)):
+                content = (
+                    raw_data.decode("utf-8", errors="ignore")
+                    if isinstance(raw_data, bytes)
+                    else raw_data
+                )
+
+                meta = packet.meta.copy() if packet.meta else {}
+                if packet.task:
+                    meta["source"] = packet.task.uri
+                    if packet.task.meta:
+                        meta.update(packet.task.meta)
+                else:
+                    meta["source"] = f"local_file_{i}"
+
+                if "extension" not in meta:
+                    _, ext = os.path.splitext(meta["source"])
+                    if ext:
+                        meta["extension"] = ext.lower()
+                        self._log(f"   [Fix] Injected extension from URI: {ext}")
+
+                input_doc = SayouBlock(content=content, metadata=meta, type="code")
+
+            if input_doc is None:
+                self._log(
+                    f"⚠️ Unhandled data type in packet: {type(raw_data)}",
+                    level="warning",
+                )
+                continue
+
             # --- Phase 2: Chunking ---
             chunks = self.chunking.run(
                 input_doc, strategy=strategies.get("chunking", "auto"), **run_config
