@@ -178,6 +178,7 @@ class CodeSplitter(BaseSplitter):
                     self._flush_chunk(chunks, current_chunk_lines, doc)
                     current_chunk_lines = []
                     current_size = 0
+                    current_buffer_start = None
 
                 self._flush_chunk(
                     chunks,
@@ -186,6 +187,8 @@ class CodeSplitter(BaseSplitter):
                     extra_meta={
                         "semantic_type": "function",
                         "function_name": node.name,
+                        "lineStart": start + 1,  # 1-based index
+                        "lineEnd": end,
                     },
                 )
 
@@ -193,22 +196,33 @@ class CodeSplitter(BaseSplitter):
             else:
                 self._log(f"   -> Found Minor Node ({node_type}). Merging...")
 
+                if not current_chunk_lines:
+                    current_buffer_start = start + 1
+
                 if current_size + node_len > chunk_size:
                     self._log("      -> Buffer full. Flushing previous chunk.")
-                    self._flush_chunk(chunks, current_chunk_lines, doc)
+                    self._flush_chunk(
+                        chunks,
+                        current_chunk_lines,
+                        doc,
+                        extra_meta={
+                            "lineStart": current_buffer_start,
+                            "lineEnd": start,
+                        },
+                    )
                     current_chunk_lines = []
                     current_size = 0
+                    current_buffer_start = start + 1
 
                 current_chunk_lines.extend(node_lines)
                 current_size += node_len
 
         if current_chunk_lines:
-            self._flush_chunk(
-                chunks,
-                current_chunk_lines,
-                doc,
-                extra_meta={"imports": current_imports} if current_imports else None,
-            )
+            extra_meta = {"lineStart": current_buffer_start, "lineEnd": end}
+            if current_imports:
+                extra_meta["imports"] = current_imports
+            self._flush_chunk(chunks, current_chunk_lines, doc, extra_meta=extra_meta)
+
         self._log(f"[DEBUG] AST Split Finished. Total chunks: {len(chunks)}")
         return chunks
 
@@ -296,7 +310,12 @@ class CodeSplitter(BaseSplitter):
             first_child_idx = 0
 
         header_lines = source_lines[start_line:header_end_line]
-        header_meta = {"semantic_type": "class_header", "class_name": node.name}
+        header_meta = {
+            "semantic_type": "class_header",
+            "class_name": node.name,
+            "start_line": start_line + 1,
+            "end_line": header_end_line,
+        }
         if inheritance_info:
             header_meta["inherits_from"] = inheritance_info
 
@@ -308,9 +327,12 @@ class CodeSplitter(BaseSplitter):
         # ---------------------------------------------------------
 
         current_attr_lines = []
+        attr_start_line = None
+        attr_end_line = None
 
         for child in node.body[first_child_idx:]:
             if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+
                 if current_attr_lines:
                     self._flush_chunk(
                         chunks,
@@ -319,9 +341,12 @@ class CodeSplitter(BaseSplitter):
                         extra_meta={
                             "semantic_type": "class_attributes",
                             "parent_node": parent_name,
+                            "start_line": attr_start_line,
+                            "end_line": attr_end_line,
                         },
                     )
                     current_attr_lines = []
+                    attr_start_line = None
 
                 c_start = child.lineno - 1
                 if hasattr(child, "decorator_list") and child.decorator_list:
@@ -329,6 +354,7 @@ class CodeSplitter(BaseSplitter):
                 c_end = child.end_lineno
 
                 method_lines = source_lines[c_start:c_end]
+
                 self._flush_chunk(
                     chunks,
                     method_lines,
@@ -337,12 +363,19 @@ class CodeSplitter(BaseSplitter):
                         "semantic_type": "method",
                         "parent_node": parent_name,
                         "function_name": child.name,
+                        "start_line": c_start + 1,
+                        "end_line": c_end,
                     },
                 )
 
             else:
                 c_start = child.lineno - 1
                 c_end = child.end_lineno
+
+                if not current_attr_lines:
+                    attr_start_line = c_start + 1
+                attr_end_line = c_end
+
                 current_attr_lines.extend(source_lines[c_start:c_end])
 
         if current_attr_lines:
@@ -353,6 +386,8 @@ class CodeSplitter(BaseSplitter):
                 extra_meta={
                     "semantic_type": "class_attributes",
                     "parent_node": parent_name,
+                    "start_line": attr_start_line,
+                    "end_line": attr_end_line,
                 },
             )
 
