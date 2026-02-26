@@ -74,6 +74,7 @@ class CodeChunkAdapter(BaseAdapter):
                 SayouAttribute.SEMANTIC_TYPE: sem_type,
                 SayouAttribute.FILE_PATH: source_path,
                 SayouAttribute.LINE_START: meta.get("start_line"),
+                SayouAttribute.LINE_END: meta.get("end_line"),
             }
 
             for k, v in meta.items():
