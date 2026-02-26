@@ -51,7 +51,8 @@ jobs:
         run: |
           echo "Building from: ${{ steps.detect_dir.outputs.package_dir }}"
           cd ${{ steps.detect_dir.outputs.package_dir }}
-          python -m build
+          python -m build -s
+          python -m build -w
 
       - name: Publish ${{ steps.parse_tag.outputs.package_name }} to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
