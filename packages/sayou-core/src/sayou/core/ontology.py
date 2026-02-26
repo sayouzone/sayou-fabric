@@ -53,6 +53,7 @@ class SayouAttribute:
     SEMANTIC_TYPE = "sayou:semanticType"
     FILE_PATH = "sayou:filePath"
     LINE_START = "sayou:lineStart"
+    LINE_END = "sayou:lineEnd"
 
     # Domain: Document
     PAGE_INDEX = "sayou:pageIndex"
