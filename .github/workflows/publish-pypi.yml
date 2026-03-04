@@ -29,6 +29,7 @@ jobs:
           PACKAGE_NAME=$(echo $TAG_NAME | rev | cut -d'-' -f2- | rev)
           echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
           PACKAGE_VERSION=$(echo $TAG_NAME | rev | cut -d'-' -f1 | rev | cut -c 2-)
+          echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
           echo "Deploying $PACKAGE_NAME version $PACKAGE_VERSION"
 
       - name: Detect package directory
@@ -59,3 +60,17 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           packages_dir: ${{ steps.detect_dir.outputs.package_dir }}/dist/
+
+      - name: Notify Cloud Run
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${{ secrets.CLOUD_RUN_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.CLOUD_RUN_WEBHOOK_SECRET }}" \
+            -d '{
+              "package": "${{ steps.parse_tag.outputs.package_name }}",
+              "version": "${{ steps.parse_tag.outputs.package_version }}",
+              "tag": "${{ github.ref_name }}",
+              "repository": "${{ github.repository }}",
+              "triggered_by": "${{ github.actor }}"
+            }'
