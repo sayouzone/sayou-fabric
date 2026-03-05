@@ -1,57 +1,135 @@
 # Architecture
 
-You don't need to understand the architecture to use `BasicRAG`, but it helps to know what's happening under the hood.
+## System Overview
 
-The Sayou framework is a composable set of libraries, or "Lego bricks." The `BasicRAG` facade simply assembles these bricks for you in a pre-defined order.
+```mermaid
+graph TD
+    Brain["Sayou Brain\n〈 Orchestrator 〉"]
 
-This is the pipeline `BasicRAG` builds for you:
+    Conn[Connector]
+    Doc[Document]
+    Ref[Refinery]
+    Chunk[Chunking]
+    Wrap[Wrapper]
+    Assem[Assembler]
 
-### The `BasicRAG` Pipeline
+    Core["Sayou Core\n〈 Ontology & Schema 〉"]
 
-**1. Connector (`sayou-connector`)**
+    Brain --> Conn & Doc & Ref & Chunk & Wrap & Assem
+    Conn & Doc & Ref & Chunk & Wrap & Assem --> Core
+```
 
-* **Job:** Fetches raw data.
+| Layer | Package | Role |
+| :--- | :--- | :--- |
+| **Core** | `sayou-core` | Schemas, ontology constants, base component model, plugin registry |
+| **Data Libraries** | `sayou-connector` … `sayou-loader` | Each owns a single pipeline stage. Communicate via Core schemas. |
+| **Orchestrator** | `sayou-brain` | Wires libraries together. Exposes `StandardPipeline` and `NormalPipeline`. |
 
-* **In `BasicRAG`:** `BasicRAG` uses the `ApiFetcher` component. When you pass `data_source=(URL, QUERY)` to `pipeline.run()`, this component executes the API call and returns the raw JSON string.
+---
 
+## The 3-Tier Pattern
 
-**2. Wrapper (`sayou-wrapper`)**
+Every library follows the same internal structure.
 
-* **Job:** Parses and structures the raw data.
+=== "Tier 1 — Interface"
+    Defines the immutable contract. Abstract base classes that specify method signatures, input/output types, and lifecycle hooks.
 
-* **In `BasicRAG`:** This is the most complex stage, which `BasicRAG` fully automates.
-    1.  It receives the single JSON string from the Connector.
-    2.  It parses the *outer* JSON (`{"header": ..., "body": ...}`).
-    3.  It extracts the `body.paths` field.
-    4.  It handles multi-encoded JSON (e.g., if `paths` is a string `"[...]"`) by parsing it again until it gets a true list.
-    5.  It passes this list (`[{...}, {...}]`) to the `BaseMapper`'s `map_list` function.
-    6.  The `BaseMapper` uses your `map_logic` function (via the internal `LambdaMapper`) to transform each item (`{...}`) into a validated `DataAtom`.
+    ```python
+    class BaseSplitter(BaseComponent):
+        @abstractmethod
+        def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
+            raise NotImplementedError
+    ```
 
+    This tier never changes after release. Code depending on `BaseSplitter` will never break.
 
-**3. Refinery (`sayou-refinery`)**
+=== "Tier 2 — Template"
+    Official, production-tested implementations that cover the common cases.
 
-* **Job:** Cleans the `DataAtoms`.
+    ```python
+    class CodeSplitter(BaseSplitter):
+        """Routes to the correct language-specific splitter."""
+        def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
+            splitter = self._resolve_splitter(doc)
+            return splitter.split(doc, self.chunk_size)
+    ```
 
-* **In `BasicRAG`:** By default, `BasicRAG` loads a `DefaultTextCleaner` to remove HTML tags (like `<b>`) from the `friendly_name` field.
+=== "Tier 3 — Plugin"
+    Vendor-specific or domain-specific extensions. Registered at import time — no changes to existing code required.
 
+    ```python
+    @register_component("splitter")
+    class RustSplitter(BaseSplitter):
+        language = "rust"
+        extensions = [".rs"]
 
-**4. Assembler (`sayou-assembler`)**
+        def _do_split(self, doc: SayouBlock) -> List[SayouChunk]:
+            ...
+    ```
 
-* **Job:** Builds the Knowledge Graph (KG) from the `DataAtoms`.
+---
 
-* **In `BasicRAG`:**
-    1.  The `SchemaValidator` (auto-loaded) checks if each Atom has an `entity_class` (which you provided in `map_logic`).
-    2.  The `DefaultKGBuilder` constructs the graph.
-    3.  The `FileStorer` saves the final `final_kg.json` to disk.
+## Data Flow
 
-**5. RAG Stage (`sayou-rag` + `llm` + `extractor`)**
+Each stage exchanges data using Core schemas. No raw dicts pass between modules.
 
-* **Job:** Uses the KG to answer the query.
+```
+SayouPacket    ← Connector output  (raw bytes + URI + metadata)
+      ↓
+SayouBlock     ← Refinery / Document output  (clean text + structure)
+      ↓
+SayouChunk     ← Chunking output  (content slice + structural metadata)
+      ↓
+SayouNode      ← Wrapper output  (typed graph entity + ontology class)
+      ↓
+SayouOutput    ← Assembler output  (nodes + typed edges)
+      ↓
+Knowledge Graph  ← Loader output  (JSON / VectorDB / Graph DB)
+```
 
-* **In `BasicRAG`:**
-    1.  The `FileRetriever` (from `sayou-extractor`) reads the `final_kg.json`.
-    2.  The `SimpleKGContextFetcher` formats the KG data into a clean text `context`.
-    3.  The `LLMPipeline` (from `sayou-llm`) injects this `context` into a prompt for your local LLM.
-    4.  The final `answer` is returned.
+---
 
-When you're ready, you can "graduate" from `BasicRAG` and assemble these components yourself. This is covered in the **Library Guides** and **Sayou Agent** sections.
+## Plugin Registry
+
+Components register themselves at import time via `@register_component`. The Brain selects the correct implementation by calling `can_handle()` on each registered plugin, which returns a confidence score `[0.0–1.0]`. The highest scorer is used.
+
+```python
+@register_component("fetcher")
+class GitHubFetcher(BaseFetcher):
+    @classmethod
+    def can_handle(cls, source: str, strategy: str = "auto") -> float:
+        if strategy == "github":
+            return 1.0
+        if source.startswith("https://github.com"):
+            return 0.9
+        return 0.0
+```
+
+Adding a new capability only requires registering a new plugin — existing code is never modified.
+
+---
+
+## Ontology
+
+`sayou-core` defines the shared vocabulary used across all libraries.
+
+=== "Node Classes"
+    | Class | URI | Description |
+    | :--- | :--- | :--- |
+    | File | `sayou:File` | Source file |
+    | Class | `sayou:Class` | Class definition |
+    | Function | `sayou:Function` | Module-level function |
+    | Method | `sayou:Method` | Class method |
+    | Topic | `sayou:Topic` | Document section / heading |
+    | VideoSegment | `sayou:VideoSegment` | Timestamped media segment |
+
+=== "Edge Types"
+    | Predicate | URI | Confidence |
+    | :--- | :--- | :--- |
+    | Contains | `sayou:contains` | HIGH |
+    | Imports | `sayou:imports` | HIGH |
+    | Calls | `sayou:calls` | HIGH |
+    | Maybe Calls | `sayou:maybeCalls` | LOW |
+    | Inherits | `sayou:inherits` | HIGH |
+    | Overrides | `sayou:overrides` | HIGH |
+    | Uses Type | `sayou:usesType` | MEDIUM |

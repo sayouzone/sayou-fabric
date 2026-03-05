@@ -1,120 +1,163 @@
-site_name: Sayouzone's Data Platform
-site_description: Modular Open-Source Framework for LLM Data Pipelines
-site_author: Sayouzone
+site_name: Sayou Fabric
+site_description: Modular framework for building production-grade LLM data pipelines and knowledge graphs.
+site_author: Sayou Technologies
 site_url: https://sayouzone.github.io/sayou-fabric/
-
-copyright: Copyright &copy; 2025 Sayouzone | All rights reserved.
+copyright: Copyright &copy; 2026 Sayouzone | All rights reserved.
+repo_name: sayouzone/sayou-fabric
+repo_url: https://github.com/sayouzone/sayou-fabric
+edit_uri: edit/main/docs/
 
 theme:
   name: material
-  language: en
   logo: assets/sayou_logo.png
   favicon: assets/favicon.png
-  font:
-    text: "Inter"
-    code: "JetBrains Mono"
+
   palette:
-    - scheme: default
-      primary: indigo
-      accent: indigo
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
-    - scheme: slate
-      primary: indigo
-      accent: indigo
+
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-sunny
         name: Switch to light mode
+
+  font:
+    text: DM Sans
+    code: JetBrains Mono
+
   features:
-    # === Navigation ===
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
     - navigation.tabs
     - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
     - navigation.top
-    - navigation.tracking
-    - navigation.footer
-    # - toc.integrate
-    # === Content ===
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
     - content.code.copy
     - content.code.annotate
-    - content.action.edit
-    - content.action.view
-    # === Performance ===
-    - navigation.instant
-  canonical_url: https://sayouzone.github.io/sayou-fabric/
+    - content.tabs.link
+    - announce.dismiss
+    - navigation.footer
 
-markdown_extensions:
-  - admonition
-  - attr_list
-  - def_list
-  - footnotes
-  - pymdownx.details
-  - pymdownx.superfences
-  - pymdownx.tabbed
-  - pymdownx.highlight:
-      anchor_linenums: true
-      linenums_style: table
-      pygments_style: github-dark
-  - pymdownx.inlinehilite
-  - toc:
-      permalink: true
-      toc_depth: 3
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
 
-plugins:
-  - search
+extra_css:
+  - assets/extra.css
+
+extra_javascript:
+  - assets/extra.js
 
 extra:
-  generator: true
   social:
     - icon: fontawesome/solid/globe
       link: https://sayouzone.com/
       name: Sayouzone Official Website
     - icon: fontawesome/brands/github
       link: https://github.com/sayouzone/sayou-fabric
-    - icon: fontawesome/brands/linkedin
-      link: https://www.linkedin.com/company/sayouzone
-  analytics: null
-  meta:
-    - name: description
-      content: "Sayouzone Data Platform — Modular Open Source Framework for LLM Data Pipelines."
-    - name: keywords
-      content: "Sayouzone, LLM, RAG, AI, Open Source, Data Platform, Python, SDK"
-    - property: og:title
-      content: "Sayouzone Data Platform"
-    - property: og:description
-      content: "Build RAG pipelines and LLM data workflows with Sayouzone components."
-    - property: og:url
-      content: "https://sayouzone.github.io/sayou-fabric/"
-    - property: og:image
-      content: "https://sayouzone.github.io/sayou-fabric/assets/og_image.png"
-    - name: twitter:card
-      content: "summary_large_image"
+      name: Sayou Fabric on GitHub
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/search/?q=sayou
+      name: Sayouzone on PyPI
+
+  analytics:
+    provider: google
+    property: !ENV [GOOGLE_ANALYTICS_KEY, ""]
 
 
-extra_css:
-  - assets/extra.css
+plugins:
+  - search:
+      lang: en
+  - include-markdown:
+      rewrite_relative_urls: false
+      preserve_includer_indent: false
+      dedent: true
+  - mkdocstrings:
+      enabled: !ENV [ENABLE_MKDOCSTRINGS, false]
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            docstring_style: google
+            merge_init_into_class: true
+            show_if_no_docstring: false
+            filters:
+              - "!^_"
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      auto_title: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+      toc_depth: 3
 
 nav:
   - Home: index.md
   - Get Started:
+    - get-started/index.md
     - Introduction: get-started/introduction.md
     - Installation: get-started/installation.md
     - Quickstart: get-started/quickstart.md
     - Architecture: get-started/architecture.md
     - Philosophy: get-started/philosophy.md
-  - Sayou Agent:
-    - Overview: sayou-agent/overview.md
   - Library Guides:
-    - Overview: library-guides/overview.md
+    - library-guides/index.md
+    - Brain: library-guides/brain.md
+    - Core: library-guides/core.md
     - Connector: library-guides/connector.md
-    - Chunking: library-guides/chunking.md
+    - Document: library-guides/document.md
     - Refinery: library-guides/refinery.md
+    - Chunking: library-guides/chunking.md
     - Wrapper: library-guides/wrapper.md
     - Assembler: library-guides/assembler.md
     - Loader: library-guides/loader.md
     - Extractor: library-guides/extractor.md
-    - Document: library-guides/document.md
     - LLM: library-guides/llm.md
+    - Visualizer: library-guides/visualizer.md
+  - Sayou Agent:
+    - sayou-agent/index.md
+    - Overview: sayou-agent/overview.md
   - Reference:
+    - reference/index.md
     - API Reference: reference/api-reference.md
     - Contributing: reference/contributing.md

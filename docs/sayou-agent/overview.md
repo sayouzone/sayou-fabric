@@ -1,81 +1,52 @@
-# Sayou RAG: The Data Platform Orchestrator
+# Sayou Agent Overview
 
-Welcome to **Sayou RAG**.
-This is the command center of the Sayou Data Platform.
+<span class="sf-badge sf-badge--wip">Coming Soon</span>
 
-If individual libraries like `sayou-document` or `sayou-chunking` are the **engine parts** (pistons, gears, valves), then `sayou-rag` is the **Car**. It assembles these parts into a working vehicle that takes you from "Raw Data" to "Intelligent Answers."
+Sayou Agent is an AI-powered layer that consumes the Knowledge Graph produced by Sayou Fabric and performs intelligent, cascading analysis — answering questions like:
 
----
-
-## 1. The Two Pillars of RAG
-
-We architected `sayou-rag` around two fundamental lifecycles of data.
-
-### Phase 1: Ingestion Pipeline (The Builder)
-* **Goal:** Turn unstructured chaos into structured knowledge.
-* **Process:** This is a heavy, batch-oriented process.
-    1.  **Connect:** Fetch data from files or APIs.
-    2.  **Parse:** Extract high-fidelity data (`sayou-document`).
-    3.  **Refine:** Convert to standard Markdown (`sayou-refinery`).
-    4.  **Chunk:** Split based on structure and context (`sayou-chunking`).
-    5.  **Wrap:** Enforce company schema (`sayou-wrapper`).
-    6.  **Assemble:** Build the Knowledge Graph (`sayou-assembler`).
-    7.  **Load:** Persist to Vector DB or Graph DB (`sayou-loader`).
-
-### Phase 2: Inference Pipeline (The Solver)
-* **Goal:** Retrieve precise context and generate answers.
-* **Process:** This is a real-time, latency-sensitive process.
-    1.  **Extract:** Search KG/Vector Store for relevant nodes (`sayou-extractor`).
-    2.  **Generate:** Synthesize answers using LLMs (`sayou-llm`).
+> *"If I change this function, what else breaks?"*
 
 ---
 
-## 2. Smart Routing & Automation
+## Core Capabilities
 
-The core innovation of `sayou-rag` is the **`StandardPipeline`**. It acts as an intelligent router that decides how to process input data without user intervention.
+=== "Impact Analysis"
+    Traverses the KG along CALLS, INHERITS, and OVERRIDES edges to compute the **blast radius** of a change.
 
-**Scenario A: "I have a PDF file."**
+    - Given a modified function, finds all callers, transitive dependencies, and override chains.
+    - Produces a ranked list of affected symbols with confidence scores.
 
-```python
-rag.ingest("manual.pdf")
-```
+=== "Semantic Diff"
+    Compares two versions of a codebase using AST hash comparison — ignoring whitespace and comments.
 
-* **Logic:** Detects file path -> Activates `DocumentPipeline` -> Full ETL Process.
+    - Detects added, removed, and modified functions at the symbol level.
+    - Cherry-pick individual function changes and apply them selectively.
 
-**Scenario B: "I have raw text or JSON."**
+=== "Cascading Patch"
+    Uses an LLM to analyze the impact report and suggest (or apply) fixes to affected downstream code.
 
-```python
-rag.ingest({"text": "..."})
-```
-
-* **Logic:** Detects Dict input -> Skips Parsing -> Activates `WrapperPipeline` directly.
-
----
-
-## 3. Dependency Map
-
-`sayou-rag` sits at the top of the hierarchy. It does not contain complex parsing or splitting logic itself; it imports and orchestrates them.
-* **Upstream:** `sayou-connector`
-* **Midstream (Processing):** `sayou-document`, `sayou-refinery`, `sayou-chunking`
-* **Midstream (Structure):** `sayou-wrapper`, `sayou-assembler`
-* **Downstream:** `sayou-loader`, `sayou-extractor`, `sayou-llm`
+    - Identifies symbols that reference a changed API.
+    - Proposes minimal patches with rollback support.
 
 ---
 
-## 4. Getting Started
+## Architecture
 
-For detailed usage of the pipeline, refer to the **Quickstart** guide in the README or explore the specific guides for each component library in the left sidebar.
+```mermaid
+graph LR
+    KG[Knowledge Graph] --> Agent[Sayou Agent]
 
-To begin building your own RAG application, simply install the main package:
+    subgraph Capabilities
+        Diff[Semantic Diff Engine]
+        Impact[Impact Analyzer]
+        Patch[Cherry-Pick Patcher]
+        Cascade[Cascading LLM Agent]
+    end
 
-```python
-pip install sayou-rag
+    Agent --> Diff --> Impact --> Patch --> Cascade
 ```
 
-And initialize the standard pipeline:
+---
 
-```python
-from sayou.rag.pipeline.standard import StandardPipeline
-rag = StandardPipeline()
-rag.initialize()
-```
+!!! info "Under active development"
+    Sayou Agent is being built on top of the Sayou Fabric KG infrastructure. The KG edge types (CALLS, INHERITS, OVERRIDES) introduced in the Assembler are specifically designed to support this layer. Full documentation will be published at release.
