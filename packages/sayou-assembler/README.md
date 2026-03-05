@@ -4,6 +4,8 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/library-guides/assembler/)
 
+## Overview
+
 **The Knowledge Builder for Sayou Fabric.**
 
 `sayou-assembler` acts as the structural engineer of the pipeline. It accepts flat lists of `SayouNode` objects produced by the Wrapper and constructs meaningful relationships (Edges), embeddings, or specific query payloads.

@@ -4,6 +4,8 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/library-guides/wrapper/)
 
+## Overview
+
 **The Ontology Mapper for Sayou Fabric.**
 
 `sayou-wrapper` takes the fragmented chunks produced by `sayou-chunking` and wraps them into a standardized graph structure (**SayouNode**). This is the final preparation step before data is assembled into a Knowledge Graph or loaded into a Vector DB.

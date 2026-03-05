@@ -4,6 +4,8 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/library-guides/chunking/)
 
+## Overview
+
 **The Structure-Aware Splitter for Sayou Fabric.**
 
 `sayou-chunking` splits large texts into smaller, semantically meaningful units called **Chunks**. Unlike traditional splitters that blindly cut text by character count, this library understands the **syntax structure** of the data.

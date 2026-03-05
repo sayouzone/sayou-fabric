@@ -4,6 +4,8 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/sayou-agent/overview/)
 
+## Overview
+
 **The Central Nervous System (Orchestrator) of Sayou Fabric.**
 
 `sayou-brain` acts as the **Control Tower** for the entire Sayou ecosystem. It provides high-level **Pipeline Facades** that abstract away the complexity of connecting individual modules (`connector`, `document`, `chunking`, etc.).
