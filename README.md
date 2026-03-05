@@ -30,29 +30,26 @@ We focus on transforming unstructured data into structured assets by analyzing t
 ### 1.1. Structure-First Architecture
 
 We prioritize the native structure of data to build a solid skeleton before processing the content.
-* **Code**: Parsed via AST to deterministically link Classes, Methods, and Import dependencies.
-* **Media**: Structured via Temporal Timeline and Semantic Segmentation.
-* **Docs**: Hierarchically organized by Headers, Tables, and Layout Coordinates.
+
+- **Code**: Parsed via AST to deterministically link Classes, Methods, and Import dependencies.
+- **Media**: Structured via Temporal Timeline and Semantic Segmentation.
+- **Docs**: Hierarchically organized by Headers, Tables, and Layout Coordinates.
 
 ### 1.2. The 3-Tier Design Pattern
 
 Inspired by robust enterprise architectures, every component adheres to a strict hierarchy to ensure stability at scale:
-* **Tier 1 (Interface)**: The immutable contract defining behavior.
-* **Tier 2 (Template)**: Standardized logic for ETL pipelines (Battery-included).
-* **Tier 3 (Plugin)**: Vendor-specific implementations (e.g., YouTube, GitHub, Notion).
+
+- **Tier 1 (Interface)**: The immutable contract defining behavior.
+- **Tier 2 (Template)**: Standardized logic for ETL pipelines (Battery-included).
+- **Tier 3 (Plugin)**: Vendor-specific implementations (e.g., YouTube, GitHub, Notion).
 
 ```mermaid
 graph TD
-    %% 스타일 정의
-    classDef brain fill:#673ab7,stroke:#4527a0,color:white,stroke-width:2px;
-    classDef modules fill:#e3f2fd,stroke:#1565c0,stroke-width:1px;
-    classDef core fill:#455a64,stroke:#263238,color:white,stroke-width:2px;
-
     %% 노드 정의
     Brain[Sayou Brain
     < Orchestrator >]:::brain
     
-    subgraph Libs [Functional Libraries]
+    subgraph Libs [Data Libraries]
         direction LR
         Conn[Connector]
         Doc[Document]
@@ -84,18 +81,18 @@ Sayou Fabric consists of independent, loosely coupled libraries that work togeth
 
 | Package | Version | Description |
 | :--- | :--- | :--- |
-| `sayou-core` | [![PyPI](https://img.shields.io/pypi/v/sayou-core.svg?color=blue)](https://pypi.org/project/sayou-core/) | Foundational layer defining Schemas, Ontology, and base components. |
-| `sayou-brain` | [![PyPI](https://img.shields.io/pypi/v/sayou-brain.svg?color=blue)](https://pypi.org/project/sayou-brain/) | Manages the entire lifecycle of data processing pipelines. |
-| `sayou-connector` | [![PyPI](https://img.shields.io/pypi/v/sayou-connector.svg?color=blue)](https://pypi.org/project/sayou-connector/) | Universal ingestor with auto-source detection and streaming support. |
-| `sayou-document` | [![PyPI](https://img.shields.io/pypi/v/sayou-document.svg?color=blue)](https://pypi.org/project/sayou-document/) | Parses documents while preserving layout, styles, and spatial coordinates. |
-| `sayou-refinery` | [![PyPI](https://img.shields.io/pypi/v/sayou-refinery.svg?color=blue)](https://pypi.org/project/sayou-refinery/) | Normalizes data formats and removes noise or PII. |
-| `sayou-chunking` | [![PyPI](https://img.shields.io/pypi/v/sayou-chunking.svg?color=blue)](https://pypi.org/project/sayou-chunking/) | Splits text intelligently based on context (Code, Markdown, Time). |
-| `sayou-wrapper` | [![PyPI](https://img.shields.io/pypi/v/sayou-wrapper.svg?color=blue)](https://pypi.org/project/sayou-wrapper/) | Maps raw data to the Sayou Ontology and creates standardized Nodes. |
-| `sayou-assembler` | [![PyPI](https://img.shields.io/pypi/v/sayou-assembler.svg?color=blue)](https://pypi.org/project/sayou-assembler/) | Constructs semantic relationships (Edges) between Nodes. |
-| `sayou-loader` | [![PyPI](https://img.shields.io/pypi/v/sayou-loader.svg?color=blue)](https://pypi.org/project/sayou-loader/) | Exports the constructed Knowledge Graph to Databases or Files. |
-| `sayou-extractor` | [![PyPI version](https://img.shields.io/pypi/v/sayou-extractor.svg?color=blue)](https://pypi.org/project/sayou-extractor/) | Retrieves context using Hybrid Search (Vector + Graph). |
-| `sayou-llm` | [![PyPI version](https://img.shields.io/pypi/v/sayou-llm.svg?color=blue)](https://pypi.org/project/sayou-llm/) | A unified adapter interface for various LLM providers. |
-| `sayou-visualizer` | [![PyPI](https://img.shields.io/pypi/v/sayou-visualizer.svg?color=blue)](https://pypi.org/project/sayou-visualizer/) | Visualizes the pipeline flow and renders 3D Knowledge Graphs. |
+| `sayou-core` | [![PyPI](https://img.shields.io/pypi/v/sayou-core.svg?color=4f8ef7)](https://pypi.org/project/sayou-core/) | Foundational layer defining Schemas, Ontology, and base components. |
+| `sayou-brain` | [![PyPI](https://img.shields.io/pypi/v/sayou-brain.svg?color=4f8ef7)](https://pypi.org/project/sayou-brain/) | Manages the entire lifecycle of data processing pipelines. |
+| `sayou-connector` | [![PyPI](https://img.shields.io/pypi/v/sayou-connector.svg?color=4f8ef7)](https://pypi.org/project/sayou-connector/) | Universal ingestor with auto-source detection and streaming support. |
+| `sayou-document` | [![PyPI](https://img.shields.io/pypi/v/sayou-document.svg?color=4f8ef7)](https://pypi.org/project/sayou-document/) | Parses documents while preserving layout, styles, and spatial coordinates. |
+| `sayou-refinery` | [![PyPI](https://img.shields.io/pypi/v/sayou-refinery.svg?color=4f8ef7)](https://pypi.org/project/sayou-refinery/) | Normalizes data formats and removes noise or PII. |
+| `sayou-chunking` | [![PyPI](https://img.shields.io/pypi/v/sayou-chunking.svg?color=4f8ef7)](https://pypi.org/project/sayou-chunking/) | Splits text intelligently based on context (Code, Markdown, Time). |
+| `sayou-wrapper` | [![PyPI](https://img.shields.io/pypi/v/sayou-wrapper.svg?color=4f8ef7)](https://pypi.org/project/sayou-wrapper/) | Maps raw data to the Sayou Ontology and creates standardized Nodes. |
+| `sayou-assembler` | [![PyPI](https://img.shields.io/pypi/v/sayou-assembler.svg?color=4f8ef7)](https://pypi.org/project/sayou-assembler/) | Constructs semantic relationships (Edges) between Nodes. |
+| `sayou-loader` | [![PyPI](https://img.shields.io/pypi/v/sayou-loader.svg?color=4f8ef7)](https://pypi.org/project/sayou-loader/) | Exports the constructed Knowledge Graph to Databases or Files. |
+| `sayou-extractor` | [![PyPI version](https://img.shields.io/pypi/v/sayou-extractor.svg?color=4f8ef7)](https://pypi.org/project/sayou-extractor/) | Retrieves context using Hybrid Search (Vector + Graph). |
+| `sayou-llm` | [![PyPI version](https://img.shields.io/pypi/v/sayou-llm.svg?color=4f8ef7)](https://pypi.org/project/sayou-llm/) | A unified adapter interface for various LLM providers. |
+| `sayou-visualizer` | [![PyPI](https://img.shields.io/pypi/v/sayou-visualizer.svg?color=4f8ef7)](https://pypi.org/project/sayou-visualizer/) | Visualizes the pipeline flow and renders 3D Knowledge Graphs. |
 
 ---
 
