@@ -4,7 +4,7 @@
 
 # Sayou Fabric
 
-[![PyPI](https://img.shields.io/pypi/v/sayou-connector.svg?color=blue&label=pypi%20package)](https://pypi.org/project/sayou-connector/)
+[![PyPI](https://img.shields.io/pypi/v/sayou-connector.svg?color=4f8ef7&label=pypi%20package)](https://pypi.org/project/sayou-connector/)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-success.svg?logo=materialformkdocs)](https://sayouzone.github.io/sayou-fabric/)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blueviolet.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
