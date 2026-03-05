@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to Sayou Fabric! We use a **Monorepo** structure, meaning multiple libraries (`sayou-core`, `sayou-brain`, etc.) coexist in this single repository.
 
-## 🚀 Quick Start (Development Setup)
+## Quick Start (Development Setup)
 
 Since this is a monorepo, you need to install the packages in **editable mode** to test your changes immediately.
 
@@ -30,7 +30,7 @@ You can run tests for the entire project or a specific module.
     # Run tests for a specific module (Recommended)
     pytest tests/connector
 
-## 📝 Pull Requests Protocol
+## Pull Requests Protocol
 
 1. **Focus**: Keep PRs focused on a single library if possible (e.g., "Add Notion Fetcher to sayou-connector").
 2. **Naming**: Start commit messages with the component name.
@@ -38,6 +38,6 @@ You can run tests for the entire project or a specific module.
     * Good: `[core] Fix retry decorator`
 3. **Tests**: Ensure you added a unit test in `tests/{library_name}/`.
 
-## 🎨 Style Guide
+## Style Guide
 - We follow **PEP 8**.
 - Please run **Black** and **Isort** before committing.
