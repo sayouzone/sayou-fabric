@@ -159,17 +159,27 @@ nav:
   - Examples:
     - examples/index.md
     # - Brain:
+    #   - Quick Start :
     # - Connector:
+    #   - Quick Start :
     # - Document:
+    #   - Quick Start :
     # - Refinery:
+    #   - Quick Start :
     - Chunking:
       - Quick Start Code: examples/src/chunking_quick_start_code.md
     # - Wrapper:
+    #   - Quick Start :
     # - Assembler:
+    #   - Quick Start :
     # - Loader:
+    #   - Quick Start :
     # - Extractor:
+    #   - Quick Start :
     # - LLM:
+    #   - Quick Start :
     # - Visualizer:
+    #   - Quick Start :
   - Reference:
     - reference/index.md
     - Contributing: reference/contributing.md
