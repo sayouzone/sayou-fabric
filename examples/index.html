@@ -9,34 +9,34 @@
         <meta name="description" content="Modular framework for building production-grade LLM data pipelines and knowledge graphs.">
       
       
-        <meta name="author" content="Sayou Technologies">
+        <meta name="author" content="Sayouzone">
       
       
-        <link rel="canonical" href="https://sayouzone.github.io/sayou-fabric/reference/api-reference/">
+        <link rel="canonical" href="https://sayouzone.github.io/sayou-fabric/examples/">
       
       
-        <link rel="prev" href="../">
+        <link rel="prev" href="../sayou-agent/overview/">
       
       
-        <link rel="next" href="../contributing/">
+        <link rel="next" href="../reference/">
       
       
         
       
       
-      <link rel="icon" href="../../assets/favicon.png">
+      <link rel="icon" href="../assets/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
-        <title>API Reference - Sayou Fabric</title>
+        <title>Library Guides - Sayou Fabric</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,11 +55,11 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../assets/extra.css">
+      <link rel="stylesheet" href="../assets/extra.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
   
@@ -94,7 +94,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api-reference" class="md-skip">
+        <a href="#library-guides" class="md-skip">
           Skip to content
         </a>
       
@@ -108,9 +108,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Sayou Fabric" class="md-header__button md-logo" aria-label="Sayou Fabric" data-md-component="logo">
+    <a href=".." title="Sayou Fabric" class="md-header__button md-logo" aria-label="Sayou Fabric" data-md-component="logo">
       
-  <img src="../../assets/sayou_logo.png" alt="logo">
+  <img src="../assets/sayou_logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -127,7 +127,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              API Reference
+              Library Guides
             
           </span>
         </div>
@@ -245,7 +245,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href=".." class="md-tabs__link">
         
   
   
@@ -266,7 +266,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../get-started/" class="md-tabs__link">
+        <a href="../get-started/" class="md-tabs__link">
           
   
   
@@ -288,7 +288,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../library-guides/" class="md-tabs__link">
+        <a href="../library-guides/" class="md-tabs__link">
           
   
   
@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../sayou-agent/" class="md-tabs__link">
+        <a href="../sayou-agent/" class="md-tabs__link">
           
   
   
@@ -334,7 +334,29 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/" class="md-tabs__link">
           
   
   
@@ -359,6 +381,8 @@
           
             
               
+                
+              
               <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
@@ -370,9 +394,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Sayou Fabric" class="md-nav__button md-logo" aria-label="Sayou Fabric" data-md-component="logo">
+    <a href=".." title="Sayou Fabric" class="md-nav__button md-logo" aria-label="Sayou Fabric" data-md-component="logo">
       
-  <img src="../../assets/sayou_logo.png" alt="logo">
+  <img src="../assets/sayou_logo.png" alt="logo">
 
     </a>
     Sayou Fabric
@@ -399,7 +423,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -455,13 +479,11 @@
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../get-started/" class="md-nav__link ">
+            <a href="../get-started/" class="md-nav__link ">
               
   
   
@@ -505,7 +527,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../get-started/introduction/" class="md-nav__link">
+      <a href="../get-started/introduction/" class="md-nav__link">
         
   
   
@@ -533,7 +555,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../get-started/installation/" class="md-nav__link">
+      <a href="../get-started/installation/" class="md-nav__link">
         
   
   
@@ -561,7 +583,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../get-started/quickstart/" class="md-nav__link">
+      <a href="../get-started/quickstart/" class="md-nav__link">
         
   
   
@@ -589,7 +611,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../get-started/architecture/" class="md-nav__link">
+      <a href="../get-started/architecture/" class="md-nav__link">
         
   
   
@@ -617,7 +639,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../get-started/philosophy/" class="md-nav__link">
+      <a href="../get-started/philosophy/" class="md-nav__link">
         
   
   
@@ -695,13 +717,11 @@
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../library-guides/" class="md-nav__link ">
+            <a href="../library-guides/" class="md-nav__link ">
               
   
   
@@ -745,7 +765,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/brain/" class="md-nav__link">
+      <a href="../library-guides/brain/" class="md-nav__link">
         
   
   
@@ -773,7 +793,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/core/" class="md-nav__link">
+      <a href="../library-guides/core/" class="md-nav__link">
         
   
   
@@ -801,7 +821,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/connector/" class="md-nav__link">
+      <a href="../library-guides/connector/" class="md-nav__link">
         
   
   
@@ -829,7 +849,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/document/" class="md-nav__link">
+      <a href="../library-guides/document/" class="md-nav__link">
         
   
   
@@ -857,7 +877,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/refinery/" class="md-nav__link">
+      <a href="../library-guides/refinery/" class="md-nav__link">
         
   
   
@@ -885,7 +905,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/chunking/" class="md-nav__link">
+      <a href="../library-guides/chunking/" class="md-nav__link">
         
   
   
@@ -913,7 +933,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/wrapper/" class="md-nav__link">
+      <a href="../library-guides/wrapper/" class="md-nav__link">
         
   
   
@@ -941,7 +961,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/assembler/" class="md-nav__link">
+      <a href="../library-guides/assembler/" class="md-nav__link">
         
   
   
@@ -969,7 +989,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/loader/" class="md-nav__link">
+      <a href="../library-guides/loader/" class="md-nav__link">
         
   
   
@@ -997,7 +1017,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/extractor/" class="md-nav__link">
+      <a href="../library-guides/extractor/" class="md-nav__link">
         
   
   
@@ -1025,7 +1045,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/llm/" class="md-nav__link">
+      <a href="../library-guides/llm/" class="md-nav__link">
         
   
   
@@ -1053,7 +1073,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../library-guides/visualizer/" class="md-nav__link">
+      <a href="../library-guides/visualizer/" class="md-nav__link">
         
   
   
@@ -1109,13 +1129,11 @@
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../sayou-agent/" class="md-nav__link ">
+            <a href="../sayou-agent/" class="md-nav__link ">
               
   
   
@@ -1159,7 +1177,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../sayou-agent/overview/" class="md-nav__link">
+      <a href="../sayou-agent/overview/" class="md-nav__link">
         
   
   
@@ -1204,8 +1222,6 @@
       
         
       
-        
-      
     
     
     
@@ -1226,7 +1242,178 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="./" class="md-nav__link md-nav__link--active">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link md-nav__link--active" for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunking
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Chunking
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="src/chunking_quick_start_code.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/" class="md-nav__link ">
               
   
   
@@ -1244,14 +1431,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1267,48 +1454,10 @@
                 
   
   
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    API Reference
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
   
   
     <li class="md-nav__item">
-      <a href="../contributing/" class="md-nav__link">
+      <a href="../reference/contributing/" class="md-nav__link">
         
   
   
@@ -1344,7 +1493,9 @@
             
             
               
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" hidden>
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -1367,6 +1518,8 @@
               
                 
 
+  
+
 
 
   
@@ -1379,7 +1532,7 @@
   
   
     <li class="md-path__item">
-      <a href="../.." class="md-path__link">
+      <a href=".." class="md-path__link">
         
   <span class="md-ellipsis">
     Home
@@ -1397,10 +1550,10 @@
     
     
       <li class="md-path__item">
-        <a href="../" class="md-path__link">
+        <a href="./" class="md-path__link">
           
   <span class="md-ellipsis">
-    Reference
+    Examples
   </span>
 
         </a>
@@ -1416,16 +1569,86 @@
               <article class="md-content__inner md-typeset">
                 
                   
+  
+
 
 
   
   
 
 
-<h1 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h1>
-<p><span class="sf-badge sf-badge--wip">Coming Soon</span></p>
-
-
+<h1 id="library-guides">Library Guides<a class="headerlink" href="#library-guides" title="Permanent link">&para;</a></h1>
+<p>Sayou Fabric is composed of independent Python packages. Each follows the same <a href="../get-started/architecture/">3-Tier design pattern</a> — install only what you need, replace any component at any layer.</p>
+<div class="language-bash highlight"><span class="filename">Bash</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>sayou-brain<span class="w">        </span><span class="c1"># full stack</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span>sayou-chunking<span class="w">     </span><span class="c1"># just the splitter</span>
+</span></code></pre></div>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Package</th>
+<th style="text-align: center;">Version</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="brain.md"><code>sayou-brain</code></a></td>
+<td style="text-align: center;"><a href="https://pypi.org/project/sayou-brain/"><img alt="PyPI" src="https://img.shields.io/pypi/v/sayou-brain.svg?color=4f8ef7" /></a></td>
+<td style="text-align: left;">Pipeline orchestrator — wires all modules together</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="connector.md"><code>sayou-connector</code></a></td>
+<td style="text-align: center;"><a href="https://pypi.org/project/sayou-connector/"><img alt="PyPI" src="https://img.shields.io/pypi/v/sayou-connector.svg?color=4f8ef7" /></a></td>
+<td style="text-align: left;">Universal ingestor — files, APIs, databases, SaaS</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="document.md"><code>sayou-document</code></a></td>
+<td style="text-align: center;"><a href="https://pypi.org/project/sayou-document/"><img alt="PyPI" src="https://img.shields.io/pypi/v/sayou-document.svg?color=4f8ef7" /></a></td>
+<td style="text-align: left;">Layout-preserving parser — PDF, Office, Image</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="refinery.md"><code>sayou-refinery</code></a></td>
+<td style="text-align: center;"><a href="https://pypi.org/project/sayou-refinery/"><img alt="PyPI" src="https://img.shields.io/pypi/v/sayou-refinery.svg?color=4f8ef7" /></a></td>
+<td style="text-align: left;">Data cleaning, normalization, PII masking</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="chunking.md"><code>sayou-chunking</code></a></td>
+<td style="text-align: center;"><a href="https://pypi.org/project/sayou-chunking/"><img alt="PyPI" src="https://img.shields.io/pypi/v/sayou-chunking.svg?color=4f8ef7" /></a></td>
+<td style="text-align: left;">Polyglot structural splitter with AST call-graph</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="wrapper.md"><code>sayou-wrapper</code></a></td>
+<td style="text-align: center;"><a href="https://pypi.org/project/sayou-wrapper/"><img alt="PyPI" src="https://img.shields.io/pypi/v/sayou-wrapper.svg?color=4f8ef7" /></a></td>
+<td style="text-align: left;">Chunk → typed <code>SayouNode</code> with ontology mapping</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assembler.md"><code>sayou-assembler</code></a></td>
+<td style="text-align: center;"><a href="https://pypi.org/project/sayou-assembler/"><img alt="PyPI" src="https://img.shields.io/pypi/v/sayou-assembler.svg?color=4f8ef7" /></a></td>
+<td style="text-align: left;">Node → Edge resolution — CALLS, INHERITS, IMPORTS…</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="loader.md"><code>sayou-loader</code></a></td>
+<td style="text-align: center;"><a href="https://pypi.org/project/sayou-loader/"><img alt="PyPI" src="https://img.shields.io/pypi/v/sayou-loader.svg?color=4f8ef7" /></a></td>
+<td style="text-align: left;">Persistence — VectorDB, Graph DB, JSON</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="extractor.md"><code>sayou-extractor</code></a></td>
+<td style="text-align: center;"><a href="https://pypi.org/project/sayou-extractor/"><img alt="PyPI" src="https://img.shields.io/pypi/v/sayou-extractor.svg?color=4f8ef7" /></a></td>
+<td style="text-align: left;">Hybrid search — Vector + Graph retrieval</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="llm.md"><code>sayou-llm</code></a></td>
+<td style="text-align: center;"><a href="https://pypi.org/project/sayou-llm/"><img alt="PyPI" src="https://img.shields.io/pypi/v/sayou-llm.svg?color=4f8ef7" /></a></td>
+<td style="text-align: left;">Unified LLM adapter interface</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="visualizer.md"><code>sayou-visualizer</code></a></td>
+<td style="text-align: center;"><a href="https://pypi.org/project/sayou-visualizer/"><img alt="PyPI" src="https://img.shields.io/pypi/v/sayou-visualizer.svg?color=4f8ef7" /></a></td>
+<td style="text-align: left;">3D KG rendering and pipeline DAG tracing</td>
+</tr>
+</tbody>
+</table>
 
 
 
@@ -1434,7 +1657,14 @@
 
 
   
+  
 
+
+
+  
+
+
+  
 
 
 
@@ -1460,10 +1690,12 @@
   
     
       
+        
+      
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Reference">
+          <a href="../sayou-agent/overview/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Overview">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1473,20 +1705,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Reference
+                Overview
               </div>
             </div>
           </a>
         
         
           
-          <a href="../contributing/" class="md-footer__link md-footer__link--next" aria-label="Next: Contributing">
+          <a href="../reference/" class="md-footer__link md-footer__link--next" aria-label="Next: Reference">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Contributing
+                Reference
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1558,12 +1790,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.path", "navigation.indexes", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "announce.dismiss", "navigation.footer"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.path", "navigation.indexes", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "announce.dismiss", "navigation.footer"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../../assets/extra.js"></script>
+        <script src="../assets/extra.js"></script>
       
     
   </body>
