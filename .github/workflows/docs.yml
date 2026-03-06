@@ -41,6 +41,9 @@ jobs:
             "mkdocs-include-markdown-plugin>=6.0" \
             "mkdocstrings[python]>=0.24"
 
+      - name: Generate example pages from .py files
+        run: python scripts/gen_examples.py
+
       - name: Install Sayou packages (for mkdocstrings introspection)
         run: |
           for pkg_dir in packages/*/; do

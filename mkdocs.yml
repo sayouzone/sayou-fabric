@@ -1,6 +1,6 @@
 site_name: Sayou Fabric
 site_description: Modular framework for building production-grade LLM data pipelines and knowledge graphs.
-site_author: Sayou Technologies
+site_author: Sayouzone
 site_url: https://sayouzone.github.io/sayou-fabric/
 copyright: Copyright &copy; 2026 Sayouzone | All rights reserved.
 repo_name: sayouzone/sayou-fabric
@@ -39,7 +39,6 @@ theme:
     - navigation.tracking
     - navigation.tabs
     - navigation.sections
-    - navigation.expand
     - navigation.path
     - navigation.indexes
     - navigation.top
@@ -157,7 +156,20 @@ nav:
   - Sayou Agent:
     - sayou-agent/index.md
     - Overview: sayou-agent/overview.md
+  - Examples:
+    - examples/index.md
+    # - Brain:
+    # - Connector:
+    # - Document:
+    # - Refinery:
+    - Chunking:
+      - Quick Start Code: examples/src/chunking_quick_start_code.md
+    # - Wrapper:
+    # - Assembler:
+    # - Loader:
+    # - Extractor:
+    # - LLM:
+    # - Visualizer:
   - Reference:
     - reference/index.md
-    - API Reference: reference/api-reference.md
     - Contributing: reference/contributing.md
