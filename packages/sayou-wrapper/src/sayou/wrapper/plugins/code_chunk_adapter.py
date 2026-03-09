@@ -92,14 +92,17 @@ class CodeChunkAdapter(BaseAdapter):
             # ---- Ensure file node ----
             file_node_id = f"sayou:file:{safe_path}"
             if file_node_id not in file_nodes:
+                file_node_attrs = {
+                    SayouAttribute.FILE_PATH: source_path,
+                    SayouAttribute.LANGUAGE: meta.get("language", ""),
+                }
+                if meta.get("module_all"):
+                    file_node_attrs[SayouAttribute.MODULE_ALL_RAW] = meta["module_all"]
                 file_nodes[file_node_id] = SayouNode(
                     node_id=file_node_id,
                     node_class=SayouClass.FILE,
                     friendly_name=os.path.basename(source_path),
-                    attributes={
-                        SayouAttribute.FILE_PATH: source_path,
-                        SayouAttribute.LANGUAGE: meta.get("language", ""),
-                    },
+                    attributes=file_node_attrs,
                 )
 
             # ---- Build typed node ----
@@ -160,6 +163,10 @@ class CodeChunkAdapter(BaseAdapter):
 
             if meta.get("inherits_from"):
                 attrs[SayouAttribute.INHERITS_FROM_RAW] = meta["inherits_from"]
+            if meta.get("decorators"):
+                attrs[SayouAttribute.DECORATORS_RAW] = meta["decorators"]
+            if meta.get("instance_attrs"):
+                attrs[SayouAttribute.INSTANCE_ATTRS_RAW] = meta["instance_attrs"]
 
             node = SayouNode(
                 node_id=node_id,
@@ -262,6 +269,8 @@ class CodeChunkAdapter(BaseAdapter):
             # Loose blocks may carry import lists — preserve them
             if meta.get("imports"):
                 attrs["sayou:importsRaw"] = meta["imports"]
+            if meta.get("module_vars"):
+                attrs[SayouAttribute.MODULE_VARS_RAW] = meta["module_vars"]
 
             return SayouNode(
                 node_id=node_id,
@@ -297,6 +306,22 @@ class CodeChunkAdapter(BaseAdapter):
             attrs[SayouAttribute.ATTR_CALLS_RAW] = meta["attribute_calls"]
         if meta.get("type_refs"):
             attrs[SayouAttribute.TYPE_REFS_RAW] = meta["type_refs"]
+        if meta.get("decorators"):
+            attrs[SayouAttribute.DECORATORS_RAW] = meta["decorators"]
+        if meta.get("globals_declared"):
+            attrs[SayouAttribute.GLOBALS_DECLARED_RAW] = meta["globals_declared"]
+        if meta.get("raises"):
+            attrs[SayouAttribute.RAISES_RAW] = meta["raises"]
+        if meta.get("catches"):
+            attrs[SayouAttribute.CATCHES_RAW] = meta["catches"]
+        if meta.get("params") is not None:
+            attrs[SayouAttribute.PARAMS_RAW] = meta["params"]
+        if meta.get("is_async"):
+            attrs[SayouAttribute.IS_ASYNC] = True
+        if meta.get("is_generator"):
+            attrs[SayouAttribute.IS_GENERATOR] = True
+        if "return_type" in meta:
+            attrs[SayouAttribute.RETURN_TYPE] = meta["return_type"]
 
     @staticmethod
     def _safe(path: str) -> str:
