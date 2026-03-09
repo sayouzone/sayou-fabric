@@ -89,8 +89,11 @@ class CodeGraphBuilder(BaseBuilder):
             self._edge_maybe_calls(node, idx, edges)
             self._edge_inherits(node, idx, edges)
             self._edge_uses_type(node, idx, edges)
+            self._edge_mutates_global(node, idx, edges)
+            self._edge_raises(node, edges)
 
         self._edge_overrides(nodes, idx, edges)
+        self._edge_exposes(nodes, idx, edges)
 
         self._log(f"✅ [BUILD] {len(edges)} edges generated.")
 
@@ -146,6 +149,20 @@ class CodeGraphBuilder(BaseBuilder):
                 parent = node.attributes.get(SayouAttribute.PARENT_CLASS, "")
                 method = node.attributes.get(SayouAttribute.SYMBOL_NAME, "")
                 idx.method_map[fp][parent][method] = node.node_id
+
+            # module_var_map: path → {var_name: code_block_node_id}
+            if node.node_class == SayouClass.CODE_BLOCK:
+                for var_name in node.attributes.get(SayouAttribute.MODULE_VARS_RAW, []):
+                    idx.module_var_map[fp][var_name] = node.node_id
+
+            # decorator_map: node_id → set of decorator names
+            decs = node.attributes.get(SayouAttribute.DECORATORS_RAW, [])
+            if decs:
+                idx.decorator_map[node.node_id] = set(decs)
+
+            # async_map: set of node_ids that are async
+            if node.attributes.get(SayouAttribute.IS_ASYNC, False):
+                idx.async_map.add(node.node_id)
 
         return idx
 
@@ -226,19 +243,25 @@ class CodeGraphBuilder(BaseBuilder):
         src_fp = _norm(node.attributes.get(SayouAttribute.FILE_PATH, ""))
         parent_class = node.attributes.get(SayouAttribute.PARENT_CLASS, "")
 
+        src_is_async: bool = node.attributes.get(SayouAttribute.IS_ASYNC, False)
+
         for name in raw_calls:
             target_id = self._resolve_call(name, src_fp, parent_class, idx)
             if target_id and target_id != node.node_id:
-                edges.append(
-                    _edge(
-                        node.node_id,
-                        target_id,
-                        SayouPredicate.CALLS,
-                        "HIGH",
-                        "DIRECT",
-                        "call_resolver",
-                    )
+                e = _edge(
+                    node.node_id,
+                    target_id,
+                    SayouPredicate.CALLS,
+                    "HIGH",
+                    "DIRECT",
+                    "call_resolver",
                 )
+                # Sync caller → async callee: the callee returns a coroutine
+                # object, not its result. Without `await`, this is almost always
+                # a bug. Flag it so downstream tools can highlight it.
+                if not src_is_async and target_id in idx.async_map:
+                    e["async_mismatch"] = True
+                edges.append(e)
 
     def _edge_maybe_calls(self, node, idx: "_Index", edges: list) -> None:
         """
@@ -262,17 +285,22 @@ class CodeGraphBuilder(BaseBuilder):
             hits = idx.global_symbol_map.get(name, [])
             if len(hits) == 1:
                 _, target_id = hits[0]
-                if target_id != node.node_id:
-                    edges.append(
-                        _edge(
-                            node.node_id,
-                            target_id,
-                            SayouPredicate.MAYBE_CALLS,
-                            "LOW",
-                            "HEURISTIC",
-                            "duck_type_resolver",
-                        )
+                if target_id == node.node_id:
+                    continue
+                # @property methods are accessed as attributes, not called.
+                # obj.prop → property read, not a CALLS edge.
+                if "property" in idx.decorator_map.get(target_id, set()):
+                    continue
+                edges.append(
+                    _edge(
+                        node.node_id,
+                        target_id,
+                        SayouPredicate.MAYBE_CALLS,
+                        "LOW",
+                        "HEURISTIC",
+                        "duck_type_resolver",
                     )
+                )
             # >1 hits → ambiguous, skip
 
     def _edge_inherits(self, node, idx: "_Index", edges: list) -> None:
@@ -338,16 +366,22 @@ class CodeGraphBuilder(BaseBuilder):
             for method_name, child_mid in child_methods.items():
                 parent_mid = parent_methods.get(method_name)
                 if parent_mid:
-                    edges.append(
-                        _edge(
-                            child_mid,
-                            parent_mid,
-                            SayouPredicate.OVERRIDES,
-                            "HIGH",
-                            "INFERRED",
-                            "override_resolver",
-                        )
+                    parent_decs = idx.decorator_map.get(parent_mid, set())
+                    is_abstract = (
+                        "abstractmethod" in parent_decs
+                        or "abc.abstractmethod" in parent_decs
                     )
+                    e = _edge(
+                        child_mid,
+                        parent_mid,
+                        SayouPredicate.OVERRIDES,
+                        "HIGH",
+                        "INFERRED",
+                        "override_resolver",
+                    )
+                    if is_abstract:
+                        e["abstract_parent"] = True
+                    edges.append(e)
 
     def _edge_uses_type(self, node, idx: "_Index", edges: list) -> None:
         """FUNC/METHOD → CLASS via type annotation / isinstance refs (USES_TYPE)."""
@@ -375,6 +409,106 @@ class CodeGraphBuilder(BaseBuilder):
                         "type_ref_resolver",
                     )
                 )
+
+    def _edge_mutates_global(self, node, idx: "_Index", edges: list) -> None:
+        """
+        FUNC/METHOD → CODE_BLOCK (module-level var block) via MUTATES_GLOBAL.
+
+        A function that declares `global x` directly mutates shared module state.
+        We resolve `x` to the CODE_BLOCK node whose MODULE_VARS_RAW contains it.
+        If no such block is found (e.g. the var is from an imported module),
+        the edge is silently skipped — no phantom nodes are created.
+        """
+        if node.node_class not in (SayouClass.FUNCTION, SayouClass.METHOD):
+            return
+
+        declared: List[str] = node.attributes.get(
+            SayouAttribute.GLOBALS_DECLARED_RAW, []
+        )
+        if not declared:
+            return
+
+        src_fp = _norm(node.attributes.get(SayouAttribute.FILE_PATH, ""))
+
+        for var_name in declared:
+            target_id = idx.module_var_map.get(src_fp, {}).get(var_name)
+            if target_id and target_id != node.node_id:
+                edges.append(
+                    _edge(
+                        node.node_id,
+                        target_id,
+                        SayouPredicate.MUTATES_GLOBAL,
+                        "HIGH",
+                        "DIRECT",
+                        "global_mutator_resolver",
+                    )
+                )
+
+    def _edge_raises(self, node, edges: list) -> None:
+        """
+        FUNC/METHOD → virtual exception-type node via RAISES.
+
+        Exception types are not first-class nodes in the KG (they may come from
+        stdlib or third-party packages not in the graph). We create lightweight
+        virtual nodes with id `sayou:exc:<TypeName>` on demand. The same virtual
+        node is reused across all functions that raise the same exception type,
+        allowing queries like "which functions raise ValueError?".
+        """
+        if node.node_class not in (SayouClass.FUNCTION, SayouClass.METHOD):
+            return
+
+        raises: List[str] = node.attributes.get(SayouAttribute.RAISES_RAW, [])
+        if not raises:
+            return
+
+        for exc_name in raises:
+            virtual_id = f"sayou:exc:{exc_name}"
+            edges.append(
+                _edge(
+                    node.node_id,
+                    virtual_id,
+                    SayouPredicate.RAISES,
+                    "HIGH",
+                    "DIRECT",
+                    "exception_resolver",
+                )
+            )
+
+    def _edge_exposes(self, nodes, idx: "_Index", edges: list) -> None:
+        """
+        FILE → FUNCTION/CLASS via EXPOSES for symbols declared in __all__.
+
+        Runs as a post-pass (like _edge_overrides) because it needs the full
+        symbol index to resolve names to node IDs.
+        """
+        for node in nodes:
+            if node.node_class != SayouClass.FILE:
+                continue
+
+            all_names: List[str] = node.attributes.get(
+                SayouAttribute.MODULE_ALL_RAW, []
+            )
+            if not all_names:
+                continue
+
+            fp = _norm(node.attributes.get(SayouAttribute.FILE_PATH, ""))
+
+            for name in all_names:
+                # Look up in symbol_map (functions) and class_map (classes)
+                target_id = idx.symbol_map.get(fp, {}).get(name) or idx.class_map.get(
+                    fp, {}
+                ).get(name)
+                if target_id:
+                    edges.append(
+                        _edge(
+                            node.node_id,
+                            target_id,
+                            SayouPredicate.EXPOSES,
+                            "HIGH",
+                            "DIRECT",
+                            "public_api_resolver",
+                        )
+                    )
 
     # ── resolution helpers ────────────────────────────────────────────
 
@@ -482,6 +616,12 @@ class _Index:
         self.method_map: Dict[str, Dict[str, Dict[str, str]]] = defaultdict(
             lambda: defaultdict(dict)
         )
+        # path → {var_name: code_block_node_id}  (module-level variables)
+        self.module_var_map: Dict[str, Dict[str, str]] = defaultdict(dict)
+        # node_id → set of decorator names
+        self.decorator_map: Dict[str, Set] = defaultdict(set)
+        # set of node_ids that are async functions/methods
+        self.async_map: Set[str] = set()
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
