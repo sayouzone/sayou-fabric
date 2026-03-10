@@ -183,8 +183,89 @@ ANALYST_STYLE_SHEET = [
             "width": 2,
         },
     },
-    # =========================================================
-    # [CRITICAL FIX] Restored Interaction Styles
+    # ── Code domain — behavioral edges ────────────────────────────────────────
+    {
+        "selector": "edge[edgeType='sayou:calls']",
+        "style": {
+            "line-color": "#00cec9",
+            "target-arrow-color": "#00cec9",
+            "target-arrow-shape": "triangle",
+            "width": 2.5,
+            "opacity": 0.9,
+        },
+    },
+    {
+        "selector": "edge[edgeType='sayou:maybeCalls']",
+        "style": {
+            "line-color": "#636e72",
+            "target-arrow-color": "#636e72",
+            "target-arrow-shape": "triangle",
+            "line-style": "dashed",
+            "width": 1.5,
+            "opacity": 0.6,
+        },
+    },
+    {
+        "selector": "edge[edgeType='sayou:overrides']",
+        "style": {
+            "line-color": "#a29bfe",
+            "target-arrow-color": "#a29bfe",
+            "target-arrow-shape": "triangle",
+            "width": 2.5,
+        },
+    },
+    {
+        "selector": "edge[edgeType='sayou:usesType']",
+        "style": {
+            "line-color": "#fdcb6e",
+            "target-arrow-color": "#fdcb6e",
+            "target-arrow-shape": "circle",
+            "line-style": "dotted",
+            "width": 1.5,
+            "opacity": 0.7,
+        },
+    },
+    {
+        "selector": "edge[edgeType='sayou:raises']",
+        "style": {
+            "line-color": "#e17055",
+            "target-arrow-color": "#e17055",
+            "target-arrow-shape": "triangle",
+            "line-style": "dashed",
+            "width": 2,
+            "opacity": 0.85,
+        },
+    },
+    {
+        "selector": "edge[edgeType='sayou:mutatesGlobal']",
+        "style": {
+            "line-color": "#d63031",
+            "target-arrow-color": "#d63031",
+            "target-arrow-shape": "square",
+            "width": 2.5,
+            "opacity": 0.9,
+        },
+    },
+    {
+        "selector": "edge[edgeType='sayou:exposes']",
+        "style": {
+            "line-color": "#00b894",
+            "target-arrow-color": "#00b894",
+            "target-arrow-shape": "triangle",
+            "width": 2,
+            "opacity": 0.8,
+        },
+    },
+    # async_mismatch=True → red dotted warning
+    {
+        "selector": "edge[edgeType='sayou:calls'][?async_mismatch]",
+        "style": {
+            "line-color": "#ff7675",
+            "target-arrow-color": "#ff7675",
+            "line-style": "dashed",
+            "width": 3,
+        },
+    },
     # =========================================================
     {
         "selector": ".highlighted",

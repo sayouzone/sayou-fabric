@@ -26,46 +26,159 @@ class AnalyticKGRenderer(BaseComponent):
         with open(json_path, "r", encoding="utf-8") as f:
             raw_data = json.load(f)
 
+        elements = self._build_elements(raw_data)
+        self._generate_html(elements, output_path)
+        self._log(f"✅ Pure Graph View saved to: {output_path}")
+
+    def render_diff_kg(
+        self,
+        kg: dict,
+        diff_result: dict,
+        output_path: str = "sayou_diff_view.html",
+        focus_node_id: str | None = None,
+        subgraph_depth: int = 3,
+    ) -> str:
+        """
+        Takes KG and diff results and generates an interactive graph with change status overlayed.
+
+        Color Rules:
+            🔴 modified  — Changed existing behavior (most dangerous)
+            🟢 added     — New node
+            ⚫ removed   — Missing nodes (exist only in the original KG)
+            🟠 impacted  — CALLS reverse sphere of influence of modified node
+            Basic color  — No change
+
+        If focus_node_id is given, only the subgraph centered at that node
+        and with a depth of ubgraph_depth is extracted. If None, the entire KG is rendered.
+        """
+        # Diff node classification
+        modified_ids = {
+            item.get("orig_node_id") for item in diff_result.get("modified", [])
+        }
+        added_ids = {item.get("node_id") for item in diff_result.get("added", [])}
+        removed_ids = {item.get("node_id") for item in diff_result.get("removed", [])}
+
+        # Influence Nodes (Reverse CALLS of modified)
+        impacted_ids: set[str] = set()
+        for mod_item in diff_result.get("modified", []):
+            nid = mod_item.get("orig_node_id")
+            if nid:
+                for edge in kg.get("edges", []):
+                    if edge.get("target") == nid and edge.get("type") in {
+                        "sayou:calls",
+                        "sayou:maybeCalls",
+                    }:
+                        impacted_ids.add(edge.get("source", ""))
+
+        # Subgraph extraction
+        if focus_node_id:
+            sub_kg = self._extract_subgraph(kg, focus_node_id, subgraph_depth)
+        else:
+            sub_kg = kg
+
+        elements = self._build_elements(
+            sub_kg,
+            modified_ids=modified_ids,
+            added_ids=added_ids,
+            removed_ids=removed_ids,
+            impacted_ids=impacted_ids,
+        )
+        self._generate_html(elements, output_path)
+        self._log(f"✅ Diff KG View saved to: {output_path}")
+        return output_path
+
+    @staticmethod
+    def _extract_subgraph(kg: dict, center_id: str, depth: int) -> dict:
+        """
+        Extracts a subgraph of bidirectional depth centered around the center_id node.
+        """
+        from collections import deque
+
+        adj: dict[str, set] = {}
+        for edge in kg.get("edges", []):
+            s, t = edge.get("source", ""), edge.get("target", "")
+            if s and t:
+                adj.setdefault(s, set()).add(t)
+                adj.setdefault(t, set()).add(s)
+
+        visited: set[str] = set()
+        queue = deque([(center_id, 0)])
+        while queue:
+            nid, d = queue.popleft()
+            if nid in visited or d > depth:
+                continue
+            visited.add(nid)
+            for neighbor in adj.get(nid, []):
+                if neighbor not in visited:
+                    queue.append((neighbor, d + 1))
+
+        nodes = [n for n in kg.get("nodes", []) if n.get("node_id") in visited]
+        edges = [
+            e
+            for e in kg.get("edges", [])
+            if e.get("source") in visited and e.get("target") in visited
+        ]
+        return {"nodes": nodes, "edges": edges}
+
+    def _build_elements(
+        self,
+        raw_data: dict,
+        modified_ids: set | None = None,
+        added_ids: set | None = None,
+        removed_ids: set | None = None,
+        impacted_ids: set | None = None,
+    ) -> list:
+        modified_ids = modified_ids or set()
+        added_ids = added_ids or set()
+        removed_ids = removed_ids or set()
+        impacted_ids = impacted_ids or set()
+
         elements = []
 
-        # 1. Nodes Processing
         for node in raw_data.get("nodes", []):
             node_id = node.get("node_id")
             attrs = node.get("attributes", {})
             n_cls = node.get("node_class", "unknown")
-
-            # [Pure Config Lookup]
             cy_type = ANALYST_TYPE_MAPPING.get(n_cls, "unknown")
-
-            # [No Logic] Builder가 준 라벨을 그대로 사용
             label = node.get("friendly_name") or attrs.get("label") or node_id
+
+            diff_status = (
+                "modified"
+                if node_id in modified_ids
+                else (
+                    "added"
+                    if node_id in added_ids
+                    else (
+                        "removed"
+                        if node_id in removed_ids
+                        else "impacted" if node_id in impacted_ids else "normal"
+                    )
+                )
+            )
 
             cy_data = {
                 "id": node_id,
                 "label": label,
                 "type": cy_type,
+                "diff_status": diff_status,
                 "code": attrs.get("schema:text", ""),
                 "meta": attrs,
             }
             elements.append({"group": "nodes", "data": cy_data})
 
-        # 2. Edges Processing
         for edge in raw_data.get("edges", []):
             e_type = edge.get("type", "relates")
-            elements.append(
-                {
-                    "group": "edges",
-                    "data": {
-                        "source": edge.get("source"),
-                        "target": edge.get("target"),
-                        "edgeType": e_type,
-                        "label": e_type.split(":")[-1],
-                    },
-                }
-            )
+            e_data = {
+                "source": edge.get("source"),
+                "target": edge.get("target"),
+                "edgeType": e_type,
+                "label": e_type.split(":")[-1],
+                "async_mismatch": edge.get("async_mismatch", False),
+                "abstract_parent": edge.get("abstract_parent", False),
+            }
+            elements.append({"group": "edges", "data": e_data})
 
-        self._generate_html(elements, output_path)
-        self._log(f"✅ Pure Graph View saved to: {output_path}")
+        return elements
 
     def _generate_html(self, elements: list, output_path: str):
         elements_json = (
@@ -166,10 +279,20 @@ class AnalyticKGRenderer(BaseComponent):
     </div>
 
     <script>
+        var diffStyles = [
+            {{ selector: "node[diff_status='modified']",
+               style: {{ "background-color": "#d63031", "border-color": "#ff7675", "border-width": 4, "width": 40, "height": 40 }} }},
+            {{ selector: "node[diff_status='added']",
+               style: {{ "background-color": "#00b894", "border-color": "#55efc4", "border-width": 4 }} }},
+            {{ selector: "node[diff_status='removed']",
+               style: {{ "background-color": "#2d3436", "border-color": "#636e72", "border-width": 3, "opacity": 0.5 }} }},
+            {{ selector: "node[diff_status='impacted']",
+               style: {{ "background-color": "#e17055", "border-color": "#fdcb6e", "border-width": 3 }} }},
+        ];
         var cy = cytoscape({{
             container: document.getElementById('cy'),
             elements: {elements_json},
-            style: {style_json},
+            style: {style_json}.concat(diffStyles),
             layout: {{ 
                 name: 'fcose',
                 quality: 'proof',
