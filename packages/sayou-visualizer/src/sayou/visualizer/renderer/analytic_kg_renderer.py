@@ -39,26 +39,26 @@ class AnalyticKGRenderer(BaseComponent):
         subgraph_depth: int = 3,
     ) -> str:
         """
-        Takes KG and diff results and generates an interactive graph with change status overlayed.
+        KG와 diff 결과를 받아 변경 상태가 오버레이된 인터랙티브 그래프를 생성합니다.
 
-        Color Rules:
-            🔴 modified  — Changed existing behavior (most dangerous)
-            🟢 added     — New node
-            ⚫ removed   — Missing nodes (exist only in the original KG)
-            🟠 impacted  — CALLS reverse sphere of influence of modified node
-            Basic color  — No change
+        색상 규칙:
+            🔴 modified  — 기존 동작이 변경됨 (가장 위험)
+            🟢 added     — 새로 생긴 노드
+            ⚫ removed   — 사라진 노드 (원본 KG에서만 존재)
+            🟠 impacted  — modified 노드의 CALLS 역방향 영향권
+            기본색       — 변경 없음
 
-        If focus_node_id is given, only the subgraph centered at that node
-        and with a depth of ubgraph_depth is extracted. If None, the entire KG is rendered.
+        focus_node_id가 주어지면 해당 노드 중심으로 subgraph_depth 깊이의
+        서브그래프만 추출합니다. None이면 전체 KG를 렌더링합니다.
         """
-        # Diff node classification
+        # diff 노드 분류
         modified_ids = {
             item.get("orig_node_id") for item in diff_result.get("modified", [])
         }
         added_ids = {item.get("node_id") for item in diff_result.get("added", [])}
         removed_ids = {item.get("node_id") for item in diff_result.get("removed", [])}
 
-        # Influence Nodes (Reverse CALLS of modified)
+        # 영향권 노드 (modified의 역방향 CALLS)
         impacted_ids: set[str] = set()
         for mod_item in diff_result.get("modified", []):
             nid = mod_item.get("orig_node_id")
@@ -70,7 +70,7 @@ class AnalyticKGRenderer(BaseComponent):
                     }:
                         impacted_ids.add(edge.get("source", ""))
 
-        # Subgraph extraction
+        # 서브그래프 추출
         if focus_node_id:
             sub_kg = self._extract_subgraph(kg, focus_node_id, subgraph_depth)
         else:
@@ -90,7 +90,7 @@ class AnalyticKGRenderer(BaseComponent):
     @staticmethod
     def _extract_subgraph(kg: dict, center_id: str, depth: int) -> dict:
         """
-        Extracts a subgraph of bidirectional depth centered around the center_id node.
+        center_id 노드를 중심으로 양방향 depth 깊이의 서브그래프를 추출합니다.
         """
         from collections import deque
 
@@ -99,7 +99,7 @@ class AnalyticKGRenderer(BaseComponent):
             s, t = edge.get("source", ""), edge.get("target", "")
             if s and t:
                 adj.setdefault(s, set()).add(t)
-                adj.setdefault(t, set()).add(s)
+                adj.setdefault(t, set()).add(s)  # 양방향
 
         visited: set[str] = set()
         queue = deque([(center_id, 0)])
@@ -202,10 +202,6 @@ class AnalyticKGRenderer(BaseComponent):
     <meta charset="UTF-8">
     <title>Sayou Code Universe</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
-    <script src="https://unpkg.com/layout-base/layout-base.js"></script>
-    <script src="https://unpkg.com/cose-base/cose-base.js"></script>
-    <script src="https://unpkg.com/cytoscape-fcose/cytoscape-fcose.js"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
@@ -289,21 +285,30 @@ class AnalyticKGRenderer(BaseComponent):
             {{ selector: "node[diff_status='impacted']",
                style: {{ "background-color": "#e17055", "border-color": "#fdcb6e", "border-width": 3 }} }},
         ];
-        var cy = cytoscape({{
-            container: document.getElementById('cy'),
-            elements: {elements_json},
-            style: {style_json}.concat(diffStyles),
-            layout: {{ 
-                name: 'fcose',
-                quality: 'proof',
-                nodeSeparation: 75,
-                idealEdgeLength: edge => edge.data('edgeType') === 'sayou:contains' ? 50 : 200,
-                animate: false 
-            }}
-        }});
+        try {{
+            var cy = cytoscape({{
+                container: document.getElementById('cy'),
+                elements: {elements_json},
+                style: {style_json}.concat(diffStyles),
+                layout: {{
+                    name: 'cose',
+                    animate: false,
+                    nodeRepulsion: 8000,
+                    idealEdgeLength: 120,
+                    edgeElasticity: 100,
+                    gravity: 0.8,
+                    numIter: 1000,
+                    fit: true,
+                    padding: 40,
+                }}
+            }});
+        }} catch(e) {{
+            document.getElementById('cy').innerHTML =
+                '<div style="color:#ff7675;padding:20px;font-family:monospace">KG 렌더링 오류: ' + e.message + '</div>';
+        }}
 
         function runLayout() {{
-            cy.layout({{ name: 'fcose', animate: true, animationDuration: 800 }}).run();
+            cy.layout({{ name: 'cose', animate: true, animationDuration: 600 }}).run();
         }}
 
         // [Search]
