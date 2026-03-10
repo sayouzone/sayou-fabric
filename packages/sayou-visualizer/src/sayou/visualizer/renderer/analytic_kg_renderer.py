@@ -135,6 +135,8 @@ class AnalyticKGRenderer(BaseComponent):
 
         elements = []
 
+        node_ids = {n.get("node_id") for n in raw_data.get("nodes", [])}
+
         for node in raw_data.get("nodes", []):
             node_id = node.get("node_id")
             attrs = node.get("attributes", {})
@@ -167,6 +169,35 @@ class AnalyticKGRenderer(BaseComponent):
             elements.append({"group": "nodes", "data": cy_data})
 
         for edge in raw_data.get("edges", []):
+            src = edge.get("source", "")
+            tgt = edge.get("target", "")
+
+            # 가상 노드(sayou:exc:*, sayou:lib:* 등) 자동 생성
+            for phantom_id in (src, tgt):
+                if phantom_id and phantom_id not in node_ids:
+                    node_ids.add(phantom_id)
+                    label = phantom_id.split(":")[-1]  # "SystemExit"
+                    phantom_type = (
+                        "exception"
+                        if ":exc:" in phantom_id
+                        else "library" if ":lib:" in phantom_id else "unknown"
+                    )
+                    elements.append(
+                        {
+                            "group": "nodes",
+                            "data": {
+                                "id": phantom_id,
+                                "label": label,
+                                "type": phantom_type,
+                                "diff_status": "normal",
+                                "code": "",
+                                "meta": {},
+                            },
+                        }
+                    )
+
+            if not src or not tgt:
+                continue
             e_type = edge.get("type", "relates")
             e_data = {
                 "source": edge.get("source"),

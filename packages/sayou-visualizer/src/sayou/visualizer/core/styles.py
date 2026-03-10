@@ -106,12 +106,26 @@ ANALYST_STYLE_SHEET = [
         },
     },
     {
-        "selector": "node[type='library']",
+        "selector": "node[type='exception']",
         "style": {
-            "shape": "hexagon",
-            "background-color": "#16a085",
-            "width": 50,
-            "height": 50,
+            "shape": "triangle",
+            "background-color": "#e17055",
+            "border-color": "#d63031",
+            "border-width": 2,
+            "width": 20,
+            "height": 20,
+            "font-size": "9px",
+            "color": "#fab1a0",
+        },
+    },
+    {
+        "selector": "node[type='unknown']",
+        "style": {
+            "shape": "ellipse",
+            "background-color": "#636e72",
+            "width": 15,
+            "height": 15,
+            "label": "",
         },
     },
     # [New YouTube Nodes]
@@ -256,7 +270,7 @@ ANALYST_STYLE_SHEET = [
             "opacity": 0.8,
         },
     },
-    # async_mismatch=True → red dotted warning
+    # async_mismatch=True → 빨간 점선 경고
     {
         "selector": "edge[edgeType='sayou:calls'][?async_mismatch]",
         "style": {
