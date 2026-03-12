@@ -91,7 +91,8 @@ class VisualizerPipeline(BaseComponent):
 
     def render_diff_kg(
         self,
-        kg: dict,
+        orig_kg: dict,
+        mod_kg: dict,
         diff_result: dict,
         output_path: str = "diff_kg_view.html",
         focus_node_id: str | None = None,
@@ -99,7 +100,7 @@ class VisualizerPipeline(BaseComponent):
     ) -> str:
         self._kg_renderer = AnalyticKGRenderer()
         return self._kg_renderer.render_diff_kg(
-            kg, diff_result, output_path, focus_node_id, subgraph_depth
+            orig_kg, mod_kg, diff_result, output_path, focus_node_id, subgraph_depth
         )
 
     def render_showcase_kg(

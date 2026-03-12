@@ -32,49 +32,74 @@ class AnalyticKGRenderer(BaseComponent):
 
     def render_diff_kg(
         self,
-        kg: dict,
+        orig_kg: dict,
+        mod_kg: dict,
         diff_result: dict,
         output_path: str = "sayou_diff_view.html",
         focus_node_id: str | None = None,
         subgraph_depth: int = 3,
     ) -> str:
         """
-        KG와 diff 결과를 받아 변경 상태가 오버레이된 인터랙티브 그래프를 생성합니다.
+        orig_kg + mod_kg를 병합해 변경 상태가 오버레이된 그래프를 생성합니다.
 
-        색상 규칙:
-            🔴 modified  — 기존 동작이 변경됨 (가장 위험)
-            🟢 added     — 새로 생긴 노드
-            ⚫ removed   — 사라진 노드 (원본 KG에서만 존재)
-            🟠 impacted  — modified 노드의 CALLS 역방향 영향권
-            기본색       — 변경 없음
-
-        focus_node_id가 주어지면 해당 노드 중심으로 subgraph_depth 깊이의
-        서브그래프만 추출합니다. None이면 전체 KG를 렌더링합니다.
+        병합 전략:
+          - removed 노드: orig_kg에 존재 → 유령(반투명)으로 유지.
+                          삭제된 함수를 CALLS하던 엣지가 그대로 보여 위험이 드러남.
+          - added  노드: mod_kg에서 주입. 초록색으로 표시.
+                          mod_kg의 엣지도 함께 주입해 새 연결 관계를 표시.
+          - modified 노드: orig_kg 기반, 빨간색 하이라이트.
+          - impacted 노드: modified의 CALLS 역방향, 주황색.
         """
-        # diff 노드 분류
+        # diff 노드 ID 분류
         modified_ids = {
             item.get("orig_node_id") for item in diff_result.get("modified", [])
         }
         added_ids = {item.get("node_id") for item in diff_result.get("added", [])}
         removed_ids = {item.get("node_id") for item in diff_result.get("removed", [])}
 
-        # 영향권 노드 (modified의 역방향 CALLS)
+        # 영향권: modified 노드를 CALLS하는 노드들
         impacted_ids: set[str] = set()
         for mod_item in diff_result.get("modified", []):
             nid = mod_item.get("orig_node_id")
             if nid:
-                for edge in kg.get("edges", []):
+                for edge in orig_kg.get("edges", []):
                     if edge.get("target") == nid and edge.get("type") in {
                         "sayou:calls",
                         "sayou:maybeCalls",
                     }:
                         impacted_ids.add(edge.get("source", ""))
 
-        # 서브그래프 추출
+        # ── 병합 KG 구성 ─────────────────────────────────────────────────────
+        # 1) orig_kg 전체 (removed 노드 포함 — 유령으로 렌더링)
+        merged_nodes = list(orig_kg.get("nodes", []))
+        merged_edges = list(orig_kg.get("edges", []))
+
+        orig_node_ids = {n.get("node_id") for n in merged_nodes}
+
+        # 2) mod_kg에서 added 노드 + 그 엣지 주입
+        mod_node_ids = {n.get("node_id") for n in mod_kg.get("nodes", [])}
+        for node in mod_kg.get("nodes", []):
+            if node.get("node_id") in added_ids:
+                merged_nodes.append(node)
+                orig_node_ids.add(node.get("node_id"))
+
+        # added 노드가 관련된 엣지 (양 끝이 merged 집합 안에 있는 것만)
+        for edge in mod_kg.get("edges", []):
+            src, tgt = edge.get("source", ""), edge.get("target", "")
+            if (
+                (src in added_ids or tgt in added_ids)
+                and src in orig_node_ids
+                and tgt in orig_node_ids
+            ):
+                merged_edges.append(edge)
+
+        merged_kg = {"nodes": merged_nodes, "edges": merged_edges}
+
+        # ── 서브그래프 추출 ───────────────────────────────────────────────────
         if focus_node_id:
-            sub_kg = self._extract_subgraph(kg, focus_node_id, subgraph_depth)
+            sub_kg = self._extract_subgraph(merged_kg, focus_node_id, subgraph_depth)
         else:
-            sub_kg = kg
+            sub_kg = merged_kg
 
         elements = self._build_elements(
             sub_kg,
@@ -312,7 +337,8 @@ class AnalyticKGRenderer(BaseComponent):
             {{ selector: "node[diff_status='added']",
                style: {{ "background-color": "#00b894", "border-color": "#55efc4", "border-width": 4 }} }},
             {{ selector: "node[diff_status='removed']",
-               style: {{ "background-color": "#2d3436", "border-color": "#636e72", "border-width": 3, "opacity": 0.5 }} }},
+               style: {{ "background-color": "#2d3436", "border-color": "#b2bec3", "border-width": 2,
+                         "border-style": "dashed", "opacity": 0.45, "color": "#636e72" }} }},
             {{ selector: "node[diff_status='impacted']",
                style: {{ "background-color": "#e17055", "border-color": "#fdcb6e", "border-width": 3 }} }},
         ];
