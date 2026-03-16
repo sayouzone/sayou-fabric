@@ -153,8 +153,8 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`Json Chunking`** | [▶](/docs/examples/src/chunking_quick_start_code.md) | |
-| **`Markdown Chunking`** | [▶](examples/quick_start_markdown.py) | |
-| **`Python Chunking`** | [▶](examples/quick_start_python.py) | |
-| **`Java Chunking`** | [▶](examples/quick_start_java.py) | |
-| **`Javascript Chunking`** | [▶](examples/quick_start_javascript.py) | |
+| **`Json Chunking`** | [▶](/docs/examples/src/chunking_quick_start_json.md) | |
+| **`Markdown Chunking`** | [▶](/docs/examples/src/chunking_quick_start_markdown.md) | |
+| **`Python Chunking`** | [▶](/docs/examples/src/chunking_quick_start_python.md) | |
+| **`Java Chunking`** | [▶](/docs/examples/src/chunking_quick_start_java.md) | |
+| **`Javascript Chunking`** | [▶](/docs/examples/src/chunking_quick_start_javascript.md) | |
