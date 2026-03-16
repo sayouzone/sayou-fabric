@@ -145,5 +145,5 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`Code Graph Assembler`** | [▶](examples/quick_start_code_graph.py) | |
-| **`Timeline Assembler`** | [▶](examples/quick_start_timeline.py) | |
+| **`Code Graph Assembler`** | [▶](docs/examples/src/assembler_quick_start_code_graph.md) | |
+| **`Timeline Assembler`** | [▶](/docs/examples/src/assembler_quick_start_timeline.md) | |
