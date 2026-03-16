@@ -137,3 +137,13 @@ The `config` dictionary controls how IDs are generated and which schema strictne
 ## 6. License
 
 Apache 2.0 License © 2026 **Sayouzone**
+
+## 7. Plugin List
+
+| Plugin | Example | Description |
+| :--- | :---: | :--- |
+| **`Code Chunk Wrapper`** | [▶](examples/quick_start_code_chunk.py) | |
+| **`Document Chunk Wrapper`** | [▶](examples/quick_start_document_chunk.py) | |
+| **`Video Chunk Wrapper`** | [▶](examples/quick_start_video_chunk.py) | |
+| **`Embedding Wrapper`** | [▶](examples/quick_start_embedding.py) | |
+| **`Metatdata Wrapper`** | [▶](examples/quick_start_metadata.py) | |
