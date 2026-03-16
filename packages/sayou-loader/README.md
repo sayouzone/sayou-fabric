@@ -145,3 +145,14 @@ When using Database strategies, the `config` dictionary is mandatory.
 ## 6. License
 
 Apache 2.0 License © 2026 **Sayouzone**
+
+## 7. Plugin List
+
+| Plugin | Example | Description |
+| :--- | :---: | :--- |
+| **`File Loader`** | [▶](examples/quick_start_file.py) | |
+| **`PosrgreSQL Loader`** | [▶](examples/quick_start_postgresql.py) | |
+| **`MongoDB Loader`** | [▶](examples/quick_start_mongodb.py) | |
+| **`Neo4J Loader`** | [▶](examples/quick_start_neo4j.py) | |
+| **`Chroma Loader`** | [▶](examples/quick_start_chroma.py) | |
+| **`Elastic Search Loader`** | [▶](examples/quick_start_elastic_search.py) | |
