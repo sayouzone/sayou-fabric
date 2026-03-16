@@ -145,7 +145,7 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`Doc Refinery`** | [▶](examples/quick_start_doc_markdown.py) |
-| **`HTML Refinery`** | [▶](examples/quick_start_html_text.py) |
-| **`Json Refinery`** | [▶](examples/quick_start_raw_json.py) |
-| **`Record Refinery`** | [▶](examples/quick_start_record.py) |
+| **`Doc Refinery`** | [▶](/docs/examples/src/refinery_quick_start_doc_markdown.md) | |
+| **`HTML Refinery`** | [▶](/docs/examples/src/refinery_quick_start_html_text.md) | |
+| **`Json Refinery`** | [▶](/docs/examples/src/refinery_quick_start_raw_json.md) | |
+| **`Record Refinery`** | [▶](/docs/examples/src/refinery_quick_start_record.md) | |
