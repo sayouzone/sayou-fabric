@@ -140,3 +140,12 @@ Customize the cleaning processors via the `config` dictionary.
 ## 6. License
 
 Apache 2.0 License © 2026 **Sayouzone**
+
+## 7. Plugin List
+
+| Plugin | Example | Description |
+| :--- | :---: | :--- |
+| **`Doc Refinery`** | [▶](examples/quick_start_doc_markdown.py) |
+| **`HTML Refinery`** | [▶](examples/quick_start_html_text.py) |
+| **`Json Refinery`** | [▶](examples/quick_start_raw_json.py) |
+| **`Record Refinery`** | [▶](examples/quick_start_record.py) |
