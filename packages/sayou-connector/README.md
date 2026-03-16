@@ -156,26 +156,26 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`GitHub Connector`** | [▶](examples/quick_start_github.py) |  |
-| **`Gmail Connector`** | [▶](examples/quick_start_gmail.py) |  |
-| **`Google Calendar Connector`** | [▶](examples/quick_start_calendar.py) |  |
-| **`Google Drive Connector`** | [▶](examples/quick_start_drive.py) |  |
-| **`Google Docs Connector`** | [▶](examples/quick_start_docs.py) |  |
-| **`Google Sheets Connector`** | [▶](examples/quick_start_sheets.py) |  |
-| **`Google Slides Connector`** | [▶](examples/quick_start_slides.py) |  |
-| **`Youtube Connector`** | [▶](examples/quick_start_youtube_google.py) |  |
-| **`Youtube Public Connector`** | [▶](examples/quick_start_youtube_public.py) |  |
-| **`Email Connector`** | [▶](examples/quick_start_email.py) |  |
-| **`MongoDB Connector`** | [▶](examples/quick_start_mongodb.py) |  |
-| **`MSSQL Connector`** | [▶](examples/quick_start_mssql.py) |  |
-| **`MySQL Connector`** | [▶](examples/quick_start_mysql.py) |  |
-| **`Oracle Connector`** | [▶](examples/quick_start_oracle.py) |  |
-| **`PostgreSQL Connector`** | [▶](examples/quick_start_postgresql.py) |  |
-| **`SQLite Connector`** | [▶](examples/quick_start_sqlite.py) |  |
-| **`Local File Connector`** | [▶](examples/quick_start_file.py) |  |
-| **`Requests Connector`** | [▶](examples/quick_start_requests.py) |  |
-| **`Notion Connector`** | [▶](examples/quick_start_notion.py) |  |
-| **`Obsidian Connector`** | [▶](examples/quick_start_obsidian.py) |  |
-| **`RSS Connector`** | [▶](examples/quick_start_rss.py) |  |
-| **`Trafilatura Connector`** | [▶](examples/quick_start_trafilature.py) |  |
-| **`wikipedia Connector`** | [▶](examples/quick_start_wikipedia.py) |  |
+| **`GitHub Connector`** | [▶](/docs/examples/src/connector_quick_start_github.md) |  |
+| **`Gmail Connector`** | [▶](/docs/examples/src/connector_quick_start_gmail.md) |  |
+| **`Google Calendar Connector`** | [▶](/docs/examples/src/connector_quick_start_calendar.md) |  |
+| **`Google Drive Connector`** | [▶](/docs/examples/src/connector_quick_start_drive.md) |  |
+| **`Google Docs Connector`** | [▶](/docs/examples/src/connector_quick_start_docs.md) |  |
+| **`Google Sheets Connector`** | [▶](/docs/examples/src/connector_quick_start_sheets.md) |  |
+| **`Google Slides Connector`** | [▶](/docs/examples/src/connector_quick_start_slides.md) |  |
+| **`Youtube Connector`** | [▶](/docs/examples/src/connector_quick_start_youtube_google.md) |  |
+| **`Youtube Public Connector`** | [▶](/docs/examples/src/connector_quick_start_youtube_public.md) |  |
+| **`Email Connector`** | [▶](/docs/examples/src/connector_quick_start_email.md) |  |
+| **`MongoDB Connector`** | [▶](/docs/examples/src/connector_quick_start_mongodb.md) |  |
+| **`MSSQL Connector`** | [▶](/docs/examples/src/connector_quick_start_mssql.md) |  |
+| **`MySQL Connector`** | [▶](/docs/examples/src/connector_quick_start_mysql.md) |  |
+| **`Oracle Connector`** | [▶](/docs/examples/src/connector_quick_start_oracle.md) |  |
+| **`PostgreSQL Connector`** | [▶](/docs/examples/src/connector_quick_start_postgresql.md) |  |
+| **`SQLite Connector`** | [▶](/docs/examples/src/connector_quick_start_sqlite.md) |  |
+| **`Local File Connector`** | [▶](/docs/examples/src/connector_quick_start_file.md) |  |
+| **`Requests Connector`** | [▶](/docs/examples/src/connector_quick_start_requests.md) |  |
+| **`Notion Connector`** | [▶](/docs/examples/src/connector_quick_start_notion.md) |  |
+| **`Obsidian Connector`** | [▶](/docs/examples/src/connector_quick_start_obsidian.md) |  |
+| **`RSS Connector`** | [▶](/docs/examples/src/connector_quick_start_rss.md) |  |
+| **`Trafilatura Connector`** | [▶](/docs/examples/src/connector_quick_start_trafilature.md) |  |
+| **`wikipedia Connector`** | [▶](/docs/examples/src/connector_quick_start_wikipedia.md) |  |
