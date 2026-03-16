@@ -150,9 +150,9 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`File Loader`** | [▶](examples/quick_start_file.py) | |
-| **`PosrgreSQL Loader`** | [▶](examples/quick_start_postgresql.py) | |
-| **`MongoDB Loader`** | [▶](examples/quick_start_mongodb.py) | |
-| **`Neo4J Loader`** | [▶](examples/quick_start_neo4j.py) | |
-| **`Chroma Loader`** | [▶](examples/quick_start_chroma.py) | |
-| **`Elastic Search Loader`** | [▶](examples/quick_start_elastic_search.py) | |
+| **`File Loader`** | [▶](/docs/examples/src/loader_quick_start_file.md) | |
+| **`PosrgreSQL Loader`** | [▶](/docs/examples/src/loader_quick_start_postgresql.md) | |
+| **`MongoDB Loader`** | [▶](/docs/examples/src/loader_quick_start_mongodb.md) | |
+| **`Neo4J Loader`** | [▶](/docs/examples/src/loader_quick_start_neo4j.md) | |
+| **`Chroma Loader`** | [▶](/docs/examples/src/loader_quick_start_chroma.md) | |
+| **`Elastic Search Loader`** | [▶](/docs/examples/src/loader_quick_start_elastic_search.md) | |
