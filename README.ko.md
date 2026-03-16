@@ -266,3 +266,10 @@ Sayou Fabric은 현재 **Public Beta(v0.4.0)** 단계입니다. 우리는 코어
 ## 7. License
 
 Apache 2.0 License © 2026 **Sayouzone**
+
+## 8. Agent List
+
+| Agent | Example | Description |
+| :--- | :---: | :--- |
+| **`Code Diff AI Agent`** | [▶](/docs/sayou-agent/code_diff.md) | |
+| **`Code Analysis AI Agent`** | [▶](/docs/sayou-agent/code_analysis.md) | |
