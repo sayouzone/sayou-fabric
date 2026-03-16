@@ -152,7 +152,7 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`Docx Data`** | [▶](examples/quick_start_docx.py) | |
-| **`Excel Data`** | [▶](examples/quick_start_excel.py) | |
-| **`PPTX Data`** | [▶](examples/quick_start_pptx.py) | |
-| **`PDF Data`** | [▶](examples/quick_start_pdf.py) | |
+| **`Docx Parser`** | [▶](/docs/examples/src/document_quick_start_docx.md) | |
+| **`Excel Parser`** | [▶](/docs/examples/src/document_quick_start_excel.md) | |
+| **`PPTX Parser`** | [▶](/docs/examples/src/document_quick_start_pptx.md) | |
+| **`PDF Parser`** | [▶](/docs/examples/src/document_quick_start_pdf.md) | |
