@@ -142,8 +142,8 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`Code Chunk Wrapper`** | [▶](examples/quick_start_code_chunk.py) | |
-| **`Document Chunk Wrapper`** | [▶](examples/quick_start_document_chunk.py) | |
-| **`Video Chunk Wrapper`** | [▶](examples/quick_start_video_chunk.py) | |
-| **`Embedding Wrapper`** | [▶](examples/quick_start_embedding.py) | |
-| **`Metatdata Wrapper`** | [▶](examples/quick_start_metadata.py) | |
+| **`Code Chunk Wrapper`** | [▶](/docs/examples/src/wrapper_quick_start_code_chunk.md) | |
+| **`Document Chunk Wrapper`** | [▶](/docs/examples/src/wrapper_quick_start_document_chunk.md) | |
+| **`Video Chunk Wrapper`** | [▶](/docs/examples/src/wrapper_quick_start_video_chunk.md) | |
+| **`Embedding Wrapper`** | [▶](/docs/examples/src/wrapper_quick_start_embedding.md) | |
+| **`Metatdata Wrapper`** | [▶](/docs/examples/src/wrapper_quick_start_metadata.md) | |
