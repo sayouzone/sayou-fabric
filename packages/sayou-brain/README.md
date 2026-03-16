@@ -119,3 +119,13 @@ The following keys can be used in the `config` dictionary passed to the Pipeline
 ## 6. License
 
 Apache 2.0 License © 2026 **Sayouzone**
+
+## 7. Plugin List
+
+| Plugin | Example | Description |
+| :--- | :---: | :--- |
+| **`Normal Pipeline`** | [▶](examples/quick_start_normal.py) | |
+| **`Bypass Pipeline`** | [▶](examples/quick_start_bypass.py) | |
+| **`Transfer Pipeline`** | [▶](examples/quick_start_transfer.py) | |
+| **`Standard Pipeline`** | [▶](examples/quick_start_standard.py) | |
+| **`Structure Pipeline`** | [▶](examples/quick_start_structure.py) | |
