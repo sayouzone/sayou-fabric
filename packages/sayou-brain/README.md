@@ -124,8 +124,8 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`Normal Pipeline`** | [▶](examples/quick_start_normal.py) | |
-| **`Bypass Pipeline`** | [▶](examples/quick_start_bypass.py) | |
-| **`Transfer Pipeline`** | [▶](examples/quick_start_transfer.py) | |
-| **`Standard Pipeline`** | [▶](examples/quick_start_standard.py) | |
-| **`Structure Pipeline`** | [▶](examples/quick_start_structure.py) | |
+| **`Normal Pipeline`** | [▶](/docs/examples/src/brain_quick_start_normal.md) | |
+| **`Bypass Pipeline`** | [▶](/docs/examples/src/brain_quick_start_bypass.md) | |
+| **`Transfer Pipeline`** | [▶](/docs/examples/src/brain_quick_start_transfer.md) | |
+| **`Standard Pipeline`** | [▶](/docs/examples/src/brain_quick_start_standard.md) | |
+| **`Structure Pipeline`** | [▶](/docs/examples/src/brain_quick_start_structure.md) | |
