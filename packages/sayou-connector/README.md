@@ -150,3 +150,32 @@ The `config` dictionary is crucial for authentication and connection settings.
 ## 6. License
 
 Apache 2.0 License © 2026 **Sayouzone**
+
+
+## 7. Plugin List
+
+| Plugin | Example | Description |
+| :--- | :---: | :--- |
+| **`GitHub Connector`** | [▶](examples/quick_start_github.py) |  |
+| **`Gmail Connector`** | [▶](examples/quick_start_gmail.py) |  |
+| **`Google Calendar Connector`** | [▶](examples/quick_start_calendar.py) |  |
+| **`Google Drive Connector`** | [▶](examples/quick_start_drive.py) |  |
+| **`Google Docs Connector`** | [▶](examples/quick_start_docs.py) |  |
+| **`Google Sheets Connector`** | [▶](examples/quick_start_sheets.py) |  |
+| **`Google Slides Connector`** | [▶](examples/quick_start_slides.py) |  |
+| **`Youtube Connector`** | [▶](examples/quick_start_youtube_google.py) |  |
+| **`Youtube Public Connector`** | [▶](examples/quick_start_youtube_public.py) |  |
+| **`Email Connector`** | [▶](examples/quick_start_email.py) |  |
+| **`MongoDB Connector`** | [▶](examples/quick_start_mongodb.py) |  |
+| **`MSSQL Connector`** | [▶](examples/quick_start_mssql.py) |  |
+| **`MySQL Connector`** | [▶](examples/quick_start_mysql.py) |  |
+| **`Oracle Connector`** | [▶](examples/quick_start_oracle.py) |  |
+| **`PostgreSQL Connector`** | [▶](examples/quick_start_postgresql.py) |  |
+| **`SQLite Connector`** | [▶](examples/quick_start_sqlite.py) |  |
+| **`Local File Connector`** | [▶](examples/quick_start_file.py) |  |
+| **`Requests Connector`** | [▶](examples/quick_start_requests.py) |  |
+| **`Notion Connector`** | [▶](examples/quick_start_notion.py) |  |
+| **`Obsidian Connector`** | [▶](examples/quick_start_obsidian.py) |  |
+| **`RSS Connector`** | [▶](examples/quick_start_rss.py) |  |
+| **`Trafilatura Connector`** | [▶](examples/quick_start_trafilature.py) |  |
+| **`wikipedia Connector`** | [▶](examples/quick_start_wikipedia.py) |  |
