@@ -148,3 +148,13 @@ Customize the behavior of each splitter via the `config` dictionary.
 ## 6. License
 
 Apache 2.0 License © 2026 **Sayouzone**
+
+## 7. Plugin List
+
+| Plugin | Example | Description |
+| :--- | :---: | :--- |
+| **`Json Chunking`** | [▶](examples/quick_start_json.py) | |
+| **`Markdown Chunking`** | [▶](examples/quick_start_markdown.py) | |
+| **`Python Chunking`** | [▶](examples/quick_start_python.py) | |
+| **`Java Chunking`** | [▶](examples/quick_start_java.py) | |
+| **`Javascript Chunking`** | [▶](examples/quick_start_javascript.py) | |
