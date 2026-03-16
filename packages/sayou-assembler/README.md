@@ -140,3 +140,10 @@ You can customize the building process via the `config` dictionary.
 ## 6. License
 
 Apache 2.0 License © 2026 **Sayouzone**
+
+## 7. Plugin List
+
+| Plugin | Example | Description |
+| :--- | :---: | :--- |
+| **`Code Graph Assembler`** | [▶](examples/quick_start_code_graph.py) | |
+| **`Timeline Assembler`** | [▶](examples/quick_start_timeline.py) | |
