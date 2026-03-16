@@ -147,3 +147,12 @@ Customize the parsing behavior via the `config` dictionary.
 ## 6. License
 
 Apache 2.0 License © 2026 **Sayouzone**
+
+## 7. Plugin List
+
+| Plugin | Example | Description |
+| :--- | :---: | :--- |
+| **`Docx Data`** | [▶](examples/quick_start_docx.py) | |
+| **`Excel Data`** | [▶](examples/quick_start_excel.py) | |
+| **`PPTX Data`** | [▶](examples/quick_start_pptx.py) | |
+| **`PDF Data`** | [▶](examples/quick_start_pdf.py) | |
