@@ -150,9 +150,9 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`File Loader`** | [▶](/docs/examples/src/loader_quick_start_file.md) | |
-| **`PosrgreSQL Loader`** | [▶](/docs/examples/src/loader_quick_start_postgresql.md) | |
-| **`MongoDB Loader`** | [▶](/docs/examples/src/loader_quick_start_mongodb.md) | |
-| **`Neo4J Loader`** | [▶](/docs/examples/src/loader_quick_start_neo4j.md) | |
-| **`Chroma Loader`** | [▶](/docs/examples/src/loader_quick_start_chroma.md) | |
-| **`Elastic Search Loader`** | [▶](/docs/examples/src/loader_quick_start_elastic_search.md) | |
+| **`File Loader`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/loader_quick_start_file.md) | |
+| **`PosrgreSQL Loader`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/loader_quick_start_postgresql.md) | |
+| **`MongoDB Loader`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/loader_quick_start_mongodb.md) | |
+| **`Neo4J Loader`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/loader_quick_start_neo4j.md) | |
+| **`Chroma Loader`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/loader_quick_start_chroma.md) | |
+| **`Elastic Search Loader`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/loader_quick_start_elastic_search.md) | |
