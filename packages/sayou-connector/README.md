@@ -156,26 +156,26 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`GitHub Connector`** | [▶](/docs/examples/src/connector_quick_start_github.md) |  |
-| **`Gmail Connector`** | [▶](/docs/examples/src/connector_quick_start_gmail.md) |  |
-| **`Google Calendar Connector`** | [▶](/docs/examples/src/connector_quick_start_calendar.md) |  |
-| **`Google Drive Connector`** | [▶](/docs/examples/src/connector_quick_start_drive.md) |  |
-| **`Google Docs Connector`** | [▶](/docs/examples/src/connector_quick_start_docs.md) |  |
-| **`Google Sheets Connector`** | [▶](/docs/examples/src/connector_quick_start_sheets.md) |  |
-| **`Google Slides Connector`** | [▶](/docs/examples/src/connector_quick_start_slides.md) |  |
-| **`Youtube Connector`** | [▶](/docs/examples/src/connector_quick_start_youtube_google.md) |  |
-| **`Youtube Public Connector`** | [▶](/docs/examples/src/connector_quick_start_youtube_public.md) |  |
-| **`Email Connector`** | [▶](/docs/examples/src/connector_quick_start_email.md) |  |
-| **`MongoDB Connector`** | [▶](/docs/examples/src/connector_quick_start_mongodb.md) |  |
-| **`MSSQL Connector`** | [▶](/docs/examples/src/connector_quick_start_mssql.md) |  |
-| **`MySQL Connector`** | [▶](/docs/examples/src/connector_quick_start_mysql.md) |  |
-| **`Oracle Connector`** | [▶](/docs/examples/src/connector_quick_start_oracle.md) |  |
-| **`PostgreSQL Connector`** | [▶](/docs/examples/src/connector_quick_start_postgresql.md) |  |
-| **`SQLite Connector`** | [▶](/docs/examples/src/connector_quick_start_sqlite.md) |  |
-| **`Local File Connector`** | [▶](/docs/examples/src/connector_quick_start_file.md) |  |
-| **`Requests Connector`** | [▶](/docs/examples/src/connector_quick_start_requests.md) |  |
-| **`Notion Connector`** | [▶](/docs/examples/src/connector_quick_start_notion.md) |  |
-| **`Obsidian Connector`** | [▶](/docs/examples/src/connector_quick_start_obsidian.md) |  |
-| **`RSS Connector`** | [▶](/docs/examples/src/connector_quick_start_rss.md) |  |
-| **`Trafilatura Connector`** | [▶](/docs/examples/src/connector_quick_start_trafilature.md) |  |
-| **`wikipedia Connector`** | [▶](/docs/examples/src/connector_quick_start_wikipedia.md) |  |
+| **`GitHub Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_github.md) |  |
+| **`Gmail Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_gmail.md) |  |
+| **`Google Calendar Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_calendar.md) |  |
+| **`Google Drive Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_drive.md) |  |
+| **`Google Docs Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_docs.md) |  |
+| **`Google Sheets Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_sheets.md) |  |
+| **`Google Slides Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_slides.md) |  |
+| **`Youtube Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_youtube_google.md) |  |
+| **`Youtube Public Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_youtube_public.md) |  |
+| **`Email Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_email.md) |  |
+| **`MongoDB Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_mongodb.md) |  |
+| **`MSSQL Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_mssql.md) |  |
+| **`MySQL Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_mysql.md) |  |
+| **`Oracle Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_oracle.md) |  |
+| **`PostgreSQL Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_postgresql.md) |  |
+| **`SQLite Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_sqlite.md) |  |
+| **`Local File Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_file.md) |  |
+| **`Requests Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_requests.md) |  |
+| **`Notion Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_notion.md) |  |
+| **`Obsidian Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_obsidian.md) |  |
+| **`RSS Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_rss.md) |  |
+| **`Trafilatura Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_trafilature.md) |  |
+| **`wikipedia Connector`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/connector_quick_start_wikipedia.md) |  |
