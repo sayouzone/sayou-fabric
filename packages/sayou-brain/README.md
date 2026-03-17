@@ -124,8 +124,8 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`Normal Pipeline`** | [▶](/docs/examples/src/brain_quick_start_normal.md) | |
-| **`Bypass Pipeline`** | [▶](/docs/examples/src/brain_quick_start_bypass.md) | |
-| **`Transfer Pipeline`** | [▶](/docs/examples/src/brain_quick_start_transfer.md) | |
-| **`Standard Pipeline`** | [▶](/docs/examples/src/brain_quick_start_standard.md) | |
-| **`Structure Pipeline`** | [▶](/docs/examples/src/brain_quick_start_structure.md) | |
+| **`Normal Pipeline`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/brain_quick_start_normal.md) | |
+| **`Bypass Pipeline`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/brain_quick_start_bypass.md) | |
+| **`Transfer Pipeline`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/brain_quick_start_transfer.md) | |
+| **`Standard Pipeline`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/brain_quick_start_standard.md) | |
+| **`Structure Pipeline`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/brain_quick_start_structure.md) | |
