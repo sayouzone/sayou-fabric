@@ -145,5 +145,5 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`Code Graph Assembler`** | [▶](docs/examples/src/assembler_quick_start_code_graph.md) | |
-| **`Timeline Assembler`** | [▶](/docs/examples/src/assembler_quick_start_timeline.md) | |
+| **`Code Graph Assembler`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/assembler_quick_start_code_graph.md) | |
+| **`Timeline Assembler`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/assembler_quick_start_timeline.md) | |
