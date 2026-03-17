@@ -142,8 +142,8 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`Code Chunk Wrapper`** | [▶](/docs/examples/src/wrapper_quick_start_code_chunk.md) | |
-| **`Document Chunk Wrapper`** | [▶](/docs/examples/src/wrapper_quick_start_document_chunk.md) | |
-| **`Video Chunk Wrapper`** | [▶](/docs/examples/src/wrapper_quick_start_video_chunk.md) | |
-| **`Embedding Wrapper`** | [▶](/docs/examples/src/wrapper_quick_start_embedding.md) | |
-| **`Metatdata Wrapper`** | [▶](/docs/examples/src/wrapper_quick_start_metadata.md) | |
+| **`Code Chunk Wrapper`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/wrapper_quick_start_code_chunk.md) | |
+| **`Document Chunk Wrapper`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/wrapper_quick_start_document_chunk.md) | |
+| **`Video Chunk Wrapper`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/wrapper_quick_start_video_chunk.md) | |
+| **`Embedding Wrapper`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/wrapper_quick_start_embedding.md) | |
+| **`Metatdata Wrapper`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/wrapper_quick_start_metadata.md) | |
