@@ -145,7 +145,7 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Plugin | Example | Description |
 | :--- | :---: | :--- |
-| **`Doc Refinery`** | [▶](/docs/examples/src/refinery_quick_start_doc_markdown.md) | |
-| **`HTML Refinery`** | [▶](/docs/examples/src/refinery_quick_start_html_text.md) | |
-| **`Json Refinery`** | [▶](/docs/examples/src/refinery_quick_start_raw_json.md) | |
-| **`Record Refinery`** | [▶](/docs/examples/src/refinery_quick_start_record.md) | |
+| **`Doc Refinery`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/refinery_quick_start_doc_markdown.md) | |
+| **`HTML Refinery`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/refinery_quick_start_html_text.md) | |
+| **`Json Refinery`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/refinery_quick_start_raw_json.md) | |
+| **`Record Refinery`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/examples/src/refinery_quick_start_record.md) | |
