@@ -1,7 +1,8 @@
 from sayou.core.base_component import BaseComponent
 
-from .renderer.kg_renderer import KGRenderer
+from .renderer.analytic_kg_renderer import AnalyticKGRenderer
 from .renderer.pyvis_renderer import PyVisRenderer
+from .renderer.showcase_kg_renderer import ShowcaseKGRenderer
 from .tracer.graph_tracer import GraphTracer
 from .tracer.rich_tracer import RichConsoleTracer
 from .tracer.websocket_tracer import WebSocketTracer
@@ -81,11 +82,34 @@ class VisualizerPipeline(BaseComponent):
         self._renderer = PyVisRenderer()
         self._renderer.render(self._graph_tracer.graph, output_path, **kwargs)
 
-    def render_kg(self, json_path: str, output_path: str = "kg_view.html"):
+    def render_analytic_kg(self, json_path: str, output_path: str = "kg_view.html"):
         """
         Visualizes the OUTPUT JSON (Knowledge Graph).
         """
-        self._kg_renderer = KGRenderer()
+        self._kg_renderer = AnalyticKGRenderer()
+        self._kg_renderer.render(json_path, output_path)
+
+    def render_diff_kg(
+        self,
+        orig_kg: dict,
+        mod_kg: dict,
+        diff_result: dict,
+        output_path: str = "diff_kg_view.html",
+        focus_node_id: str | None = None,
+        subgraph_depth: int = 3,
+    ) -> str:
+        self._kg_renderer = AnalyticKGRenderer()
+        return self._kg_renderer.render_diff_kg(
+            orig_kg, mod_kg, diff_result, output_path, focus_node_id, subgraph_depth
+        )
+
+    def render_showcase_kg(
+        self, json_path: str, output_path: str = "showcase_kg_view.html"
+    ):
+        """
+        Visualizes the OUTPUT JSON (Knowledge Graph).
+        """
+        self._kg_renderer = ShowcaseKGRenderer()
         self._kg_renderer.render(json_path, output_path)
 
     def save_live_log(self, output_path="live_status.html"):

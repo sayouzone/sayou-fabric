@@ -1,37 +1,176 @@
 # Contributing
 
-We welcome contributions to the Sayou Data Platform! Whether you're fixing a bug, proposing a new feature, or improving documentation, your help is valued.
+Thank you for your interest in contributing to Sayou Fabric! We use a **Monorepo** structure, meaning multiple libraries (`sayou-core`, `sayou-brain`, etc.) coexist in this single repository.
 
 ---
 
-## Ways to Contribute
+## Quick Start
 
-* **Issues:** Report bugs, request new features, or ask questions. Please check if a similar issue already exists before creating a new one.
-* **Pull Requests (PRs):** Submit your changes to the codebase.
+Since this is a monorepo, install packages in **editable mode** to test changes immediately.
 
-## Pull Request Workflow
+**1. Fork & Clone**
 
-We follow the Git Strategy outlined in the main `README.md`. All contributions must be made via Pull Requests to the `develop` branch.
+```bash
+git clone https://github.com/YOUR_USERNAME/sayou-fabric.git
+cd sayou-fabric
+```
 
-1.  **Fork** the `sayou-fabric` repository to your own GitHub account.
-2.  **Clone** your fork to your local machine.
-3.  **Create a branch** from `develop`. Use the `feature/` or `fix/` prefix (e.g., `git checkout -b feature/add-new-fetcher`).
-4.  **Make your changes.**
-5.  **Add Tests:** (Placeholder for text: "If you are adding a new feature or fixing a bug, please add corresponding unit tests under the `tests/` directory for that package.")
-6.  **Update Documentation:** (Placeholder for text: "If your change affects behavior, please update the relevant `.md` file in the `docs/library-guides/` folder.")
-7.  **Run Linters/Formatters:** (Placeholder for text: "Please run `black .` and `ruff .` to format your code before committing.")
-8.  **Commit** your changes with a conventional commit message (e.g., `feat(connector): Add S3Fetcher T3 plugin`).
-9.  **Push** your branch to your fork.
-10. **Open a Pull Request** from your branch to the `sayou-fabric:develop` branch.
+**2. Install in Editable Mode**
 
-## Development Setup
+```bash
+# Install core dependencies in editable mode
+pip install -e ./packages/sayou-core
+pip install -e ./packages/sayou-brain
 
-(Placeholder for text: "This section will detail how to set up the Monorepo for local development. This includes installing all packages in editable mode and managing shared dependencies.")
+# If working on a specific plugin (e.g., connector)
+pip install -e ./packages/sayou-connector
+```
+
+**3. Run Tests**
+
+```bash
+# Run all tests
+pytest
+
+# Run tests for a specific module
+pytest tests/connector
+```
+
+---
+
+## Pull Request Protocol
+
+1. **Focus** — Keep PRs focused on a single library if possible (e.g., "Add Notion Fetcher to sayou-connector").
+2. **Naming** — Start commit messages with the component name.
+    - `[connector] Add Notion support`
+    - `[core] Fix retry decorator`
+3. **Tests** — Add a unit test in `tests/{library_name}/`.
+
+---
+
+## Style Guide
+
+- Follow **PEP 8**.
+- Run **Black** and **Isort** before committing.
+
+---
+
+## Templates
+
+=== "Bug Report"
+
+    **Component**
+
+    Which library is causing the issue? (e.g., `sayou-connector`, `sayou-chunking`)
+
+    **Describe the bug**
+
+    A clear and concise description of what the bug is.
+
+    **Configuration / Strategy Used**
+
+    ```python
+    pipeline.process(
+        source="...",
+        strategy="markdown",
+        config={"chunk_size": 500}
+    )
+    ```
+
+    **To Reproduce**
+
+    1. Initialize pipeline...
+    2. Run method...
+    3. See error
+
+    **Expected behavior**
+
+    A clear and concise description of what you expected to happen.
+
+    **Logs / Traceback**
+
+    ```markdown
+    Paste error logs here...
+    ```
+
+    **Environment**
+
+    - OS: (e.g., macOS)
+    - Python Version: (e.g., 3.11)
+    - Sayou Version: (e.g., 0.4.0)
+
+    ---
+    [Open a Bug Report →](https://github.com/sayouzone/sayou-fabric/issues/new?template=bug_report.md){ .md-button }
+
+=== "Feature Request"
+
+    **Is your feature request related to a problem?**
+
+    A clear and concise description of the problem. (e.g., "I'm always frustrated when...")
+
+    **Describe the solution you'd like**
+
+    A clear and concise description of what you want to happen.
+
+    **Describe alternatives you've considered**
+
+    Any alternative solutions or features you've considered.
+
+    **Additional context**
+
+    Any other context or screenshots about the feature request.
+
+    ---
+    [Open a Feature Request →](https://github.com/sayouzone/sayou-fabric/issues/new?template=feature_request.md){ .md-button }
+
+=== "Pull Request"
+
+    **Description**
+    
+    A summary of the change and which issue is fixed.
+
+    **Fixes # (issue number)**
+
+    **Affected Components**
+
+    ```markdown
+    - [ ] `sayou-core`
+    - [ ] `sayou-brain`
+    - [ ] `sayou-connector`
+    - [ ] `sayou-document`
+    - [ ] `sayou-refinery`
+    - [ ] `sayou-chunking`
+    - [ ] `sayou-wrapper`
+    - [ ] `sayou-assembler`
+    - [ ] `sayou-loader`
+    - [ ] `sayou-extractor`
+    - [ ] `sayou-llm`
+    - [ ] `sayou-visualizer`
+    ```
+
+    **Type of change**
+
+    ```markdown
+    - [ ] Bug fix
+    - [ ] New feature
+    - [ ] Breaking change
+    - [ ] Documentation update
+    ```
+
+    **Checklist**
+
+    ```markdown
+    - [ ] Code follows the style guidelines
+    - [ ] Self-review completed
+    - [ ] Hard-to-understand areas are commented
+    - [ ] Tests added
+    - [ ] All tests pass locally
+    ```
+
+---
 
 ## Code of Conduct
 
-(Placeholder for text: "All contributors are expected to follow our [Code of Conduct](link-to-coc.md). Please be respectful and constructive.")
+Sayou Fabric follows the [Contributor Covenant v2.0](https://www.contributor-covenant.org/version/2/0/code_of_conduct.html).
 
-## License
-
-By contributing to `sayou-fabric`, you agree that your contributions will be licensed under the **Apache 2.0 License** that covers the project.
+The full text is available at [`CODE_OF_CONDUCT.md`](https://github.com/sayouzone/sayou-fabric/blob/main/CODE_OF_CONDUCT.md).

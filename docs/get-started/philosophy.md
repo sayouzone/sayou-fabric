@@ -1,28 +1,48 @@
 # Philosophy
 
-Sayouzone's Data Platform is built on three core principles that define its value and design.
+## Structure-First
 
-### 1. The Facade Principle: "Low Floor, High Ceiling"
-Our goal is to provide the simplest possible entry point for a complex task.
+Sayou Fabric parses the **native structure** of data before processing any content.
 
-* **Low Floor (Easy Start):** The `BasicRAG` facade. You import *one* class (`BasicRAG`) and provide *one* function (`map_logic`). The framework handles the rest. This gets you from "API-to-Answer" in minutes.
+| Data Type | Native Structure | How Sayou Uses It |
+| :--- | :--- | :--- |
+| **Code** | AST — classes, methods, imports, call sites | Constructs a typed call graph with CALLS, INHERITS, OVERRIDES, IMPORTS edges |
+| **Documents** | Spatial layout, heading hierarchy, table boundaries | Preserves section nesting, never splits a table or code block across chunks |
+| **Media** | Temporal timeline, transcript alignment | Sequences segments chronologically with typed NEXT/PREV edges |
 
-* **High Ceiling (High Customization):** When you outgrow the facade, you have full access to the underlying libraries (Lego bricks). Want to swap the `FileStorer` for a `Neo4jStorer`? Import `AssemblerPipeline` and configure it yourself. You are never locked into the "basic" flow.
+This is the **Structure-First Architecture**. The skeleton is built from the data's own organization before any content is touched.
 
-### 2. Built for Production and Scale
-Sayou is engineered for production-grade systems. We believe that a scalable RAG system *is* a scalable data engineering system.
+---
 
-This "Process-Driven" philosophy is why Sayou is not a single library. It is a composable set of 11+ specialized modules (Connector, Wrapper, Assembler...). Each module is built with a 3-Tier (Interface -> Default -> Plugin) architecture, ensuring that every single component of your pipeline can be tested, customized, and replaced as your application scales.
+## Deterministic
 
-### 3. The Knowledge Graph as a Reusable Asset
-A Sayou pipeline doesn't just produce an answer in memory. **It produces a tangible, structured, and reusable data asset: the Knowledge Graph** (`final_kg.json`).
+Given the same input, Sayou always produces the same graph. This matters for three reasons:
 
-This KG is not a "black box" like a vector database index. It's a clean, auditable JSON file that can be:
+- **Reproducibility** — the pipeline is testable and auditable.
+- **Debuggability** — when a relationship is wrong, there is a specific rule to fix.
+- **Stability** — the graph is consistent across environments and over time.
 
-* **Queried** again later without re-running the API.
+---
 
-* **Imported** into a graph database like Neo4j.
+## The 3-Tier Design Pattern
 
-* **Used** for analytics or visualization.
+Every module in Sayou Fabric follows the same internal structure, inspired by enterprise software architecture:
 
-* **Versioned** and managed as part of your data infrastructure.
+- **Tier 1 — Interface**: The immutable contract. Abstract base classes defining method signatures and data types. Never changes once released.
+- **Tier 2 — Template**: Official, production-tested implementations covering the common cases.
+- **Tier 3 — Plugin**: Vendor-specific or domain-specific extensions. New languages, new databases, new APIs — all registered here without touching existing code.
+
+This applies at two levels simultaneously:
+
+- **Micro-level**: each individual library (`sayou-connector`, `sayou-chunking`, …) follows the 3-Tier pattern internally.
+- **Macro-level**: the entire ecosystem forms the same pattern — Core as the interface layer, the Data Libraries as templates, Brain as the orchestrator.
+
+---
+
+## Independent Modularity
+
+The ecosystem is split into 10+ independent packages for practical reasons, not engineering purity:
+
+- A data engineer who only needs chunking should not install an LLM adapter.
+- A team using their own vector store should not be forced into Sayou's loader.
+- Every package follows the same 3-Tier contract, so mixing and matching always works.

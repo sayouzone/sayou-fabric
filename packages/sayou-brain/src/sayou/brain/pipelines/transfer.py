@@ -12,7 +12,7 @@ from ..core.config import SayouConfig
 
 class TransferPipeline(BaseComponent):
     """
-    (Tier 1) Lightweight ETL Pipeline.
+    Lightweight ETL Pipeline.
 
     Purpose: Move data from Source to Destination with minimal transformation.
     Flow: Connector -> [Refinery] -> Loader

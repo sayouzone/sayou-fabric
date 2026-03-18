@@ -1,4 +1,5 @@
-from typing import List
+from collections import defaultdict
+from typing import Any, Dict, List
 
 from sayou.core.registry import register_component
 
@@ -16,7 +17,12 @@ except ImportError:
 @register_component("writer")
 class Neo4jWriter(BaseWriter):
     """
-    Executes Cypher queries against a Neo4j database.
+    Neo4j Writer (Graph Loader).
+
+    Features:
+    - Automatically groups nodes by 'label' for batch processing.
+    - Uses 'UNWIND' + 'MERGE' for high-performance UPSERT.
+    - Handles both Node creation and Relationship linking.
     """
 
     component_name = "Neo4jWriter"
@@ -41,65 +47,164 @@ class Neo4jWriter(BaseWriter):
 
         return 0.0
 
-    def initialize(self, **kwargs):
-        """
-        Initialize Neo4j Driver.
-        Expects: neo4j_uri (or uses destination from run), neo4j_user, neo4j_password
-        """
-        if GraphDatabase is None:
-            raise ImportError(
-                "Neo4jWriter requires 'neo4j'. Install with 'pip install sayou-loader[neo4j]'"
-            )
-
-        self.auth_config = kwargs
-        self.driver = None
-
-    def _ensure_connection(self, uri: str):
-        """Lazy connection helper"""
-        if self.driver:
-            return
-
-        user = self.auth_config.get("neo4j_user", "neo4j")
-        password = self.auth_config.get("neo4j_password", "password")
-
-        if not (uri.startswith("bolt://") or uri.startswith("neo4j://")):
-            uri = self.auth_config.get("neo4j_uri", uri)
-
-        try:
-            self.driver = GraphDatabase.driver(uri, auth=(user, password))
-            self.driver.verify_connectivity()
-            self._log(f"Neo4j driver connected to {uri}.")
-        except Exception as e:
-            raise WriterError(f"Failed to connect to Neo4j at {uri}: {e}")
-
-    def __del__(self):
-        if hasattr(self, "driver") and self.driver:
-            self.driver.close()
-
     def _do_write(self, input_data: Any, destination: str, **kwargs) -> bool:
-        """
-        Execute Cypher queries.
-        Args:
-            input_data: List of Cypher query strings.
-            destination: Neo4j URI (e.g., bolt://localhost:7687).
-        """
-        self._ensure_connection(destination)
+        if not GraphDatabase:
+            raise WriterError("Please install 'neo4j' package (pip install neo4j).")
 
-        if not isinstance(input_data, list):
-            self._log("Neo4jWriter expects a list of Cypher strings.", level="error")
-            return False
+        # 1. Configuration parsing
+        # destination: neo4j://host:7687
+        uri = destination if "://" in destination else kwargs.get("uri")
+        auth = kwargs.get("auth")  # (user, password) tuple
+        if not auth and "user" in kwargs and "password" in kwargs:
+            auth = (kwargs["user"], kwargs["password"])
 
-        # Transaction execution
-        success_count = 0
-        with self.driver.session() as session:
-            for query in input_data:
+        # Primary Key to use (default: 'id')
+        id_key = kwargs.get("id_key", "id")
+
+        # 2. Data normalization and grouping
+        nodes = self._normalize_input_data(input_data)
+        if not nodes:
+            return True
+
+        # Group nodes by label (required for batch processing)
+        grouped_nodes = defaultdict(list)
+        relationships = []
+
+        for node in nodes:
+            # Label extraction (default: 'Entity')
+            label = node.get("label", "Entity")
+
+            # Property sanitization (Neo4j doesn't support nested Dict -> JSON String conversion)
+            props = self._sanitize_props(node)
+
+            # ID confirmation (required)
+            if id_key not in props:
+                self._log(
+                    f"Skipping node without ID key '{id_key}': {props}", level="warning"
+                )
+                continue
+
+            grouped_nodes[label].append(props)
+
+            # Relationship data extraction (e.g: 'links': [{'target': 'doc_2', 'type': 'WROTE'}])
+            if "links" in node and isinstance(node["links"], list):
+                src_id = props[id_key]
+                for link in node["links"]:
+                    target_id = link.get("target")
+                    rel_type = link.get("type", "RELATED_TO")
+                    if target_id:
+                        relationships.append(
+                            {"src": src_id, "tgt": target_id, "type": rel_type}
+                        )
+
+        # 3. Neo4j execution
+        driver = GraphDatabase.driver(uri, auth=auth)
+        try:
+            with driver.session() as session:
+                # A. Node loading (batch processing by label)
+                for label, batch_data in grouped_nodes.items():
+                    self._log(
+                        f"Merging {len(batch_data)} nodes with label ':{label}'..."
+                    )
+                    session.execute_write(
+                        self._batch_merge_nodes, label, batch_data, id_key
+                    )
+
+                # B. Relationship loading (edge connection)
+                if relationships:
+                    self._log(f"Creating {len(relationships)} relationships...")
+                    # Group relationships by type for faster processing
+                    self._process_relationships(session, relationships, id_key)
+
+            return True
+        finally:
+            driver.close()
+
+    def _batch_merge_nodes(self, tx, label, batch_data, id_key):
+        """
+        Cypher UNWIND to perform high-speed merge
+        """
+        query = f"""
+        UNWIND $batch AS row
+        MERGE (n:`{label}` {{ `{id_key}`: row.`{id_key}` }})
+        SET n += row
+        """
+        tx.run(query, batch=batch_data)
+
+    def _process_relationships(self, session, all_rels, id_key):
+        """Group relationships by type"""
+        rels_by_type = defaultdict(list)
+        for rel in all_rels:
+            rels_by_type[rel["type"]].append(rel)
+
+        for rel_type, batch in rels_by_type.items():
+            session.execute_write(self._batch_merge_rels, rel_type, batch, id_key)
+
+    def _batch_merge_rels(self, tx, rel_type, batch, id_key):
+        """
+        Find two nodes and create relationship. (Don't create if nodes don't exist -> MATCH)
+        """
+        query = f"""
+        UNWIND $batch AS rel
+        MATCH (a {{ `{id_key}`: rel.src }})
+        MATCH (b {{ `{id_key}`: rel.tgt }})
+        MERGE (a)-[r:`{rel_type}`]->(b)
+        """
+        tx.run(query, batch=batch)
+
+    def _normalize_input_data(self, input_data: Any) -> List[Dict]:
+        """SayouNode(attributes/metadata) -> Dict conversion"""
+        if hasattr(input_data, "nodes"):
+            raw_nodes = input_data.nodes
+        elif isinstance(input_data, list):
+            raw_nodes = input_data
+        else:
+            raw_nodes = [input_data]
+
+        normalized = []
+        for n in raw_nodes:
+            # SayouNode processing logic
+            # attributes to default, metadata to merge
+            if hasattr(n, "attributes") or hasattr(n, "metadata"):
+                # 1. attributes to default
+                d = getattr(n, "attributes", {}).copy()
+
+                # 2. metadata to merge
+                if hasattr(n, "metadata") and n.metadata:
+                    d.update(n.metadata)
+
+                # 3. id field correction (node_id -> id)
+                if hasattr(n, "node_id") and n.node_id:
+                    d["id"] = n.node_id
+
+                # 4. content field processing
+                if hasattr(n, "content") and n.content:
+                    d["content"] = n.content
+
+                normalized.append(d)
+
+            elif isinstance(n, dict):
+                normalized.append(n)
+
+        return normalized
+
+    def _sanitize_props(self, props: Dict) -> Dict:
+        """Neo4j Property Type Restrictions (Primitive or List of Primitive)"""
+        new_props = {}
+        for k, v in props.items():
+            if k == "links":
+                continue
+
+            if isinstance(v, (dict, list)):
                 try:
-                    # 간단한 실행 (실제로는 배치 처리나 파라미터 바인딩 권장)
-                    session.run(query)
-                    success_count += 1
-                except Exception as e:
-                    self._log(f"Cypher query failed: {e}", level="warning")
-                    # 실패해도 계속 진행할지 여부는 정책에 따름 (여기선 진행)
-
-        self._log(f"Executed {success_count}/{len(input_data)} queries successfully.")
-        return True
+                    if isinstance(v, list) and all(
+                        isinstance(x, (str, int, float)) for x in v
+                    ):
+                        new_props[k] = v
+                    else:
+                        new_props[k] = json.dumps(v)
+                except:
+                    new_props[k] = str(v)
+            else:
+                new_props[k] = v
+        return new_props

@@ -2,9 +2,9 @@ import hashlib
 import uuid
 from typing import Any, List, Union
 
+from sayou.core.ontology import SayouAttribute, SayouClass, SayouPredicate
 from sayou.core.registry import register_component
 from sayou.core.schemas import SayouNode, SayouOutput
-from sayou.core.vocabulary import SayouAttribute, SayouClass, SayouPredicate
 
 from ..interfaces.base_adapter import BaseAdapter
 
@@ -102,7 +102,7 @@ class DocumentChunkAdapter(BaseAdapter):
             elif sem_type == "table":
                 node_class = SayouClass.TABLE
             elif sem_type == "code_block":
-                node_class = SayouClass.CODE
+                node_class = SayouClass.CODE_BLOCK
             elif sem_type == "list_item":
                 node_class = SayouClass.LIST_ITEM
             else:

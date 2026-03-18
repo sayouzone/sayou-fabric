@@ -20,7 +20,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install build tools
-        run: pip install hatch
+        run: pip install build
 
       - name: Parse package name and version from tag
         id: parse_tag
@@ -29,6 +29,7 @@ jobs:
           PACKAGE_NAME=$(echo $TAG_NAME | rev | cut -d'-' -f2- | rev)
           echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
           PACKAGE_VERSION=$(echo $TAG_NAME | rev | cut -d'-' -f1 | rev | cut -c 2-)
+          echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
           echo "Deploying $PACKAGE_NAME version $PACKAGE_VERSION"
 
       - name: Detect package directory
@@ -51,10 +52,25 @@ jobs:
         run: |
           echo "Building from: ${{ steps.detect_dir.outputs.package_dir }}"
           cd ${{ steps.detect_dir.outputs.package_dir }}
-          hatch build
+          python -m build -s
+          python -m build -w
 
       - name: Publish ${{ steps.parse_tag.outputs.package_name }} to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           packages_dir: ${{ steps.detect_dir.outputs.package_dir }}/dist/
+
+      - name: Notify Cloud Run
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${{ secrets.CLOUD_RUN_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.CLOUD_RUN_WEBHOOK_SECRET }}" \
+            -d '{
+              "package": "${{ steps.parse_tag.outputs.package_name }}",
+              "version": "${{ steps.parse_tag.outputs.package_version }}",
+              "tag": "${{ github.ref_name }}",
+              "repository": "${{ github.repository }}",
+              "triggered_by": "${{ github.actor }}"
+            }'

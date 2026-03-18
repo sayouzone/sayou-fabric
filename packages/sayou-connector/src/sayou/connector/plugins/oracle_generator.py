@@ -9,7 +9,7 @@ from ..interfaces.base_generator import BaseGenerator
 @register_component("generator")
 class OracleGenerator(BaseGenerator):
     """
-    (Tier 1) Standard Oracle Task Generator.
+    Standard Oracle Task Generator.
     Simply generates tasks for each table provided.
     No custom business logic (like date splitting).
     """

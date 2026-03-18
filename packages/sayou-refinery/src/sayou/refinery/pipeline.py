@@ -206,23 +206,41 @@ class RefineryPipeline(BaseComponent):
         # ---------------------------------------------------------
         # Step 2: Process Chain (Dynamic Execution)
         # ---------------------------------------------------------
+        target_processors = (
+            processors
+            or kwargs.get("processors")
+            or self.global_config.get("default_processors")
+            or []
+        )
+
         # 1. Select Processor
         candidate_processors = []
 
-        # Case A: Manual Chain
-        target_names = processors or kwargs.get("processors")
+        # Case A: Using the "ALL" keyword
+        if target_processors == "ALL":
+            self._log(
+                "⚠️ 'ALL' strategy selected. Executing all capable processors.",
+                level="info",
+            )
+            all_procs = list(self.processor_cls_map.values())
+            candidate_processors = sorted(all_procs, key=lambda x: x.component_name)
 
-        if target_names:
-            for name in target_names:
+        # Case B: Explicit list (List[str])
+        elif isinstance(target_processors, list):
+            for name in target_processors:
                 proc_cls = self._resolve_processor_by_name(name)
                 if proc_cls:
                     candidate_processors.append(proc_cls)
                 else:
-                    self._log(f"Processor '{name}' not found.", level="warning")
+                    self._log(
+                        f"Processor '{name}' not found. Skipping.", level="warning"
+                    )
 
-        # Case B: Auto Chain
+        # Case C: None or []
         else:
-            candidate_processors = list(set(self.processor_cls_map.values()))
+            self._log(
+                "No processors specified. Skipping refinement chain.", level="debug"
+            )
 
         # 2. Execution
         active_instances = []

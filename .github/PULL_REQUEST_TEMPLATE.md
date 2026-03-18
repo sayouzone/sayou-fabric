@@ -1,6 +1,23 @@
 ## Description
 Please include a summary of the change and which issue is fixed.
 
+**Fixes # (issue number)**
+
+## Affected Components
+Please check the libraries modified by this PR:
+- [ ] `sayou-core`
+- [ ] `sayou-brain`
+- [ ] `sayou-connector`
+- [ ] `sayou-document`
+- [ ] `sayou-refinery`
+- [ ] `sayou-chunking`
+- [ ] `sayou-wrapper`
+- [ ] `sayou-assembler`
+- [ ] `sayou-loader`
+- [ ] `sayou-extractor`
+- [ ] `sayou-llm`
+- [ ] `sayou-visualizer`
+
 ## Type of change
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)

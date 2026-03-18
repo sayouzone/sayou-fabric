@@ -15,7 +15,7 @@ except ImportError:
 @register_component("fetcher")
 class OracleFetcher(BaseFetcher):
     """
-    (Tier 1) Standard Oracle Fetcher.
+    Standard Oracle Fetcher.
     Executes standard SQL queries via 'oracledb'.
     Includes driver-level optimization for LOBs.
     """

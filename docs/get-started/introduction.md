@@ -1,29 +1,39 @@
 # Introduction
 
-Welcome to the Sayouzone's Data Platform.
+**Sayou Fabric is a framework for Deterministic Knowledge Graph Construction.**
 
-Sayou is a modular framework for building **production-grade, scalable RAG (Retrieval-Augmented Generation) pipelines.**
+It transforms unstructured data into structured assets by analyzing their intrinsic topology — syntax trees, file hierarchies, and metadata. The result is a Knowledge Graph that is precise, reproducible, and structurally sound.
 
-### What Sayou Is
-Sayou is a composable set of libraries designed to orchestrate the full data-to-answer lifecycle. This includes:
+---
 
-1.  **Connecting** to live data sources (APIs, DBs, files).
-2.  **Structuring** raw data (parsing, validation, mapping).
-3.  **Refining** and cleaning (e.g., text, metadata).
-4.  **Assembling** data into a queryable 'Knowledge Asset' (like a KG).
-5.  **Extracting** precise context (e.g., file retrieval, KG queries).
-6.  **Orchestrating** the final LLM-powered response.
+## What Sayou Fabric Does
 
-### Why Sayou is Modular
-This specialized, multi-library architecture (10+ libraries) is a deliberate design choice.
+The full data-to-answer lifecycle is decomposed into discrete, composable stages:
 
-We believe that robust, scalable AI systems require a robust, scalable data engineering process. This modularity ensures that every component of the pipeline is **testable, replaceable, and extensible.**
+| Stage | Package | Role |
+| :--- | :--- | :--- |
+| Ingestion | `sayou-connector` | Fetches data from files, APIs, databases, SaaS |
+| Parsing | `sayou-document` | Converts documents to structured DOM with layout coordinates |
+| Cleaning | `sayou-refinery` | Normalizes, denoises, masks PII |
+| Splitting | `sayou-chunking` | Splits by native structure — AST for code, headers for docs |
+| Mapping | `sayou-wrapper` | Converts chunks to typed `SayouNode` objects |
+| Assembly | `sayou-assembler` | Resolves relationships between nodes into typed edges |
+| Persistence | `sayou-loader` | Writes the graph to VectorDB, Graph DB, or file |
 
-This architecture is built on two layers of a 3-Tier (Interface -> Default -> Plugin) structure:
+The `sayou-brain` orchestrator wires these stages together. You invoke a Pipeline; Brain handles the rest.
 
-1.  **Micro-level:** Each individual library (e.g., `sayou-connector`) follows the 3-Tier principle, allowing developers to plug in custom components.
+---
 
-2.  **Macro-level:** The entire system forms a 3-Tier structure (Core -> Libraries -> RAG), allowing developers to assemble entirely new pipelines.
+## Pipeline Modes
 
-### Getting Started
-This `Get Started` guide focuses on the `BasicRAG` facade. This facade composes 5+ of these libraries into a simple, pre-configured pipeline, allowing you to build your first "API-to-Answer" workflow in minutes.
+**StandardPipeline** — for documents where spatial layout matters (PDF, DOCX, PPTX).
+Routes through `sayou-document` to preserve heading hierarchy, table boundaries, and page coordinates before chunking.
+
+**NormalPipeline** — for code, video, and web content.
+Skips layout parsing. Routes directly to structural chunking — AST for code, temporal segmentation for video.
+
+---
+
+## Scope
+
+Sayou Fabric is a data layer framework. It produces a clean, queryable Knowledge Graph that any retrieval or generation layer can consume.

@@ -1,16 +1,18 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
-- family-names: "Sayouzone"
-  given-names: "Team"
+- name: "Sayouzone"
 title: "Sayou Fabric: The Data-Centric Framework for Building Enterprise RAG Pipelines"
-version: 0.3.0
-date-released: 2025-01-01
+abstract: "A comprehensive ETL and orchestration framework for RAG systems, featuring modular pipelines for ingestion, refinement, and knowledge graph assembly."
+version: 0.4.0
+date-released: 2026-02-06
 url: "https://github.com/sayouzone/sayou-fabric"
+repository-code: "https://github.com/sayouzone/sayou-fabric"
 license: Apache-2.0
 keywords:
   - rag
   - etl
+  - data
   - knowledge-graph
   - pipeline
   - python

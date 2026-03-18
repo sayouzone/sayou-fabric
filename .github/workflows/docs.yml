@@ -1,33 +1,59 @@
-name: Deploy MkDocs to GitHub Pages
+name: Deploy Documentation
 
 on:
   push:
     branches:
       - main
     paths:
+      - 'README.md'
+      - 'packages/**/README.md'
       - 'docs/**'
+      - 'packages/**/*.py'
       - 'mkdocs.yml'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   deploy:
+    name: Build and deploy docs
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
+          cache: pip
 
-      - name: Install dependencies
-        run: pip install mkdocs mkdocs-material
+      - name: Install docs dependencies
+        run: |
+          pip install \
+            "mkdocs>=1.5,<2.0" \
+            "mkdocs-material>=9.0,<10.0" \
+            "mkdocs-include-markdown-plugin>=6.0" \
+            "mkdocstrings[python]>=0.24"
+
+      - name: Generate example pages from .py files
+        run: python scripts/gen_examples.py
+
+      - name: Install Sayou packages (for mkdocstrings introspection)
+        run: |
+          for pkg_dir in packages/*/; do
+            if [ -f "$pkg_dir/pyproject.toml" ] || [ -f "$pkg_dir/setup.py" ]; then
+              pip install -e "$pkg_dir" --quiet || true
+            fi
+          done
 
       - name: Build and deploy
-        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        run: mkdocs gh-deploy --force --clean --verbose
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
+          ENABLE_MKDOCSTRINGS: true
