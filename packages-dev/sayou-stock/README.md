@@ -191,3 +191,15 @@ print(data.spread_df)
 ## 📜 License
 
 Apache 2.0 License © 2025 Sayouzone
+
+## Plugin List
+
+| Plugin | Example | Description |
+| :--- | :---: | :--- |
+| **`SEC EDGAR Crawler`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/packages-dev/sayou-stock/src/sayou/stock/edgar/README.md) |  |
+| **`FnGuide Crawler`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/packages-dev/sayou-stock/src/sayou/stock/fnguide/README.md) |  |
+| **`Kisrating Crawler`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/packages-dev/sayou-stock/src/sayou/stock/kisrating/README.md) | 한국신용평가 신용등급 조회 |
+| **`Koreainvestment Crawler`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/packages-dev/sayou-stock/src/sayou/stock/koreainvestment/README.md) | 한국투자증권 연동 |
+| **`Naver Crawler`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/packages-dev/sayou-stock/src/sayou/stock/naver/README.md) | 네이버 뉴스 수집 및 네이버 증권 조회 |
+| **`OpenDart Crawler`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/packages-dev/sayou-stock/src/sayou/stock/opendart/README.md) | DART 오픈API |
+| **`Yahoo Crawler`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/packages-dev/sayou-stock/src/sayou/stock/yahoo/README.md) | Yahoo Finance API |
