@@ -1,104 +1,159 @@
+# ── Setup
+"""
+Split JSON data using `JsonSplitter`.
+
+`JsonSplitter` operates on structured data rather than plain text.  It
+accepts a JSON string, a Python `list`, or a Python `dict` as `content`
+and groups items into chunks whose serialised size stays under
+`chunk_size` bytes.
+
+Two routing modes:
+
+| Input type | Strategy                            | chunk_type metadata |
+|------------|-------------------------------------|---------------------|
+| `list`     | Batch consecutive items             | `"json_list"`       |
+| `dict`     | Batch key-value pairs               | `"json_object"`     |
+
+Oversized items within a list are split further using the dict strategy.
+Oversized values within a dict are split recursively by key.
+
+Use `JsonSplitter` for structured records from databases, API responses,
+transcript cue lists, or any other tabular data.
+"""
 import json
-import logging
 
 from sayou.chunking.pipeline import ChunkingPipeline
 from sayou.chunking.plugins.json_splitter import JsonSplitter
 
-logging.basicConfig(level=logging.INFO, format="%(message)s")
+pipeline = ChunkingPipeline(extra_splitters=[JsonSplitter])
+print("Pipeline initialized.")
 
 
-def run_json_demo():
-    print(">>> Initializing Sayou JSON Chunking Pipeline...")
+# ── Split a JSON Array
+"""
+The most common use case: a list of records fetched from a database or API.
 
-    pipeline = ChunkingPipeline(extra_splitters=[JsonSplitter])
+Each chunk contains as many consecutive items as fit within `chunk_size`
+characters (after JSON serialisation).  Metadata records:
 
-    # ---------------------------------------------------------
-    # Scenario 1: List of Records (YouTube Subtitle Style)
-    # ---------------------------------------------------------
-    print("\n=== [1] YouTube Subtitle Batching ===")
+- `chunk_type`    — `"json_list"`
+- `item_count`    — number of items in this chunk
+- `index_start`   — first item's original index
+- `index_end`     — last item's original index
+"""
+records = [
+    {"id": i, "name": f"user_{i:03d}", "score": round(i * 1.7, 2)} for i in range(30)
+]
 
-    youtube_records = [
-        {"text": "안녕하세요.", "start": 0.0, "duration": 1.5},
-        {"text": "Sayou Fabric 데모입니다.", "start": 1.8, "duration": 2.5},
-        {"text": "이것은 JSON 청킹 테스트입니다.", "start": 4.5, "duration": 3.0},
-        {"text": "문장이 짧아도...", "start": 7.8, "duration": 1.2},
-        {"text": "설정된 크기만큼 묶입니다.", "start": 9.2, "duration": 2.0},
-        {"text": "다음 챕터로 넘어갑니다.", "start": 12.5, "duration": 2.0},
-        {"text": "여기서부터는 새로운 청크가 되겠죠.", "start": 15.0, "duration": 3.5},
-    ]
+chunks = pipeline.run(
+    {
+        "content": json.dumps(records),
+        "config": {"chunk_size": 300, "chunk_overlap": 0},
+    },
+    strategy="json",
+)
 
-    request_youtube = {
-        "type": "record",  # SayouBlock type
-        "content": youtube_records,
-        "metadata": {
-            "source": "video_transcript.json",
-            "video_id": "v12345",
-        },
-        "config": {
-            "chunk_size": 100,
-            "min_chunk_size": 10,
-        },
-    }
+print("=== Split a JSON Array ===")
+for chunk in chunks:
+    m = chunk.metadata
+    print(
+        f"  items {m['index_start']:2d}–{m['index_end']:2d}  "
+        f"count={m['item_count']}  "
+        f"bytes={len(chunk.content):4d}"
+    )
 
-    chunks_list = pipeline.run(request_youtube, strategy="record")
-
-    for i, chunk in enumerate(chunks_list):
-        meta = chunk.metadata
-        time_info = f"Time: {meta.get('sayou:startTime')} ~ {meta.get('sayou:endTime')}"
-        count_info = f"Items: {meta.get('item_count')}"
-
-        print(f"[{i}] {time_info} | {count_info}")
-        print("-" * 40)
-        print(chunk.content.strip())
-        print("-" * 40)
-
-    # ---------------------------------------------------------
-    # Scenario 2: Nested Dictionary (Complex JSON)
-    # ---------------------------------------------------------
-    print("\n=== [2] Complex Nested JSON Splitting ===")
-
-    complex_data = {
-        "meta": {"api_version": "v1", "environment": "production"},
-        "data": {
-            "users": [
-                {"id": k, "name": f"User_{k}", "log": "Action data..." * 5}
-                for k in range(1, 6)
-            ],
-            "settings": {"theme": "dark", "notifications": True},
-        },
-    }
-
-    request_dict = {
-        "type": "json",
-        "content": complex_data,
-        "metadata": {
-            "source": "api_response.json",
-        },
-        "config": {
-            "chunk_size": 200,
-        },
-    }
-
-    chunks_dict = pipeline.run(request_dict, strategy="json")
-
-    for i, chunk in enumerate(chunks_dict):
-        meta = chunk.metadata
-        path_info = f"Path: {meta.get('json_path', 'root')}"
-        type_info = f"Type: {meta.get('chunk_type')}"
-
-        print(f"[{i}] {type_info} | {path_info}")
-        print(f"    Content Preview: {chunk.content[:60].replace(chr(10), ' ')}...")
-
-    # ---------------------------------------------------------
-    # [Save Result]
-    # ---------------------------------------------------------
-    output_data = [c.model_dump() for c in chunks_list + chunks_dict]
-
-    with open("json_chunk_result_demo.json", "w", encoding="utf-8") as f:
-        json.dump(output_data, f, indent=2, ensure_ascii=False)
-
-    print(f"\n✅ Saved {len(output_data)} chunks to json_chunk_result_demo.json")
+total = sum(c.metadata["item_count"] for c in chunks)
+print(f"  Total items recovered: {total} / {len(records)}")
 
 
-if __name__ == "__main__":
-    run_json_demo()
+# ── Split a JSON Object
+"""
+A large dict is split by key — key-value pairs are batched until the
+serialised size reaches `chunk_size`.  Each chunk carries:
+
+- `chunk_type`       — `"json_object"`
+- `chunk_id_suffix`  — `"part_0"`, `"part_1"`, …
+
+Useful for wide API responses, configuration objects, or document metadata
+dicts that are too large to embed in a single call.
+"""
+large_dict = {f"field_{i:03d}": "x" * 40 for i in range(20)}
+
+dict_chunks = pipeline.run(
+    {
+        "content": json.dumps(large_dict),
+        "config": {"chunk_size": 200},
+    },
+    strategy="json",
+)
+
+print("\n=== Split a JSON Object ===")
+for chunk in dict_chunks:
+    keys = list(json.loads(chunk.content).keys())
+    print(f"  suffix={chunk.metadata['chunk_id_suffix']:8s}  keys={keys}")
+
+
+# ── Transcript Cue Lists
+"""
+YouTube and podcast transcripts are delivered as lists of timed cue dicts:
+
+```python
+[{"text": "Hello.", "start": 0.0, "duration": 1.5}, …]
+```
+
+`JsonSplitter` batches consecutive cues until the chunk reaches `chunk_size`.
+When a `"start"` key is present, `metadata` also records:
+
+- `sayou:startTime` — start time of the first cue in the chunk
+- `sayou:endTime`   — end time of the last cue in the chunk
+"""
+transcript = [
+    {"text": f"Sentence {i}.", "start": i * 3.0, "duration": 2.8} for i in range(20)
+]
+
+transcript_chunks = pipeline.run(
+    {
+        "content": json.dumps(transcript),
+        "config": {"chunk_size": 400},
+    },
+    strategy="json",
+)
+
+print("\n=== Transcript Cue Lists ===")
+for chunk in transcript_chunks:
+    m = chunk.metadata
+    print(
+        f"  cues {m['index_start']:2d}–{m['index_end']:2d}  "
+        f"start={m.get('sayou:startTime', '?'):5}s  "
+        f"end={m.get('sayou:endTime', '?'):5}s"
+    )
+
+
+# ── Block Type Input
+"""
+Pass `type="json"` in the block so `JsonSplitter.can_handle()` returns 1.0
+without needing the explicit `strategy="json"` argument.
+"""
+from sayou.core.schemas import SayouBlock
+
+block = SayouBlock(
+    type="json",
+    content=json.dumps(records[:10]),
+    metadata={"config": {"chunk_size": 200}, "source": "api_response"},
+)
+
+auto_chunks = pipeline.run(block, strategy="auto")
+print(f"\n=== Block Type Input (auto) ===")
+print(f"  Chunks: {len(auto_chunks)}")
+for c in auto_chunks:
+    print(f"    item_count={c.metadata['item_count']}  bytes={len(c.content)}")
+
+
+# ── Save Results
+"""
+Write all list chunks to JSON for downstream processing.
+"""
+with open("json_chunks.json", "w", encoding="utf-8") as f:
+    json.dump([c.model_dump() for c in chunks], f, indent=2, ensure_ascii=False)
+
+print(f"\nSaved {len(chunks)} chunks to json_chunks.json")
