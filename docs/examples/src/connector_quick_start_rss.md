@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_rss.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_rss.py).
+
+## Setup
+
 Collect articles from an RSS or Atom feed and archive them as Markdown
 files using `TransferPipeline`.
 
@@ -16,7 +19,8 @@ python quick_start_rss.py
 
 The example below mocks both libraries for offline testing.
 Remove `setup_mock()` and substitute a real `rss://` URL to go live.
-"""
+
+```python
 import json
 import os
 import sys
@@ -25,10 +29,10 @@ from unittest.mock import MagicMock
 from sayou.brain.pipelines.transfer import TransferPipeline
 
 OUTPUT_DIR = "./sayou_archive/rss"
+```
 
+## Mock Setup
 
-# ── Mock Setup
-"""
 `RssGenerator` calls `feedparser.parse()`.
 `RssFetcher` calls `trafilatura.fetch_url()` and `trafilatura.extract()`.
 
@@ -36,9 +40,8 @@ OUTPUT_DIR = "./sayou_archive/rss"
 `.get()`, and the `in` operator so `RssFetcher` can extract all fields.
 
 To switch to live mode: delete this function and its call below.
-"""
 
-
+```python
 class _MockEntry:
     def __init__(self, n: int):
         self.link = f"https://example.com/post-{n}"
@@ -72,16 +75,17 @@ def setup_mock():
     )
     mock_tf.extract.return_value = "Full article text extracted by trafilatura."
     sys.modules["trafilatura"] = mock_tf
+```
 
+## Collect a Feed
 
-# ── Collect a Feed
-"""
 Use the `rss://` prefix with the feed URL (the protocol portion is replaced
 automatically — `rss://feeds.example.com/tech` becomes
 `https://feeds.example.com/tech`).
 
 Each article is written as a separate Markdown file in `destination`.
-"""
+
+```python
 setup_mock()
 
 stats = TransferPipeline.process(
@@ -93,13 +97,14 @@ stats = TransferPipeline.process(
 
 print("=== Collect a Feed ===")
 print(json.dumps(stats, indent=2))
+```
 
+## Collect Multiple Feeds
 
-# ── Collect Multiple Feeds
-"""
 Run the pipeline once per feed.  Results accumulate in the same destination
 directory, distinguished by the filename derived from each entry's title.
-"""
+
+```python
 feeds = [
     "rss://feeds.example.com/ai",
     "rss://feeds.example.com/devops",
@@ -118,13 +123,14 @@ for feed in feeds:
 
 print("=== Collect Multiple Feeds ===")
 print(json.dumps(total, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Each feed entry produces one Markdown file.  The file includes the article
 title, author, date, source link, and extracted body.
-"""
+
+```python
 if os.path.isdir(OUTPUT_DIR):
     files = [
         n for n in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, n))
@@ -134,3 +140,4 @@ if os.path.isdir(OUTPUT_DIR):
         sample_path = os.path.join(OUTPUT_DIR, files[0])
         with open(sample_path, encoding="utf-8") as f:
             print(f.read(300))
+```

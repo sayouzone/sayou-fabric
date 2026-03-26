@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_github.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_github.py).
+
+## Setup
+
 Collect files or issues from a GitHub repository and archive them using
 `TransferPipeline`.
 
@@ -21,7 +24,8 @@ Remove `setup_mock()`, set `GITHUB_TOKEN`, and update `source` to go live.
 **Personal Access Token (PAT):**
 Required for private repositories.  For public repositories it avoids
 rate-limiting.  Create one at https://github.com/settings/tokens.
-"""
+
+```python
 import json
 import os
 import sys
@@ -30,10 +34,10 @@ from unittest.mock import MagicMock
 from sayou.brain.pipelines.transfer import TransferPipeline
 
 OUTPUT_DIR = "./sayou_archive/github"
+```
 
+## Mock Setup
 
-# ── Mock Setup
-"""
 `GithubGenerator` calls `Github(auth=…).get_repo(…).get_contents(path)`.
 
 The mock returns two Python files at the root and raises a different
@@ -46,9 +50,8 @@ entry with nested files).
 The same mock is reused for both `target="code"` and `target="issues"`.
 
 To switch to live mode: delete this function and its call below.
-"""
 
-
+```python
 def setup_mock():
     mock_file_1 = MagicMock()
     mock_file_1.type = "file"
@@ -94,16 +97,17 @@ def setup_mock():
     mock_github.Auth = mock_auth
 
     sys.modules["github"] = mock_github
+```
 
+## Collect Repository Code
 
-# ── Collect Repository Code
-"""
 `source` format: `github://{owner}/{repo}`
 
 Use `path` to restrict traversal to a sub-directory within the repository.
 Use `extensions` to collect only specific file types.
 `limit=0` means no cap on file count.
-"""
+
+```python
 setup_mock()
 
 stats_code = TransferPipeline.process(
@@ -119,13 +123,14 @@ stats_code = TransferPipeline.process(
 
 print("=== Collect Repository Code ===")
 print(json.dumps(stats_code, indent=2))
+```
 
+## Collect Issues
 
-# ── Collect Issues
-"""
 Switch to `target="issues"` to collect issue threads instead of source
 files.  Each issue is archived as a self-contained Markdown document.
-"""
+
+```python
 setup_mock()
 
 stats_issues = TransferPipeline.process(
@@ -139,13 +144,14 @@ stats_issues = TransferPipeline.process(
 
 print("=== Collect Issues ===")
 print(json.dumps(stats_issues, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Code files are archived with their original extension.  Issue files are
 Markdown documents.  Inspect a sample to confirm the content is correct.
-"""
+
+```python
 for label, subdir in [("code", "code"), ("issues", "issues")]:
     path = os.path.join(OUTPUT_DIR, subdir)
     if os.path.isdir(path):
@@ -155,3 +161,4 @@ for label, subdir in [("code", "code"), ("issues", "issues")]:
             sample = os.path.join(path, files[0])
             with open(sample, encoding="utf-8") as f:
                 print(f.read(300))
+```

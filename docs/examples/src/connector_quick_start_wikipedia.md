@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_wikipedia.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_wikipedia.py).
+
+## Setup
+
 Fetch Wikipedia articles and archive them as plain-text files using
 `TransferPipeline`.
 
@@ -16,7 +19,8 @@ python quick_start_wikipedia.py
 
 The example below mocks the library for offline testing.
 Remove `setup_mock()` and substitute a real `wiki://` title to go live.
-"""
+
+```python
 import json
 import os
 import sys
@@ -25,19 +29,18 @@ from unittest.mock import MagicMock
 from sayou.brain.pipelines.transfer import TransferPipeline
 
 OUTPUT_DIR = "./sayou_archive/wikipedia"
+```
 
+## Mock Setup
 
-# ── Mock Setup
-"""
 `WikipediaGenerator` and `WikipediaFetcher` both call
 `wikipediaapi.Wikipedia(language=…).page(title)`.  The mock returns a page
 object with `.exists()`, `.title`, and `.text` so the full pipeline path
 is exercised.
 
 To switch to live mode: delete this function and its call below.
-"""
 
-
+```python
 def setup_mock(title: str = "Artificial intelligence"):
     mock_page = MagicMock()
     mock_page.exists.return_value = True
@@ -59,16 +62,17 @@ def setup_mock(title: str = "Artificial intelligence"):
     mock_wapi = MagicMock()
     mock_wapi.Wikipedia.return_value = mock_wiki_instance
     sys.modules["wikipediaapi"] = mock_wapi
+```
 
+## Fetch a Single Article
 
-# ── Fetch a Single Article
-"""
 Use the `wiki://` prefix followed by the article title (spaces are allowed).
 The `lang` keyword selects the language edition — default is `"ko"` (Korean).
 Set `lang="en"` for English, `"ja"` for Japanese, and so on.
 
 `packet.data` is the full plain-text content of the article.
-"""
+
+```python
 setup_mock("Artificial intelligence")
 
 stats = TransferPipeline.process(
@@ -80,13 +84,14 @@ stats = TransferPipeline.process(
 
 print("=== Fetch a Single Article ===")
 print(json.dumps(stats, indent=2))
+```
 
+## Fetch Multiple Articles
 
-# ── Fetch Multiple Articles
-"""
 Run the pipeline once per topic.  Each article is written to a separate
 file whose name is derived from the article title.
-"""
+
+```python
 topics = [
     "wiki://Machine learning",
     "wiki://Natural language processing",
@@ -108,12 +113,13 @@ for topic in topics:
 
 print("=== Fetch Multiple Articles ===")
 print(json.dumps(total, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Inspect the archived article to confirm it was written correctly.
-"""
+
+```python
 if os.path.isdir(OUTPUT_DIR):
     files = [
         n for n in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, n))
@@ -123,3 +129,4 @@ if os.path.isdir(OUTPUT_DIR):
         sample_path = os.path.join(OUTPUT_DIR, files[0])
         with open(sample_path, encoding="utf-8") as f:
             print(f.read(300))
+```

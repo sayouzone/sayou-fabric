@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_oracle.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_oracle.py).
+
+## Setup
+
 Transfer data from Oracle Database to a local archive using
 `TransferPipeline`.
 
@@ -17,7 +20,8 @@ python quick_start_oracle.py
 
 The example below mocks `oracledb` so it runs without an Oracle instance.
 Remove `setup_mock()`, update `connection_args`, and set `tables` to go live.
-"""
+
+```python
 import json
 import os
 import sys
@@ -26,10 +30,10 @@ from unittest.mock import MagicMock, patch
 from sayou.brain.pipelines.transfer import TransferPipeline
 
 OUTPUT_DIR = "./sayou_archive/oracle"
+```
 
+## Mock Setup
 
-# ── Mock Setup
-"""
 `OracleFetcher` calls:
   - `oracledb.connect(user=…, password=…, dsn=…)` — connect
   - `connection.cursor()` — create cursor
@@ -42,9 +46,8 @@ The mock simulates two rows from an `EMPLOYEES` table.
 `_output_type_handler` callback can be set without error.
 
 To switch to live mode: delete this function and its call below.
-"""
 
-
+```python
 def setup_mock():
     rows_batch_1 = [
         ("E001", "Alice Johnson", "Engineering", 95000.00, "2022-03-15"),
@@ -75,10 +78,10 @@ def setup_mock():
     mock_oracledb.DB_TYPE_LONG = "DB_TYPE_LONG"
     mock_oracledb.DB_TYPE_RAW = "DB_TYPE_RAW"
     sys.modules["oracledb"] = mock_oracledb
+```
 
+## Transfer Tables
 
-# ── Transfer Tables
-"""
 List table names in `tables` — `OracleFetcher` issues `SELECT * FROM {table}`
 for each entry.
 
@@ -89,7 +92,8 @@ for each entry.
   - `password`     — Oracle password
 
 Both `oracle://` and `oracle+…` prefixes are auto-detected by the generator.
-"""
+
+```python
 setup_mock()
 
 stats = TransferPipeline.process(
@@ -106,13 +110,14 @@ stats = TransferPipeline.process(
 
 print("=== Transfer Tables ===")
 print(json.dumps(stats, indent=2))
+```
 
+## Transfer with Custom Query
 
-# ── Transfer with Custom Query
-"""
 Use `query` for complex SQL — joins, window functions, CTEs.  The full
 result set is written to a single archive file named `custom_query`.
-"""
+
+```python
 setup_mock()
 
 stats_query = TransferPipeline.process(
@@ -135,13 +140,14 @@ stats_query = TransferPipeline.process(
 
 print("=== Transfer with Custom Query ===")
 print(json.dumps(stats_query, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Each table or query produces one archive file.  Oracle-specific types
 (LOBs, CLOB) are fetched as text; datetime values are ISO 8601 strings.
-"""
+
+```python
 if os.path.isdir(OUTPUT_DIR):
     files = [
         n for n in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, n))
@@ -150,3 +156,4 @@ if os.path.isdir(OUTPUT_DIR):
     if files:
         with open(os.path.join(OUTPUT_DIR, files[0]), encoding="utf-8") as f:
             print(f.read(400))
+```

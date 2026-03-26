@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_mongodb.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_mongodb.py).
+
+## Setup
+
 Transfer documents from a MongoDB collection to a local archive using
 `TransferPipeline`.
 
@@ -18,7 +21,8 @@ python quick_start_mongodb.py
 The example below mocks `pymongo` so it runs without a MongoDB instance.
 Remove `setup_mock()`, update `connection_args`, and set `collections` to
 go live.
-"""
+
+```python
 import datetime
 import json
 import os
@@ -29,10 +33,10 @@ from unittest.mock import MagicMock
 from sayou.brain.pipelines.transfer import TransferPipeline
 
 OUTPUT_DIR = "./sayou_archive/mongodb"
+```
 
+## Mock Setup
 
-# ── Mock Setup
-"""
 `MongoDBFetcher` calls:
   - `pymongo.MongoClient(uri)` — connect
   - `client[db_name][collection].find(filter).limit(n)` — query
@@ -42,9 +46,8 @@ The mock returns three sample documents from the `products` collection.
 `_sanitize()` method converts them correctly.
 
 To switch to live mode: delete this function and its call below.
-"""
 
-
+```python
 def setup_mock():
     mock_doc_1 = {
         "_id": "507f1f77bcf86cd799439011",  # pre-stringified for simplicity
@@ -93,10 +96,10 @@ def setup_mock():
     mock_bson = MagicMock()
     sys.modules["pymongo"] = mock_pymongo
     sys.modules["bson"] = mock_bson
+```
 
+## Transfer a Collection
 
-# ── Transfer a Collection
-"""
 Pass a MongoDB connection URI as `source`.  List the target collection
 names in `collections` — one task is created per collection.
 
@@ -105,7 +108,8 @@ names in `collections` — one task is created per collection.
   - `host`, `port`, `user`, `password`, `dbname` — individual fields
 
 `query` is an optional `find()` filter dict (default: `{}` — all docs).
-"""
+
+```python
 setup_mock()
 
 stats = TransferPipeline.process(
@@ -121,13 +125,14 @@ stats = TransferPipeline.process(
 
 print("=== Transfer a Collection ===")
 print(json.dumps(stats, indent=2))
+```
 
+## Transfer Multiple Collections with a Filter
 
-# ── Transfer Multiple Collections with a Filter
-"""
 Pass multiple collection names to transfer them in a single pipeline run.
 Use `query` to apply a `find()` filter to every collection.
-"""
+
+```python
 setup_mock()
 
 stats_multi = TransferPipeline.process(
@@ -144,13 +149,14 @@ stats_multi = TransferPipeline.process(
 
 print("=== Transfer Multiple Collections with a Filter ===")
 print(json.dumps(stats_multi, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Each collection produces one archive file.  The documents are serialised
 as JSON with all ObjectId and datetime fields converted to strings.
-"""
+
+```python
 if os.path.isdir(OUTPUT_DIR):
     files = [
         n for n in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, n))
@@ -159,3 +165,4 @@ if os.path.isdir(OUTPUT_DIR):
     if files:
         with open(os.path.join(OUTPUT_DIR, files[0]), encoding="utf-8") as f:
             print(f.read(400))
+```

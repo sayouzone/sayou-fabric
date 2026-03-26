@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_postgresql.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_postgresql.py).
+
+## Setup
+
 Transfer data from PostgreSQL to a local archive using `TransferPipeline`.
 
 `PostgresqlGenerator` yields one task per table name or one task for a
@@ -16,7 +19,8 @@ python quick_start_postgresql.py
 
 The example below mocks `psycopg2` so it runs without a PostgreSQL server.
 Remove `setup_mock()`, update `connection_args`, and set `tables` to go live.
-"""
+
+```python
 import datetime
 import decimal
 import json
@@ -28,10 +32,10 @@ from unittest.mock import MagicMock
 from sayou.brain.pipelines.transfer import TransferPipeline
 
 OUTPUT_DIR = "./sayou_archive/postgresql"
+```
 
+## Mock Setup
 
-# ── Mock Setup
-"""
 `PostgresqlFetcher` calls:
   - `psycopg2.connect(dbname=…, user=…, password=…, host=…, port=…)`
   - `conn.cursor(cursor_factory=RealDictCursor)` — dict-returning cursor
@@ -41,9 +45,8 @@ The mock returns two rows with UUID, Decimal, and datetime fields to
 verify `_sanitize_dict()`.
 
 To switch to live mode: delete this function and its call below.
-"""
 
-
+```python
 def setup_mock():
     rows_batch_1 = [
         {
@@ -80,10 +83,10 @@ def setup_mock():
 
     sys.modules["psycopg2"] = mock_psycopg2
     sys.modules["psycopg2.extras"] = mock_extras
+```
 
+## Transfer Tables
 
-# ── Transfer Tables
-"""
 List table names in `tables`.  `PostgresqlFetcher` issues
 `SELECT * FROM {table}` for each entry.
 
@@ -95,7 +98,8 @@ List table names in `tables`.  `PostgresqlFetcher` issues
   - `password` — role password
 
 Both `postgres://` and `postgresql://` source prefixes are supported.
-"""
+
+```python
 setup_mock()
 
 stats = TransferPipeline.process(
@@ -114,12 +118,13 @@ stats = TransferPipeline.process(
 
 print("=== Transfer Tables ===")
 print(json.dumps(stats, indent=2))
+```
 
+## Transfer with Custom Query
 
-# ── Transfer with Custom Query
-"""
 Use `query` for SQL with joins, CTEs, or window functions.
-"""
+
+```python
 setup_mock()
 
 stats_query = TransferPipeline.process(
@@ -143,13 +148,14 @@ stats_query = TransferPipeline.process(
 
 print("=== Transfer with Custom Query ===")
 print(json.dumps(stats_query, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Each table or query produces one archive file.  All PostgreSQL-specific
 types (UUID, Decimal, datetime, date) are serialised to JSON-safe values.
-"""
+
+```python
 if os.path.isdir(OUTPUT_DIR):
     files = [
         n for n in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, n))
@@ -158,3 +164,4 @@ if os.path.isdir(OUTPUT_DIR):
     if files:
         with open(os.path.join(OUTPUT_DIR, files[0]), encoding="utf-8") as f:
             print(f.read(400))
+```

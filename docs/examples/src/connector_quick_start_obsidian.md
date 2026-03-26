@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_obsidian.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_obsidian.py).
+
+## Setup
+
 Transfer an Obsidian vault to a local archive using `TransferPipeline`.
 
 `ObsidianGenerator` recursively walks a vault directory and yields one task
@@ -12,7 +15,8 @@ it runs without any existing Obsidian installation.
 ```bash
 python quick_start_obsidian.py
 ```
-"""
+
+```python
 import json
 import os
 import tempfile
@@ -44,17 +48,18 @@ def setup_demo_vault() -> str:
 
 VAULT_PATH = setup_demo_vault()
 OUTPUT_DIR = "./sayou_archive/obsidian"
+```
 
+## Transfer a Vault
 
-# ── Transfer a Vault
-"""
 `source` format: `obsidian://{absolute_path_to_vault}`
 
 `ObsidianGenerator` walks the vault recursively and yields one task per
 `.md` file.  `ObsidianFetcher` reads the raw Markdown content.
 
 Each note is written as a separate file in `destination`.
-"""
+
+```python
 stats = TransferPipeline.process(
     source=f"obsidian://{VAULT_PATH}",
     destination=OUTPUT_DIR,
@@ -63,13 +68,14 @@ stats = TransferPipeline.process(
 
 print("=== Transfer a Vault ===")
 print(json.dumps(stats, indent=2))
+```
 
+## Transfer a Sub-directory
 
-# ── Transfer a Sub-directory
-"""
 Point `source` at a sub-directory of the vault to collect only a subset
 of notes — useful for large vaults with many templates or attachments.
-"""
+
+```python
 projects_path = os.path.join(VAULT_PATH, "projects")
 
 stats_sub = TransferPipeline.process(
@@ -80,12 +86,13 @@ stats_sub = TransferPipeline.process(
 
 print("=== Transfer a Sub-directory ===")
 print(json.dumps(stats_sub, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Each `.md` note produces one archive file preserving the raw Markdown.
-"""
+
+```python
 if os.path.isdir(OUTPUT_DIR):
     files = [
         n for n in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, n))
@@ -99,3 +106,4 @@ if os.path.isdir(OUTPUT_DIR):
 import shutil
 
 shutil.rmtree(VAULT_PATH, ignore_errors=True)
+```

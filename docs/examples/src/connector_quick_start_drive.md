@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_drive.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_drive.py).
+
+## Setup
+
 Collect files from Google Drive and archive them using `TransferPipeline`.
 
 `GoogleDriveGenerator` lists files in a Drive folder via the Drive API v3.
@@ -20,7 +23,8 @@ OAuth flow, and set `GOOGLE_TOKEN_PATH` to go live.
 **Generate a token file:**
 Follow the Google API Python Quickstart guide and run the auth script.
 The resulting `token.json` is passed as `google_token_path`.
-"""
+
+```python
 import json
 import os
 import sys
@@ -29,10 +33,10 @@ from unittest.mock import MagicMock
 from sayou.brain.pipelines.transfer import TransferPipeline
 
 OUTPUT_DIR = "./sayou_archive/gdrive"
+```
 
+## Mock Setup
 
-# ── Mock Setup
-"""
 `GoogleDriveGenerator` calls `googleapiclient.discovery.build()` then
 `service.files().list().execute()`.
 
@@ -43,9 +47,8 @@ OUTPUT_DIR = "./sayou_archive/gdrive"
 The mock simulates a folder containing one Google Doc and one PDF.
 
 To switch to live mode: delete this function and its call below.
-"""
 
-
+```python
 def setup_mock():
     mock_files = MagicMock()
     mock_files.list.return_value.execute.return_value = {
@@ -91,10 +94,10 @@ def setup_mock():
     sys.modules["google"] = MagicMock()
     sys.modules["google.oauth2"] = MagicMock()
     sys.modules["google.oauth2.credentials"] = mock_creds_module
+```
 
+## Collect My Drive Root
 
-# ── Collect My Drive Root
-"""
 `source` format:
   - `gdrive://root`         — My Drive root
   - `gdrive://{folder_id}`  — specific folder
@@ -104,7 +107,8 @@ The folder ID appears in the Drive URL:
 
 Each file is written to `destination`.  Google Workspace files are exported
 as plain text; other files retain their original format.
-"""
+
+```python
 setup_mock()
 
 stats = TransferPipeline.process(
@@ -116,12 +120,13 @@ stats = TransferPipeline.process(
 
 print("=== Collect My Drive Root ===")
 print(json.dumps(stats, indent=2))
+```
 
+## Collect a Specific Folder
 
-# ── Collect a Specific Folder
-"""
 Copy the folder ID from the Drive URL and pass it after `gdrive://`.
-"""
+
+```python
 FOLDER_ID = os.environ.get("GDRIVE_FOLDER_ID", "mock-folder-id")
 
 setup_mock()
@@ -135,13 +140,14 @@ stats_folder = TransferPipeline.process(
 
 print("=== Collect a Specific Folder ===")
 print(json.dumps(stats_folder, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Inspect the archive to confirm that both Workspace exports and binary files
 were written correctly.
-"""
+
+```python
 if os.path.isdir(OUTPUT_DIR):
     files = [
         n for n in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, n))
@@ -150,3 +156,4 @@ if os.path.isdir(OUTPUT_DIR):
     for name in files[:5]:
         size = os.path.getsize(os.path.join(OUTPUT_DIR, name))
         print(f"  {name}  ({size} bytes)")
+```

@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_youtube_public.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_youtube_public.py).
+
+## Setup
+
 Collect transcripts and metadata from public YouTube videos using
 `TransferPipeline` — no OAuth required.
 
@@ -17,7 +20,8 @@ python quick_start_youtube_public.py
 
 The example below mocks both libraries so it runs without network access.
 Remove `setup_mock()` and substitute real YouTube video IDs to go live.
-"""
+
+```python
 import json
 import os
 import sys
@@ -26,10 +30,10 @@ from unittest.mock import MagicMock
 from sayou.brain.pipelines.transfer import TransferPipeline
 
 OUTPUT_DIR = "./sayou_archive/youtube_public"
+```
 
+## Mock Setup
 
-# ── Mock Setup
-"""
 `YouTubeFetcher` calls:
   - `YouTubeTranscriptApi().list(video_id)` — list available transcripts
   - `transcript_list.find_transcript(["ko", "en", …])` — select language
@@ -40,9 +44,8 @@ OUTPUT_DIR = "./sayou_archive/youtube_public"
 The mock returns a two-cue transcript and a realistic metadata dict.
 
 To switch to live mode: delete this function and its call below.
-"""
 
-
+```python
 def setup_mock():
     # Transcript cues
     mock_cue_1 = MagicMock()
@@ -84,10 +87,10 @@ def setup_mock():
     mock_requests = MagicMock()
     mock_requests.get.return_value = mock_response
     sys.modules["requests"] = mock_requests
+```
 
+## Transfer a Single Video
 
-# ── Transfer a Single Video
-"""
 `source` format: `youtube://{video_id}` or any YouTube URL.
 
 Supported input formats (comma-separated for multiple):
@@ -98,7 +101,8 @@ Supported input formats (comma-separated for multiple):
 `packet.data["content"]` is the transcript cue list (list of dicts with
 `text`, `start`, `duration`).  `packet.data["meta"]` includes title,
 channel, view count, publish date, keywords, and thumbnail URL.
-"""
+
+```python
 setup_mock()
 
 stats = TransferPipeline.process(
@@ -109,13 +113,14 @@ stats = TransferPipeline.process(
 
 print("=== Transfer a Single Video ===")
 print(json.dumps(stats, indent=2))
+```
 
+## Transfer Multiple Videos
 
-# ── Transfer Multiple Videos
-"""
 Pass a comma-separated list of IDs or URLs after `youtube://`.
 Each video produces one archive file.
-"""
+
+```python
 setup_mock()
 
 stats_multi = TransferPipeline.process(
@@ -126,14 +131,15 @@ stats_multi = TransferPipeline.process(
 
 print("=== Transfer Multiple Videos ===")
 print(json.dumps(stats_multi, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Each video produces one JSON file containing the transcript cue list and
 full metadata.  The transcript can be passed directly to `ChunkingPipeline`
 using the `json` strategy.
-"""
+
+```python
 if os.path.isdir(OUTPUT_DIR):
     files = [
         n for n in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, n))
@@ -142,3 +148,4 @@ if os.path.isdir(OUTPUT_DIR):
     if files:
         with open(os.path.join(OUTPUT_DIR, files[0]), encoding="utf-8") as f:
             print(f.read(400))
+```

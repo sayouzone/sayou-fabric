@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_mysql.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_mysql.py).
+
+## Setup
+
 Transfer data from MySQL (or MariaDB) to a local archive using
 `TransferPipeline`.
 
@@ -17,7 +20,8 @@ python quick_start_mysql.py
 
 The example below mocks `pymysql` so it runs without a MySQL server.
 Remove `setup_mock()`, update `connection_args`, and set `tables` to go live.
-"""
+
+```python
 import json
 import os
 import sys
@@ -26,19 +30,18 @@ from unittest.mock import MagicMock
 from sayou.brain.pipelines.transfer import TransferPipeline
 
 OUTPUT_DIR = "./sayou_archive/mysql"
+```
 
+## Mock Setup
 
-# ── Mock Setup
-"""
 `MySQLFetcher` calls `pymysql.connect(host=…, cursorclass=DictCursor)`
 then `cursor.execute(sql)` and `cursor.fetchmany(5000)`.
 
 The mock returns two rows to verify basic collection flow.
 
 To switch to live mode: delete this function and its call below.
-"""
 
-
+```python
 def setup_mock():
     rows_batch_1 = [
         {"id": 1, "username": "alice", "email": "alice@example.com", "active": True},
@@ -61,10 +64,10 @@ def setup_mock():
     mock_pymysql.cursors.DictCursor = MagicMock()
     sys.modules["pymysql"] = mock_pymysql
     sys.modules["pymysql.cursors"] = mock_pymysql.cursors
+```
 
+## Transfer Tables
 
-# ── Transfer Tables
-"""
 List tables in `tables` — `MySQLFetcher` issues `SELECT * FROM {table}`
 for each entry.
 
@@ -77,7 +80,8 @@ for each entry.
   - `charset`  — character set (default: `"utf8mb4"`)
 
 Both `mysql://` and `mariadb://` prefixes are auto-detected by the generator.
-"""
+
+```python
 setup_mock()
 
 stats = TransferPipeline.process(
@@ -97,13 +101,14 @@ stats = TransferPipeline.process(
 
 print("=== Transfer Tables ===")
 print(json.dumps(stats, indent=2))
+```
 
+## Transfer with Custom Query
 
-# ── Transfer with Custom Query
-"""
 Use `query` for joins, filters, or aggregations.  The result is written to
 a single archive file named `custom_query`.
-"""
+
+```python
 setup_mock()
 
 stats_query = TransferPipeline.process(
@@ -128,12 +133,13 @@ stats_query = TransferPipeline.process(
 
 print("=== Transfer with Custom Query ===")
 print(json.dumps(stats_query, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Each table or query produces one archive file.
-"""
+
+```python
 if os.path.isdir(OUTPUT_DIR):
     files = [
         n for n in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, n))
@@ -142,3 +148,4 @@ if os.path.isdir(OUTPUT_DIR):
     if files:
         with open(os.path.join(OUTPUT_DIR, files[0]), encoding="utf-8") as f:
             print(f.read(400))
+```

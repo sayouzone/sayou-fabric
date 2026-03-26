@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_mssql.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_mssql.py).
+
+## Setup
+
 Transfer data from Microsoft SQL Server to a local archive using
 `TransferPipeline`.
 
@@ -17,7 +20,8 @@ python quick_start_mssql.py
 
 The example below mocks `pymssql` so it runs without a SQL Server instance.
 Remove `setup_mock()`, update `connection_args`, and set `tables` to go live.
-"""
+
+```python
 import datetime
 import decimal
 import json
@@ -29,10 +33,10 @@ from unittest.mock import MagicMock
 from sayou.brain.pipelines.transfer import TransferPipeline
 
 OUTPUT_DIR = "./sayou_archive/mssql"
+```
 
+## Mock Setup
 
-# ── Mock Setup
-"""
 `MSSQLFetcher` calls `pymssql.connect(server=…, user=…, password=…,
 database=…, as_dict=True)` then `cursor.execute(sql)` and
 `cursor.fetchmany(5000)`.
@@ -41,9 +45,8 @@ The mock returns two rows with date, decimal, and UUID fields to verify
 the fetcher's `_sanitize_mssql_types()` method.
 
 To switch to live mode: delete this function and its call below.
-"""
 
-
+```python
 def setup_mock():
     rows_batch_1 = [
         {
@@ -73,10 +76,10 @@ def setup_mock():
     mock_pymssql = MagicMock()
     mock_pymssql.connect.return_value = mock_conn
     sys.modules["pymssql"] = mock_pymssql
+```
 
+## Transfer Tables
 
-# ── Transfer Tables
-"""
 List tables in `tables` — one task is created per table name.
 `MSSQLFetcher` issues `SELECT * FROM {table}` for each entry.
 
@@ -86,7 +89,8 @@ List tables in `tables` — one task is created per table name.
   - `user`               — SQL login
   - `password`           — SQL password
   - `database`           — target database name
-"""
+
+```python
 setup_mock()
 
 stats = TransferPipeline.process(
@@ -105,13 +109,14 @@ stats = TransferPipeline.process(
 
 print("=== Transfer Tables ===")
 print(json.dumps(stats, indent=2))
+```
 
+## Transfer with Custom Query
 
-# ── Transfer with Custom Query
-"""
 Use `query` instead of `tables` to run any SQL expression.  The entire
 result set is written to a single archive file.
-"""
+
+```python
 setup_mock()
 
 stats_query = TransferPipeline.process(
@@ -135,13 +140,14 @@ stats_query = TransferPipeline.process(
 
 print("=== Transfer with Custom Query ===")
 print(json.dumps(stats_query, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Each table or query produces one archive file.  All SQL Server-specific
 types (datetime, decimal, UUID) are serialised to standard JSON.
-"""
+
+```python
 if os.path.isdir(OUTPUT_DIR):
     files = [
         n for n in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, n))
@@ -150,3 +156,4 @@ if os.path.isdir(OUTPUT_DIR):
     if files:
         with open(os.path.join(OUTPUT_DIR, files[0]), encoding="utf-8") as f:
             print(f.read(400))
+```

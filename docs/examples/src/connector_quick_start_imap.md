@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-connector/examples/quick_start_imap.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-connector/examples/quick_start_imap.py).
+
+## Setup
+
 Collect emails from any IMAP server and archive them as HTML files using
 `TransferPipeline`.
 
@@ -20,7 +23,8 @@ Remove `setup_mock()`, set the environment variables below, and update
 
 **Gmail App Password:**
 Google Account → Security → 2-Step Verification → App Passwords.
-"""
+
+```python
 import json
 import os
 import sys
@@ -29,10 +33,10 @@ from unittest.mock import MagicMock, patch
 from sayou.brain.pipelines.transfer import TransferPipeline
 
 OUTPUT_DIR = "./sayou_archive/imap"
+```
 
+## Mock Setup
 
-# ── Mock Setup
-"""
 `ImapEmailGenerator` calls:
   - `imaplib.IMAP4_SSL(server)` → `.login()` → `.select()` → `.search()`
 
@@ -43,9 +47,8 @@ The mock returns two email UIDs from search and a minimal RFC 822 message
 on every fetch call.
 
 To switch to live mode: delete this function and its call below.
-"""
 
-
+```python
 def setup_mock():
     import email as email_lib
     from email.mime.text import MIMEText
@@ -81,10 +84,10 @@ def setup_mock():
     mock_imaplib = MagicMock()
     mock_imaplib.IMAP4_SSL.return_value = mock_mail
     sys.modules["imaplib"] = mock_imaplib
+```
 
+## Collect Inbox (Gmail)
 
-# ── Collect Inbox (Gmail)
-"""
 `source` format: `imap://{server}` — e.g. `imap://imap.gmail.com`
 
 All connection details are passed as keyword arguments:
@@ -97,7 +100,8 @@ All connection details are passed as keyword arguments:
 
 Each message is archived as an HTML file containing the subject, sender,
 date, and decoded body (HTML preferred; plain text as fallback).
-"""
+
+```python
 setup_mock()
 
 stats = TransferPipeline.process(
@@ -114,13 +118,14 @@ stats = TransferPipeline.process(
 
 print("=== Collect Inbox (Gmail) ===")
 print(json.dumps(stats, indent=2))
+```
 
+## Collect Unread Messages (Naver Mail)
 
-# ── Collect Unread Messages (Naver Mail)
-"""
 Change `imap_server` to collect from any compatible provider.
 Use `search_criteria="(UNSEEN)"` to collect only unread messages.
-"""
+
+```python
 setup_mock()
 
 stats_naver = TransferPipeline.process(
@@ -137,13 +142,14 @@ stats_naver = TransferPipeline.process(
 
 print("=== Collect Unread Messages (Naver Mail) ===")
 print(json.dumps(stats_naver, indent=2))
+```
 
+## Validate Output
 
-# ── Validate Output
-"""
 Each email produces one HTML file.  The file embeds the subject, sender,
 date, and UID in `<meta>` tags for downstream parsing.
-"""
+
+```python
 if os.path.isdir(OUTPUT_DIR):
     files = [
         n for n in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, n))
@@ -152,3 +158,4 @@ if os.path.isdir(OUTPUT_DIR):
     if files:
         with open(os.path.join(OUTPUT_DIR, files[0]), encoding="utf-8") as f:
             print(f.read(400))
+```
