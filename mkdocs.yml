@@ -160,14 +160,51 @@ nav:
     - examples/index.md
     # - Brain:
     #   - Quick Start :
-    # - Connector:
-    #   - Quick Start :
+    - Connector:
+      - Gmail: examples/src/connector_quick_start_gmail.md
+      - Email: examples/src/connector_quick_start_email.md
+      - Google Calendar: examples/src/connector_quick_start_calendar.md
+      - Google Drive: examples/src/connector_quick_start_drive.md
+      - Google Docs: examples/src/connector_quick_start_docs.md
+      - Google Sheets: examples/src/connector_quick_start_sheets.md
+      - Google Slides: examples/src/connector_quick_start_slides.md
+      - Youtube Google: examples/src/connector_quick_start_youtube_google.md
+      - Youtube Public: examples/src/connector_quick_start_youtube_public.md
+      - Github: examples/src/connector_quick_start_github.md
+      - Confluence: examples/src/connector_quick_start_confluence.md
+      - Notion: examples/src/connector_quick_start_notion.md
+      - Jira: examples/src/connector_quick_start_jira.md
+      - Slack: examples/src/connector_quick_start_slack.md
+      - S3: examples/src/connector_quick_start_s3.md
+      - Local File: examples/src/connector_quick_start_file.md
+      - Oracle: examples/src/connector_quick_start_oracle.md
+      - PostgreSQL: examples/src/connector_quick_start_postgresql.md
+      - MySQL: examples/src/connector_quick_start_mysql.md
+      - MSSQL: examples/src/connector_quick_start_mssql.md
+      - MongoDB: examples/src/connector_quick_start_mongodb.md
+      - SQLite: examples/src/connector_quick_start_sqlite.md
+      - Obsidian: examples/src/connector_quick_start_obsidian.md
+      - RSS: examples/src/connector_quick_start_rss.md
+      - Wikipedia: examples/src/connector_quick_start_wikipedia.md
+      - Trafilatura: examples/src/connector_quick_start_trafilatura.md
     # - Document:
     #   - Quick Start :
     # - Refinery:
     #   - Quick Start :
     - Chunking:
-      - Quick Start Code: examples/src/chunking_quick_start_code.md
+      - Python: examples/src/chunking_quick_start_python.md
+      - JAVA: examples/src/chunking_quick_start_java.md
+      - JavaScript: examples/src/chunking_quick_start_javascript.md
+      - TypeScript: examples/src/chunking_quick_start_typescript.md
+      - Go: examples/src/chunking_quick_start_go.md
+      - Markdown: examples/src/chunking_quick_start_markdown.md
+      - JSON: examples/src/chunking_quick_start_json.md
+      - Fixed Length: examples/src/chunking_quick_start_fixed_length.md
+      - Structure: examples/src/chunking_quick_start_structure.md
+      - Semantic: examples/src/chunking_quick_start_semantic.md
+      - Recursive: examples/src/chunking_quick_start_recursive.md
+      - Parent Document: examples/src/chunking_quick_start_parent_document.md
+      - LangChain: examples/src/chunking_quick_start_langchain.md
     # - Wrapper:
     #   - Quick Start :
     # - Assembler:
