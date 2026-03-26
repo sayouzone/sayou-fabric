@@ -17,9 +17,8 @@ Covers:
 from unittest.mock import MagicMock, call, patch
 
 import pytest
-from sayou.core.schemas import SayouPacket, SayouTask
-
 from sayou.connector.interfaces.base_fetcher import BaseFetcher
+from sayou.core.schemas import SayouPacket, SayouTask
 
 # ---------------------------------------------------------------------------
 # Concrete stub fetcher

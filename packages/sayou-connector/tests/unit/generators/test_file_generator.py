@@ -13,9 +13,8 @@ Covers:
 import os
 
 import pytest
-from sayou.core.schemas import SayouTask
-
 from sayou.connector.generator.file_generator import FileGenerator
+from sayou.core.schemas import SayouTask
 
 
 def _generator(tmp_dir: str, **kwargs) -> tuple[FileGenerator, list[SayouTask]]:

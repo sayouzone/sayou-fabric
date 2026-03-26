@@ -13,9 +13,8 @@ Covers:
 """
 
 import pytest
-from sayou.core.schemas import SayouPacket, SayouTask
-
 from sayou.connector.generator.requests_generator import RequestsGenerator
+from sayou.core.schemas import SayouPacket, SayouTask
 
 
 def _generator(

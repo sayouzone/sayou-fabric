@@ -10,9 +10,8 @@ Contract:
 """
 
 import pytest
-from sayou.core.schemas import SayouBlock
-
 from sayou.chunking.splitter.recursive_splitter import RecursiveSplitter
+from sayou.core.schemas import SayouBlock
 
 
 def _block(content: str, chunk_size: int = 1000, chunk_overlap: int = 0) -> SayouBlock:

@@ -22,11 +22,10 @@ JavaScriptSplitter contract (via CodeSplitter):
 """
 
 import pytest
-from sayou.core.schemas import SayouBlock
-
 from sayou.chunking.languages.javascript_splitter import JavaScriptSplitter
 from sayou.chunking.languages.python_splitter import PythonSplitter
 from sayou.chunking.plugins.code_splitter import CodeSplitter
+from sayou.core.schemas import SayouBlock
 
 # ---------------------------------------------------------------------------
 # Helpers

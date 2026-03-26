@@ -13,9 +13,8 @@ Covers:
 import os
 
 import pytest
-from sayou.core.schemas import SayouPacket, SayouTask
-
 from sayou.connector.generator.sqlite_generator import SqliteGenerator
+from sayou.core.schemas import SayouPacket, SayouTask
 
 
 def _generator(source: str, query: str = None, batch_size: int = 10) -> SqliteGenerator:

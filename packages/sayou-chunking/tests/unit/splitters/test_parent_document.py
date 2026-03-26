@@ -10,10 +10,9 @@ Contract:
 """
 
 import pytest
-from sayou.core.schemas import SayouBlock
-
 from sayou.chunking.splitter.parent_document_splitter import \
     ParentDocumentSplitter
+from sayou.core.schemas import SayouBlock
 
 
 def _block(

@@ -13,12 +13,11 @@ from typing import Iterator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from sayou.core.registry import register_component
-from sayou.core.schemas import SayouPacket, SayouTask
-
 from sayou.connector.interfaces.base_fetcher import BaseFetcher
 from sayou.connector.interfaces.base_generator import BaseGenerator
 from sayou.connector.pipeline import ConnectorPipeline
+from sayou.core.registry import register_component
+from sayou.core.schemas import SayouPacket, SayouTask
 
 # ---------------------------------------------------------------------------
 # Minimal stubs (not registered globally — registered via extra_* params)

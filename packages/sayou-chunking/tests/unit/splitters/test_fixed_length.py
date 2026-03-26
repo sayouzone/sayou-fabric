@@ -12,11 +12,10 @@ splitter_version) to every chunk produced by the parent class.
 """
 
 import pytest
-from sayou.core.schemas import SayouBlock
-
 from sayou.chunking.plugins.audited_fixed_length_splitter import \
     AuditedFixedLengthSplitter
 from sayou.chunking.splitter.fixed_length_splitter import FixedLengthSplitter
+from sayou.core.schemas import SayouBlock
 
 
 def _block(content: str, chunk_size: int, chunk_overlap: int = 0) -> SayouBlock:

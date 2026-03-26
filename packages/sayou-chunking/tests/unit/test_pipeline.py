@@ -11,11 +11,10 @@ Covers:
 """
 
 import pytest
-from sayou.core.schemas import SayouBlock, SayouChunk
-
 from sayou.chunking.pipeline import ChunkingPipeline
 from sayou.chunking.plugins.code_splitter import CodeSplitter
 from sayou.chunking.plugins.markdown_splitter import MarkdownSplitter
+from sayou.core.schemas import SayouBlock, SayouChunk
 
 # ---------------------------------------------------------------------------
 # Fixtures

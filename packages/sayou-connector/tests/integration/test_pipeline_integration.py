@@ -13,9 +13,8 @@ or excluded from the fast unit-test suite:
 import os
 
 import pytest
-from sayou.core.schemas import SayouPacket
-
 from sayou.connector.pipeline import ConnectorPipeline
+from sayou.core.schemas import SayouPacket
 
 pytestmark = pytest.mark.integration
 
@@ -83,10 +82,9 @@ class TestFileStrategy:
 
     def test_nonexistent_file_returns_failed_packet(self, pipeline, tmp_dir):
         """FileFetcher wraps FileNotFoundError → packet.success=False."""
-        from sayou.core.schemas import SayouTask
-
         from sayou.connector.fetcher.file_fetcher import FileFetcher
         from sayou.connector.generator.file_generator import FileGenerator
+        from sayou.core.schemas import SayouTask
 
         # Manually drive the fetcher with a bad path
         fetcher = FileFetcher()
