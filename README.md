@@ -270,5 +270,5 @@ Apache 2.0 License © 2026 **Sayouzone**
 
 | Agent | Example | Description |
 | :--- | :---: | :--- |
-| **`Code Diff AI Agent`** | [▶](/docs/sayou-agent/code_diff.md) | |
-| **`Code Analysis AI Agent`** | [▶](/docs/sayou-agent/code_analysis.md) | |
+| **`Code Diff AI Agent`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/sayou-agent/code_diff.md) | |
+| **`Code Analysis AI Agent`** | [▶](https://github.com/sayouzone/sayou-fabric/blob/main/docs/sayou-agent/code_analysis.md) | |
