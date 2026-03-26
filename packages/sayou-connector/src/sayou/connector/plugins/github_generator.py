@@ -46,7 +46,7 @@ class GithubGenerator(BaseGenerator):
 
         start_path = kwargs.get("path", "")
 
-        self._log(f"🐙 Accessing GitHub Repo: {repo_name} (Path: '{start_path}')")
+        self._log(f"Accessing GitHub repo: {repo_name} (Path: '{start_path}')")
         repo = g.get_repo(repo_name)
 
         # 3. Parameters

@@ -61,16 +61,23 @@ class ConnectorPipeline(BaseComponent):
 
     def _register_manual(self, cls):
         """
-        Safely registers a user-provided class.
+        Safely registers a user-provided class into the appropriate map.
+
+        Resolves the target map by inspecting whether the class inherits from
+        BaseGenerator or BaseFetcher, falling back to generator_cls_map.
         """
         if not isinstance(cls, type):
             raise TypeError(
-                f"Invalid generator: {cls}. "
+                f"Invalid component: {cls}. "
                 f"Please pass the CLASS itself (e.g., MyGenerator), not an instance (MyGenerator())."
             )
 
         name = getattr(cls, "component_name", cls.__name__)
-        self.generators_cls_map[name] = cls
+
+        if issubclass(cls, BaseFetcher):
+            self.fetcher_cls_map[name] = cls()
+        else:
+            self.generator_cls_map[name] = cls
 
     @classmethod
     def process(
@@ -118,9 +125,12 @@ class ConnectorPipeline(BaseComponent):
         """
         Populates local component maps from the global registry.
 
-        Iterates through the global `COMPONENT_REGISTRY` to retrieve registered
-        generator and fetcher classes. It stores references to these classes in
-        `self.generator_cls_map` and instantiates fetchers in `self.fetcher_cls_map`.
+        Generators are stored as classes (lazy instantiation per run) because
+        each run may require a fresh state via ``initialize()``.
+
+        Fetchers are pre-instantiated here because they are stateless I/O
+        adapters — a single shared instance per source_type is safe and
+        avoids repeated construction overhead inside the hot fetch loop.
         """
         for name, cls in COMPONENT_REGISTRY["generator"].items():
             self.generator_cls_map[name] = cls
@@ -172,15 +182,14 @@ class ConnectorPipeline(BaseComponent):
         """
         self._emit("on_start", input_data={"source": source, "strategy": strategy})
 
-        # 1. Generator 선택
+        # 1. Resolve Generator
         generator_cls = self._resolve_generator(source, strategy)
         generator = generator_cls()
 
-        if hasattr(self, "_callbacks"):
-            for cb in self._callbacks:
-                generator.add_callback(cb)
+        for cb in self._callbacks:
+            generator.add_callback(cb)
 
-        # 2. Generator 초기화
+        # 2. Initialise Generator
         generator.initialize(source=source, **kwargs)
         self._log(f"Connector started using strategy '{strategy}' on '{source}'")
 
@@ -197,7 +206,7 @@ class ConnectorPipeline(BaseComponent):
                     )
                     continue
 
-                # 4. Fetcher 라우팅
+                # 4. Route to Fetcher
                 fetcher = self.fetcher_cls_map.get(task.source_type)
                 if not fetcher:
                     self._log(
@@ -208,10 +217,10 @@ class ConnectorPipeline(BaseComponent):
                 for cb in self._callbacks:
                     fetcher.add_callback(cb)
 
-                # 5. Fetch 수행
+                # 5. Fetch
                 packet = fetcher.fetch(task)
 
-                # 6. 결과 처리
+                # 6. Handle result
                 if packet.success:
                     success_count += 1
                     yield packet
@@ -285,9 +294,9 @@ class ConnectorPipeline(BaseComponent):
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-                    mark = "👑"
+                    mark = " <--"
 
-                log_lines.append(f"   - {cls.__name__}: {score} {mark}")
+                log_lines.append(f"   - {cls.__name__}: {score}{mark}")
 
             except Exception as e:
                 log_lines.append(f"   - {cls.__name__}: Error ({e})")

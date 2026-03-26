@@ -125,16 +125,16 @@ class SqliteGenerator(BaseGenerator):
         Args:
             result (SayouPacket): The result from the Fetcher.
         """
-        # 1. 실패했거나 데이터가 없으면 종료
+        # Stop when the fetch failed or returned no data.
         if not result.success or not result.data:
             self._log("No data returned or fetch failed. Stopping.", level="warning")
             self.stop_flag = True
             return
 
-        # 2. 가져온 데이터가 배치 사이즈보다 작으면 '마지막 페이지'임
+        # A partial batch means we have reached the last page.
         rows = result.data
         if isinstance(rows, list) and len(rows) < self.batch_size:
             self._log(
-                f"Reached end of records (Fetched {len(rows)} < Batch {self.batch_size})."
+                f"Reached end of records (fetched {len(rows)} < batch {self.batch_size})."
             )
             self.stop_flag = True

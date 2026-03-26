@@ -25,11 +25,11 @@ class RssGenerator(BaseGenerator):
             "https://https://", "https://"
         )
 
-        self._log(f"📰 Parsing RSS Feed: {feed_url}")
+        self._log(f"Parsing RSS feed: {feed_url}")
         feed = feedparser.parse(feed_url)
 
         if feed.bozo:
-            self._log(f"⚠️ RSS parsing warning: {feed.bozo_exception}", level="warning")
+            self._log(f"RSS parsing warning: {feed.bozo_exception}", level="warning")
 
         limit = int(kwargs.get("limit", 10))
         entries = feed.entries[:limit]
