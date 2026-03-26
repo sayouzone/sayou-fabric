@@ -98,7 +98,7 @@ class CodeSplitter(BaseSplitter):
 
         if splitter is None:
             self._log(
-                f"⚠️ No language splitter found for strategy='{strategy}', "
+                f"No language splitter found for strategy='{strategy}', "
                 f"extension='{doc.metadata.get('extension', '')}'. "
                 f"Falling back to Python splitter.",
                 level="warning",
@@ -108,13 +108,13 @@ class CodeSplitter(BaseSplitter):
                 return []
 
         self._log(
-            f"🔀 Routing to [{splitter.language}] splitter "
+            f"Routing to [{splitter.language}] splitter "
             f"(source: {doc.metadata.get('source', '?')}, "
             f"size: {len(doc.content)} chars)"
         )
 
         chunks = splitter.split(doc, chunk_size)
-        self._log(f"✅ [{splitter.language}] produced {len(chunks)} chunks.")
+        self._log(f"[{splitter.language}] produced {len(chunks)} chunks.")
         return chunks
 
     # ── internal helpers ──────────────────────────────────────────────

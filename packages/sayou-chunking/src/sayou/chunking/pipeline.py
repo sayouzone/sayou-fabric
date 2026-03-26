@@ -189,6 +189,12 @@ class ChunkingPipeline(BaseComponent):
                 current_meta = parent_meta.copy()
                 current_meta.update(item.get("metadata", {}))
 
+                # Forward top-level "config" into the block's metadata so
+                # splitters can read chunk_size, chunk_overlap, etc.
+                if "config" in item:
+                    existing_config = current_meta.get("config", {})
+                    current_meta["config"] = {**existing_config, **item["config"]}
+
                 doc_type = item.get("type", "text")
 
                 if isinstance(content, list):
@@ -219,10 +225,10 @@ class ChunkingPipeline(BaseComponent):
             try:
                 _extract_and_flatten(raw)
             except Exception as e:
-                self._log(f"❌ Error during flattening: {e}", level="error")
+                self._log(f"Error during flattening: {e}", level="error")
 
         self._log(
-            f"🔎 [PIPELINE] Flattened input into {len(flattened_blocks)} clean blocks."
+            f"[PIPELINE] Flattened input into {len(flattened_blocks)} clean blocks."
         )
 
         # ----------------------------------------------------------------------
@@ -238,7 +244,8 @@ class ChunkingPipeline(BaseComponent):
 
             if not splitter_cls:
                 self._log(
-                    f"⚠️ No suitable splitter for item {i}. Preserving.", level="warning"
+                    f"No suitable splitter for item {i}. Preserving as-is.",
+                    level="warning",
                 )
                 all_results.append(
                     SayouChunk(
@@ -254,9 +261,8 @@ class ChunkingPipeline(BaseComponent):
 
             splitter = splitter_cls()
 
-            if hasattr(self, "_callbacks"):
-                for cb in self._callbacks:
-                    splitter.add_callback(cb)
+            for cb in self._callbacks:
+                splitter.add_callback(cb)
 
             splitter.initialize(**run_config)
 
@@ -269,7 +275,7 @@ class ChunkingPipeline(BaseComponent):
                     all_results.append(chunks)
 
             except Exception as e:
-                self._log(f"❌ Splitter Execution Failed: {e}", level="error")
+                self._log(f"Splitter execution failed: {e}", level="error")
                 self._emit("on_error", error=e)
                 all_results.append(
                     SayouChunk(
@@ -281,29 +287,13 @@ class ChunkingPipeline(BaseComponent):
                     )
                 )
 
-        self._log(f"🔎 [PIPELINE] Finished. Generated {len(all_results)} chunks.")
-
-        for idx, res in enumerate(all_results):
-            if not hasattr(res, "model_dump"):
-                self._log(
-                    f"🚨 [CRITICAL] Result {idx} is NOT a Pydantic model! Type: {type(res)}",
-                    level="error",
-                )
+        self._log(f"[PIPELINE] Finished. Generated {len(all_results)} chunks.")
 
         self._emit(
             "on_finish", result_data={"chunks_count": len(all_results)}, success=True
         )
 
         return all_results
-
-    def _is_valid_item(self, item: Any) -> bool:
-        if isinstance(item, (SayouBlock, SayouChunk)):
-            return bool(item.content)
-        if isinstance(item, dict):
-            return "content" in item
-        if isinstance(item, str):
-            return True
-        return False
 
     def _resolve_splitter(
         self,
@@ -349,9 +339,9 @@ class ChunkingPipeline(BaseComponent):
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-                    mark = "👑"
+                    mark = " <--"
 
-                log_lines.append(f"   - {cls.__name__}: {score} {mark}")
+                log_lines.append(f"   - {cls.__name__}: {score}{mark}")
 
             except Exception as e:
                 log_lines.append(f"   - {cls.__name__}: Error ({e})")
@@ -362,7 +352,7 @@ class ChunkingPipeline(BaseComponent):
             return best_cls
 
         self._log(
-            "⚠️ No suitable splitter found (Score 0). Fallback to RecursiveSplitter.",
+            "No suitable splitter found (score=0). Returning None.",
             level="warning",
         )
         return None

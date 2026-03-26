@@ -32,18 +32,15 @@ class SemanticSplitter(BaseSplitter):
         config = doc.metadata.get("config", {})
         doc_id = doc.metadata.get("id", "doc")
 
-        # 전처리: 문장 분리 (단순화된 버전)
         sentences = [
             s.strip() for s in doc.content.replace("\n", ". ").split(". ") if s.strip()
         ]
         if not sentences:
             return []
 
-        # 인코더 (기본값: 단순 빈도수 기반)
         encoder = config.get("encoder_function", self._simple_frequency_encoder)
         threshold = config.get("semantic_threshold", 0.5)
 
-        # 그룹핑 실행
         grouped_texts = self._cluster_sentences(sentences, encoder, threshold)
 
         return [

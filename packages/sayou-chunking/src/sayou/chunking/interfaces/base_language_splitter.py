@@ -28,7 +28,7 @@ Conditional (present when relevant):
 """
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 from sayou.core.schemas import SayouBlock, SayouChunk
 
@@ -70,8 +70,8 @@ class BaseLanguageSplitter(ABC):
         lines: List[str],
         base_meta: dict,
         chunk_index: int,
-        extra_meta: dict | None = None,
-    ) -> SayouChunk | None:
+        extra_meta: Optional[dict] = None,
+    ) -> Optional[SayouChunk]:
         """
         Build a SayouChunk from a list of source lines.
 
@@ -94,7 +94,7 @@ class BaseLanguageSplitter(ABC):
         chunks: List[SayouChunk],
         lines: List[str],
         base_meta: dict,
-        extra_meta: dict | None = None,
+        extra_meta: Optional[dict] = None,
     ) -> None:
         """Append a chunk built from *lines* to *chunks* in-place."""
         chunk = self._make_chunk(lines, base_meta, len(chunks), extra_meta)

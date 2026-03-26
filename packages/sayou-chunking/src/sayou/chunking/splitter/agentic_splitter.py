@@ -28,7 +28,7 @@ class AgenticSplitter(BaseSplitter):
         """
         Delegate splitting logic to an LLM (Mock implementation).
         """
-        # TODO: 실제 LLM Client 연동 필요
+        # TODO: wire up a real LLM client
         self._log(
             "Agentic splitting is not fully implemented yet. Returning raw content."
         )

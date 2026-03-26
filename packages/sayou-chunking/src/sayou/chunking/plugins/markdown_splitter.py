@@ -22,16 +22,16 @@ class MarkdownSplitter(BaseSplitter):
     SUPPORTED_TYPES = ["markdown", "md"]
 
     MARKDOWN_SEPARATORS = [
-        r"(?m)^\s*#{1,6}\s+",
-        r"(?m)\n\s*\n",
+        r"^\s*#{1,6}\s+",
+        r"\n\s*\n",
         "\n",
         r"(?<=[.?!])\s+",
         " ",
         "",
     ]
     PROTECTED_PATTERNS = [
-        r"(?s)```.*?```",
-        r"(?m)^(?:\|[^\n]*\|(?:\n|$))+",
+        r"```[\s\S]*?```",
+        r"(?:\|[^\n]*\|(?:\n|$))+",
         r"data:image\/[a-zA-Z]+;base64,[a-zA-Z0-9+/=]+",
         r"(?:(?:[A-Za-z0-9+/]{4}){100,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)",
     ]
