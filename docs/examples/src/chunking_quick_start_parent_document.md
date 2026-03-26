@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-chunking/examples/quick_start_parent_document.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-chunking/examples/quick_start_parent_document.py).
+
+## Setup
+
 Create parent–child chunk pairs using `ParentDocumentSplitter`.
 
 `ParentDocumentSplitter` implements the Parent Document Retrieval pattern:
@@ -24,7 +27,8 @@ Document
        ├─ Child chunk 1-0
        └─ Child chunk 1-1
 ```
-"""
+
+```python
 import json
 
 from sayou.chunking.pipeline import ChunkingPipeline
@@ -56,16 +60,17 @@ every parent stores a `child_ids` list for forward navigation.
 """
     * 3
 )  # repeat to ensure multiple parents
+```
 
+## Basic Parent–Child Split
 
-# ── Basic Parent–Child Split
-"""
 `parent_chunk_size` controls how large each parent window is.
 `chunk_size` controls how large each child window is.
 
 The pipeline returns parents and children interleaved in document order:
 parent 0, children of parent 0, parent 1, children of parent 1, …
-"""
+
+```python
 chunks = pipeline.run(
     {
         "content": LONG_TEXT,
@@ -86,13 +91,14 @@ print("=== Basic Parent–Child Split ===")
 print(f"  Parents  : {len(parents)}")
 print(f"  Children : {len(children)}")
 print(f"  Total    : {len(chunks)}")
+```
 
+## Link Integrity
 
-# ── Link Integrity
-"""
 Every child's `parent_id` matches a parent's `chunk_id`.
 Every parent's `child_ids` contains the IDs of its children.
-"""
+
+```python
 parent_map = {p.metadata["chunk_id"]: p for p in parents}
 
 print("\n=== Link Integrity ===")
@@ -104,13 +110,14 @@ for parent in parents:
         f"  {pid:30s}  children registered={len(child_ids)}  "
         f"children found={len(my_children)}"
     )
+```
 
+## Size Comparison
 
-# ── Size Comparison
-"""
 Parents are significantly larger than children.  Print average sizes to
 confirm the ratio matches the configured `parent_chunk_size` / `chunk_size`.
-"""
+
+```python
 avg_parent = sum(len(p.content) for p in parents) / max(len(parents), 1)
 avg_child = sum(len(c.content) for c in children) / max(len(children), 1)
 
@@ -118,15 +125,16 @@ print("\n=== Size Comparison ===")
 print(f"  Average parent length : {avg_parent:6.0f} chars")
 print(f"  Average child length  : {avg_child:6.0f} chars")
 print(f"  Ratio parent/child    : {avg_parent / max(avg_child, 1):.1f}x")
+```
 
+## Structure-based Parents
 
-# ── Structure-based Parents
-"""
 Set `parent_strategy="structure"` to use `StructureSplitter` for the
 parent pass.  This is useful when the document has clear section boundaries
 (e.g. legislation, contracts, or API documentation) that should not be
 split mid-section at the parent level.
-"""
+
+```python
 structured_chunks = pipeline.run(
     {
         "content": LONG_TEXT,
@@ -147,13 +155,14 @@ s_children = [c for c in structured_chunks if c.metadata.get("doc_level") == "ch
 print("\n=== Structure-based Parents ===")
 print(f"  Parents  : {len(s_parents)}")
 print(f"  Children : {len(s_children)}")
+```
 
+## Save Results
 
-# ── Save Results
-"""
 Save only child chunks — these are the units that get embedded and indexed.
 Parents are stored separately for context retrieval at query time.
-"""
+
+```python
 output = {
     "parents": [p.model_dump() for p in parents],
     "children": [c.model_dump() for c in children],
@@ -164,3 +173,4 @@ with open("parent_document_chunks.json", "w", encoding="utf-8") as f:
 print(
     f"\nSaved {len(parents)} parents and {len(children)} children to parent_document_chunks.json"
 )
+```

@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-chunking/examples/quick_start_fixed_length.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-chunking/examples/quick_start_fixed_length.py).
+
+## Setup
+
 Split text by exact character count using `FixedLengthSplitter` and its
 audited variant `AuditedFixedLengthSplitter`.
 
@@ -14,7 +17,8 @@ when preparing training data for language models with strict context limits.
 `AuditedFixedLengthSplitter` inherits the same slicing logic and adds an
 `audit` dict to every chunk's metadata, recording when the chunk was
 created, the original document length, and the splitter version.
-"""
+
+```python
 import json
 
 from sayou.chunking.pipeline import ChunkingPipeline
@@ -25,15 +29,16 @@ pipeline = ChunkingPipeline(extra_splitters=[AuditedFixedLengthSplitter])
 print("Pipeline initialized.")
 
 CONTENT = "ABCDEFGHIJ" * 10  # 100 chars for predictable demonstration
+```
 
+## Exact Split — No Overlap
 
-# ── Exact Split — No Overlap
-"""
 With `chunk_overlap=0` and `chunk_size=25`, 100 characters produce exactly
 4 chunks of 25 characters each.
 
 Each chunk carries `metadata` inherited from the input block.
-"""
+
+```python
 chunks = pipeline.run(
     {
         "content": CONTENT,
@@ -45,17 +50,18 @@ chunks = pipeline.run(
 print("=== Exact Split — No Overlap ===")
 for i, chunk in enumerate(chunks):
     print(f"[{i}] len={len(chunk.content):3d}  {chunk.content!r}")
+```
 
+## Overlapping Windows
 
-# ── Overlapping Windows
-"""
 `chunk_overlap` shifts the window start left by N characters so consecutive
 chunks share a common tail/head region.
 
 With `chunk_size=25` and `chunk_overlap=10`:
   step = 25 - 10 = 15
   windows start at 0, 15, 30, 45, …
-"""
+
+```python
 overlap_chunks = pipeline.run(
     {
         "content": CONTENT,
@@ -67,14 +73,15 @@ overlap_chunks = pipeline.run(
 print("\n=== Overlapping Windows ===")
 for i, chunk in enumerate(overlap_chunks):
     print(f"[{i}] start={i*15:3d}  {chunk.content!r}")
+```
 
+## Real Text
 
-# ── Real Text
-"""
 Fixed-length splitting on natural prose produces chunks that cut across
 word and sentence boundaries.  This is intentional — the goal is uniform
 token count, not readability.
-"""
+
+```python
 prose = (
     "The chunking strategy you choose affects retrieval quality significantly. "
     "Fixed-length splitting is fast and predictable but loses semantic coherence. "
@@ -91,10 +98,10 @@ prose_chunks = pipeline.run(
 print("\n=== Real Text ===")
 for i, chunk in enumerate(prose_chunks):
     print(f"[{i}] {chunk.content!r}")
+```
 
+## Audited Variant
 
-# ── Audited Variant
-"""
 `AuditedFixedLengthSplitter` adds an `audit` dict to `metadata`:
 
 ```python
@@ -106,7 +113,8 @@ for i, chunk in enumerate(prose_chunks):
 ```
 
 Useful for data lineage tracking in production pipelines.
-"""
+
+```python
 audited_chunks = pipeline.run(
     {
         "content": CONTENT,
@@ -123,12 +131,13 @@ for i, chunk in enumerate(audited_chunks):
         f"| original_length={audit.get('original_length')}  "
         f"| version={audit.get('splitter_version')}"
     )
+```
 
+## Save Results
 
-# ── Save Results
-"""
 Serialise both chunk sets to JSON for comparison.
-"""
+
+```python
 output = {
     "fixed_length": [c.model_dump() for c in chunks],
     "audited": [c.model_dump() for c in audited_chunks],
@@ -137,3 +146,4 @@ with open("fixed_length_chunks.json", "w", encoding="utf-8") as f:
     json.dump(output, f, indent=2, ensure_ascii=False)
 
 print(f"\nSaved to fixed_length_chunks.json")
+```
