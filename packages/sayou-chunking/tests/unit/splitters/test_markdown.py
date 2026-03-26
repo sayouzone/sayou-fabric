@@ -13,9 +13,9 @@ Contract:
 """
 
 import pytest
+from sayou.core.schemas import SayouBlock
 
 from sayou.chunking.plugins.markdown_splitter import MarkdownSplitter
-from sayou.core.schemas import SayouBlock
 
 
 def _block(content: str, chunk_size: int = 2000) -> SayouBlock:

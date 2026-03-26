@@ -3,9 +3,7 @@ Shared pytest fixtures for the sayou-chunking test suite.
 """
 
 import pytest
-
 from sayou.core.schemas import SayouBlock
-
 
 # ---------------------------------------------------------------------------
 # SayouBlock factories

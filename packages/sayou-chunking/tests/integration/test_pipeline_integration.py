@@ -10,12 +10,11 @@ Marked with ``@pytest.mark.integration``.
 import json
 
 import pytest
-
-from sayou.chunking.pipeline import ChunkingPipeline
-from sayou.chunking.plugins.markdown_splitter import MarkdownSplitter
-from sayou.chunking.plugins.code_splitter import CodeSplitter
 from sayou.core.schemas import SayouChunk
 
+from sayou.chunking.pipeline import ChunkingPipeline
+from sayou.chunking.plugins.code_splitter import CodeSplitter
+from sayou.chunking.plugins.markdown_splitter import MarkdownSplitter
 
 pytestmark = pytest.mark.integration
 

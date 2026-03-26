@@ -14,9 +14,9 @@ Contract:
 import json
 
 import pytest
+from sayou.core.schemas import SayouBlock
 
 from sayou.chunking.plugins.json_splitter import JsonSplitter
-from sayou.core.schemas import SayouBlock
 
 
 def _block(content, *, chunk_size: int = 100, block_type: str = "text") -> SayouBlock:
