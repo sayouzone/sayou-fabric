@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-wrapper/examples/quick_start_document_chunk.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-wrapper/examples/quick_start_document_chunk.py).
+
+## Setup
+
 Convert sayou-chunking output into semantic SayouNodes using
 `WrapperPipeline` with `DocumentChunkAdapter`.
 
@@ -14,22 +17,24 @@ same fields) into typed `SayouNode` objects.  It:
 Install dependencies before running with real data:
 
     pip install sayou-wrapper sayou-core
-"""
+
+```python
 import json
 
 from sayou.wrapper.adapter.document_chunk_adapter import DocumentChunkAdapter
 from sayou.wrapper.pipeline import WrapperPipeline
 
 pipeline = WrapperPipeline(extra_adapters=[DocumentChunkAdapter])
+```
 
+## Basic Conversion
 
-# ── Basic Conversion
-"""
 Pass a list of chunk dicts (or SayouChunk objects).
 Each chunk becomes one SayouNode with a deterministic URI:
 
     sayou:doc:<safe_filename>:<chunk_id>
-"""
+
+```python
 chunks = [
     {
         "content": "Sayou Fabric is a collection of LLM data-processing libraries.",
@@ -68,10 +73,10 @@ print(f"  Input chunks : {len(chunks)}")
 print(f"  Output nodes : {len(output.nodes)}")
 for node in output.nodes:
     print(f"  [{node.node_class.split(':')[-1]:12s}] {node.node_id}")
+```
 
+## Semantic Type Mapping
 
-# ── Semantic Type Mapping
-"""
 Mapping table:
 
 | semantic_type | is_header | node_class          |
@@ -81,18 +86,20 @@ Mapping table:
 | code_block    | False     | sayou:CodeBlock     |
 | list_item     | False     | sayou:ListItem      |
 | (other)       | False     | sayou:Text          |
-"""
+
+```python
 print("\n=== Semantic Type Mapping ===")
 for node in output.nodes:
     text = str(node.attributes.get("schema:text", ""))[:40]
     print(f"  {node.node_class:22s}  {text!r}")
+```
 
+## Parent-Child Relationships
 
-# ── Parent-Child Relationships
-"""
 When a chunk has `parent_id` in metadata, the adapter creates a
 `sayou:hasParent` relationship — useful for parent-document chunking.
-"""
+
+```python
 parent_chunks = [
     {
         "content": "Chapter 1: Introduction to Sayou Fabric.",
@@ -126,13 +133,14 @@ for node in parent_output.nodes:
         print(f"    sayou:hasParent → {parent_uri}")
     else:
         print(f"  {node.node_id}  (root)")
+```
 
+## Metadata Passthrough
 
-# ── Metadata Passthrough
-"""
 Any metadata key not handled by the adapter is stored as `meta:<key>`.
 Downstream builders (e.g. CodeGraphBuilder) read these passthrough attrs.
-"""
+
+```python
 code_chunk = {
     "content": "def process(data): return data",
     "metadata": {
@@ -151,9 +159,11 @@ print("\n=== Metadata Passthrough ===")
 for k, v in node.attributes.items():
     if k.startswith("meta:"):
         print(f"  {k}: {v}")
+```
 
+## Save Results
 
-# ── Save Results
+```python
 result = {
     "nodes": [
         {
@@ -168,3 +178,4 @@ with open("document_chunk_nodes.json", "w", encoding="utf-8") as f:
     json.dump(result, f, indent=2, ensure_ascii=False)
 
 print(f"\nSaved {len(output.nodes)} node(s) to 'document_chunk_nodes.json'")
+```

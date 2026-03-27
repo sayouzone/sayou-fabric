@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-wrapper/examples/quick_start_metadata.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-wrapper/examples/quick_start_metadata.py).
+
+## Setup
+
 Enrich SayouNodes with computed metadata using `WrapperPipeline` with
 `MetadataAdapter`.
 
@@ -17,23 +20,25 @@ Use this adapter to attach:
 Install dependencies for real enrichment functions:
 
     pip install keybert langdetect
-"""
+
+```python
 import json
 
 from sayou.wrapper.pipeline import WrapperPipeline
 from sayou.wrapper.plugins.metadata_adapter import MetadataAdapter
 
 pipeline = WrapperPipeline(extra_adapters=[MetadataAdapter])
+```
 
+## Custom Enrichment Functions
 
-# ── Custom Enrichment Functions
-"""
 Pass a ``metadata_map`` dict where each key is the attribute name to store
 and each value is a callable ``(text: str) -> Any``.
 
 Functions are applied independently — if one raises, only that attribute is
 set to None and the others continue.
-"""
+
+```python
 chunks = [
     {
         "content": "Sayou Fabric processes data for LLM retrieval pipelines.",
@@ -81,17 +86,18 @@ for node in output.nodes:
     print(f"    word_count  : {node.attributes.get('word_count')}")
     print(f"    keywords    : {node.attributes.get('keywords')}")
     print(f"    is_sentence : {node.attributes.get('is_sentence')}")
+```
 
+## Stub Mode
 
-# ── Stub Mode
-"""
 Pass ``use_stub=True`` with no ``metadata_map`` to generate placeholder
 attributes for quick pipeline testing.
 
 Stub output:
 - ``summary``: first 20 chars of content + "..."
 - ``keywords``: ["stub", "test", "keyword"]
-"""
+
+```python
 stub_output = pipeline.run(
     chunks[:2],
     strategy="metadata",
@@ -103,15 +109,14 @@ for node in stub_output.nodes:
     print(f"  [{node.node_id}]")
     print(f"    summary  : {node.attributes.get('summary')!r}")
     print(f"    keywords : {node.attributes.get('keywords')}")
+```
 
+## Enrichment Error Handling
 
-# ── Enrichment Error Handling
-"""
 If an enrichment function raises, the attribute is set to None and
 processing continues.  Other attributes on the same node are unaffected.
-"""
 
-
+```python
 def always_fails(text: str):
     raise RuntimeError("enrichment service unavailable")
 
@@ -133,10 +138,10 @@ print("\n=== Enrichment Error Handling ===")
 node = safe_output.nodes[0]
 print(f"  status       : {node.attributes.get('status')!r}")
 print(f"  broken_attr  : {node.attributes.get('broken_attr')!r}  (None = failed)")
+```
 
+## Integration with Real NLP (commented — requires external packages)
 
-# ── Integration with Real NLP (commented — requires external packages)
-"""
 Example with KeyBERT for keyword extraction:
 
     from keybert import KeyBERT
@@ -151,10 +156,10 @@ Example with KeyBERT for keyword extraction:
         strategy="metadata",
         metadata_map={"keywords": extract_keywords},
     )
-"""
 
+## Save Results
 
-# ── Save Results
+```python
 result = [
     {
         "id": n.node_id,
@@ -166,3 +171,4 @@ with open("metadata_nodes.json", "w", encoding="utf-8") as f:
     json.dump(result, f, indent=2, ensure_ascii=False, default=str)
 
 print(f"\nSaved {len(output.nodes)} node(s) to 'metadata_nodes.json'")
+```
