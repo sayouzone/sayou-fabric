@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from typing import Any, Dict, List
 
@@ -9,9 +10,7 @@ from ..interfaces.base_writer import BaseWriter
 try:
     from neo4j import GraphDatabase
 except ImportError:
-    raise ImportError(
-        "Neo4jWriter requires 'neo4j'. Install with 'pip install sayou-loader[neo4j]'"
-    )
+    GraphDatabase = None  # type: ignore[assignment]
 
 
 @register_component("writer")
@@ -35,7 +34,7 @@ class Neo4jWriter(BaseWriter):
         """
         Determines eligibility based on destination format (ext) or connection string.
         """
-        if GraphDatabase is None:
+        if not GraphDatabase:
             return 0.0
 
         if strategy in cls.SUPPORTED_TYPES:
@@ -49,7 +48,9 @@ class Neo4jWriter(BaseWriter):
 
     def _do_write(self, input_data: Any, destination: str, **kwargs) -> bool:
         if not GraphDatabase:
-            raise WriterError("Please install 'neo4j' package (pip install neo4j).")
+            raise WriterError(
+                "Neo4jWriter requires 'neo4j'. " "Install with: pip install neo4j"
+            )
 
         # 1. Configuration parsing
         # destination: neo4j://host:7687

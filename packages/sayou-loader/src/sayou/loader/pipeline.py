@@ -223,34 +223,20 @@ class LoaderPipeline(BaseComponent):
         elif isinstance(raw_data, (str, bytes, list, dict)):
             content_len = len(raw_data)
 
-        log_lines = [f"Scoring for Item (Type: {obj_type}, Len: {content_len}):"]
-        if hasattr(raw_data, "content") and isinstance(raw_data.content, str):
-            log_lines.append(f"Content Preview: {raw_data.content[:50]}...")
-        elif isinstance(raw_data, str):
-            log_lines.append(f"Content Preview: {raw_data[:50]}...")
-
         for cls in set(self.writers_cls_map.values()):
             try:
                 score = cls.can_handle(raw_data, destination, strategy)
-
-                mark = ""
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-                    mark = "👑"
-
-                log_lines.append(f"   - {cls.__name__}: {score} {mark}")
-
             except Exception as e:
-                log_lines.append(f"   - {cls.__name__}: Error ({e})")
-
-        self._log("\n".join(log_lines))
+                self._log(f"{cls.__name__}.can_handle raised: {e}", level="warning")
 
         if best_cls and best_score > 0.0:
             return best_cls
 
         self._log(
-            "⚠️ No suitable writer found (Score 0).",
+            "No suitable writer found (all scores zero).",
             level="warning",
         )
         return None
