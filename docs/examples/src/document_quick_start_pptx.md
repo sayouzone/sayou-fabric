@@ -21,15 +21,9 @@ python quick_start_pptx.py
 import json
 from unittest.mock import MagicMock, patch
 
+from sayou.document.models import (ChartElement, Document, ImageElement, Slide,
+                                   TableElement, TextElement)
 from sayou.document.pipeline import DocumentPipeline
-from sayou.document.models import (
-    ChartElement,
-    Document,
-    ImageElement,
-    Slide,
-    TableElement,
-    TextElement,
-)
 
 OUTPUT_FILE = "pptx_result.json"
 ```

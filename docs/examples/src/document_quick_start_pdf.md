@@ -24,8 +24,8 @@ that creates an instance, parses the file, and returns the `Document`.
 import json
 from unittest.mock import MagicMock, patch
 
+from sayou.document.models import Document, ImageElement, Page, TextElement
 from sayou.document.pipeline import DocumentPipeline
-from sayou.document.models import Document, Page, TextElement, ImageElement
 
 OUTPUT_FILE = "pdf_result.json"
 ```
