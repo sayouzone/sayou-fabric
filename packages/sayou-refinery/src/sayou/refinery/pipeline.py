@@ -62,17 +62,23 @@ class RefineryPipeline(BaseComponent):
 
     def _register_manual(self, cls):
         """
-        Safely registers a user-provided class.
+        Safely registers a user-provided class into the appropriate map.
+
+        Resolves the target map by inspecting whether the class inherits from
+        BaseNormalizer or BaseProcessor.
         """
         if not isinstance(cls, type):
             raise TypeError(
-                f"Invalid normalizer: {cls}. "
+                f"Invalid component: {cls}. "
                 f"Please pass the CLASS itself (e.g., MyNormalizer), not an instance (MyNormalizer())."
             )
 
         name = getattr(cls, "component_name", cls.__name__)
-        self.normalizer_cls_map[name] = cls
-        self.processor_cls_map[name] = cls
+
+        if issubclass(cls, BaseNormalizer):
+            self.normalizer_cls_map[name] = cls
+        else:
+            self.processor_cls_map[name] = cls
 
     @classmethod
     def process(
@@ -131,13 +137,10 @@ class RefineryPipeline(BaseComponent):
     @safe_run(default_return=None)
     def initialize(self, **kwargs):
         """
-        Initialize all sub-components (Normalizers and Processors).
-        Passes global configuration (like PII masking rules) down to components.
-        """
-        """
-        Updates global configuration and logs status.
+        Update global configuration and log component counts.
+
         Actual component instantiation happens lazily during run().
-        
+
         Args:
             **kwargs: Updates to the global configuration.
         """
@@ -189,9 +192,8 @@ class RefineryPipeline(BaseComponent):
         # Instantiate Normalizer
         normalizer = normalizer_cls()
 
-        if hasattr(self, "_callbacks"):
-            for cb in self._callbacks:
-                normalizer.add_callback(cb)
+        for cb in self._callbacks:
+            normalizer.add_callback(cb)
 
         normalizer.initialize(**run_config)
 
@@ -219,7 +221,7 @@ class RefineryPipeline(BaseComponent):
         # Case A: Using the "ALL" keyword
         if target_processors == "ALL":
             self._log(
-                "⚠️ 'ALL' strategy selected. Executing all capable processors.",
+                "ALL strategy selected: executing all capable processors.",
                 level="info",
             )
             all_procs = list(self.processor_cls_map.values())
@@ -251,9 +253,8 @@ class RefineryPipeline(BaseComponent):
 
                 if score > 0.0:
                     proc = proc_cls()
-                    if hasattr(self, "_callbacks"):
-                        for cb in self._callbacks:
-                            proc.add_callback(cb)
+                    for cb in self._callbacks:
+                        proc.add_callback(cb)
 
                     proc.initialize(**run_config)
                     active_instances.append(proc)
@@ -314,7 +315,7 @@ class RefineryPipeline(BaseComponent):
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-                    mark = "👑"
+                    mark = " <--"
 
                 log_lines.append(f"   - {cls.__name__}: {score} {mark}")
 
@@ -327,7 +328,7 @@ class RefineryPipeline(BaseComponent):
             return best_cls
 
         self._log(
-            "⚠️ No suitable normalizer found (Score 0).",
+            "No suitable normalizer found (score=0).",
             level="warning",
         )
         return None

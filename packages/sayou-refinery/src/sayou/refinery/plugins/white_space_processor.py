@@ -16,6 +16,18 @@ class WhiteSpaceProcessor(BaseProcessor):
 
     component_name = "WhiteSpaceProcessor"
 
+    def initialize(self, preserve_newlines: bool = True, **kwargs):
+        """
+        Args:
+            preserve_newlines (bool): Keep paragraph breaks; only collapse excess whitespace.
+                                      Set False to flatten all whitespace to single spaces.
+        """
+        super().initialize(**kwargs)
+        self.config = {
+            **getattr(self, "config", {}),
+            "preserve_newlines": preserve_newlines,
+        }
+
     def _do_process(self, blocks: List[SayouBlock]) -> List[SayouBlock]:
         preserve_newlines = self.config.get("preserve_newlines", True)
 

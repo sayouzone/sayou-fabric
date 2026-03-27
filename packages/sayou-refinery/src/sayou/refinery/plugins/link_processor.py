@@ -18,6 +18,14 @@ class LinkProcessor(BaseProcessor):
 
     component_name = "LinkProcessor"
 
+    def initialize(self, remove_links: bool = False, **kwargs):
+        """
+        Args:
+            remove_links (bool): If True, remove matched links from the text body.
+        """
+        super().initialize(**kwargs)
+        self.config = {**getattr(self, "config", {}), "remove_links": remove_links}
+
     def _do_process(self, blocks: List[SayouBlock]) -> List[SayouBlock]:
         remove_links = self.config.get("remove_links", False)
 

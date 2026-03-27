@@ -113,6 +113,11 @@ class RecordNormalizer(BaseNormalizer):
             if key in extracted_meta:
                 found_id = extracted_meta[key]
                 break
+        if not found_id and isinstance(content_candidate, dict):
+            for key in id_candidates:
+                if key in content_candidate:
+                    found_id = content_candidate[key]
+                    break
         if found_id:
             extracted_meta["original_id"] = str(found_id)
 

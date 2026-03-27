@@ -102,7 +102,7 @@ class DocMarkdownNormalizer(BaseNormalizer):
         # 2. Iterate Pages
         for page in doc_data.get("pages", []):
             page_content_buffer = []
-            page_num = page.get("page_index", 0)
+            page_num = page.get("page_num", 0)
 
             # Helper to extract text from elements using existing logic
             def collect_text(elements, is_header=False, is_footer=False):
@@ -111,9 +111,16 @@ class DocMarkdownNormalizer(BaseNormalizer):
                 for element in elements:
                     sub_blocks = self._handle_element(element, is_header, is_footer)
                     for sb in sub_blocks:
-                        if sb.content and sb.content.strip():
-                            clean_content = sanitize_text(sb.content.strip())
-                            page_content_buffer.append(clean_content)
+                        if not sb.content:
+                            continue
+                        # image_base64 blocks are emitted directly, not merged into text
+                        if sb.type == "image_base64":
+                            normalized_blocks.append(sb)
+                            continue
+                        # strip() only for emptiness check — preserve leading whitespace
+                        if not str(sb.content).strip():
+                            continue
+                        page_content_buffer.append(sanitize_text(sb.content))
 
             # A. Header Elements
             if self.include_headers:
@@ -230,23 +237,23 @@ class DocMarkdownNormalizer(BaseNormalizer):
 
         content = None
 
-        # 1. '●' (List) 처리
+        # 1. List item
         if semantic_type == "list":
             level = raw_attrs.get("list_level", 0)
             indent = "  " * level
             content = f"{indent}- {text}"
 
-        # 2. 'Heading 1-9' (제목) 처리
+        # 2. Heading (H1–H9)
         elif semantic_type == "heading":
             level = raw_attrs.get("heading_level", 1)
             hashes = "#" * level
             content = f"{hashes} {text}"
 
-        # 3. PPT 플레이스홀더 (레거시 호환)
+        # 3. PPT placeholder title (legacy compatibility)
         elif raw_attrs.get("placeholder_type") == "TITLE":
             content = f"# {text}"
 
-        # 4. 그 외 (기본 텍스트)
+        # 4. Plain text
         else:
             content = text
 
@@ -286,15 +293,15 @@ class DocMarkdownNormalizer(BaseNormalizer):
         if max_cols == 0:
             return []
 
-        # 1. 헤더 행 (첫 번째 행)
+        # 1. Header row (first row)
         header = table_data[0]
         header_cells = list(map(str, header)) + [""] * (max_cols - len(header))
         md_table += "| " + " | ".join(header_cells) + " |\n"
 
-        # 2. 구분자 행 (최대 열 개수 기준)
+        # 2. Separator row
         md_table += "| " + " | ".join(["---"] * max_cols) + " |\n"
 
-        # 3. 본문 행 (두 번째 행부터)
+        # 3. Body rows
         for row in table_data[1:]:
             body_cells = list(map(str, row)) + [""] * (max_cols - len(row))
             md_table += "| " + " | ".join(body_cells) + " |\n"
@@ -320,7 +327,6 @@ class DocMarkdownNormalizer(BaseNormalizer):
         Depending on implementation, this might return an 'image_base64' block
         or a Markdown image link if an external URL is provided.
         """
-        image_base64 = element.get("image_base64")
         image_base64 = element.get("image_base64")
         if not image_base64:
             return []
