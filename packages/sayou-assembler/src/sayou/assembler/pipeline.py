@@ -135,7 +135,7 @@ class AssemblerPipeline(BaseComponent):
         strategy: str = "auto",
         **kwargs,
     ) -> Any:
-        """ """
+        """Execute the assembly strategy and return the builder output."""
         if not input_data:
             return []
 
@@ -220,7 +220,6 @@ class AssemblerPipeline(BaseComponent):
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-                    mark = "👑"
 
                 log_lines.append(f"   - {cls.__name__}: {score} {mark}")
 
@@ -233,7 +232,7 @@ class AssemblerPipeline(BaseComponent):
             return best_cls
 
         self._log(
-            "⚠️ No suitable builder found (Score 0).",
+            "No suitable builder found (all scores zero).",
             level="warning",
         )
 

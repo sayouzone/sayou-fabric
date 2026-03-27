@@ -25,9 +25,12 @@ class VectorBuilder(BaseBuilder):
 
         if isinstance(input_data, SayouOutput) and input_data.nodes:
             first_node = input_data.nodes[0]
-            if "vector" in first_node.attributes or "embedding" in first_node.attributes:
+            if (
+                "vector" in first_node.attributes
+                or "embedding" in first_node.attributes
+            ):
                 return 0.95
-        
+
         return 0.0
 
     def initialize(self, embedding_fn: Callable = None, **kwargs):

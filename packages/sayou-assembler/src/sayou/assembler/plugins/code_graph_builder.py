@@ -38,8 +38,12 @@ import os
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set
 
-from sayou.core.ontology import (SayouAttribute, SayouClass, SayouEdgeMeta,
-                                 SayouPredicate)
+from sayou.core.ontology import (
+    SayouAttribute,
+    SayouClass,
+    SayouEdgeMeta,
+    SayouPredicate,
+)
 from sayou.core.registry import register_component
 from sayou.core.schemas import SayouOutput
 
@@ -69,12 +73,12 @@ class CodeGraphBuilder(BaseBuilder):
         nodes = data.nodes
         package_roots: List[str] = kwargs.get("package_roots", [])
 
-        self._log(f"🔥 [BUILD] {len(nodes)} nodes incoming")
+        self._log(f"[BUILD] {len(nodes)} nodes incoming")
 
         # ── Phase 1: Index ────────────────────────────────────────────
         idx = self._build_index(nodes)
         self._log(
-            f"📊 [INDEX] files={len(idx.file_map)}, "
+            f"[INDEX] files={len(idx.file_map)}, "
             f"symbols={sum(len(v) for v in idx.symbol_map.values())}, "
             f"classes={sum(len(v) for v in idx.class_map.values())}"
         )
@@ -95,7 +99,7 @@ class CodeGraphBuilder(BaseBuilder):
         self._edge_overrides(nodes, idx, edges)
         self._edge_exposes(nodes, idx, edges)
 
-        self._log(f"✅ [BUILD] {len(edges)} edges generated.")
+        self._log(f"[BUILD] {len(edges)} edges generated.")
 
         nodes_out = {n.node_id: n.model_dump(exclude={"relationships"}) for n in nodes}
         # Merge node-level relationships from Pass 1 (CONTAINS, HAS_PARENT)

@@ -40,9 +40,9 @@ class GraphBuilder(BaseBuilder):
 
         # 1. Node Processing
         for node in data.nodes:
-            # Pydantic model_dump를 사용하여 순수 dict로 변환
+            # Serialise to a plain dict via Pydantic model_dump.
             n_dict = node.model_dump()
-            # relationships는 엣지로 변환되므로 노드 속성에서는 제외
+            # Relationships are converted to edges; exclude from node props.
             n_dict.pop("relationships", None)
 
             nodes_map[node.node_id] = n_dict

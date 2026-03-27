@@ -38,7 +38,7 @@ class CypherBuilder(BaseBuilder):
             if node.friendly_name:
                 props["friendly_name"] = node.friendly_name
 
-            # 속성값 이스케이핑 처리를 위해 json.dumps 사용
+            # Use json.dumps to handle property value escaping.
             props_str = self._dict_to_cypher_props(props)
             label = self._clean_label(node.node_class)
 
@@ -68,9 +68,8 @@ class CypherBuilder(BaseBuilder):
         """
         Helper to convert a Python dictionary into a Cypher map string.
         """
-        # json.dumps를 쓰면 따옴표 처리가 됨.
-        # 단, Cypher 키에는 따옴표가 없어야 예쁘므로 정규식 처리 등을 할 수 있으나
-        # 여기선 단순하게 JSON 문자열로 변환 후 키의 따옴표 제거는 생략 (Neo4j는 JSON 호환됨)
+        # json.dumps handles quoting. Neo4j accepts JSON-compatible map literals,
+        # so keeping keys quoted is acceptable for simplicity.
         return json.dumps(props, ensure_ascii=False)
 
     def _clean_label(self, label: str) -> str:
