@@ -15,9 +15,9 @@ class WrapperPipeline(BaseComponent):
     """
     Orchestrates the data wrapping process.
 
-    This pipeline acts as the final gateway before data storage. It receives
-    processed data (usually chunks) and delegates it to a specific `Adapter`
-    to convert it into the standard `SayouNode` format.
+    Acts as the final gateway before data storage. Receives processed data
+    (usually chunks) and delegates it to a specific Adapter to convert it
+    into the standard SayouNode format.
     """
 
     component_name = "WrapperPipeline"
@@ -31,8 +31,8 @@ class WrapperPipeline(BaseComponent):
         Initialize the pipeline with default and optional custom adapters.
 
         Args:
-            extra_adapters: Custom adapters to register.
-            **kwargs: Global configuration.
+            extra_adapters: Custom adapter classes to register.
+            **kwargs: Global configuration passed to all adapters.
         """
         super().__init__()
 
@@ -51,16 +51,13 @@ class WrapperPipeline(BaseComponent):
 
         self.initialize(**kwargs)
 
-    def _register_manual(self, cls):
-        """
-        Safely registers a user-provided class.
-        """
+    def _register_manual(self, cls) -> None:
+        """Register a user-provided adapter class."""
         if not isinstance(cls, type):
             raise TypeError(
-                f"Invalid adapter: {cls}. "
-                f"Please pass the CLASS itself (e.g., MyAdapter), not an instance (MyAdapter())."
+                f"Invalid adapter: {cls!r}. "
+                "Pass the class itself (e.g. MyAdapter), not an instance."
             )
-
         name = getattr(cls, "component_name", cls.__name__)
         self.adapters_cls_map[name] = cls
 
@@ -72,34 +69,21 @@ class WrapperPipeline(BaseComponent):
         **kwargs,
     ) -> SayouOutput:
         """
-        [Facade] One-line execution method.
-
-        Instantiates the pipeline and executes the wrapping strategy immediately.
+        One-line facade: instantiate the pipeline and run immediately.
 
         Args:
-            input_data (Any): The raw input data to be wrapped.
-                Typically a List[SayouChunk] from the ChunkingPipeline,
-                or a raw dictionary/list representing the content.
-            strategy (str): The explicit adapter strategy to use (default: 'auto').
-                If set to 'auto', the pipeline attempts to detect the best adapter
-                based on the input data structure.
-            **kwargs: Additional configuration options passed to the pipeline
-                initialization and the adapter's execution context.
+            input_data: Raw input data (typically List[SayouChunk] or dict).
+            strategy: Explicit adapter strategy; 'auto' for score-based selection.
+            **kwargs: Configuration forwarded to the pipeline and adapter.
 
         Returns:
-            SayouOutput: A standardized container holding the graph of nodes
-                and associated metadata ready for the Assembler/Loader.
+            SayouOutput containing standardised SayouNodes.
         """
         instance = cls(**kwargs)
         return instance.run(input_data, strategy, **kwargs)
 
-    def _register(self, package_name: str):
-        """
-        Automatically discovers and registers plugins from the specified package.
-
-        Args:
-            package_name (str): The dot-separated package path.
-        """
+    def _register(self, package_name: str) -> None:
+        """Auto-discover and import all modules under *package_name*."""
         try:
             package = importlib.import_module(package_name)
             if hasattr(package, "__path__"):
@@ -110,33 +94,28 @@ class WrapperPipeline(BaseComponent):
                         self._log(f"Discovered module: {full_name}", level="debug")
                     except Exception as e:
                         self._log(
-                            f"Failed to import module {full_name}: {e}", level="warning"
+                            f"Failed to import module {full_name}: {e}",
+                            level="warning",
                         )
         except ImportError as e:
             self._log(f"Package not found: {package_name} ({e})", level="debug")
 
-    def _load_from_registry(self):
-        """
-        Populates local component maps from the global registry.
-        """
+    def _load_from_registry(self) -> None:
+        """Populate the local adapter map from the global component registry."""
         if "adapter" in COMPONENT_REGISTRY:
             self.adapters_cls_map.update(COMPONENT_REGISTRY["adapter"])
 
     @safe_run(default_return=None)
-    def initialize(self, **kwargs):
+    def initialize(self, **kwargs) -> None:
         """
-        Initialize all registered adapters.
-
-        Propagates global configuration to all adapters, although adapters
-        are typically stateless.
+        Finalise configuration after all adapters are registered.
 
         Args:
-            **kwargs: Updates to the global configuration.
+            **kwargs: Additional configuration merged into global_config.
         """
         self.global_config.update(kwargs)
-
-        n_adap = len(self.adapters_cls_map)
-        self._log(f"WrapperPipeline initialized. Strategies: {n_adap} Adapters")
+        n = len(self.adapters_cls_map)
+        self._log(f"WrapperPipeline initialised with {n} adapter(s).")
 
     def run(
         self,
@@ -148,53 +127,44 @@ class WrapperPipeline(BaseComponent):
         Execute the wrapping strategy.
 
         Args:
-            input_data (Any): The input data (e.g., List[Chunk] or raw Dict).
-            strategy (str): The adapter strategy to use (default: 'auto').
-            **kwargs: Additional keyword arguments to pass to the adapter.
+            input_data: Input data (e.g. List[SayouChunk] or raw dict).
+            strategy: Adapter strategy key, or 'auto' for score-based selection.
+            **kwargs: Forwarded to the selected adapter.
 
         Returns:
-            SayouOutput: A container holding the list of standardized SayouNodes.
+            SayouOutput with standardised SayouNodes.
 
         Raises:
-            AdaptationError: If the strategy is unknown or execution fails.
+            AdaptationError: If no suitable adapter is found or execution fails.
         """
         if not input_data:
             return SayouOutput(nodes=[])
 
-        # 1. Config Merge
         run_config = {**self.global_config, **kwargs}
 
         self._emit("on_start", input_data={"strategy": strategy})
 
-        # 2. Resolve Adapter
         adapter_cls = self._resolve_adapter(input_data, strategy)
 
         if not adapter_cls:
-            error_msg = f"No suitable adapter found for strategy='{strategy}'"
-            self._emit("on_error", error=Exception(error_msg))
-            raise AdaptationError(error_msg)
+            msg = f"No suitable adapter found for strategy={strategy!r}."
+            self._emit("on_error", error=Exception(msg))
+            raise AdaptationError(msg)
 
-        # 3. Instantiate & Initialize (Lazy Loading)
         adapter = adapter_cls()
-
-        if hasattr(self, "_callbacks"):
-            for cb in self._callbacks:
-                adapter.add_callback(cb)
-
+        for cb in self._callbacks:
+            adapter.add_callback(cb)
         adapter.initialize(**run_config)
 
         self._log(f"Routing to adapter: {adapter.component_name}")
 
         try:
-            # 4. Execute
             output = adapter.adapt(input_data, **kwargs)
-
             self._emit("on_finish", result_data={"output": output}, success=True)
             return output
-
         except Exception as e:
             self._emit("on_error", error=e)
-            raise e
+            raise
 
     def _resolve_adapter(
         self,
@@ -202,59 +172,32 @@ class WrapperPipeline(BaseComponent):
         strategy: str,
     ) -> Optional[Type[BaseAdapter]]:
         """
-        Selects the best adapter based on score or explicit type match.
+        Select the best adapter by explicit name or highest can_handle() score.
 
         Args:
-            raw_data (Any): The input data to evaluate.
-            strategy (str): The requested strategy name.
+            raw_data: Input data used for scoring.
+            strategy: Requested strategy key.
 
         Returns:
-            Optional[Type[BaseAdapter]]: The selected adapter class or None.
+            The winning adapter class, or None if all scores are zero.
         """
         if strategy in self.adapters_cls_map:
             return self.adapters_cls_map[strategy]
 
         best_score = 0.0
-        best_cls = None
-
-        obj_type = getattr(raw_data, "type", type(raw_data).__name__)
-        content_len = 0
-        if hasattr(raw_data, "content"):
-            c = raw_data.content
-            if hasattr(c, "__len__"):
-                content_len = len(c)
-        elif isinstance(raw_data, (str, bytes, list, dict)):
-            content_len = len(raw_data)
-
-        log_lines = [f"Scoring for Item (Type: {obj_type}, Len: {content_len}):"]
-        if hasattr(raw_data, "content") and isinstance(raw_data.content, str):
-            log_lines.append(f"Content Preview: {raw_data.content[:50]}...")
-        elif isinstance(raw_data, str):
-            log_lines.append(f"Content Preview: {raw_data[:50]}...")
+        best_cls: Optional[Type[BaseAdapter]] = None
 
         for cls in set(self.adapters_cls_map.values()):
             try:
                 score = cls.can_handle(raw_data, strategy)
-
-                mark = ""
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-                    mark = "👑"
-
-                log_lines.append(f"   - {cls.__name__}: {score} {mark}")
-
             except Exception as e:
-                log_lines.append(f"   - {cls.__name__}: Error ({e})")
-
-        self._log("\n".join(log_lines))
+                self._log(f"{cls.__name__}.can_handle raised: {e}", level="warning")
 
         if best_cls and best_score > 0.0:
             return best_cls
 
-        self._log(
-            "⚠️ No suitable adapter found (Score 0)",
-            level="warning",
-        )
-
+        self._log("No suitable adapter found (all scores zero).", level="warning")
         return None

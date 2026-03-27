@@ -12,11 +12,11 @@ from ..interfaces.base_adapter import BaseAdapter
 @register_component("adapter")
 class DocumentChunkAdapter(BaseAdapter):
     """
-    Standard Adapter for Sayou Chunking results.
+    Standard adapter for sayou-chunking results.
 
-    Converts `Chunk` objects (from sayou-chunking) into semantic `SayouNodes`.
-    It maps metadata like 'semantic_type' to Ontology Classes (e.g., sayou:Topic)
-    and preserves relationships like 'parent_id' as 'sayou:hasParent'.
+    Converts SayouChunk objects into semantic SayouNodes, mapping
+    metadata fields (semantic_type, parent_id, …) to ontology classes
+    and predicates.
     """
 
     component_name = "DocumentChunkAdapter"
@@ -30,17 +30,13 @@ class DocumentChunkAdapter(BaseAdapter):
         if isinstance(input_data, list):
             if len(input_data) == 0:
                 return 0.1
-
             first = input_data[0]
-
             if hasattr(first, "doc_type") or (
                 isinstance(first, dict) and "chunk_id" in first
             ):
                 return 0.95
-
             if isinstance(first, dict):
                 return 0.6
-
             return 0.3
 
         if hasattr(input_data, "doc_type") or (
@@ -54,14 +50,14 @@ class DocumentChunkAdapter(BaseAdapter):
         """
         Convert chunks into a list of SayouNodes.
 
-        Handles both Pydantic Chunk objects and dictionary representations.
-        Generates deterministic URIs for nodes based on chunk IDs.
+        Handles both Pydantic Chunk objects and plain dicts.
+        Node URIs are deterministic: derived from chunk IDs or content hash.
 
         Args:
-            input_data (Union[List[Any], Any]): A single Chunk or list of Chunks.
+            input_data: A single chunk or list of chunks.
 
         Returns:
-            SayouOutput: The output containing the graph of nodes.
+            SayouOutput containing the constructed nodes.
         """
         if not isinstance(input_data, list):
             input_data = [input_data]
@@ -78,13 +74,14 @@ class DocumentChunkAdapter(BaseAdapter):
             content = chunk_data.get("content", "")
             meta = chunk_data.get("metadata", {})
 
-            # 1. ID Mapping (Prefix 'sayou:doc:' added)
+            # --- ID resolution ---
             raw_id = meta.get("chunk_id", "unknown")
             if not raw_id or raw_id == "unknown":
-                if content:
-                    raw_id = hashlib.md5(content.encode("utf-8")).hexdigest()
-                else:
-                    raw_id = str(uuid.uuid4())
+                raw_id = (
+                    hashlib.md5(content.encode("utf-8")).hexdigest()
+                    if content
+                    else str(uuid.uuid4())
+                )
 
             source_name = meta.get("filename") or meta.get("source")
             if source_name:
@@ -93,7 +90,7 @@ class DocumentChunkAdapter(BaseAdapter):
             else:
                 node_id = f"sayou:doc:{raw_id}"
 
-            # 2. Node Class Decision (Semantic Type Mapping)
+            # --- Node class from semantic type ---
             sem_type = meta.get("semantic_type", "text")
             is_header = meta.get("is_header", False)
 
@@ -108,7 +105,7 @@ class DocumentChunkAdapter(BaseAdapter):
             else:
                 node_class = SayouClass.TEXT
 
-            # 3. Attributes (Vocabulary 사용)
+            # --- Attributes ---
             attributes = {
                 SayouAttribute.TEXT: content,
                 SayouAttribute.SEMANTIC_TYPE: sem_type,
@@ -116,12 +113,12 @@ class DocumentChunkAdapter(BaseAdapter):
                 SayouAttribute.PART_INDEX: meta.get("part_index"),
                 SayouAttribute.SOURCE: meta.get("source"),
             }
-            # 기타 메타데이터 보존
+            # Preserve remaining metadata as passthrough attributes.
             for k, v in meta.items():
-                if k not in ["chunk_id", "semantic_type", "parent_id", "is_header"]:
+                if k not in {"chunk_id", "semantic_type", "parent_id", "is_header"}:
                     attributes[f"meta:{k}"] = v
 
-            # 4. Relationships (Vocabulary 사용)
+            # --- Relationships ---
             relationships = {}
             raw_parent_id = meta.get("parent_id")
 
@@ -131,17 +128,16 @@ class DocumentChunkAdapter(BaseAdapter):
                     std_parent_id = f"sayou:doc:{safe_name}:{raw_parent_id}"
                 else:
                     std_parent_id = f"sayou:doc:{raw_parent_id}"
-
                 relationships[SayouPredicate.HAS_PARENT] = [std_parent_id]
 
-            # 5. Create Node
-            node = SayouNode(
-                node_id=node_id,
-                node_class=node_class,
-                friendly_name=f"DOC_NODE [{sem_type}] {raw_id}",
-                attributes=attributes,
-                relationships=relationships,
+            nodes.append(
+                SayouNode(
+                    node_id=node_id,
+                    node_class=node_class,
+                    friendly_name=f"DOC_NODE [{sem_type}] {raw_id}",
+                    attributes=attributes,
+                    relationships=relationships,
+                )
             )
-            nodes.append(node)
 
         return SayouOutput(nodes=nodes, metadata={"source": "sayou-chunking"})
