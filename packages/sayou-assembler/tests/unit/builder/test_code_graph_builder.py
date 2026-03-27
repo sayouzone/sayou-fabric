@@ -20,15 +20,17 @@ Node-rel merge— Pass-1 CONTAINS / HAS_PARENT relationships → edges
 """
 
 import logging
+
 import pytest
-from sayou.assembler.plugins.code_graph_builder import CodeGraphBuilder
-from sayou.core.schemas import SayouNode, SayouOutput
 from sayou.core.ontology import (
-    SayouClass,
     SayouAttribute,
-    SayouPredicate,
+    SayouClass,
     SayouEdgeMeta,
+    SayouPredicate,
 )
+from sayou.core.schemas import SayouNode, SayouOutput
+
+from sayou.assembler.plugins.code_graph_builder import CodeGraphBuilder
 
 FILE_PATH = "sayou/refinery/pipeline.py"
 FILE_PATH2 = "sayou/refinery/helpers.py"
