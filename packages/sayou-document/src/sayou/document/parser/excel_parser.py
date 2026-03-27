@@ -186,7 +186,7 @@ class ExcelParser(BaseDocumentParser):
         try:
             return openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
         except (TypeError, KeyError, zipfile.BadZipFile):
-            self._log("⚠️ Excel load failed. Attempting repair (removing custom.xml)...")
+            self._log("Excel load failed. Attempting repair (removing custom.xml)...")
             try:
                 repaired_buffer = io.BytesIO()
                 with zipfile.ZipFile(io.BytesIO(file_bytes), "r") as zin:

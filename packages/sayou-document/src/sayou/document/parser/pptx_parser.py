@@ -45,7 +45,7 @@ class PptxParser(BaseDocumentParser):
         # PPTX (Zip)
         if file_bytes.startswith(b"PK\x03\x04") and file_name.lower().endswith(".pptx"):
             return 1.0
-        # Legacy DOC
+        # Legacy PPT (OLE compound document)
         if file_bytes.startswith(b"\xd0\xcf\x11\xe0"):
             return 1.0
         # Extension fallback
@@ -79,16 +79,16 @@ class PptxParser(BaseDocumentParser):
             elements_list: List[BaseElement] = []
             page_num = slide_idx + 1
 
-            # 1. Shape 순회 (kwargs 전달)
+            # 1. Iterate shapes
             for shape in slide.shapes:
                 elements_list.extend(self._process_shape(shape, page_num, **kwargs))
 
-            # 2. 좌표 기준 정렬
+            # 2. Sort by position (top-left reading order)
             elements_list.sort(
                 key=lambda x: (x.bbox.y0 if x.bbox else 0, x.bbox.x0 if x.bbox else 0)
             )
 
-            # 3. 노트(발표자 메모) 추출
+            # 3. Extract speaker notes
             note_text = ""
             if slide.has_notes_slide:
                 note_text = slide.notes_slide.notes_text_frame.text.strip()
@@ -141,13 +141,13 @@ class PptxParser(BaseDocumentParser):
         """
         extracted = []
 
-        # 1. 그룹 (Group) -> 재귀 호출
+        # 1. Group shapes — recurse into children
         if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
             for sub_shape in shape.shapes:
                 extracted.extend(self._process_shape(sub_shape, page_num, **kwargs))
             return extracted
 
-        # 공통 BBox
+        # Common bounding box
         try:
             bbox = BoundingBox(
                 x0=shape.left,
@@ -166,7 +166,7 @@ class PptxParser(BaseDocumentParser):
         if shape.is_placeholder:
             placeholder_type = str(shape.placeholder_format.type)
 
-        # 2. 텍스트 (Text Frame)
+        # 2. Text frame
         if shape.has_text_frame and shape.text.strip():
             text_elem = TextElement(
                 id=meta.id,
@@ -181,7 +181,7 @@ class PptxParser(BaseDocumentParser):
             )
             extracted.append(text_elem)
 
-        # 3. 이미지 (Picture)
+        # 3. Picture
         if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
             try:
                 img_elem = self._process_image_data(
@@ -197,12 +197,12 @@ class PptxParser(BaseDocumentParser):
             except Exception as e:
                 self._log(f"PPT Image Error: {e}", level="warning")
 
-        # 4. 테이블 (Table)
+        # 4. Table
         if shape.shape_type == MSO_SHAPE_TYPE.TABLE:
             try:
                 table = shape.table
                 rows_data = []
-                rows_cells = []  # TODO: v0.1.0+ - TableCell 상세 구현
+                rows_cells = []  # TODO: detailed TableCell objects (v0.1.0+)
 
                 for row in table.rows:
                     row_data = [cell.text.strip() for cell in row.cells]
@@ -214,14 +214,14 @@ class PptxParser(BaseDocumentParser):
                     bbox=bbox,
                     meta=meta,
                     data=rows_data,
-                    cells=[],  # v0.1.0+ 구현
+                    cells=[],  # TODO: detailed cells (v0.1.0+)
                     raw_attributes={"placeholder_type": placeholder_type},
                 )
                 extracted.append(table_elem)
             except Exception as e:
                 self._log(f"PPT Table Error: {e}", level="warning")
 
-        # 5. 차트 (Chart)
+        # 5. Chart
         if shape.shape_type == MSO_SHAPE_TYPE.CHART:
             try:
                 chart = shape.chart
@@ -230,7 +230,7 @@ class PptxParser(BaseDocumentParser):
                 )
                 chart_type_str = str(chart.chart_type)
 
-                # 차트 데이터를 텍스트로 단순 변환
+                # Convert chart data to a plain-text representation
                 text_rep = f"Chart: {chart_title} (Type: {chart_type_str})\n"
                 for i, series in enumerate(chart.series):
                     series_name = series.name or f"Series {i+1}"

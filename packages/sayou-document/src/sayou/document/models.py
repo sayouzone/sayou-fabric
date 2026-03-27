@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field
 
 # ==============================================================================
-# 1. Atom (최소 단위) - Common Schema 기반
+# 1. Atoms — smallest unit, Common Schema
 # ==============================================================================
 
 
@@ -51,7 +51,7 @@ class ElementMetadata(BaseModel):
     a unique identifier, and optionally a hyperlink if the element is clickable.
     """
 
-    model_config = ConfigDict(extra="allow")  # 정의되지 않은 필드도 허용
+    model_config = ConfigDict(extra="allow")  # allow format-specific extra fields
 
     page_num: int
     id: Optional[str] = None
@@ -59,7 +59,7 @@ class ElementMetadata(BaseModel):
 
 
 # ==============================================================================
-# 2. Elements (콘텐츠 요소) - 모든 문서 공통
+# 2. Elements — content blocks common to all document types
 # ==============================================================================
 
 
@@ -76,12 +76,12 @@ class BaseElement(BaseModel):
     type: str
     bbox: Optional[BoundingBox] = None
 
-    # 원본 스키마의 자잘한 속성들(z-order, rotation 등) 보존
+    # Preserves format-specific attributes (z-order, rotation, etc.)
     raw_attributes: Dict[str, Any] = {}
     model_config = ConfigDict(extra="allow")
 
     @property
-    def text(self) -> str:
+    def text_repr(self) -> str:
         """Returns the textual representation of the element."""
         return ""
 
@@ -95,7 +95,7 @@ class TextElement(BaseElement):
     """
 
     type: Literal["text"] = "text"
-    # text: str
+    text: str = ""
     style: Optional[TextStyle] = None
     meta: ElementMetadata
 
@@ -181,7 +181,7 @@ class ChartElement(BaseElement):
 
 
 # ==============================================================================
-# 3. Containers (그릇) - 각 스키마 특화 영역
+# 3. Containers — format-specific page/slide/sheet wrappers
 # ==============================================================================
 
 
@@ -224,6 +224,7 @@ class Slide(BasePage):
     and master slide references.
     """
 
+    text: Optional[str] = None
     has_notes: bool = False
     note_text: Optional[str] = None
     master_slide_id: Optional[str] = None
@@ -243,7 +244,7 @@ class Sheet(BasePage):
 
 
 # ==============================================================================
-# 4. The Document (Root) - 통합 인터페이스
+# 4. Document — root object, unified interface
 # ==============================================================================
 
 

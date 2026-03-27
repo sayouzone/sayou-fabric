@@ -53,7 +53,7 @@ class DocxParser(BaseDocumentParser):
         # DOCX (Zip)
         if file_bytes.startswith(b"PK\x03\x04") and file_name.lower().endswith(".docx"):
             return 1.0
-        # Legacy DOC
+        # Legacy DOC (OLE compound document)
         if file_bytes.startswith(b"\xd0\xcf\x11\xe0"):
             return 1.0
         # Extension fallback
@@ -165,7 +165,7 @@ class DocxParser(BaseDocumentParser):
     def _process_paragraph_with_images(
         self,
         para: "Paragraph",
-        doc: "DocxDocumentObject",
+        doc: "DocxDocument",
         page_num: int,
         meta_id_base: str,
     ) -> List[BaseElement]:
@@ -319,12 +319,12 @@ class DocxParser(BaseDocumentParser):
                 cell_text = cell.text.strip()
                 current_row_data.append(cell_text)
 
-                # TODO: v0.1.0+ - 셀 병합(merge) 정보 파악
+                # TODO: detect cell merge spans (v0.1.0+)
                 cell_obj = TableCell(
                     text=cell_text,
                     row_span=1,
                     col_span=1,
-                    is_header=(r_idx == 0),  # 단순 추측 (v0.1.0+ 개선 필요)
+                    is_header=(r_idx == 0),  # heuristic: first row is header
                 )
                 current_row_cells.append(cell_obj)
 

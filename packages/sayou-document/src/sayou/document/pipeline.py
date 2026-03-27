@@ -72,16 +72,25 @@ class DocumentPipeline(BaseComponent):
 
     def _register_manual(self, cls):
         """
-        Safely registers a user-provided class.
+        Safely registers a user-provided class into the appropriate map.
+
+        Resolves the target map by inspecting whether the class inherits from
+        BaseDocumentParser, BaseOCR, or BaseConverter.
         """
         if not isinstance(cls, type):
             raise TypeError(
-                f"Invalid converter: {cls}. "
-                f"Please pass the CLASS itself (e.g., MyConverter), not an instance (MyConverter())."
+                f"Invalid component: {cls}. "
+                f"Please pass the CLASS itself (e.g., MyParser), not an instance (MyParser())."
             )
 
         name = getattr(cls, "component_name", cls.__name__)
-        self.converter_cls_map[name] = cls
+
+        if issubclass(cls, BaseDocumentParser):
+            self.parser_cls_map[name] = cls
+        elif issubclass(cls, BaseOCR):
+            self.ocr_cls_map[name] = cls
+        else:
+            self.converter_cls_map[name] = cls
 
     @classmethod
     def process(
@@ -218,7 +227,7 @@ class DocumentPipeline(BaseComponent):
 
         if not parser_cls:
             error_msg = f"No suitable parser found for {file_name}"
-            self._log(f"⚠️ {error_msg}", level="error")
+            self._log(error_msg, level="error")
             raise ParserError(error_msg)
 
         # ---------------------------------------------------------------------
@@ -244,9 +253,8 @@ class DocumentPipeline(BaseComponent):
         # ---------------------------------------------------------------------
         parser = parser_cls()
 
-        if hasattr(self, "_callbacks"):
-            for cb in self._callbacks:
-                parser.add_callback(cb)
+        for cb in self._callbacks:
+            parser.add_callback(cb)
 
         if ocr_instance and hasattr(parser, "set_ocr_engine"):
             parser.set_ocr_engine(ocr_instance)
@@ -319,7 +327,7 @@ class DocumentPipeline(BaseComponent):
                 if score > best_score:
                     best_score = score
                     best_cls = cls
-                    mark = "👑"
+                    mark = " <--"
 
                 log_lines.append(f"   - {cls.__name__}: {score} {mark}")
 
@@ -332,7 +340,7 @@ class DocumentPipeline(BaseComponent):
             return best_cls
 
         self._log(
-            "⚠️ No suitable component found (Score 0).",
+            "No suitable component found (score=0).",
             level="warning",
         )
         return None

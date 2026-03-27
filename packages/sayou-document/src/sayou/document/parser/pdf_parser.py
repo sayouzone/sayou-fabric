@@ -61,16 +61,16 @@ class PdfParser(BaseDocumentParser):
         Returns:
             Document: A document object with 'doc_type="pdf"'.
         """
-        # 1. PDF 로드
+        # 1. Load PDF
         doc = self._load_document(file_bytes)
         pages_list = []
 
-        # 2. 페이지 순회
+        # 2. Iterate pages
         for page_num in range(doc.page_count):
             page_obj = self._process_page(doc, page_num, file_name)
             pages_list.append(page_obj)
 
-        # 3. TOC(목차) 추출
+        # 3. Extract table of contents
         toc_list = []
         try:
             toc = doc.get_toc()
@@ -82,7 +82,7 @@ class PdfParser(BaseDocumentParser):
 
         doc.close()
 
-        # 4. 최종 Document 반환
+        # 4. Return final Document
         return Document(
             file_name=file_name,
             file_id=file_name,
@@ -121,17 +121,17 @@ class PdfParser(BaseDocumentParser):
         page_text_dump = page.get_text()
         ocr_applied = False
 
-        # 텍스트가 거의 없다면 (스캔본 의심)
+        # If page text is empty, assume scanned image and apply OCR
         if not page_text_dump.strip() and self.ocr_engine:
             self._log(f"Page {page_num+1} seems to be scanned. Applying full-page OCR.")
             try:
-                # 페이지를 고해상도 이미지로 렌더링
+                # Render page to high-resolution image for OCR
                 pix = page.get_pixmap(dpi=kwargs.get("ocr_dpi", 200))
                 img_bytes = pix.tobytes("png")
                 ocr_text = self.ocr_engine.ocr(img_bytes, **kwargs)
 
                 if ocr_text:
-                    # 페이지 전체를 하나의 TextElement로 생성
+                    # Wrap the full page OCR result in a single TextElement
                     full_page_bbox = BoundingBox(
                         x0=0, y0=0, x1=page.rect.width, y1=page.rect.height
                     )
@@ -203,7 +203,7 @@ class PdfParser(BaseDocumentParser):
     ) -> Optional[TextElement]:
         """Convert a text block dictionary into a TextElement."""
         block_text = ""
-        # TODO: High-Fidelity (v0.1.0+) - 폰트/스타일 정보 추출
+        # TODO: extract font/style info for high-fidelity output (v0.1.0+)
         for line in block.get("lines", []):
             for span in line.get("spans", []):
                 block_text += span.get("text", "")

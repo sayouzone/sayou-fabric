@@ -49,7 +49,7 @@ class ImageToPdfConverter(BaseConverter):
         try:
             image = Image.open(io.BytesIO(file_bytes))
 
-            # PDF 저장을 위해 RGB 모드로 변환 (PNG 투명도 이슈 방지)
+            # Convert to RGB for PDF compatibility (handles PNG transparency)
             if image.mode in ("RGBA", "LA"):
                 background = Image.new("RGB", image.size, (255, 255, 255))
                 background.paste(image, mask=image.split()[-1])
