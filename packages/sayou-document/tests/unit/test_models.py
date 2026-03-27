@@ -16,22 +16,10 @@ from __future__ import annotations
 
 import pytest
 
-from sayou.document.models import (
-    BoundingBox,
-    ChartElement,
-    Document,
-    DocumentMetadata,
-    ElementMetadata,
-    ImageElement,
-    Page,
-    Sheet,
-    Slide,
-    TableCell,
-    TableElement,
-    TextElement,
-    TextStyle,
-)
-
+from sayou.document.models import (BoundingBox, ChartElement, Document,
+                                   DocumentMetadata, ElementMetadata,
+                                   ImageElement, Page, Sheet, Slide, TableCell,
+                                   TableElement, TextElement, TextStyle)
 
 # ---------------------------------------------------------------------------
 # BoundingBox

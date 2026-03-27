@@ -18,8 +18,8 @@ python quick_start_excel.py
 import json
 from unittest.mock import MagicMock, patch
 
-from sayou.document.pipeline import DocumentPipeline
 from sayou.document.models import Document, Sheet, TableElement
+from sayou.document.pipeline import DocumentPipeline
 
 OUTPUT_FILE = "excel_result.json"
 

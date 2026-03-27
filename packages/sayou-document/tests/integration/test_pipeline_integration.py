@@ -11,13 +11,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from sayou.document.models import Document, Page, Slide, Sheet
-from sayou.document.pipeline import DocumentPipeline
-from sayou.document.parser.pdf_parser import PdfParser
-from sayou.document.parser.excel_parser import ExcelParser
-from sayou.document.parser.pptx_parser import PptxParser
 from sayou.document.converter.image_converter import ImageToPdfConverter
-
+from sayou.document.models import Document, Page, Sheet, Slide
+from sayou.document.parser.excel_parser import ExcelParser
+from sayou.document.parser.pdf_parser import PdfParser
+from sayou.document.parser.pptx_parser import PptxParser
+from sayou.document.pipeline import DocumentPipeline
 
 # ---------------------------------------------------------------------------
 # PDF end-to-end

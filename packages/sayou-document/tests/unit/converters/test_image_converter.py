@@ -10,7 +10,6 @@ import pytest
 
 from sayou.document.converter.image_converter import ImageToPdfConverter
 
-
 JPEG_MAGIC = b"\xff\xd8\xff\xe0" + b"\x00" * 14
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n" + b"\x00" * 8
 BMP_MAGIC = b"BM" + b"\x00" * 6

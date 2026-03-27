@@ -9,17 +9,17 @@ from __future__ import annotations
 import pytest
 from sayou.core.schemas import SayouBlock
 
-from sayou.refinery.pipeline import RefineryPipeline
-from sayou.refinery.normalizer.doc_markdown_normalizer import DocMarkdownNormalizer
+from sayou.refinery.normalizer.doc_markdown_normalizer import \
+    DocMarkdownNormalizer
 from sayou.refinery.normalizer.html_text_normalizer import HtmlTextNormalizer
 from sayou.refinery.normalizer.raw_json_normalizer import RawJsonNormalizer
 from sayou.refinery.normalizer.record_normalizer import RecordNormalizer
-from sayou.refinery.processor.text_cleaner import TextCleaner
-from sayou.refinery.processor.pii_masker import PiiMasker
-from sayou.refinery.processor.deduplicator import Deduplicator
-from sayou.refinery.processor.recursive_pruner import RecursivePruner
+from sayou.refinery.pipeline import RefineryPipeline
 from sayou.refinery.plugins.white_space_processor import WhiteSpaceProcessor
-
+from sayou.refinery.processor.deduplicator import Deduplicator
+from sayou.refinery.processor.pii_masker import PiiMasker
+from sayou.refinery.processor.recursive_pruner import RecursivePruner
+from sayou.refinery.processor.text_cleaner import TextCleaner
 
 # ---------------------------------------------------------------------------
 # DocMarkdownNormalizer → TextCleaner

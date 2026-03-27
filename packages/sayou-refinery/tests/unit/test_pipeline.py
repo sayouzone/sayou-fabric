@@ -12,18 +12,17 @@ Covers:
 
 from __future__ import annotations
 
+import logging
 from typing import Any, List
 from unittest.mock import MagicMock, patch
 
 import pytest
-import logging
 from sayou.core.schemas import SayouBlock
 
 from sayou.refinery.core.exceptions import RefineryError
 from sayou.refinery.interfaces.base_normalizer import BaseNormalizer
 from sayou.refinery.interfaces.base_processor import BaseProcessor
 from sayou.refinery.pipeline import RefineryPipeline
-
 
 # ---------------------------------------------------------------------------
 # Stubs

@@ -11,7 +11,6 @@ from sayou.refinery.normalizer.html_text_normalizer import HtmlTextNormalizer
 from sayou.refinery.normalizer.raw_json_normalizer import RawJsonNormalizer
 from sayou.refinery.normalizer.record_normalizer import RecordNormalizer
 
-
 # ===========================================================================
 # HtmlTextNormalizer
 # ===========================================================================

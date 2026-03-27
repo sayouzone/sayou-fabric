@@ -21,7 +21,6 @@ from sayou.document.interfaces.base_parser import BaseDocumentParser
 from sayou.document.models import Document, Page
 from sayou.document.pipeline import DocumentPipeline
 
-
 # ---------------------------------------------------------------------------
 # Minimal stubs
 # ---------------------------------------------------------------------------

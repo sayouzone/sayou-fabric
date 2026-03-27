@@ -15,14 +15,14 @@ from __future__ import annotations
 import pytest
 from sayou.core.schemas import SayouBlock
 
-from sayou.refinery.processor.text_cleaner import TextCleaner
-from sayou.refinery.processor.pii_masker import PiiMasker
+from sayou.refinery.plugins.link_processor import LinkProcessor
+from sayou.refinery.plugins.white_space_processor import WhiteSpaceProcessor
 from sayou.refinery.processor.deduplicator import Deduplicator
 from sayou.refinery.processor.imputer import Imputer
 from sayou.refinery.processor.outlier_handler import OutlierHandler
+from sayou.refinery.processor.pii_masker import PiiMasker
 from sayou.refinery.processor.recursive_pruner import RecursivePruner
-from sayou.refinery.plugins.link_processor import LinkProcessor
-from sayou.refinery.plugins.white_space_processor import WhiteSpaceProcessor
+from sayou.refinery.processor.text_cleaner import TextCleaner
 
 
 def _text(content: str, **meta) -> SayouBlock:

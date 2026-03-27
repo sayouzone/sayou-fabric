@@ -15,8 +15,8 @@ from __future__ import annotations
 import pytest
 from sayou.core.schemas import SayouBlock
 
-from sayou.refinery.normalizer.doc_markdown_normalizer import DocMarkdownNormalizer
-
+from sayou.refinery.normalizer.doc_markdown_normalizer import \
+    DocMarkdownNormalizer
 
 # ---------------------------------------------------------------------------
 # can_handle

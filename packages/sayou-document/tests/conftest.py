@@ -79,7 +79,8 @@ else:
 # 2. sayou.core stubs (used when sayou-core is not installed)
 # ---------------------------------------------------------------------------
 if "sayou.core" not in sys.modules:
-    from pydantic import BaseModel as _BM, ConfigDict as _CD
+    from pydantic import BaseModel as _BM
+    from pydantic import ConfigDict as _CD
 
     _exc = types.ModuleType("sayou.core.exceptions")
 

@@ -10,20 +10,13 @@ Verifies:
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from sayou.document.models import (
-    ChartElement,
-    Document,
-    ImageElement,
-    Slide,
-    TableElement,
-    TextElement,
-)
+from sayou.document.models import (ChartElement, Document, ImageElement, Slide,
+                                   TableElement, TextElement)
 from sayou.document.parser.pptx_parser import PptxParser
-
 
 # ---------------------------------------------------------------------------
 # Helpers
