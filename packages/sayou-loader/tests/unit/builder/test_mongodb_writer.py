@@ -4,8 +4,9 @@ Unit tests for MongoDBWriter.
 
 import json
 import logging
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestMongoDBWriterCanHandle:

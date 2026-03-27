@@ -4,8 +4,9 @@ Unit tests for Neo4jWriter.
 
 import json
 import logging
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestNeo4jWriterCanHandle:
