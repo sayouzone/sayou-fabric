@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-loader/examples/quick_start_chroma.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-loader/examples/quick_start_chroma.py).
+
+## Setup
+
 Load vector payloads into ChromaDB using `LoaderPipeline` with
 `ChromaWriter`.
 
@@ -20,7 +23,8 @@ present; otherwise Chroma uses its default embedding function.
 Install:
 
     pip install chromadb
-"""
+
+```python
 import json
 import logging
 from unittest.mock import MagicMock, patch
@@ -50,13 +54,14 @@ PAYLOADS = [
         "metadata": {"node_class": "sayou:Text", "source": "guide.pdf", "page": 3},
     },
 ]
+```
 
+## Write to Local ChromaDB
 
-# ── Write to Local ChromaDB
-"""
 The writer detects a local path when there is no ``:`` before the first
 ``/`` in the URI path portion and uses ``PersistentClient``.
-"""
+
+```python
 mock_col = MagicMock()
 mock_client = MagicMock()
 mock_client.get_or_create_collection.return_value = mock_col
@@ -77,15 +82,16 @@ call_kw = mock_col.upsert.call_args
 if call_kw:
     ids = call_kw.kwargs.get("ids") or (call_kw.args[0] if call_kw.args else [])
     print(f"  IDs upserted    : {ids}")
+```
 
+## Write to ChromaDB Server
 
-# ── Write to ChromaDB Server
-"""
 URI: ``chroma://<host>:<port>/<collection_name>``
 
 The writer switches to ``HttpClient`` when it detects ``:`` (port) in
 the path portion of the URI.
-"""
+
+```python
 print("\n=== URI Pattern Routing ===")
 cw = ChromaWriter()
 cw.logger = logging.getLogger("test")
@@ -100,17 +106,18 @@ for uri, mode, expected_path, expected_col in cases:
     print(f"  URI    : {uri}")
     print(f"  Mode   : {mode}  path={path!r}  collection={col!r}")
     assert path == expected_path and col == expected_col
+```
 
+## Metadata Sanitisation
 
-# ── Metadata Sanitisation
-"""
 ChromaDB only accepts str, int, float, bool in metadata.
 `ChromaWriter._sanitize_metadata` converts incompatible types:
 
 - ``None``  → excluded
 - ``dict``  → JSON string
 - ``list``  → JSON string (unless all elements are primitives)
-"""
+
+```python
 raw_meta = {
     "title": "Guide",
     "page": 1,
@@ -126,32 +133,32 @@ for k, v in clean.items():
     print(f"  {k:8s}: {v!r}  ({type(v).__name__})")
 if "empty" not in clean:
     print("  empty  : (excluded — None)")
+```
 
+## Upsert with Pre-computed Vectors
 
-# ── Upsert with Pre-computed Vectors
-"""
 When every payload has a ``vector`` field and the count matches ``ids``,
 the writer calls ``upsert(ids=…, documents=…, metadatas=…, embeddings=…)``.
 
 If vectors are missing or counts differ, it falls back to auto-embedding.
-"""
+
+```python
 print("\n=== Upsert Modes ===")
 print("  All vectors present → upsert with embeddings")
 print("  Vectors missing     → upsert with auto-embedding (Chroma default)")
+```
 
+## Real Connection
 
-# ── Real Connection
-"""
-    from sayou.loader.pipeline import LoaderPipeline
-    from sayou.loader.plugins.chroma_writer import ChromaWriter
+from sayou.loader.pipeline import LoaderPipeline
+from sayou.loader.plugins.chroma_writer import ChromaWriter
 
-    pipeline = LoaderPipeline(extra_writers=[ChromaWriter])
+pipeline = LoaderPipeline(extra_writers=[ChromaWriter])
 
-    # Local
-    pipeline.run(payloads, "chroma://./chroma_db/sayou_docs",
-                 strategy="ChromaWriter")
+# Local
+pipeline.run(payloads, "chroma://./chroma_db/sayou_docs",
+             strategy="ChromaWriter")
 
-    # Server
-    pipeline.run(payloads, "chroma://localhost:8000/sayou_docs",
-                 strategy="ChromaWriter", distance_func="cosine")
-"""
+# Server
+pipeline.run(payloads, "chroma://localhost:8000/sayou_docs",
+             strategy="ChromaWriter", distance_func="cosine")

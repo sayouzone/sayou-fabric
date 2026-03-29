@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-loader/examples/quick_start_elasticsearch.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-loader/examples/quick_start_elasticsearch.py).
+
+## Setup
+
 Index documents into Elasticsearch using `LoaderPipeline` with
 `ElasticsearchWriter`.
 
@@ -12,7 +15,8 @@ URI pattern: ``http://<host>:<port>/<index_name>``
 Install:
 
     pip install elasticsearch
-"""
+
+```python
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -44,10 +48,10 @@ DOCS = [
         "node_class": "sayou:Text",
     },
 ]
+```
 
+## Write to Elasticsearch
 
-# ── Write to Elasticsearch
-"""
 Pass the URI as ``http://<host>:<port>/<index_name>``.
 The writer splits it into ``hosts`` and ``index_name`` automatically.
 
@@ -55,7 +59,8 @@ Authentication options:
 
     auth=("user", "password")   # basic auth
     auth="<api_key>"            # API key
-"""
+
+```python
 mock_es = MagicMock()
 mock_es.ping.return_value = True
 
@@ -77,17 +82,18 @@ print(f"  Result         : {result}")
 print(f"  bulk() called  : {mock_helpers.bulk.called}")
 success, failed = mock_helpers.bulk.return_value
 print(f"  Indexed        : {success}  Failed: {failed}")
+```
 
+## Bulk Action Format
 
-# ── Bulk Action Format
-"""
 Each document is converted to an Elasticsearch bulk action:
 
     {"_index": "sayou_index", "_id": "<id>", "_source": { … }}
 
 Documents without the ``id_key`` field still produce an action but
 without ``_id`` (Elasticsearch auto-assigns an ID).
-"""
+
+```python
 ew = ElasticsearchWriter()
 ew.logger = logging.getLogger("test")
 ew._callbacks = []
@@ -97,14 +103,15 @@ actions = list(ew._generate_bulk_actions(DOCS, "sayou_index", "id"))
 print("\n=== Bulk Action Format ===")
 for a in actions:
     print(f"  _id={a['_id']:35s}  _index={a['_index']}")
+```
 
+## SayouNode Normalisation
 
-# ── SayouNode Normalisation
-"""
 `ElasticsearchWriter` accepts both plain dicts and `SayouNode` objects.
 For SayouNode, `attributes` and `metadata` are merged, and `node_id` is
 mapped to `node_id` in the document.
-"""
+
+```python
 from sayou.core.schemas import SayouNode
 
 node = SayouNode(
@@ -117,13 +124,14 @@ normalised = ew._normalize_input_data([node])
 print("\n=== SayouNode Normalisation ===")
 print(f"  node_id present : {'node_id' in normalised[0]}")
 print(f"  schema:text     : {normalised[0].get('schema:text')!r}")
+```
 
+## can_handle Routing
 
-# ── can_handle Routing
-"""
 The writer auto-detects Elasticsearch destinations by URI scheme or
 explicit strategy.
-"""
+
+```python
 print("\n=== can_handle Routing ===")
 cases = [
     ("elasticsearch://host/idx", "auto", True),
@@ -136,24 +144,23 @@ for uri, strat, expected in cases:
     matched = bool(score)
     status = "✓" if matched == expected else "✗"
     print(f"  {status} strategy={strat:15s} uri={uri[:30]:30s} → {score}")
+```
 
+## Real Connection
 
-# ── Real Connection
-"""
-    pipeline.run(
-        docs,
-        "http://localhost:9200/sayou_index",
-        strategy="ElasticsearchWriter",
-        id_key="id",
-        auth=("elastic", "changeme"),    # basic auth
-        verify_certs=False,              # dev only
-    )
+pipeline.run(
+    docs,
+    "http://localhost:9200/sayou_index",
+    strategy="ElasticsearchWriter",
+    id_key="id",
+    auth=("elastic", "changeme"),    # basic auth
+    verify_certs=False,              # dev only
+)
 
-    # Elastic Cloud (API key)
-    pipeline.run(
-        docs,
-        "https://my-cluster.es.io:9243/sayou_index",
-        strategy="ElasticsearchWriter",
-        auth="<base64-encoded-api-key>",
-    )
-"""
+# Elastic Cloud (API key)
+pipeline.run(
+    docs,
+    "https://my-cluster.es.io:9243/sayou_index",
+    strategy="ElasticsearchWriter",
+    auth="<base64-encoded-api-key>",
+)
