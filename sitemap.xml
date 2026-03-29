@@ -205,6 +205,26 @@
          <lastmod>2026-03-29</lastmod>
     </url>
     <url>
+         <loc>https://sayouzone.github.io/sayou-fabric/examples/src/loader_quick_start_chroma/</loc>
+         <lastmod>2026-03-29</lastmod>
+    </url>
+    <url>
+         <loc>https://sayouzone.github.io/sayou-fabric/examples/src/loader_quick_start_elasticsearch/</loc>
+         <lastmod>2026-03-29</lastmod>
+    </url>
+    <url>
+         <loc>https://sayouzone.github.io/sayou-fabric/examples/src/loader_quick_start_file/</loc>
+         <lastmod>2026-03-29</lastmod>
+    </url>
+    <url>
+         <loc>https://sayouzone.github.io/sayou-fabric/examples/src/loader_quick_start_mongodb/</loc>
+         <lastmod>2026-03-29</lastmod>
+    </url>
+    <url>
+         <loc>https://sayouzone.github.io/sayou-fabric/examples/src/loader_quick_start_postgresql/</loc>
+         <lastmod>2026-03-29</lastmod>
+    </url>
+    <url>
          <loc>https://sayouzone.github.io/sayou-fabric/examples/src/refinery_quick_start_doc_markdown/</loc>
          <lastmod>2026-03-29</lastmod>
     </url>
