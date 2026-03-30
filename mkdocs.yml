@@ -187,10 +187,18 @@ nav:
       - RSS: examples/src/connector_quick_start_rss.md
       - Wikipedia: examples/src/connector_quick_start_wikipedia.md
       - Trafilatura: examples/src/connector_quick_start_trafilatura.md
-    # - Document:
-    #   - Quick Start :
-    # - Refinery:
-    #   - Quick Start :
+    - Document:
+      - Docx: docs/examples/src/document_quick_start_docx.md
+      - Excel: docs/examples/src/document_quick_start_excel.md
+      - PPTX: docs/examples/src/document_quick_start_pptx.md
+      - PDF: docs/examples/src/document_quick_start_pdf.md
+      - Image: docs/examples/src/document_quick_start_image.md
+    - Refinery:
+      - Doc to Markdown: docs/examples/src/refinery_quick_start_doc_markdown.md
+      - HTML to Text: docs/examples/src/refinery_quick_start_html_text.md
+      - Raw JSON: docs/examples/src/refinery_quick_start_raw_json.md
+      - Record: docs/examples/src/refinery_quick_start_record.md
+      - Processors: docs/examples/src/refinery_quick_start_processors.md
     - Chunking:
       - Python: examples/src/chunking_quick_start_python.md
       - JAVA: examples/src/chunking_quick_start_java.md
@@ -205,12 +213,25 @@ nav:
       - Recursive: examples/src/chunking_quick_start_recursive.md
       - Parent Document: examples/src/chunking_quick_start_parent_document.md
       - LangChain: examples/src/chunking_quick_start_langchain.md
-    # - Wrapper:
-    #   - Quick Start :
-    # - Assembler:
-    #   - Quick Start :
-    # - Loader:
-    #   - Quick Start :
+    - Wrapper:
+      - Code Chunk: docs/examples/src/wrapper_quick_start_code_chunk.md
+      - Document Chunk: docs/examples/src/wrapper_quick_start_document_chunk.md
+      - Video Chunk: docs/examples/src/wrapper_quick_start_video_chunk.md
+      - Embedding: docs/examples/src/wrapper_quick_start_embedding.md
+      - Metadata: docs/examples/src/wrapper_quick_start_metadata.md
+    - Assembler:
+      - Code Graph: docs/examples/src/assembler_quick_start_code_graph.md
+      - Cypher: docs/examples/src/assembler_quick_start_cypher.md
+      - Timeline: docs/examples/src/assembler_quick_start_timeline.md
+      - Graph: docs/examples/src/assembler_quick_start_graph.md
+      - Vector: docs/examples/src/assembler_quick_start_vector.md
+    - Loader:
+      - File: docs/examples/src/loader_quick_start_file.md
+      - Neo4j: docs/examples/src/loader_quick_start_neo4j.md
+      - Chroma: docs/examples/src/loader_quick_start_chroma.md
+      - PostgreSQL: docs/examples/src/loader_quick_start_postgresql.md
+      - Elasticsearch: docs/examples/src/loader_quick_start_elasticsearch.md
+      - MongoDB: docs/examples/src/loader_quick_start_mongodb.md
     # - Extractor:
     #   - Quick Start :
     # - LLM:
