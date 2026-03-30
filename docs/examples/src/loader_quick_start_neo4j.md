@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-loader/examples/quick_start_neo4j.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-loader/examples/quick_start_neo4j.py).
+
+## Setup
+
 Load a knowledge graph into Neo4j using `LoaderPipeline` with
 `Neo4jWriter`.
 
@@ -15,7 +18,8 @@ URI pattern: ``bolt://host:port`` or ``neo4j://host:port``
 Install the driver:
 
     pip install neo4j
-"""
+
+```python
 import json
 from unittest.mock import MagicMock, patch
 
@@ -25,10 +29,10 @@ from sayou.loader.pipeline import LoaderPipeline
 from sayou.loader.plugins.neo4j_writer import Neo4jWriter
 
 pipeline = LoaderPipeline(extra_writers=[Neo4jWriter])
+```
 
+## Sample Graph Data
 
-# ── Sample Graph Data
-"""
 `Neo4jWriter` accepts:
 - A list of plain dicts (output of GraphBuilder or CypherBuilder prep)
 - SayouNode objects (converted automatically)
@@ -37,7 +41,8 @@ Each dict may have a ``links`` key for relationships:
 
     {"id": "n1", "label": "Person", "name": "Alice",
      "links": [{"target": "n2", "type": "KNOWS"}]}
-"""
+
+```python
 graph_data = [
     {
         "id": "sayou:doc:report_pdf:c001",
@@ -64,13 +69,14 @@ graph_data = [
         "links": [{"target": "sayou:doc:report_pdf:c001", "type": "HAS_PARENT"}],
     },
 ]
+```
 
+## Write to Neo4j (mocked)
 
-# ── Write to Neo4j (mocked)
-"""
 The writer connects, groups nodes by label, then executes batch MERGE
 queries using UNWIND for efficiency.
-"""
+
+```python
 print("=== Write to Neo4j (mocked) ===")
 
 mock_gdb = MagicMock()
@@ -89,10 +95,10 @@ with patch("sayou.loader.plugins.neo4j_writer.GraphDatabase", mock_gdb):
 
 print(f"  Result              : {result}")
 print(f"  session.execute_write calls: {mock_session.execute_write.call_count}")
+```
 
+## UNWIND Batch Merge
 
-# ── UNWIND Batch Merge
-"""
 Nodes are grouped by ``label`` and merged in a single Cypher statement:
 
     UNWIND $batch AS row
@@ -100,7 +106,8 @@ Nodes are grouped by ``label`` and merged in a single Cypher statement:
     SET n += row
 
 This is significantly faster than one MERGE per node for large graphs.
-"""
+
+```python
 print("\n=== Node Grouping by Label ===")
 import logging
 from collections import defaultdict
@@ -118,10 +125,10 @@ for node in normalised:
 
 for label, ids in by_label.items():
     print(f"  :{label:10s}  {len(ids)} node(s): {ids}")
+```
 
+## Property Sanitisation
 
-# ── Property Sanitisation
-"""
 Neo4j property values must be primitives or lists of primitives.
 `Neo4jWriter._sanitize_props` converts complex values:
 
@@ -129,7 +136,8 @@ Neo4j property values must be primitives or lists of primitives.
 - ``dict``        → JSON string
 - ``list[str/int]`` → preserved as-is
 - ``links``       → excluded (converted to relationships)
-"""
+
+```python
 print("\n=== Property Sanitisation ===")
 raw = {
     "id": "n1",
@@ -141,11 +149,11 @@ raw = {
 sanitised = nw._sanitize_props(raw)
 for k, v in sanitised.items():
     print(f"  {k:8s}: {v!r}  ({type(v).__name__})")
+```
 
+## Real Connection (commented — requires running Neo4j)
 
-# ── Real Connection (commented — requires running Neo4j)
-"""
-    result = pipeline.run(
+result = pipeline.run(
         graph_data,
         "bolt://localhost:7687",
         strategy="Neo4jWriter",
@@ -160,17 +168,18 @@ Or with Neo4j AuraDB:
         strategy="Neo4jWriter",
         auth=("neo4j", "<AuraDB-password>"),
     )
-"""
 
+```python
 print("\nNeo4jWriter example complete.")
+```
 
+## Save Results
 
-# ── Save Results
-"""
 Save the generated Cypher queries to a file for inspection or manual
 execution.  Use `LoaderPipeline` with `FileWriter` to persist any other
 graph payload format.
-"""
+
+```python
 import json
 
 cypher_queries = [
@@ -182,3 +191,4 @@ with open("neo4j_queries.cypher", "w", encoding="utf-8") as f:
     f.write("\n\n".join(cypher_queries))
 
 print(f"Saved {len(cypher_queries)} Cypher query/queries to 'neo4j_queries.cypher'")
+```
