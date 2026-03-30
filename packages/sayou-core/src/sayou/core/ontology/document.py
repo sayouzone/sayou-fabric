@@ -10,7 +10,7 @@ class SayouClassDocument:
     """Node type labels for the document domain."""
 
     TABLE = "sayou:Table"
-    TEXT = "sayou:TextFragment"
+    TEXT_FRAGMENT = "sayou:TextFragment"  # a paragraph / text block
     LIST_ITEM = "sayou:ListItem"
 
 

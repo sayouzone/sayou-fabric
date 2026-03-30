@@ -1,25 +1,39 @@
-COMPONENT_REGISTRY = {
-    # Connector Group
+from typing import Dict, Type
+
+from .exceptions import RegistryError
+
+# ---------------------------------------------------------------------------
+# Global component registry
+#
+# Populated at import time by @register_component decorators.
+#
+# NOTE: Because this is a module-level mutable dict, it is shared across
+# all code in the same Python process.  In production this is intentional —
+# all pipelines discover the same set of installed components.
+#
+# In tests, use the ``isolated_registry`` context manager (below) to avoid
+# cross-test pollution.
+# ---------------------------------------------------------------------------
+COMPONENT_REGISTRY: Dict[str, Dict[str, Type]] = {
+    # Connector group
     "generator": {},
     "fetcher": {},
-    # Document Group
+    # Document group
     "parser": {},
     "converter": {},
     "ocr": {},
-    # Refinery Group
+    # Refinery group
     "normalizer": {},
     "processor": {},
-    # Chunking Group
+    # Chunking group
     "splitter": {},
-    # Wrapper Group
+    # Wrapper group
     "adapter": {},
-    # Assembler Group
+    # Assembler group
     "builder": {},
-    # Loader Group
+    # Loader group
     "writer": {},
-    # Extractor Group
-    # LLM Group
-    # Visualizer Group
+    # Future groups (reserved slots)
     "tracer": {},
     "renderer": {},
 }
@@ -27,31 +41,54 @@ COMPONENT_REGISTRY = {
 
 def register_component(role: str):
     """
-    Registers a component class into the global component registry.
+    Class decorator — register a component into the global registry.
 
-    This decorator adds the decorated class to the `COMPONENT_REGISTRY`
-    under the specified role. It uses the class's `component_name` attribute
-    as the unique key within that role.
+    The decorated class must have a ``component_name`` class attribute which
+    is used as the unique key within the given ``role`` bucket.
 
     Args:
-        role (str): The category or role of the component (e.g., "generator", "fetcher").
-                    Must be one of the pre-defined keys in `COMPONENT_REGISTRY`.
-
-    Returns:
-        Callable: The decorator function to apply to the component class.
+        role: The component category (e.g. ``"fetcher"``, ``"writer"``).
+              Must be one of the pre-defined keys in ``COMPONENT_REGISTRY``.
 
     Raises:
-        ValueError: If the provided `role` is not a valid key in the registry.
+        RegistryError: If ``role`` is not a recognised registry key.
+
+    Example::
+
+        @register_component("writer")
+        class FileWriter(BaseWriter):
+            component_name = "FileWriter"
     """
 
     def decorator(cls):
         if role not in COMPONENT_REGISTRY:
-            raise ValueError(
-                f"Unknown component role: '{role}'. defined roles: {list(COMPONENT_REGISTRY.keys())}"
+            raise RegistryError(
+                f"Unknown component role: {role!r}. "
+                f"Valid roles: {sorted(COMPONENT_REGISTRY)}"
             )
-
         if hasattr(cls, "component_name"):
             COMPONENT_REGISTRY[role][cls.component_name] = cls
         return cls
 
     return decorator
+
+
+def clear_registry(role: str | None = None) -> None:
+    """
+    Remove all entries from the registry (optionally scoped to one role).
+
+    Primarily intended for use in tests — call from a fixture or
+    ``setup_method`` to prevent cross-test pollution caused by the shared
+    global state.
+
+    Args:
+        role: If supplied, clear only that role's bucket.
+              If ``None``, clear every bucket.
+    """
+    if role is not None:
+        if role not in COMPONENT_REGISTRY:
+            raise RegistryError(f"Unknown component role: {role!r}.")
+        COMPONENT_REGISTRY[role].clear()
+    else:
+        for bucket in COMPONENT_REGISTRY.values():
+            bucket.clear()

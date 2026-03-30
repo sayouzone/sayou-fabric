@@ -3,33 +3,36 @@ import logging
 import time
 from typing import Any, Callable
 
-logger = logging.getLogger("SayouCore")
+logger = logging.getLogger("sayou.core")
 
 
 def measure_time(func: Callable) -> Callable:
     """
-    [Decorator] 함수 실행 시간을 측정하여 로그로 남깁니다.
-    성능 병목 구간을 찾을 때 유용합니다.
+    Measure and log the wall-clock execution time of the decorated function.
+
+    The elapsed time is emitted at DEBUG level so it is invisible in normal
+    operation and only surfaces when the application enables debug logging.
     """
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        start_time = time.perf_counter()
+        start = time.perf_counter()
         try:
-            result = func(*args, **kwargs)
-            return result
+            return func(*args, **kwargs)
         finally:
-            end_time = time.perf_counter()
-            elapsed = end_time - start_time
-            logger.debug(f"[Timer] {func.__qualname__} took {elapsed:.4f}s")
+            elapsed = time.perf_counter() - start
+            logger.debug("[Timer] %s took %.4fs", func.__qualname__, elapsed)
 
     return wrapper
 
 
 def safe_run(default_return: Any = None) -> Callable:
     """
-    [Decorator] 에러가 발생해도 파이프라인을 죽이지 않고,
-    로그를 남긴 뒤 기본값(default_return)을 반환합니다.
+    Prevent a single component failure from crashing the entire pipeline.
+
+    On exception, logs the error at ERROR level and returns ``default_return``
+    instead of propagating.  Use sparingly — only on optional / non-critical
+    methods such as ``initialize()`` where a failure should be tolerated.
     """
 
     def decorator(func: Callable) -> Callable:
@@ -37,9 +40,12 @@ def safe_run(default_return: Any = None) -> Callable:
         def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
-            except Exception as e:
+            except Exception as exc:
                 logger.error(
-                    f"[SafeRun] Error in {func.__qualname__}: {e}", exc_info=True
+                    "[SafeRun] Error in %s: %s",
+                    func.__qualname__,
+                    exc,
+                    exc_info=True,
                 )
                 return default_return
 
@@ -48,30 +54,49 @@ def safe_run(default_return: Any = None) -> Callable:
     return decorator
 
 
-def retry(max_retries: int = 3, delay: float = 1.0, backoff: float = 2.0) -> Callable:
+def retry(
+    max_retries: int = 3,
+    delay: float = 1.0,
+    backoff: float = 2.0,
+) -> Callable:
     """
-    [Decorator] 실패 시 재시도. backoff 인자를 추가하여 대기 시간을 점진적으로 늘립니다.
+    Retry a function on failure with exponential back-off.
+
+    Args:
+        max_retries: Maximum number of attempts (default 3).
+        delay: Initial wait between attempts in seconds (default 1.0).
+        backoff: Multiplier applied to ``delay`` after each failure
+                 (default 2.0 → 1 s → 2 s → 4 s …).
+
+    Raises:
+        The last exception raised if all attempts are exhausted.
     """
 
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            last_exception = None
-            current_delay = delay  # 초기 딜레이
+            last_exc: Exception | None = None
+            current_delay = delay
 
             for attempt in range(max_retries):
                 try:
                     return func(*args, **kwargs)
-                except Exception as e:
-                    last_exception = e
+                except Exception as exc:
+                    last_exc = exc
                     logger.warning(
-                        f"[Retry] {func.__qualname__} failed ({attempt+1}/{max_retries}). Retrying in {current_delay}s..."
+                        "[Retry] %s failed (%d/%d). Retrying in %.1fs…",
+                        func.__qualname__,
+                        attempt + 1,
+                        max_retries,
+                        current_delay,
                     )
                     time.sleep(current_delay)
-                    current_delay *= backoff  # 1초 -> 2초 -> 4초...
+                    current_delay *= backoff
 
-            logger.error(f"[Retry] Failed after {max_retries} attempts.")
-            raise last_exception
+            logger.error(
+                "[Retry] %s failed after %d attempts.", func.__qualname__, max_retries
+            )
+            raise last_exc
 
         return wrapper
 

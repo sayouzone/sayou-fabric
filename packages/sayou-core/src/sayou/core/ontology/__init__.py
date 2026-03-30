@@ -2,7 +2,7 @@
 # Sayou Fabric — Ontology Package
 #
 # Public API — all consumers import from here:
-#   from sayou.core.ontology import SayouClass, SayouPredicate, ...
+#   from sayou.core.ontology import SayouClass, SayouPredicate, SayouAttribute
 #
 # Internal layout:
 #   base.py      — domain-agnostic foundations
@@ -14,14 +14,26 @@
 # classes into a single namespace so existing code requires zero changes.
 # =============================================================================
 
-from .base import SayouClassBase, SayouPredicateBase, SayouAttributeBase, SayouEdgeMeta
-from .code import SayouClassCode, SayouPredicateCode, SayouAttributeCode
-from .document import SayouClassDocument, SayouPredicateDocument, SayouAttributeDocument
-from .media import SayouClassMedia, SayouPredicateMedia, SayouAttributeMedia
+from .base import (SayouAttributeBase, SayouClassBase, SayouEdgeMeta,
+                   SayouPredicateBase)
+from .code import SayouAttributeCode, SayouClassCode, SayouPredicateCode
+from .document import (SayouAttributeDocument, SayouClassDocument,
+                       SayouPredicateDocument)
+from .media import SayouAttributeMedia, SayouClassMedia, SayouPredicateMedia
 
 
 class SayouClass(SayouClassBase, SayouClassCode, SayouClassDocument, SayouClassMedia):
-    """Unified node type labels — all domains merged."""
+    """
+    Unified node type labels — all domains merged.
+
+    Naming conventions
+    ──────────────────
+    Constant names match the concept, not the URI value:
+
+        SayouClass.TEXT_FRAGMENT  →  "sayou:TextFragment"
+        SayouClass.CODE_BLOCK     →  "sayou:CodeBlock"
+        SayouClass.VIDEO_SEGMENT  →  "sayou:VideoSegment"
+    """
 
     pass
 
@@ -53,7 +65,10 @@ __all__ = [
     "SayouPredicate",
     "SayouAttribute",
     "SayouEdgeMeta",
-    # Domain-specific classes for consumers that want explicit imports
+    # Domain-specific classes for explicit imports
+    "SayouClassBase",
+    "SayouPredicateBase",
+    "SayouAttributeBase",
     "SayouClassCode",
     "SayouPredicateCode",
     "SayouAttributeCode",
