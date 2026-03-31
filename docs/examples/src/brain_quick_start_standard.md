@@ -1,5 +1,8 @@
-# ── Setup
-"""
+!!! abstract "Source"
+    Synced from [`packages/sayou-brain/examples/quick_start_standard.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-brain/examples/quick_start_standard.py).
+
+## Setup
+
 Build a document RAG knowledge base using `StandardPipeline`.
 
 `StandardPipeline` is the all-in-one Brain for document ingestion.
@@ -16,12 +19,16 @@ Use cases
 - RAG knowledge base from PDFs, DOCX, HTML pages
 - Multi-source document ingestion into a vector store
 - Enterprise knowledge graph over mixed document types
-"""
+
+```python
 import sys
 import types as _types
 from unittest.mock import MagicMock, patch
+```
 
-# ── Sub-library stubs
+## Sub-library stubs
+
+```python
 _sayou = _types.ModuleType("sayou")
 _sayou.__path__ = [
     "/home/claude/brain_pkg/src/sayou",
@@ -60,17 +67,16 @@ for _m, _c in [
 ]:
     _stub(_m, _c)
 
-from sayou.core.schemas import SayouChunk, SayouNode, SayouOutput
-
 from sayou.brain.pipelines.standard import StandardPipeline
+from sayou.core.schemas import SayouOutput, SayouNode, SayouChunk
+```
 
-# ── Sample Packets
-"""
+## Sample Packets
+
 StandardPipeline reads packet.task.meta["filename"] to identify each file.
 We build lightweight packet objects that satisfy this interface.
-"""
 
-
+```python
 class _Packet:
     """Minimal packet object compatible with StandardPipeline's expectations."""
 
@@ -88,13 +94,14 @@ doc_packets = [
     _Packet("architecture.docx", b"PK\x03\x04 ... DOCX binary ..."),
     _Packet("classified.pdf", None, success=False, error="403 Forbidden"),
 ]
+```
 
+## Stage Stubs
 
-# ── Stage Stubs
-"""
 Deterministic stubs trace each stage.  The output is meaningful without
 installing any sub-library.
-"""
+
+```python
 doc_log = []
 refinery_log = []
 chunk_idx = [0]
@@ -160,9 +167,11 @@ def assemble(sayou_output, **kw):
         }
         for n in sayou_output.nodes
     ]
+```
 
+## Run the Pipeline
 
-# ── Run the Pipeline
+```python
 mock_connector = MagicMock()
 mock_connector.run.return_value = iter(doc_packets)
 mock_document = MagicMock()
@@ -208,26 +217,28 @@ print("=== StandardPipeline Run ===")
 print(f"  Files total   : {stats['files_count']}")
 print(f"  Processed     : {stats['processed']}")
 print(f"  Failed        : {stats['failed']}  (classified.pdf → 403)")
+```
 
+## Stage-by-stage Trace
 
-# ── Stage-by-stage Trace
-"""
 Stages 2–5 (Document → Wrapper) run per file.
 Stage 6 (Assembler) runs once on all accumulated nodes.
-"""
+
+```python
 print("\n=== Stage-by-stage Trace ===")
 print(f"  {'File':25s}  Document           Refinery output")
 print(f"  {'-'*72}")
 for doc_entry, ref_entry in zip(doc_log, refinery_log):
     filename, doc_type = doc_entry.split(" → ")
     print(f"  {filename:25s}  parsed as {doc_type:6s}   {ref_entry!r}")
+```
 
+## Vector Payloads
 
-# ── Vector Payloads
-"""
 VectorBuilder receives all accumulated nodes at once and returns
 a list of vector payloads ready for ChromaDB / Elasticsearch.
-"""
+
+```python
 asm_call = mock_assembler.run.call_args
 asm_input = asm_call.args[0] if asm_call.args else asm_call.kwargs.get("input_data")
 payloads = assemble(asm_input) if asm_input else []
@@ -238,25 +249,29 @@ for p in payloads:
     print(f"  [{p['id']}]")
     print(f"    text   = {p['text']!r}")
     print(f"    vector = {p['vector']}  (dim={len(p['vector'])})")
+```
 
+## Binary Document Handling
 
-# ── Binary Document Handling
-"""
 Binary detection: isinstance(packet.data, bytes)
 
 Fallback chain:
   bytes → DocumentPipeline → ok    → Refinery  (normal path)
   bytes → DocumentPipeline fails   → UTF-8 decode → Refinery
   bytes → UTF-8 decode fails       → skip  (stats["failed"]++)
-"""
+
+```python
 print("\n=== Binary Handling Fallback Chain ===")
 print("  bytes → Document → Refinery           (normal path)")
 print("  bytes → Document fails → UTF-8 decode → Refinery")
 print("  bytes → decode fails                  → skip  (failed++)")
+```
 
+## Stats
 
-# ── Stats
+```python
 print("\n=== Stats ===")
 print(f"  files_count = {stats['files_count']}  (total packets from Connector)")
 print(f"  processed   = {stats['processed']}  (successfully reached Wrapper)")
 print(f"  failed      = {stats['failed']}  (403 Forbidden packet)")
+```

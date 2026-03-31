@@ -1,8 +1,9 @@
-import sys
-import types as _types
-from unittest.mock import MagicMock, patch
+!!! abstract "Source"
+    Synced from [`packages/sayou-brain/examples/quick_start_transfer.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-brain/examples/quick_start_transfer.py).
 
-# ── Sub-library stubs
+## Sub-library stubs
+
+```python
 _sayou = _types.ModuleType("sayou")
 _sayou.__path__ = [
     "/home/claude/brain_pkg/src/sayou",
@@ -40,9 +41,10 @@ for _m, _c in [
     ("sayou.loader", "LoaderPipeline"),
 ]:
     _stub(_m, _c)
+```
 
-# ── Setup
-"""
+## Setup
+
 ETL pipeline with optional normalisation using `TransferPipeline`.
 
 `TransferPipeline` fetches raw data from any Connector source, optionally
@@ -58,16 +60,18 @@ Use cases
 - Database record migration with light schema normalisation
 - Log backup with optional content filtering
 - Raw data archiving with Refinery preprocessing
-"""
-from sayou.core.schemas import SayouPacket
 
+```python
 from sayou.brain.pipelines.transfer import TransferPipeline
+from sayou.core.schemas import SayouPacket
+```
 
-# ── Sample Data
-"""
+## Sample Data
+
 Simulating a Connector that fetches three JSON records from an API
 and one that fails mid-transfer.
-"""
+
+```python
 api_packets = [
     SayouPacket(
         data={"id": "r001", "content": "<h1>Sales</h1><p>Revenue: $1.2M</p>"},
@@ -88,13 +92,14 @@ api_packets = [
         meta={"filename": "r004.json"},
     ),
 ]
+```
 
+## Transfer Without Refinery
 
-# ── Transfer Without Refinery
-"""
 Default mode: Connector → Loader, no transformation.
 Each successful packet is written verbatim.
-"""
+
+```python
 mock_connector = MagicMock()
 mock_connector.run.return_value = iter(api_packets)
 mock_loader = MagicMock()
@@ -113,15 +118,16 @@ with patch.object(pipeline, "connector", mock_connector), patch.object(
 print("=== Transfer Without Refinery ===")
 print(f"  read={stats['read']}  written={stats['written']}  failed={stats['failed']}")
 print(f"  (r003 failed, the other 3 written as-is)")
+```
 
+## Transfer With Refinery
 
-# ── Transfer With Refinery
-"""
 Set ``use_refinery=True`` to normalise each packet before writing.
 
 If Refinery returns an empty result, the packet is skipped —
 this enables content-based filtering.
-"""
+
+```python
 REFINED = [
     [MagicMock(type="text", content="Sales. Revenue: $1.2M", metadata={})],
     [MagicMock(type="text", content="Discussed roadmap for Q2.", metadata={})],
@@ -165,12 +171,13 @@ for call in mock_l2.run.call_args_list:
 
     if isinstance(data, list) and data:
         print(f"    → {os.path.basename(dest)}  text={data[0].content!r}")
+```
 
+## Refinery as Content Filter
 
-# ── Refinery as Content Filter
-"""
 Refinery returning [] silently drops the packet — no write, no error.
-"""
+
+```python
 FILTERED = [
     [MagicMock(content="Keep this.")],
     [],  # empty → packet skipped
@@ -199,9 +206,11 @@ print("\n=== Refinery as Content Filter ===")
 print(f"  Input packets : 3")
 print(f"  Written       : {stats3['written']}  (f2 filtered — Refinery returned [])")
 print(f"  Failed        : {stats3['failed']}")
+```
 
+## Stats Summary
 
-# ── Stats Summary
+```python
 print("\n=== Stats Summary ===")
 print(f"  {'Scenario':22s}  read  written  failed")
 print(f"  {'-'*45}")
@@ -211,3 +220,4 @@ for label, s in [
     ("Filtered", stats3),
 ]:
     print(f"  {label:22s}  {s['read']:4d}  {s['written']:7d}  {s['failed']:6d}")
+```
