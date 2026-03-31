@@ -103,7 +103,7 @@ class DocumentChunkAdapter(BaseAdapter):
             elif sem_type == "list_item":
                 node_class = SayouClass.LIST_ITEM
             else:
-                node_class = SayouClass.TEXT
+                node_class = SayouClass.TEXT_FRAGMENT
 
             # --- Attributes ---
             attributes = {

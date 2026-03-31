@@ -53,8 +53,7 @@ else:
 # 2. sayou.core stubs
 # ---------------------------------------------------------------------------
 if "sayou.core" not in sys.modules:
-    from pydantic import BaseModel as _BM
-    from pydantic import ConfigDict as _CD
+    from pydantic import BaseModel as _BM, ConfigDict as _CD
 
     _exc = types.ModuleType("sayou.core.exceptions")
 
@@ -204,7 +203,7 @@ if "sayou.core.ontology" not in sys.modules:
     _onto = types.ModuleType("sayou.core.ontology")
 
     class SayouClass:
-        TEXT = "sayou:TextFragment"
+        TEXT_FRAGMENT = "sayou:TextFragment"
         TOPIC = "sayou:Topic"
         TABLE = "sayou:Table"
         CODE_BLOCK = "sayou:CodeBlock"

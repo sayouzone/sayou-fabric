@@ -3,9 +3,8 @@ Unit tests for DocumentChunkAdapter.
 """
 
 import pytest
-from sayou.core.schemas import SayouOutput
-
 from sayou.wrapper.adapter.document_chunk_adapter import DocumentChunkAdapter
+from sayou.core.schemas import SayouOutput
 
 
 def _chunk(content="Hello", **meta):
@@ -56,7 +55,7 @@ class TestDoAdapt:
         from sayou.core.ontology import SayouClass
 
         output = self.adapter._do_adapt([_chunk("text")])
-        assert output.nodes[0].node_class == SayouClass.TEXT
+        assert output.nodes[0].node_class == SayouClass.TEXT_FRAGMENT
 
     def test_topic_class_for_header(self):
         from sayou.core.ontology import SayouClass
