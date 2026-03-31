@@ -1,53 +1,53 @@
-import os
 from typing import Any, Dict
 
+from sayou.core.config import SayouConfig as _CoreConfig
 
-class SayouConfig:
+
+class SayouConfig(_CoreConfig):
     """
-    Central configuration manager for Sayou Fabric.
-    Facilitates configuration injection from Dict or Environment Variables.
+    Brain-level configuration manager.
+
+    Extends ``sayou.core.config.SayouConfig`` with per-library property
+    accessors so pipeline constructors can unpack sub-configs cleanly::
+
+        cfg = SayouConfig({
+            "connector": {"timeout": 30},
+            "loader":    {"batch_size": 256},
+        })
+
+        ConnectorPipeline(**cfg.connector)   # → {"timeout": 30}
+        LoaderPipeline(**cfg.loader)         # → {"batch_size": 256}
+
+    All ``get()`` / ``set()`` / ``merge()`` behaviour is inherited from
+    ``sayou.core.config.SayouConfig``.
     """
 
-    def __init__(self, config_dict: Dict[str, Any] = None):
-        self._config = config_dict or {}
-
-    def get(self, key: str, default: Any = None) -> Any:
-        """
-        Retrieves a configuration value.
-        Priority: Dict -> Environment Variable -> Default
-        """
-        # 1. Direct dictionary lookup
-        if key in self._config:
-            return self._config[key]
-
-        # 2. Environment variable lookup (e.g., 'openai_api_key' -> 'OPENAI_API_KEY')
-        env_key = key.upper()
-        return os.environ.get(env_key, default)
+    # Convenience properties — each returns the section dict (never None)
 
     @property
     def connector(self) -> Dict[str, Any]:
-        return self.get("connector", {})
+        return self.section("connector")
 
     @property
     def document(self) -> Dict[str, Any]:
-        return self.get("document", {})
+        return self.section("document")
 
     @property
     def refinery(self) -> Dict[str, Any]:
-        return self.get("refinery", {})
+        return self.section("refinery")
 
     @property
     def chunking(self) -> Dict[str, Any]:
-        return self.get("chunking", {})
+        return self.section("chunking")
 
     @property
     def wrapper(self) -> Dict[str, Any]:
-        return self.get("wrapper", {})
+        return self.section("wrapper")
 
     @property
     def assembler(self) -> Dict[str, Any]:
-        return self.get("assembler", {})
+        return self.section("assembler")
 
     @property
     def loader(self) -> Dict[str, Any]:
-        return self.get("loader", {})
+        return self.section("loader")

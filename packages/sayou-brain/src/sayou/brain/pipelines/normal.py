@@ -1,41 +1,43 @@
-import os
 from typing import Any, Dict, List
 
 from sayou.assembler import AssemblerPipeline
 from sayou.chunking import ChunkingPipeline
 from sayou.connector import ConnectorPipeline
 from sayou.core.decorators import measure_time
-from sayou.core.schemas import SayouBlock, SayouNode, SayouOutput
+from sayou.core.schemas import SayouNode, SayouOutput
 from sayou.loader import LoaderPipeline
+from sayou.refinery import RefineryPipeline
 from sayou.wrapper import WrapperPipeline
 
 from ..core.base_brain import BaseBrainPipeline
 
 
-class StructurePipeline(BaseBrainPipeline):
+class NormalPipeline(BaseBrainPipeline):
     """
-    Structural assembly pipeline for code knowledge graphs.
+    Document knowledge graph pipeline (Refinery-inclusive).
 
-    Transforms raw code files into a fully linked knowledge graph and
-    persists it to the target store.
+    Extends ``StructurePipeline`` by inserting a Refinery stage between
+    the Connector and Chunking to handle raw unstructured text and HTML.
 
     Flow
     ────
-    Connector → Chunking → Wrapper → Assembler → Loader
+    Connector → Refinery → Chunking → Wrapper → Assembler → Loader
 
     Use cases
     ─────────
-    - Code knowledge graph construction
-    - RAG index over a codebase
-    - Dependency / call-graph visualisation
+    - Code + document mixed-source knowledge graphs
+    - Situations where raw connector output needs normalisation before
+      chunking (e.g. HTML stripping, record flattening)
     """
 
-    component_name = "StructurePipeline"
+    component_name = "NormalPipeline"
 
     def __init__(
         self,
         extra_generators=None,
         extra_fetchers=None,
+        extra_normalizers=None,
+        extra_processors=None,
         extra_splitters=None,
         extra_adapters=None,
         extra_builders=None,
@@ -53,8 +55,14 @@ class StructurePipeline(BaseBrainPipeline):
             extra_fetchers=extra_fetchers,
             **cfg.connector,
         )
+        self.refinery = RefineryPipeline(
+            extra_normalizers=extra_normalizers,
+            extra_processors=extra_processors,
+            **cfg.refinery,
+        )
         self.chunking = ChunkingPipeline(
             extra_splitters=extra_splitters,
+            extra_processors=extra_processors,
             **cfg.chunking,
         )
         self.wrapper = WrapperPipeline(
@@ -72,6 +80,7 @@ class StructurePipeline(BaseBrainPipeline):
 
         self._sub_pipelines = {
             "connector": self.connector,
+            "refinery": self.refinery,
             "chunking": self.chunking,
             "wrapper": self.wrapper,
             "assembler": self.assembler,
@@ -93,10 +102,9 @@ class StructurePipeline(BaseBrainPipeline):
 
         Example::
 
-            StructurePipeline.process(
-                "./my_project/",
+            NormalPipeline.process(
+                "./data/",
                 destination="bolt://localhost:7687",
-                strategies={"assembler": "CodeGraphBuilder"},
             )
         """
         return cls(**kwargs).ingest(source, destination, strategies, **kwargs)
@@ -110,15 +118,16 @@ class StructurePipeline(BaseBrainPipeline):
         **kwargs,
     ) -> Dict[str, Any]:
         """
-        Execute the structural assembly pipeline.
+        Execute the Refinery-inclusive knowledge graph pipeline.
 
         Args:
             source: Source URI or directory path.
             destination: Target store URI / path.
             strategies: Per-stage strategy overrides
-                        (keys: connector, chunking, wrapper, assembler, loader).
+                        (keys: connector, refinery, chunking, wrapper,
+                        assembler, loader).
         """
-        self._emit("on_start", input_data={"source": source, "type": "structure"})
+        self._emit("on_start", input_data={"source": source, "type": "normal"})
         strategies = strategies or {}
         stats: Dict[str, Any] = {
             "extracted": 0,
@@ -130,7 +139,7 @@ class StructurePipeline(BaseBrainPipeline):
         run_config = {**self.config._config, **kwargs}
 
         # ── Phase 1: Extract ─────────────────────────────────────────
-        self._log(f"[1/4] Extracting from '{source}'...")
+        self._log(f"[1/5] Extracting from '{source}'...")
         try:
             packets_gen = self.connector.run(
                 source,
@@ -141,23 +150,29 @@ class StructurePipeline(BaseBrainPipeline):
                 self._log("No data returned by connector.", level="warning")
                 return stats
         except Exception as exc:
-            self._log(f"[1/4] Extraction failed: {exc}", level="error")
+            self._log(f"[1/5] Extraction failed: {exc}", level="error")
             self._emit("on_error", error=exc)
             return stats
 
-        # ── Phase 2: Chunk + Wrap (streaming) ────────────────────────
-        self._log("[2/4] Chunking and wrapping...")
+        # ── Phase 2: Refinery + Chunking + Wrapper (streaming) ───────
+        self._log("[2/5] Refinery → Chunking → Wrapper...")
         all_nodes: List[SayouNode] = []
 
-        for i, packet in enumerate(packets_gen):
+        for packet in packets_gen:
             if not packet.success:
                 continue
 
             stats["extracted"] += 1
-            input_doc = self._normalise_packet(packet, i)
-            if input_doc is None:
-                continue
+            raw_data = packet.data
 
+            # Refinery
+            input_doc = self.refinery.run(
+                raw_data,
+                strategy=strategies.get("refinery", "auto"),
+                **run_config,
+            )
+
+            # Chunking
             chunks = self.chunking.run(
                 input_doc,
                 strategy=strategies.get("chunking", "auto"),
@@ -168,6 +183,7 @@ class StructurePipeline(BaseBrainPipeline):
 
             stats["chunks"] += len(chunks)
 
+            # Wrapper
             wrapper_out = self.wrapper.run(
                 chunks,
                 strategy=strategies.get("wrapper", "auto"),
@@ -184,7 +200,7 @@ class StructurePipeline(BaseBrainPipeline):
         self._log(f"Collected {stats['nodes']} nodes.")
 
         # ── Phase 3: Assemble ─────────────────────────────────────────
-        self._log("[3/4] Assembling knowledge graph...")
+        self._log("[3/5] Assembling knowledge graph...")
         try:
             assembly_result = self.assembler.run(
                 SayouOutput(nodes=all_nodes),
@@ -196,12 +212,12 @@ class StructurePipeline(BaseBrainPipeline):
                 stats["edges"] = len(assembly_result.get("edges", []))
                 self._log(f"Assembled {stats['nodes']} nodes, {stats['edges']} edges.")
         except Exception as exc:
-            self._log(f"[3/4] Assembly failed: {exc}", level="error")
+            self._log(f"[3/5] Assembly failed: {exc}", level="error")
             self._emit("on_error", error=exc)
             return stats
 
         # ── Phase 4: Load ─────────────────────────────────────────────
-        self._log(f"[4/4] Saving to '{destination}'...")
+        self._log(f"[4/5] Saving to '{destination}'...")
         try:
             success = self.loader.run(
                 input_data=assembly_result,
@@ -211,76 +227,12 @@ class StructurePipeline(BaseBrainPipeline):
             )
             if success:
                 stats["saved"] = 1
-                self._log("Structure pipeline complete.")
+                self._log("Normal pipeline complete.")
             else:
                 self._log("Loader returned False.", level="error")
         except Exception as exc:
-            self._log(f"[4/4] Load failed: {exc}", level="error")
+            self._log(f"[4/5] Load failed: {exc}", level="error")
             self._emit("on_error", error=exc)
 
         self._emit("on_finish", result_data=stats, success=True)
         return stats
-
-    # ------------------------------------------------------------------
-    # Private helpers
-    # ------------------------------------------------------------------
-
-    def _normalise_packet(self, packet: Any, index: int):
-        """
-        Convert a raw Connector packet into a SayouBlock for the Chunking stage.
-
-        Handles dict payloads (GitHub connector), SayouBlock pass-throughs,
-        and raw bytes / strings.  Returns None if the packet cannot be used.
-        """
-        raw = packet.data
-
-        if isinstance(raw, dict):
-            content = raw.get("content", "")
-            meta = raw.get("meta", {}).copy()
-
-            # Ensure a usable source path
-            bad_sources = (None, "", "github_code", "unknown")
-            if meta.get("source") in bad_sources:
-                meta["source"] = (
-                    meta.get("file_path")
-                    or meta.get("path")
-                    or meta.get("title")
-                    or f"fallback_file_{index}"
-                )
-
-            # Inject extension if absent
-            if not meta.get("extension"):
-                _, ext = os.path.splitext(meta.get("source", ""))
-                if ext:
-                    meta["extension"] = ext.lower()
-
-            if isinstance(content, bytes):
-                content = content.decode("utf-8", errors="ignore")
-
-            return SayouBlock(content=content, metadata=meta, type="code")
-
-        if hasattr(raw, "content"):
-            if "source" not in raw.metadata:
-                raw.metadata["source"] = f"unknown_block_{index}"
-            return raw
-
-        if isinstance(raw, (bytes, str)):
-            content = (
-                raw.decode("utf-8", errors="ignore") if isinstance(raw, bytes) else raw
-            )
-            meta: Dict[str, Any] = dict(packet.meta or {})
-            if packet.task:
-                meta["source"] = packet.task.uri
-                meta.update(packet.task.meta or {})
-            else:
-                meta["source"] = f"local_file_{index}"
-
-            if not meta.get("extension"):
-                _, ext = os.path.splitext(meta["source"])
-                if ext:
-                    meta["extension"] = ext.lower()
-
-            return SayouBlock(content=content, metadata=meta, type="code")
-
-        self._log(f"Unhandled packet data type: {type(raw).__name__}", level="warning")
-        return None

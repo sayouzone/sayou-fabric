@@ -2,21 +2,28 @@ import os
 from typing import Any, Dict
 
 from sayou.connector import ConnectorPipeline
-from sayou.core.base_component import BaseComponent
-from sayou.core.decorators import measure_time, safe_run
+from sayou.core.decorators import measure_time
 from sayou.loader import LoaderPipeline
 from sayou.refinery import RefineryPipeline
 
-from ..core.config import SayouConfig
+from ..core.base_brain import BaseBrainPipeline
 
 
-class TransferPipeline(BaseComponent):
+class TransferPipeline(BaseBrainPipeline):
     """
-    Lightweight ETL Pipeline.
+    Lightweight ETL pipeline.
 
-    Purpose: Move data from Source to Destination with minimal transformation.
-    Flow: Connector -> [Refinery] -> Loader
-    Ideal for: DB Migration, Log Backup, Raw Data Archiving.
+    Moves data from a source to a destination with minimal transformation.
+
+    Flow
+    ────
+    Connector → [Refinery] → Loader
+
+    Use cases
+    ─────────
+    - Database migration
+    - Log backup
+    - Raw data archiving
     """
 
     component_name = "TransferPipeline"
@@ -31,17 +38,11 @@ class TransferPipeline(BaseComponent):
         config: Dict[str, Any] = None,
         **kwargs,
     ):
-        """
-        Initializes the Brain. Plugins are passed directly to sub-pipelines.
-        """
         super().__init__()
 
-        full_config = config or {}
-        full_config.update(kwargs)
-        self.config = SayouConfig(full_config)
+        self.config = self._init_config(config, kwargs)
         cfg = self.config
 
-        # 1. Initialize Sub-pipelines
         self.connector = ConnectorPipeline(
             extra_generators=extra_generators,
             extra_fetchers=extra_fetchers,
@@ -57,6 +58,12 @@ class TransferPipeline(BaseComponent):
             **cfg.loader,
         )
 
+        self._sub_pipelines = {
+            "connector": self.connector,
+            "refinery": self.refinery,
+            "loader": self.loader,
+        }
+
         self.initialize(**kwargs)
 
     @classmethod
@@ -68,35 +75,16 @@ class TransferPipeline(BaseComponent):
         **kwargs,
     ) -> Dict[str, Any]:
         """
-        [Facade] 1-Line Execution.
+        One-line facade.
 
-        Usage:
+        Example::
+
             TransferPipeline.process(
-                "https://...",
-                destination="./output.json",
+                "https://example.com/data",
+                destination="./output/",
             )
         """
-        instance = cls(**kwargs)
-        return instance.ingest(source, destination, strategies, **kwargs)
-
-    @safe_run(default_return=None)
-    def initialize(self, config: Dict[str, Any] = None, **kwargs):
-        """
-        [Transfer] Initialize all sub-pipelines with new configurations.
-
-        This allows re-configuring the pipeline without recreating it.
-        """
-        if config:
-            self.config._config.update(config)
-        self.config._config.update(kwargs)
-
-        cfg = self.config
-
-        self.connector.initialize(**cfg.connector)
-        self.refinery.initialize(**cfg.refinery)
-        self.loader.initialize(**cfg.loader)
-
-        self._log("TransferPipeline initialized. Configs propagated.")
+        return cls(**kwargs).ingest(source, destination, strategies, **kwargs)
 
     @measure_time
     def ingest(
@@ -108,158 +96,90 @@ class TransferPipeline(BaseComponent):
         **kwargs,
     ) -> Dict[str, Any]:
         """
-        Execute the Transfer(ETL) pipeline with comprehensive error handling.
+        Execute the transfer pipeline.
+
+        Args:
+            source: Source URI or path.
+            destination: Target directory.  Required.
+            strategies: Per-stage strategy overrides (keys: connector, refinery, loader).
+            use_refinery: When True, raw data passes through RefineryPipeline before
+                          being written.  Default False for zero-copy mode.
         """
         self._emit("on_start", input_data={"source": source, "type": "transfer"})
         strategies = strategies or {}
-        stats = {"read": 0, "written": 0, "failed": 0}
+        stats: Dict[str, int] = {"read": 0, "written": 0, "failed": 0}
 
-        # -----------------------------------------------------------
-        # [Prep] Configuration
-        # -----------------------------------------------------------
+        # ── Prep ──────────────────────────────────────────────────────
+        if not destination:
+            raise ValueError("TransferPipeline requires a destination directory.")
+
+        os.makedirs(destination, exist_ok=True)
+        run_config = {**self.config._config, **kwargs}
+        self._log(f"Transfer: {source} -> {destination}")
+
+        # ── Phase 1: Extract ─────────────────────────────────────────
         try:
-            if not destination:
-                raise ValueError("Destination is required for TransferPipeline.")
-
-            if not os.path.exists(destination):
-                os.makedirs(destination, exist_ok=True)
-
-            run_config = {**self.config._config, **kwargs}
-            self._log(f"--- Starting Transfer: {source} -> {destination} ---")
-
-            if hasattr(self, "_callbacks"):
-                for cb in self._callbacks:
-                    self.connector.add_callback(cb)
-                    self.refinery.add_callback(cb)
-                    self.loader.add_callback(cb)
-
-        except Exception as e:
-            self._log(f"💥 [Prep] Config Error: {e}", level="error")
-            self._emit("on_error", error=e)
-            return stats
-
-        # -----------------------------------------------------------
-        # [Phase 1] Connector (Extract)
-        # -----------------------------------------------------------
-        packets_gen = None
-        try:
-            self._log(f"🚀 [Phase 1] Extracting from '{source}'...")
-            conn_strat = strategies.get("connector", "auto")
-
-            packets_gen = self.connector.run(source, strategy=conn_strat, **run_config)
-
+            packets_gen = self.connector.run(
+                source,
+                strategy=strategies.get("connector", "auto"),
+                **run_config,
+            )
             if not packets_gen:
-                self._log("⚠️ [Phase 1] No data generator returned.", level="warning")
+                self._log("No data returned by connector.", level="warning")
                 return stats
-
-        except Exception as e:
-            self._log(f"💥 [Phase 1] Extraction Failed: {e}", level="error")
-            self._emit("on_error", error=e)
+        except Exception as exc:
+            self._log(f"[Phase 1] Extraction failed: {exc}", level="error")
+            self._emit("on_error", error=exc)
             return stats
 
-        # -----------------------------------------------------------
-        # [Phase 2] Processing Loop (Transform & Aggregate)
-        # -----------------------------------------------------------
-
+        # ── Phase 2: Transform & Load (streaming) ────────────────────
         for i, packet in enumerate(packets_gen):
             if not packet.success:
-                self._log(f"⚠️ Extract error: {packet.error}", level="warning")
+                self._log(f"Packet error: {packet.error}", level="warning")
                 stats["failed"] += 1
                 continue
 
             stats["read"] += 1
-
-            # 1. Data Preparation
             current_data = packet.data
 
-            # 2. Refinery
             if use_refinery:
                 try:
-                    ref_strat = strategies.get("refinery", "auto")
                     processed = self.refinery.run(
-                        current_data, strategy=ref_strat, **run_config
+                        current_data,
+                        strategy=strategies.get("refinery", "auto"),
+                        **run_config,
                     )
-
                     if processed:
                         current_data = processed
                     else:
-                        self._log(f"⚠️ Refinery filtered out item {i}.", level="warning")
+                        self._log(f"Refinery filtered item {i}.", level="warning")
                         continue
-
-                except Exception as e:
+                except Exception as exc:
                     self._log(
-                        f"💥 [Phase 2] Refinery Error on item {i}: {e}", level="error"
+                        f"[Phase 2] Refinery error on item {i}: {exc}", level="error"
                     )
                     stats["failed"] += 1
                     continue
 
-            # 3. Dynamic Destination Resolution
             final_path = self._resolve_output_path(destination, packet, i)
 
-            # 4. Loader (Load Immediately)
             try:
-                load_strat = strategies.get("loader", "auto")
-
                 success = self.loader.run(
                     input_data=current_data,
                     destination=final_path,
-                    strategy=load_strat,
+                    strategy=strategies.get("loader", "auto"),
                     **run_config,
                 )
-
                 if success:
                     stats["written"] += 1
-                    self._log(f"✅ Saved: {os.path.basename(final_path)}")
+                    self._log(f"Saved: {os.path.basename(final_path)}")
                 else:
-                    self._log(f"❌ Failed to save: {final_path}", level="error")
+                    self._log(f"Save returned False: {final_path}", level="error")
                     stats["failed"] += 1
-
-            except Exception as e:
-                self._log(f"💥 [Phase 3] Load Error: {e}", level="error")
+            except Exception as exc:
+                self._log(f"[Phase 2] Load error: {exc}", level="error")
                 stats["failed"] += 1
 
         self._emit("on_finish", result_data=stats, success=True)
+        self._log(f"Transfer complete. {stats}")
         return stats
-
-    def _resolve_output_path(self, destination: str, packet: dict, index: int) -> str:
-        """
-        Helper: Generates a unique filename with SMART extension detection.
-        """
-        import os
-
-        # 1. Extract metadata
-        meta = {}
-
-        if hasattr(packet, "task") and packet.task:
-            task_meta = getattr(packet.task, "meta", {})
-            if task_meta:
-                meta.update(task_meta)
-
-        payload = getattr(packet, "data", None) or getattr(packet, "content", None)
-
-        if isinstance(payload, dict):
-            meta.update(payload.get("meta", {}))
-        elif hasattr(packet, "meta") and packet.meta:
-            meta.update(packet.meta)
-
-        # 2. Determine file name
-        raw_name = (
-            meta.get("filename")
-            or meta.get("subject")
-            or meta.get("title")
-            or meta.get("uid")
-            or meta.get("file_id")
-            or f"file_{index}"
-        )
-
-        safe_name = self._sanitize_filename(str(raw_name))
-
-        if os.path.splitext(destination)[1]:
-            return destination
-
-        return os.path.join(destination, safe_name)
-
-    def _sanitize_filename(self, name: str) -> str:
-        import re
-
-        return re.sub(r'[<>:"/\\|?*]', "_", name).strip()
