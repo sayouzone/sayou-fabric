@@ -38,7 +38,7 @@ theme:
     - navigation.instant.progress
     - navigation.tracking
     - navigation.tabs
-    - navigation.sections
+    # - navigation.sections
     - navigation.path
     - navigation.indexes
     - navigation.top
