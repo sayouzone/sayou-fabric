@@ -21,54 +21,11 @@ Use cases
 - Enterprise knowledge graph over mixed document types
 
 ```python
-import sys
-import types as _types
 from unittest.mock import MagicMock, patch
-```
 
-## Sub-library stubs
-
-```python
-_sayou = _types.ModuleType("sayou")
-_sayou.__path__ = [
-    "/home/claude/brain_pkg/src/sayou",
-    "/home/claude/core_pkg/src/sayou",
-]
-sys.modules["sayou"] = _sayou
-sys.path.insert(0, "/home/claude/brain_pkg/src")
-sys.path.insert(0, "/home/claude/core_pkg/src")
-
-
-def _stub(module, cls_name):
-    mod = _types.ModuleType(module)
-    cls = type(
-        cls_name,
-        (),
-        {
-            "__init__": lambda self, **kw: None,
-            "initialize": lambda self, **kw: None,
-            "run": lambda self, *a, **kw: None,
-            "add_callback": lambda self, cb: None,
-        },
-    )
-    setattr(mod, cls_name, cls)
-    sys.modules[module] = mod
-    setattr(_sayou, module.split(".")[-1], mod)
-
-
-for _m, _c in [
-    ("sayou.connector", "ConnectorPipeline"),
-    ("sayou.document", "DocumentPipeline"),
-    ("sayou.refinery", "RefineryPipeline"),
-    ("sayou.chunking", "ChunkingPipeline"),
-    ("sayou.wrapper", "WrapperPipeline"),
-    ("sayou.assembler", "AssemblerPipeline"),
-    ("sayou.loader", "LoaderPipeline"),
-]:
-    _stub(_m, _c)
+from sayou.core.schemas import SayouChunk, SayouNode, SayouOutput
 
 from sayou.brain.pipelines.standard import StandardPipeline
-from sayou.core.schemas import SayouOutput, SayouNode, SayouChunk
 ```
 
 ## Sample Packets

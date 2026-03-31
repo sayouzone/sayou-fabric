@@ -1,48 +1,6 @@
 !!! abstract "Source"
     Synced from [`packages/sayou-brain/examples/quick_start_normal.py`](https://github.com/sayouzone/sayou-fabric/blob/main/packages/sayou-brain/examples/quick_start_normal.py).
 
-## Sub-library stubs
-
-```python
-_sayou = _types.ModuleType("sayou")
-_sayou.__path__ = [
-    "/home/claude/brain_pkg/src/sayou",
-    "/home/claude/core_pkg/src/sayou",
-]
-sys.modules["sayou"] = _sayou
-sys.path.insert(0, "/home/claude/brain_pkg/src/sayou/../..")
-sys.path.insert(0, "/home/claude/core_pkg/src/sayou/../..")
-
-
-def _stub(module, cls_name):
-    mod = _types.ModuleType(module)
-    cls = type(
-        cls_name,
-        (),
-        {
-            "__init__": lambda self, **kw: None,
-            "initialize": lambda self, **kw: None,
-            "run": lambda self, *a, **kw: None,
-            "add_callback": lambda self, cb: None,
-        },
-    )
-    setattr(mod, cls_name, cls)
-    sys.modules[module] = mod
-    setattr(_sayou, module.split(".")[-1], mod)
-
-
-for _m, _c in [
-    ("sayou.connector", "ConnectorPipeline"),
-    ("sayou.document", "DocumentPipeline"),
-    ("sayou.refinery", "RefineryPipeline"),
-    ("sayou.chunking", "ChunkingPipeline"),
-    ("sayou.wrapper", "WrapperPipeline"),
-    ("sayou.assembler", "AssemblerPipeline"),
-    ("sayou.loader", "LoaderPipeline"),
-]:
-    _stub(_m, _c)
-```
-
 ## Setup
 
 Build a knowledge graph with Refinery normalisation using `NormalPipeline`.
@@ -63,8 +21,9 @@ NormalPipeline    — adds Refinery before Chunking
 StandardPipeline  — adds Document parsing for binary files (PDF, DOCX, …)
 
 ```python
+from sayou.core.schemas import SayouChunk, SayouNode, SayouOutput, SayouPacket
+
 from sayou.brain.pipelines.normal import NormalPipeline
-from sayou.core.schemas import SayouPacket, SayouOutput, SayouNode, SayouChunk
 ```
 
 ## Sample HTML Packets
