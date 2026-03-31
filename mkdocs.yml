@@ -158,8 +158,12 @@ nav:
     - Overview: sayou-agent/overview.md
   - Examples:
     - examples/index.md
-    # - Brain:
-    #   - Quick Start :
+    - Brain:
+      - ByPass: examples/src/brain_quick_start_bypass.md
+      - Normal: examples/src/brain_quick_start_normal.md
+      - Standard: examples/src/brain_quick_start_standard.md
+      - Structure: examples/src/brain_quick_start_structure.md
+      - Transfer: examples/src/brain_quick_start_transfer.md
     - Connector:
       - Gmail: examples/src/connector_quick_start_gmail.md
       - Email: examples/src/connector_quick_start_email.md
