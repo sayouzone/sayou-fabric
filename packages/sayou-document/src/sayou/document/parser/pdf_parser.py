@@ -5,15 +5,8 @@ from sayou.core.registry import register_component
 
 from ..interfaces.base_ocr import BaseOCR
 from ..interfaces.base_parser import BaseDocumentParser
-from ..models import (
-    BaseElement,
-    BoundingBox,
-    Document,
-    ElementMetadata,
-    ImageElement,
-    Page,
-    TextElement,
-)
+from ..models import (BaseElement, BoundingBox, Document, ElementMetadata,
+                      ImageElement, Page, TextElement)
 
 
 @register_component("parser")

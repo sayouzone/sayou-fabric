@@ -12,16 +12,8 @@ from typing import List
 from sayou.core.registry import register_component
 
 from ..interfaces.base_parser import BaseDocumentParser
-from ..models import (
-    BaseElement,
-    Document,
-    ElementMetadata,
-    ImageElement,
-    Page,
-    Sheet,
-    TableCell,
-    TableElement,
-)
+from ..models import (BaseElement, Document, ElementMetadata, ImageElement,
+                      Page, Sheet, TableCell, TableElement)
 
 
 @register_component("parser")
@@ -45,8 +37,11 @@ class ExcelParser(BaseDocumentParser):
         # XLSX (Zip)
         if file_bytes.startswith(b"PK\x03\x04") and file_name.lower().endswith(".xlsx"):
             return 1.0
-        # Legacy XLS
-        if file_bytes.startswith(b"\xd0\xcf\x11\xe0"):
+        # Legacy XLS — must also check extension to avoid matching other OLE formats
+        # (e.g. HWP, DOC) which share the same magic bytes.
+        if file_bytes.startswith(b"\xd0\xcf\x11\xe0") and any(
+            file_name.lower().endswith(t) for t in cls.SUPPORTED_TYPES
+        ):
             return 1.0
         # Extension fallback
         if any(file_name.lower().endswith(t) for t in cls.SUPPORTED_TYPES):

@@ -14,17 +14,8 @@ from typing import List, Optional
 from sayou.core.registry import register_component
 
 from ..interfaces.base_parser import BaseDocumentParser
-from ..models import (
-    BaseElement,
-    BoundingBox,
-    Document,
-    ElementMetadata,
-    ImageElement,
-    Page,
-    TableCell,
-    TableElement,
-    TextElement,
-)
+from ..models import (BaseElement, BoundingBox, Document, ElementMetadata,
+                      ImageElement, Page, TableCell, TableElement, TextElement)
 
 
 @register_component("parser")
@@ -53,8 +44,10 @@ class DocxParser(BaseDocumentParser):
         # DOCX (Zip)
         if file_bytes.startswith(b"PK\x03\x04") and file_name.lower().endswith(".docx"):
             return 1.0
-        # Legacy DOC (OLE compound document)
-        if file_bytes.startswith(b"\xd0\xcf\x11\xe0"):
+        # Legacy DOC — extension check prevents matching HWP/XLS sharing the same OLE magic
+        if file_bytes.startswith(b"\xd0\xcf\x11\xe0") and any(
+            file_name.lower().endswith(t) for t in cls.SUPPORTED_TYPES
+        ):
             return 1.0
         # Extension fallback
         if any(file_name.lower().endswith(t) for t in cls.SUPPORTED_TYPES):
@@ -165,7 +158,7 @@ class DocxParser(BaseDocumentParser):
     def _process_paragraph_with_images(
         self,
         para: "Paragraph",
-        doc: "DocxDocument",
+        doc: "DocxDocumentObject",
         page_num: int,
         meta_id_base: str,
     ) -> List[BaseElement]:

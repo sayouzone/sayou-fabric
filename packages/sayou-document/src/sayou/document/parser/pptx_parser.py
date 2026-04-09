@@ -11,18 +11,9 @@ from typing import List
 from sayou.core.registry import register_component
 
 from ..interfaces.base_parser import BaseDocumentParser
-from ..models import (
-    BaseElement,
-    BoundingBox,
-    ChartElement,
-    Document,
-    ElementMetadata,
-    ImageElement,
-    Slide,
-    TableCell,
-    TableElement,
-    TextElement,
-)
+from ..models import (BaseElement, BoundingBox, ChartElement, Document,
+                      ElementMetadata, ImageElement, Slide, TableCell,
+                      TableElement, TextElement)
 
 
 @register_component("parser")
@@ -45,8 +36,10 @@ class PptxParser(BaseDocumentParser):
         # PPTX (Zip)
         if file_bytes.startswith(b"PK\x03\x04") and file_name.lower().endswith(".pptx"):
             return 1.0
-        # Legacy PPT (OLE compound document)
-        if file_bytes.startswith(b"\xd0\xcf\x11\xe0"):
+        # Legacy PPT — extension check prevents matching HWP/XLS sharing the same OLE magic
+        if file_bytes.startswith(b"\xd0\xcf\x11\xe0") and any(
+            file_name.lower().endswith(t) for t in cls.SUPPORTED_TYPES
+        ):
             return 1.0
         # Extension fallback
         if any(file_name.lower().endswith(t) for t in cls.SUPPORTED_TYPES):
@@ -197,7 +190,7 @@ class PptxParser(BaseDocumentParser):
             except Exception as e:
                 self._log(f"PPT Image Error: {e}", level="warning")
 
-        # 4. Table
+        # 4. 테이블 (Table)
         if shape.shape_type == MSO_SHAPE_TYPE.TABLE:
             try:
                 table = shape.table
