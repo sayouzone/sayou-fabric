@@ -173,4 +173,8 @@ class MarkdownSplitter(BaseSplitter):
             return "code_block"
         if re.match(r"^[-*] ", text):
             return "list_item"
+        if text.startswith("data:image/"):
+            return "image"
+        if re.match(r"(?:[A-Za-z0-9+/]{4}[\n\r]?){100,}", text):
+            return "image"
         return "text"
