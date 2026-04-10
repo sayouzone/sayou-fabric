@@ -98,6 +98,8 @@ class DocumentChunkAdapter(BaseAdapter):
                 node_class = SayouClass.TOPIC
             elif sem_type == "table":
                 node_class = SayouClass.TABLE
+            elif sem_type == "image":
+                node_class = SayouClass.IMAGE
             elif sem_type == "code_block":
                 node_class = SayouClass.CODE_BLOCK
             elif sem_type == "list_item":
