@@ -12,6 +12,7 @@ class SayouClassDocument:
     TABLE = "sayou:Table"
     TEXT_FRAGMENT = "sayou:TextFragment"  # a paragraph / text block
     LIST_ITEM = "sayou:ListItem"
+    IMAGE = "sayou:Image"
 
 
 class SayouPredicateDocument:
